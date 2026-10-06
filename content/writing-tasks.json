@@ -1,0 +1,236 @@
+[
+  {
+    "id": "m1-w1",
+    "moduleId": 1,
+    "sectionId": "conversion-input",
+    "title": "Dakikayı saniyeye çevir",
+    "level": "Tamamla",
+    "objective": "Metin girdisini sayıya dönüştürüp hesaplama yap.",
+    "prompt": "Girdide negatif olmayan bir tam sayı dakika var. Saniye karşılığını tek satırda yazdır. input() bir str döndürür; işlemden önce int ile dönüştür. Girdi sorusu/etiket yazdırma.",
+    "starterCode": "minutes = int(input())\n# Saniye sayısını hesapla ve yazdır\n",
+    "exampleInput": "3",
+    "exampleOutput": "180",
+    "hints": [
+      "Bir dakikada 60 saniye vardır.",
+      "minutes ile 60'ı çarpıp sonucu print ile yazdır."
+    ],
+    "solution": "minutes = int(input())\nprint(minutes * 60)",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3",
+        "expectedOutput": "180"
+      },
+      {
+        "label": "Sıfır dakika",
+        "stdin": "0",
+        "expectedOutput": "0"
+      },
+      {
+        "label": "Bir dakika",
+        "stdin": "1",
+        "expectedOutput": "60"
+      },
+      {
+        "label": "Büyük değer",
+        "stdin": "125",
+        "expectedOutput": "7500"
+      }
+    ]
+  },
+  {
+    "id": "m1-w2",
+    "moduleId": 1,
+    "sectionId": "arithmetic",
+    "title": "Paket hesabını onar",
+    "level": "Düzelt",
+    "objective": "Normal bölme ile taban bölme ve kalanı ayırt et.",
+    "prompt": "İlk satırda ürün adedi (0 veya pozitif tam sayı), ikincide paket kapasitesi (pozitif tam sayı) var. Önce tamamen dolan paket sayısını, sonra artan ürün sayısını ayrı satırlarda yazdır. Başlangıç kodundaki iki hesaplama hatasını düzelt.",
+    "starterCode": "items = int(input())\ncapacity = int(input())\nprint(items / capacity)\nprint(items - capacity)\n",
+    "exampleInput": "17\n5",
+    "exampleOutput": "3\n2",
+    "hints": [
+      "Tam paket sayısı için //, kalan için % işlemini düşün.",
+      "İki çıktı da items ve capacity üzerinden hesaplanmalı."
+    ],
+    "solution": "items = int(input())\ncapacity = int(input())\nprint(items // capacity)\nprint(items % capacity)",
+    "tests": [
+      {
+        "label": "Artan ürün",
+        "stdin": "17\n5",
+        "expectedOutput": "3\n2"
+      },
+      {
+        "label": "Tam bölünme",
+        "stdin": "20\n5",
+        "expectedOutput": "4\n0"
+      },
+      {
+        "label": "Boş sipariş",
+        "stdin": "0\n4",
+        "expectedOutput": "0\n0"
+      },
+      {
+        "label": "Tek paketten az",
+        "stdin": "2\n7",
+        "expectedOutput": "0\n2"
+      }
+    ]
+  },
+  {
+    "id": "m1-w3",
+    "moduleId": 1,
+    "sectionId": "arithmetic",
+    "title": "Kasa hesabını sıfırdan yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "Bir gereksinimi girdiler, işlem ve çıktı olarak çözümle.",
+    "prompt": "Üç satır girdi: birim fiyat (tam sayı kuruş), adet (tam sayı), indirim (tam sayı kuruş). Toplamdan indirimi çıkarıp ödenecek kuruş miktarını yazdır. Fiyat ve adet negatif değildir; indirim toplamı aşmaz. Fonksiyon veya döngü gerekmiyor. Önce hangi üç değeri okuyacağını düşün; sonra kendi programını yaz.",
+    "starterCode": "",
+    "exampleInput": "2500\n3\n500",
+    "exampleOutput": "7000",
+    "hints": [
+      "Üç ayrı input() çağrısı yap; her sonucu int'e dönüştür.",
+      "Ödenecek tutar = birim fiyat × adet − indirim."
+    ],
+    "solution": "price = int(input())\nquantity = int(input())\ndiscount = int(input())\nprint(price * quantity - discount)",
+    "tests": [
+      {
+        "label": "İndirimli alışveriş",
+        "stdin": "2500\n3\n500",
+        "expectedOutput": "7000"
+      },
+      {
+        "label": "İndirimsiz",
+        "stdin": "120\n4\n0",
+        "expectedOutput": "480"
+      },
+      {
+        "label": "Boş sepet",
+        "stdin": "99\n0\n0",
+        "expectedOutput": "0"
+      },
+      {
+        "label": "Tam indirim",
+        "stdin": "300\n2\n600",
+        "expectedOutput": "0"
+      }
+    ]
+  },
+  {
+    "id": "m2-w1",
+    "moduleId": 2,
+    "sectionId": "methods",
+    "title": "Etiketi temizle",
+    "level": "Tamamla",
+    "objective": "String metotlarını zincirleyerek yeni metin üret.",
+    "prompt": "Bir satır ham etiket oku. Uçlardaki boşlukları kaldır, harfleri lower() ile küçült, kalan her normal boşluğu '-' ile değiştir. Birden fazla iç boşluk birden fazla tire üretmelidir. Türkçeye özel dil dönüşümü beklenmiyor.",
+    "starterCode": "raw = input()\n# strip, lower ve replace ile dönüştür\n",
+    "exampleInput": "  Python Lab  ",
+    "exampleOutput": "python-lab",
+    "hints": [
+      "Her metot yeni bir string döndürür.",
+      "raw.strip().lower().replace(\" \", \"-\") ifadesini yazdır."
+    ],
+    "solution": "raw = input()\nprint(raw.strip().lower().replace(\" \", \"-\"))",
+    "tests": [
+      {
+        "label": "İki kelime",
+        "stdin": "  Python Lab  ",
+        "expectedOutput": "python-lab"
+      },
+      {
+        "label": "Tek kelime",
+        "stdin": "CODE",
+        "expectedOutput": "code"
+      },
+      {
+        "label": "Çift iç boşluk",
+        "stdin": " a  B ",
+        "expectedOutput": "a--b"
+      },
+      {
+        "label": "Yalnız boşluk",
+        "stdin": "   ",
+        "expectedOutput": ""
+      }
+    ]
+  },
+  {
+    "id": "m2-w2",
+    "moduleId": 2,
+    "sectionId": "immutability",
+    "title": "Değişmeyen metni düzelt",
+    "level": "Düzelt",
+    "objective": "Immutable metot sonucunu sakla ve orijinali koru.",
+    "prompt": "Bir satır metin oku. İlk satırda orijinal metni, ikinci satırda tüm 'cat' parçalarının 'dog' olduğu yeni metni yazdır. Değiştirme büyük/küçük harfe duyarlıdır. Başlangıç kodu neden iki kez aynı metni yazdırıyor? Sorunu düzelt.",
+    "starterCode": "original = input()\noriginal.replace(\"cat\", \"dog\")\nprint(original)\nprint(original)\n",
+    "exampleInput": "cat cafe",
+    "exampleOutput": "cat cafe\ndog cafe",
+    "hints": [
+      "replace orijinali değiştirmez; yeni metni döndürür.",
+      "Dönen metni updated gibi başka bir isme bağla ve ikinci print'te onu kullan."
+    ],
+    "solution": "original = input()\nupdated = original.replace(\"cat\", \"dog\")\nprint(original)\nprint(updated)",
+    "tests": [
+      {
+        "label": "Tek eşleşme",
+        "stdin": "cat cafe",
+        "expectedOutput": "cat cafe\ndog cafe"
+      },
+      {
+        "label": "Birden çok eşleşme",
+        "stdin": "cat-cat",
+        "expectedOutput": "cat-cat\ndog-dog"
+      },
+      {
+        "label": "Eşleşme yok",
+        "stdin": "bird",
+        "expectedOutput": "bird\nbird"
+      },
+      {
+        "label": "Harf duyarlılığı",
+        "stdin": "Cat cat",
+        "expectedOutput": "Cat cat\nCat dog"
+      }
+    ]
+  },
+  {
+    "id": "m2-w3",
+    "moduleId": 2,
+    "sectionId": "formatting",
+    "title": "Profil kartını sıfırdan yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "Girdi temizleme, tip dönüşümü ve biçimlendirmeyi birleştir.",
+    "prompt": "İlk satırda isim, ikinci satırda ondalıklı puan (0–100, nokta ayıracı) var. İsmin uç boşluklarını kaldır. 'isim · puan' biçiminde tek satır yazdır; puan her zaman bir ondalık basamak içersin. Python'un .1f biçimlendirme kuralını kullan.",
+    "starterCode": "",
+    "exampleInput": "  Ada  \n87.46",
+    "exampleOutput": "Ada · 87.5",
+    "hints": [
+      "İsmi input().strip(), puanı float(input()) ile okuyabilirsin.",
+      "Bir f-string içinde puan için :.1f kullan."
+    ],
+    "solution": "name = input().strip()\nscore = float(input())\nprint(f\"{name} · {score:.1f}\")",
+    "tests": [
+      {
+        "label": "Yuvarlama",
+        "stdin": "  Ada  \n87.46",
+        "expectedOutput": "Ada · 87.5"
+      },
+      {
+        "label": "Sıfır",
+        "stdin": " Deniz \n0",
+        "expectedOutput": "Deniz · 0.0"
+      },
+      {
+        "label": "Tam puan",
+        "stdin": "Ece\n100",
+        "expectedOutput": "Ece · 100.0"
+      },
+      {
+        "label": "Unicode isim",
+        "stdin": " Çağrı \n12.34",
+        "expectedOutput": "Çağrı · 12.3"
+      }
+    ]
+  }
+]

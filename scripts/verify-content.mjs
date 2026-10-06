@@ -1,10 +1,11 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadPyodide } from "pyodide";
+import "../public/python-runtime.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const files = ["content/module-01.json", "content/module-02.json"];
+const files = (await readdir(path.join(root, "content"))).filter(file => /^module-\d+\.json$/.test(file)).map(file => `content/${file}`);
 const modules = await Promise.all(files.map(async (file) => JSON.parse(await readFile(path.join(root, file), "utf8"))));
 const pyodide = await loadPyodide();
 const version = pyodide.runPython("import sys; tuple(sys.version_info[:3])").toJs();
@@ -16,14 +17,15 @@ if (version[0] < 3 || (version[0] === 3 && version[1] < 12)) {
 let checked = 0;
 const failures = [];
 
-async function execute(code) {
+async function execute(code, stdin = "") {
   const stdout = [];
   const stderr = [];
   pyodide.setStdout({ batched: (value) => stdout.push(value) });
   pyodide.setStderr({ batched: (value) => stderr.push(value) });
   try {
-    await pyodide.runPythonAsync(code);
-    return { output: [...stdout, ...stderr].join("\n").trimEnd(), error: null };
+    const result = await globalThis.pythonRuntime.execute(pyodide, code, stdin);
+    if (!result.ok) throw new Error(result.output);
+    return { output: result.output.trimEnd(), error: null };
   } catch (error) {
     const text = String(error);
     const name = text.match(/\n([A-Za-z]+(?:Error|Exception)):/)?.[1] ?? text.match(/^([A-Za-z]+(?:Error|Exception)):/)?.[1] ?? "PythonError";
@@ -31,8 +33,8 @@ async function execute(code) {
   }
 }
 
-async function verifyCode(label, code, expectedOutput, expectedError) {
-  const result = await execute(code);
+async function verifyCode(label, code, expectedOutput, expectedError, stdin = "") {
+  const result = await execute(code, stdin);
   checked += 1;
   if (expectedError) {
     if (result.error !== expectedError) failures.push(`${label}: ${expectedError} beklendi, ${result.error ?? "hata yok"} alındı.`);
@@ -56,7 +58,11 @@ for (const module of modules) {
   }
   for (const question of module.questions) {
     if (question.type === "output") await verifyCode(question.id, question.code, question.expectedOutput);
-    if (["fill", "order", "code"].includes(question.type) && question.solutionCode) await verifyCode(`${question.id} çözüm`, question.solutionCode, question.expectedOutput);
+    if (["fill", "order", "code"].includes(question.type) && question.solutionCode) await verifyCode(`${question.id} çözüm`, question.solutionCode, question.expectedOutput, undefined, question.exampleInput);
+    if (question.type === "code") {
+      if (!question.tests || question.tests.length < 3) failures.push(`${question.id}: en az üç test gerekli.`);
+      for (const test of question.tests ?? []) await verifyCode(`${question.id} ${test.label}`, question.solutionCode, test.expectedOutput, undefined, test.stdin);
+    }
     if (question.expectedError) await verifyCode(`${question.id} hata`, question.code, undefined, question.expectedError);
   }
 }

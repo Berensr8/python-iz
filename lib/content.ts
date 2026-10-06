@@ -25,6 +25,9 @@ export function seededTestQuestions(module: LearningModule, seed: number, count 
   const random = () => ((state = (state * 1664525 + 1013904223) >>> 0) / 4294967296);
   const shuffle = <T,>(items: T[]) => items.map((value) => ({ value, key: random() })).sort((a, b) => a.key - b.key).map(({ value }) => value);
   const previousCount = previous.length ? Math.round(count * 0.2) : 0;
-  return shuffle([...shuffle(current).slice(0, count - previousCount), ...shuffle(previous).slice(0, previousCount)]);
+  // Every module test includes writing, rather than leaving it to chance.
+  const writing = shuffle(current.filter(question => question.type === "code")).slice(0, Math.min(3, count - previousCount));
+  const remaining = current.filter(question => !writing.includes(question));
+  return shuffle([...writing, ...shuffle(remaining).slice(0, count - previousCount - writing.length), ...shuffle(previous).slice(0, previousCount)]);
 }
 

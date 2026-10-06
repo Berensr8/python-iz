@@ -1,5 +1,14 @@
 export type QuestionType = "output" | "bug" | "fill" | "order" | "code" | "traceback";
 
+export type CodeTest = { label: string; stdin: string; expectedOutput: string };
+export type WritingTask = {
+  id: string; moduleId: number; sectionId: string; title: string;
+  level: "Tamamla" | "Düzelt" | "Sıfırdan yaz";
+  objective: string; prompt: string; starterCode: string;
+  exampleInput: string; exampleOutput: string;
+  hints: string[]; solution: string; tests: CodeTest[];
+};
+
 export type LessonSection = {
   id: string;
   title: string;
@@ -29,6 +38,8 @@ export type Question = {
   expectedOutput?: string;
   expectedError?: string;
   solutionCode?: string;
+  tests?: CodeTest[];
+  exampleInput?: string;
   hints: string[];
   explanation: string;
 };
@@ -52,7 +63,7 @@ export type TestAttempt = {
 };
 
 export type LearningProgress = {
-  version: 1;
+  version: 2;
   xp: number;
   streak: number;
   lastStudyDate: string | null;
@@ -64,5 +75,8 @@ export type LearningProgress = {
   attempts: TestAttempt[];
   theme: "light" | "dark";
   sound: boolean;
+  writingDrafts: Record<string, string>;
+  writingHelp: Record<string, boolean>;
+  writingResults: Record<string, { passed: boolean; independent: boolean; attempts: number }>;
 };
 

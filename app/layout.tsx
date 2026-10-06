@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Python İz · Kodu okuyarak Python öğren",
-  description: "Türkçe, interaktif ve kod okuma odaklı Python öğrenme alanı.",
+  title: "Python İz · Kodu anla, kendin yaz",
+  description: "Türkçe, interaktif Python öğrenme alanı. Kodu oku, hataları düzelt, kendi programlarını yaz ve test et.",
   other: {
     "codex-preview": "development",
   },
