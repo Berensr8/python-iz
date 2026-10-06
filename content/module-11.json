@@ -1,0 +1,1520 @@
+{
+  "id": 11,
+  "slug": "oop-1",
+  "title": "OOP 1",
+  "description": "Sınıf ve nesne kurmayı, durumu korumayı, kalıtım ile composition arasında seçmeyi ve property, classmethod, staticmethod'u kendi kodunda ve başkasının kodunda tanımayı öğren.",
+  "contentVersion": 1,
+  "estimatedMinutes": 150,
+  "practiceIds": [
+    "m11-q01",
+    "m11-q03",
+    "m11-q04",
+    "m11-q08",
+    "m11-q10",
+    "m11-q11",
+    "m11-q13",
+    "m11-q14",
+    "m11-q16",
+    "m11-q18",
+    "m11-q21",
+    "m11-q22",
+    "m11-q27",
+    "m11-q31",
+    "m11-q34"
+  ],
+  "sections": [
+    {
+      "id": "class-object",
+      "title": "class, nesne, __init__ ve self",
+      "eyebrow": "Veriyi ve davranışı tek şablonda topla",
+      "objectives": [
+        "class ile bir şablon tanımlar, ondan nesneler (instance) üretir ve her nesnenin kendi verisini taşıdığını gösterir.",
+        "__init__ ve self'in rolünü açıklar; metot çağrısında nesnenin ilk parametre olarak otomatik geçtiğini bilir."
+      ],
+      "prerequisites": [
+        "m6:def-return",
+        "m5:names-references"
+      ],
+      "summary": "class bir şablondur; Dog('Pamuk') ile ondan nesne üretilir. Nesne yaratılınca __init__ çalışır ve self üzerinden nesnenin verisini (öznitelik) kurar. Metotlar, self'i ilk parametre olarak alan fonksiyonlardır.",
+      "explanation": "class Dog: ile yeni bir tür tanımlarsın; Dog(...) çağrısı bu türden bir nesne (instance) üretir. Sınıf adları gelenek olarak BüyükHarfle yazılır (Dog, ShoppingCart). Nesne yaratılınca Python önce boş nesneyi kurar, sonra __init__'i çağırır; __init__ nesneyi hazırlar, yeni bir değer döndürmez (nesnenin kendisini kuran özel metot __new__'dur ve günlük kodda yazılmaz). self, metodun çalıştığı nesnenin kendisidir: self.name = name o nesneye name özniteliğini bağlar. Aynı sınıftan üretilen her nesnenin kendi öznitelikleri vardır; birini değiştirmek ötekini etkilemez. pamuk.birthday() çağrısı Python'un gözünde Dog.birthday(pamuk) ile aynıdır: nesne, metoda ilk argüman olarak kendiliğinden geçer. Bu yüzden her metot tanımında self parametresi bulunmalı ve nesnenin verisine self. ile erişilmelidir; yalnızca age yazarsan bu bir yerel değişken ya da NameError olur. self adı bir gelenektir (dilin zorunluluğu değil) ama hiç ayrılma. type(nesne) türünü, isinstance(nesne, Dog) bir sınıfa ait olup olmadığını söyler. Yalnızca veri taşıyan basit kayıtlar için sınıf ağır kalabilir: dict, tuple ya da M10'daki namedtuple yeterli olabilir; sınıf, veriyle birlikte o veriyi değiştiren kuralların da aynı yerde durmasını istediğinde anlamlıdır.",
+      "code": "class Dog:\n    def __init__(self, name, age):\n        self.name = name\n        self.age = age\n\n    def describe(self):\n        return f\"{self.name} ({self.age} yaşında)\"\n\n    def birthday(self):\n        self.age += 1\n\npamuk = Dog(\"Pamuk\", 3)\nkarabas = Dog(\"Karabaş\", 5)\npamuk.birthday()\nprint(pamuk.describe())\nprint(karabas.describe())\nprint(Dog.describe(karabas))\nprint(type(pamuk).__name__, isinstance(pamuk, Dog))",
+      "expectedOutput": "Pamuk (4 yaşında)\nKarabaş (5 yaşında)\nKarabaş (5 yaşında)\nDog True",
+      "why": "İki nesne aynı şablondan çıktı ama birbirinden bağımsız verileri var: pamuk'un yaşı artınca karabas değişmedi. Dog.describe(karabas) satırı, karabas.describe() çağrısının perde arkasını gösterir: self, nesnenin kendisidir.",
+      "alternatives": [
+        "Yalnızca birkaç alan taşıyan kayıtlar için dict ya da namedtuple daha kısadır; dataclass'ı M12'de göreceksin.",
+        "Tek bir iş yapan, durumu olmayan kod için sınıf yerine düz fonksiyon yaz."
+      ],
+      "traps": [
+        "Metot tanımında self'i unutmak: def describe(): çağrıldığında 'takes 0 positional arguments but 1 was given' hatası verir.",
+        "__init__ içinde self.age yerine age = age yazmak: yerel değişken oluşur, nesneye hiçbir şey kaydedilmez.",
+        "Sınıfı çağırmayı unutmak: pamuk = Dog yazarsan pamuk bir nesne değil, sınıfın kendisidir.",
+        "Nesne yaratılırken __init__'in istediği argümanları eksik vermek (Dog() → TypeError)."
+      ],
+      "realCode": "class Product:\n    def __init__(self, name, price, stock=0):\n        self.name = name\n        self.price = price\n        self.stock = stock\n\n    def sell(self, count):\n        if count > self.stock:\n            raise ValueError(f\"{self.name}: yetersiz stok ({self.stock})\")\n        self.stock -= count\n        return count * self.price\n\nbook = Product(\"Kitap\", 120, stock=5)\nprint(book.sell(2))\ntry:\n    book.sell(10)\nexcept ValueError as error:\n    print(error)\nprint(book.stock)",
+      "realOutput": "240\nKitap: yetersiz stok (3)\n3",
+      "lineByLine": [
+        "__init__ üç değeri alıp nesnenin üç özniteliğine bağlar; stock'un varsayılan değeri 0'dır.",
+        "sell, kuralı (stoktan fazlası satılamaz) verinin yanında tutar ve geçersiz istekte ValueError fırlatır.",
+        "İlk satış geçerlidir: stok 5'ten 3'e düşer ve 2 x 120 = 240 döner.",
+        "Yetersiz stoklu satış hata verir ve stoğa dokunmaz; son satır hâlâ 3 yazar."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Sınıflar (class tanımı ve nesneler)",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "methods-state",
+      "title": "Metotlar, nesne durumu ve metin gösterimi",
+      "eyebrow": "Durumu değiştir, okunur göster",
+      "objectives": [
+        "Nesnenin durumunu değiştiren metot ile yeni bir değer hesaplayıp döndüren metot arasındaki farkı ayırır.",
+        "__repr__ ve __str__ ile nesneye okunur bir metin gösterimi verir ve print ile liste içi gösterimin neden farklı olduğunu açıklar."
+      ],
+      "prerequisites": [
+        "class-object",
+        "m5:mutable-immutable"
+      ],
+      "summary": "Bir metot ya nesnenin durumunu değiştirir (çoğu zaman None döner) ya da bir değer hesaplayıp döndürür. __str__ print ve f-string için okunur metin, __repr__ ise geliştiriciye yönelik, mümkünse yeniden kurulabilir gösterim verir.",
+      "explanation": "Metotlar iki ana iş yapar: komut (nesnenin durumunu değiştirir; list.append gibi, genellikle None döner) ve sorgu (durumu okuyup bir değer döndürür; total() gibi). Karıştırmak yaygın bir hatadır: result = basket.add('Süt') yazıp sonucun sepet olmasını beklemek, add yalnızca durumu değiştirdiği için None verir. Bir metot self'i döndürürse çağrılar zincirlenebilir (basket.add('a').add('b')); bunu bilinçli bir tercih olarak kullan. Nesneler değiştirilebilir referanslardır (M5): other = basket yeni nesne üretmez, aynı sepete ikinci bir ad bağlar; bir fonksiyona verilen nesne de fonksiyonun içinde değiştirilebilir. pamuk.describe gibi parantezsiz metot, nesneye bağlı bir metot nesnesidir; saklanıp sonra çağrılabilir ve self'i hatırlar. Bir nesneyi yazdırırken varsayılan gösterim <__main__.Basket object at 0x...> gibi anlamsızdır. __str__ print(nesne) ve f-string için okunur metni, __repr__ ise hata ayıklamada, repr(nesne)'de ve listelerin içinde görünen gösterimi belirler; yalnızca __repr__ yazarsan __str__ da onu kullanır. Genel kural: her sınıfa en azından bir __repr__ yaz; ikisini birden yazmak zorunlu değildir.",
+      "code": "class Basket:\n    def __init__(self):\n        self.items = []\n\n    def add(self, name, price):\n        self.items.append((name, price))\n        return self\n\n    def total(self):\n        return sum(price for _, price in self.items)\n\n    def __repr__(self):\n        return f\"Basket({len(self.items)} ürün, toplam={self.total()})\"\n\n    def __str__(self):\n        return \", \".join(name for name, _ in self.items) or \"boş sepet\"\n\nbasket = Basket()\nprint(basket)\nbasket.add(\"Ekmek\", 15).add(\"Süt\", 40)\nprint(basket)\nprint(repr(basket))\nprint([basket])\nother = basket\nother.add(\"Peynir\", 120)\nprint(basket.total(), len(basket.items))\nadd = basket.add\nadd(\"Su\", 10)\nprint(basket.total())",
+      "expectedOutput": "boş sepet\nEkmek, Süt\nBasket(2 ürün, toplam=55)\n[Basket(2 ürün, toplam=55)]\n175 3\n185",
+      "why": "print(basket) __str__'i, repr(basket) ve liste içindeki gösterim __repr__'i kullandı. add self döndürdüğü için iki çağrı zincirlendi. other ve basket aynı nesneye bağlı olduğundan Peynir her ikisinde de görünür; add = basket.add ise self'i hatırlayan bağlı bir metottur, bu yüzden add('Su', 10) yine aynı sepete ekler.",
+      "alternatives": [
+        "Yalnızca bir gösterim yazacaksan __repr__ yaz; __str__ yoksa print de onu kullanır.",
+        "Zincirleme hoşuna gitmiyorsa metotları None döndüren komutlar olarak bırak ve çağrıları ayrı satırlara yaz; daha az sürpriz verir."
+      ],
+      "traps": [
+        "Komut metodunun değer döndürdüğünü sanıp sonucu bir değişkene atamak (result = basket.add(...) → None).",
+        "Nesneyi kopyalamak için other = basket yazmak; aynı nesneye ikinci bir ad bağlanır.",
+        "__repr__ içinde yeniden hesaplanması pahalı ya da hata verebilecek işler yapmak; hata ayıklarken kendi hatan çıkar.",
+        "__str__ ya da __repr__ içinde print yazıp metni döndürmeyi unutmak (TypeError: __str__ returned non-string)."
+      ],
+      "realCode": "class Task:\n    def __init__(self, title, done=False):\n        self.title = title\n        self.done = done\n\n    def finish(self):\n        self.done = True\n\n    def __repr__(self):\n        return f\"Task({self.title!r}, done={self.done})\"\n\ntasks = [Task(\"rapor\"), Task(\"test\")]\ntasks[0].finish()\nprint(tasks)\npending = [task.title for task in tasks if not task.done]\nprint(pending)",
+      "realOutput": "[Task('rapor', done=True), Task('test', done=False)]\n['test']",
+      "lineByLine": [
+        "finish bir komut metodudur: durumu değiştirir, değer döndürmez.",
+        "__repr__ içindeki !r, başlığı tırnaklı (repr biçiminde) gösterir; liste içinde nesnenin ne olduğu hemen okunur.",
+        "Listeyi yazdırmak her öğenin __repr__'ini kullanır; __repr__ olmasaydı adres içeren anlamsız metinler görünürdü.",
+        "pending listesi, durumu bozmadan nesnelerin öznitelikleri üzerinden hesaplanan bir sorgu sonucudur."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Sınıflar (metot nesneleri)",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html#method-objects"
+        },
+        {
+          "title": "Python 3.12 · Veri modeli: __repr__ ve __str__",
+          "url": "https://docs.python.org/3.12/reference/datamodel.html#object.__repr__"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "instance-class-vars",
+      "title": "Instance ve class değişkenleri",
+      "eyebrow": "Nesneye özel mi, sınıfta ortak mı?",
+      "objectives": [
+        "Class değişkeni ile instance değişkeni arasındaki farkı ve Python'un özniteliği nesne, sonra sınıf sırasıyla aradığını açıklar.",
+        "Nesne üzerinden atamanın class değişkenini gölgelediğini ve değiştirilebilir bir class değişkeninin bütün nesnelerce paylaşıldığını gösterir, hatayı düzeltir."
+      ],
+      "prerequisites": [
+        "class-object",
+        "m6:mutable-default"
+      ],
+      "summary": "self.x = ... nesneye özel (instance) özniteliği kurar. Sınıfın gövdesinde yazılan x = ... ise bütün nesnelerin paylaştığı class değişkenidir. Öznitelik okunurken önce nesne, bulunamazsa sınıf aranır.",
+      "explanation": "Sınıf gövdesinde (metotların dışında) tanımlanan ad class değişkenidir ve sınıfa aittir; tüm nesneler ona erişebilir. self.ad = ... ile kurulan özniteliğe instance değişkeni denir ve her nesnenin kendi kopyası vardır. nesne.ad okunurken Python önce nesnenin kendi öznitelik sözlüğüne (vars(nesne)), orada yoksa sınıfa, sonra üst sınıflara bakar. Bu yüzden Student.school değiştirilince, kendi school özniteliği olmayan bütün nesneler yeni değeri görür. Atama farklı çalışır: can.school = 'X' sınıfı değiştirmez; yalnızca can nesnesinin kendi school özniteliğini oluşturur ve bu, sınıftakini gölgeler. del can.school gölgeyi kaldırır ve sınıfın değeri yeniden görünür. Ortak sayaç gibi sınıf düzeyinde durumu değiştirmek için sınıf adını kullan (Student.count += 1). self.count += 1 yazarsan sağ taraf sınıftaki değeri okur, sol taraf ise nesnede yeni bir count oluşturur; sınıfın sayacı hiç artmaz. En sık hata, değiştirilebilir bir değeri (liste, sözlük, küme) class düzeyinde tanımlamaktır: self.songs.append(...) sınıftaki tek listeyi büyütür ve bütün nesneler aynı veriyi görür; M6'daki değiştirilebilir varsayılan argüman tuzağının kardeşidir. Nesneye özel değiştirilebilir veriyi her zaman __init__ içinde kur. Class değişkenleri sabitler (vergi oranı, varsayılan ayar) ve gerçekten ortak sayaçlar için uygundur.",
+      "code": "class Student:\n    school = \"Python İz\"\n    count = 0\n\n    def __init__(self, name):\n        self.name = name\n        Student.count += 1\n\nada = Student(\"Ada\")\ncan = Student(\"Can\")\nprint(Student.count, ada.count, can.school)\ncan.school = \"Başka okul\"\nprint(ada.school, can.school, Student.school)\nprint(vars(can))\nStudent.school = \"Yeni ad\"\nprint(ada.school, can.school)\ndel can.school\nprint(can.school)",
+      "expectedOutput": "2 2 Python İz\nPython İz Başka okul Python İz\n{'name': 'Can', 'school': 'Başka okul'}\nYeni ad Başka okul\nYeni ad",
+      "why": "count sınıfta tutulduğu için iki nesne de 2'yi gördü. can.school ataması yalnızca can'a özel bir öznitelik oluşturdu (vars bunu gösterir) ve sınıftakini gölgeledi. Student.school değişince ada yeni değeri gördü, can ise kendi gölgesini görmeye devam etti; del ile gölge kalkınca can da sınıfın değerine döndü.",
+      "alternatives": [
+        "Nesneye özel her şeyi __init__ içinde self ile kur; class düzeyinde yalnızca sabit ve gerçekten paylaşılan değerler tut.",
+        "Sınıfı ilgilendiren bir sayaç yerine her nesnenin kendi sayacına ihtiyacın varsa onu __init__ içinde self.count = 0 ile başlat."
+      ],
+      "traps": [
+        "Değiştirilebilir bir class değişkenini (liste, sözlük) nesneye özel sanmak; tüm nesneler aynı listeyi paylaşır.",
+        "Sınıf sayacını self.count += 1 ile artırmaya çalışmak; her nesnede ayrı bir count oluşur ve sınıfınki 0 kalır.",
+        "nesne.ad = ... yazarak sınıf değişkenini değiştirdiğini sanmak; yalnızca o nesnede gölge oluşur.",
+        "Class değişkenini yeniden atamadan, aynı nesne üzerinden okuyup değişmediğini sanmak (kendi gölgesi olan nesne eski değeri gösterir)."
+      ],
+      "realCode": "class SharedPlaylist:\n    songs = []\n\n    def add(self, song):\n        self.songs.append(song)\n\nclass Playlist:\n    def __init__(self):\n        self.songs = []\n\n    def add(self, song):\n        self.songs.append(song)\n\na, b = SharedPlaylist(), SharedPlaylist()\na.add(\"Ezgi\")\nprint(b.songs)\nc, d = Playlist(), Playlist()\nc.add(\"Ezgi\")\nprint(d.songs)",
+      "realOutput": "['Ezgi']\n[]",
+      "lineByLine": [
+        "SharedPlaylist.songs sınıfta tek bir listedir; self.songs.append o listeyi büyütür.",
+        "Playlist, listeyi __init__ içinde kurar; her nesnenin kendi listesi olur.",
+        "a'ya eklenen şarkı b'de de görünür çünkü ikisi aynı listeyi okur.",
+        "c'ye eklenen şarkı d'yi etkilemez; nesneye özel veri __init__ içinde yaratıldı."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Sınıf ve instance değişkenleri",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html#class-and-instance-variables"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "inheritance-super",
+      "title": "Kalıtım ve super()",
+      "eyebrow": "Var olan sınıfı genişlet",
+      "objectives": [
+        "Alt sınıfın üst sınıfın metotlarını devraldığını, yeniden tanımladığını (override) ve super() ile genişlettiğini gösterir.",
+        "isinstance ve issubclass ile 'bir ... dır' (is-a) ilişkisini sınar; super().__init__ çağrısı unutulduğunda neyin kurulmadığını açıklar."
+      ],
+      "prerequisites": [
+        "class-object",
+        "instance-class-vars"
+      ],
+      "summary": "class Manager(Employee): ile Manager, Employee'nin tüm öznitelik ve metotlarını devralır. Aynı adlı metot yazmak onu geçersiz kılar (override); super() üst sınıfın sürümüne erişip onu genişletmeyi sağlar.",
+      "explanation": "class Alt(Üst): yazınca Alt nesneleri Üst'ün metotlarını kullanabilir. Bir metot çağrılınca Python önce nesnenin sınıfına, bulamazsa üst sınıfa bakar; alt sınıfta aynı adı yazmak üst sınıftaki sürümü geçersiz kılar (override). super() üst sınıfın metoduna erişir: super().__init__(name, salary) üst sınıfın kurulum kodunu çalıştırır, super().summary() üst sınıfın sonucunu alıp üstüne ekleme yapmanı sağlar. Alt sınıf kendi __init__'ini yazarsa üst sınıfınki otomatik çalışmaz; super().__init__(...) çağrılmazsa üst sınıfın öznitelikleri hiç kurulmaz ve sonradan AttributeError alırsın. Üst sınıfın bir metodu self.role() gibi başka bir metodu çağırıyorsa, nesne alt sınıfınsa alt sınıfın sürümü çalışır; bu, ortak akışı üst sınıfta, değişen adımı alt sınıfta yazmanın temelidir. isinstance(nesne, Sınıf) nesne o sınıftan ya da onun alt sınıfından üretildiyse True verir; type(nesne) is Sınıf ise tam eşleşmeyi sorar. issubclass sınıf ilişkisini sınar. Her sınıf örtük olarak object'ten türer. Kalıtımı yalnızca gerçek 'bir ... dır' ilişkisinde kullan (Yönetici bir çalışandır). Sırf kod tekrarı olmasın diye ilgisiz sınıfları türetmek kırılgan tasarım yaratır; ek bölümde composition alternatifine bakacağız. Çoklu kalıtım, abc ve polimorfizm M12'dedir.",
+      "code": "class Employee:\n    def __init__(self, name, salary):\n        self.name = name\n        self.salary = salary\n\n    def role(self):\n        return \"çalışan\"\n\n    def summary(self):\n        return f\"{self.name} - {self.role()} - {self.salary}\"\n\nclass Manager(Employee):\n    def __init__(self, name, salary, team):\n        super().__init__(name, salary)\n        self.team = team\n\n    def role(self):\n        return \"yönetici\"\n\n    def summary(self):\n        return super().summary() + f\" - ekip: {len(self.team)}\"\n\nada = Employee(\"Ada\", 5000)\ncan = Manager(\"Can\", 8000, [\"Ada\", \"Eda\"])\nprint(ada.summary())\nprint(can.summary())\nprint(isinstance(can, Employee), isinstance(ada, Manager))\nprint(issubclass(Manager, Employee), type(can).__name__)",
+      "expectedOutput": "Ada - çalışan - 5000\nCan - yönetici - 8000 - ekip: 2\nTrue False\nTrue Manager",
+      "why": "Manager, name ve salary'yi kendisi kurmak yerine super().__init__ ile Employee'ye devretti. Employee.summary içindeki self.role() Manager nesnesinde Manager'ın sürümünü çalıştırdığı için 'yönetici' yazdı; Manager.summary ise üst sınıfın sonucuna ekip bilgisini ekledi. Yönetici bir çalışandır (True) ama her çalışan yönetici değildir (False).",
+      "alternatives": [
+        "Alt sınıf yalnızca bir metodu değiştiriyorsa __init__ yazma; üst sınıfınki zaten devralınır.",
+        "İlişki 'bir ... dır' değil 'sahiptir' ise kalıtım yerine composition kullan (bu modülün son bölümü)."
+      ],
+      "traps": [
+        "Alt sınıfta __init__ yazıp super().__init__(...) çağırmayı unutmak; üst sınıfın öznitelikleri kurulmaz.",
+        "super().__init__'e üst sınıfın beklemediği fazla ya da eksik argüman vermek (TypeError).",
+        "Kalıtımı yalnızca kod paylaşmak için kullanmak; alt sınıf, üst sınıfın bütün genel arayüzünü de devralır.",
+        "Derin kalıtım zincirleri kurmak; bir metodun hangi sınıftan geldiğini bulmak zorlaşır."
+      ],
+      "realCode": "class Notifier:\n    def __init__(self, prefix):\n        self.prefix = prefix\n\n    def format(self, message):\n        return f\"[{self.prefix}] {message}\"\n\n    def send(self, message):\n        print(self.format(message))\n\nclass UrgentNotifier(Notifier):\n    def format(self, message):\n        return super().format(message.upper()) + \"!\"\n\nfor notifier in (Notifier(\"bilgi\"), UrgentNotifier(\"acil\")):\n    notifier.send(\"disk dolu\")",
+      "realOutput": "[bilgi] disk dolu\n[acil] DISK DOLU!",
+      "lineByLine": [
+        "Notifier.send akışı sabit tutar: önce format, sonra yazdır.",
+        "UrgentNotifier yalnızca format'ı geçersiz kılar; __init__ ve send'i devralır.",
+        "super().format(...) üst sınıfın biçimlendirmesini kullanıp üzerine büyük harf ve ünlem ekler.",
+        "Aynı send çağrısı, nesnenin sınıfına göre farklı biçimlendirme yapar; ortak kod tek yerde kalır."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Kalıtım",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html#inheritance"
+        },
+        {
+          "title": "Python 3.12 · super()",
+          "url": "https://docs.python.org/3.12/library/functions.html#super"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "encapsulation",
+      "title": "Kapsülleme",
+      "eyebrow": "Durumu korumak için sınır çiz",
+      "objectives": [
+        "_ad ve __ad adlandırmasının ne sağladığını (gelenek ve ad bozma) ve ne sağlamadığını (gerçek gizlilik) açıklar.",
+        "Geçersiz duruma izin vermeyen genel metotlar yazar ve iç veriyi kopyasıyla vererek dışarıdan bozulmasını önler."
+      ],
+      "prerequisites": [
+        "class-object",
+        "m7:raising"
+      ],
+      "summary": "Python'da gerçek private yoktur: _ad 'iç kullanım' demektir, __ad ise ad bozma (name mangling) uygular. Kapsüllemenin amacı gizlemek değil, nesnenin durumunu kurallarını bilen metotlar üzerinden değiştirmektir.",
+      "explanation": "Kapsülleme, bir nesnenin verisini ve o veriyi değiştiren kuralları bir arada tutmaktır; böylece nesne her zaman geçerli durumda kalır (bakiye eksiye düşmez, ad boş olmaz). Python bunu dil kuralıyla değil gelenekle sağlar. Tek alt çizgiyle başlayan ad (self._balance) 'bu bir iç ayrıntı, dışarıdan dokunma' anlamına gelir; Python engellemez ama okuyan herkes sınırı anlar. İki alt çizgiyle başlayan ad (self.__log) sınıf içinde _SınıfAdı__log olarak yeniden adlandırılır (name mangling). Amaç alt sınıfların aynı adı yanlışlıkla ezmesini önlemektir; güvenlik değildir, nesne._Account__log ile yine okunur. Dışarıya iç yapının kendisini vermek kapsüllemeyi deler: bir metot self._members listesini olduğu gibi döndürürse çağıran taraf listeye doğrudan ekleme yapıp kuralı atlayabilir. Kopya (list(self._members)) ya da değiştirilemez bir görünüm (tuple(...)) döndür. İyi bir sınıf, geçersiz istekleri açık bir hatayla (ValueError) reddeder ve durumu bozmaz. Her özniteliği gizleme: kural gerektirmeyen basit alanlar herkese açık kalabilir (self.owner). Kuralı olan alanlar için bir sonraki bölümdeki property, aynı korumayı öznitelik sözdizimiyle sağlar.",
+      "code": "class Account:\n    def __init__(self, owner, balance=0):\n        self.owner = owner\n        self._balance = balance\n        self.__log = []\n\n    def deposit(self, amount):\n        if amount <= 0:\n            raise ValueError(\"tutar pozitif olmalı\")\n        self._balance += amount\n        self.__log.append((\"yatır\", amount))\n\n    def withdraw(self, amount):\n        if amount > self._balance:\n            raise ValueError(\"yetersiz bakiye\")\n        self._balance -= amount\n        self.__log.append((\"çek\", amount))\n\n    def history(self):\n        return tuple(self.__log)\n\nacc = Account(\"Ada\", 100)\nacc.deposit(50)\ntry:\n    acc.withdraw(500)\nexcept ValueError as error:\n    print(\"hata:\", error)\nprint(acc._balance)\nprint(acc.history())\nprint(hasattr(acc, \"__log\"), hasattr(acc, \"_Account__log\"))\nprint(sorted(name for name in vars(acc) if \"log\" in name))",
+      "expectedOutput": "hata: yetersiz bakiye\n150\n(('yatır', 50),)\nFalse True\n['_Account__log']",
+      "why": "withdraw ve deposit bakiyeyi kuralları denetleyerek değiştirir; geçersiz çekim hatayla reddedildi ve bakiye 150 kaldı. _balance Python tarafından engellenmedi, ama gelenek 'dokunma' der. __log, _Account__log adıyla saklandığı için __log adıyla bulunamaz. history ise listeyi değil, değiştirilemeyen bir tuple kopyasını verir.",
+      "alternatives": [
+        "Kural gerektirmeyen alanları (owner gibi) düz öznitelik bırak; her şeye getter/setter yazmak Python'da gereksiz.",
+        "Kural gerektiren bir alanı öznitelik gibi kullandırmak için property kullan (sonraki bölüm)."
+      ],
+      "traps": [
+        "__ad'ın gerçek bir gizlilik ya da güvenlik sağladığını sanmak; ad bozma yalnızca ad çakışmasını önler.",
+        "İç listeyi ya da sözlüğü olduğu gibi döndürüp çağıranın kuralı atlamasına izin vermek.",
+        "Nesne dışarıdan _ ile başlayan ada doğrudan yazılıp durumun bozulması; sınır geleneğe uymayı gerektirir.",
+        "Her alana boş getter/setter yazıp kodu şişirmek."
+      ],
+      "realCode": "class Roster:\n    def __init__(self):\n        self._names = []\n\n    def add(self, name):\n        name = name.strip()\n        if not name:\n            raise ValueError(\"ad boş olamaz\")\n        if name not in self._names:\n            self._names.append(name)\n\n    def names(self):\n        return list(self._names)\n\nroster = Roster()\nroster.add(\" Ada \")\nroster.add(\"Can\")\nroster.add(\"Ada\")\ncopy = roster.names()\ncopy.append(\"Sahte\")\nprint(roster.names(), copy)",
+      "realOutput": "['Ada', 'Can'] ['Ada', 'Can', 'Sahte']",
+      "lineByLine": [
+        "add, adı temizler, boşu reddeder ve aynı adı ikinci kez eklemez; kural tek yerde durur.",
+        "names iç listeyi değil kopyasını döndürür.",
+        "copy.append('Sahte') yalnızca kopyayı değiştirir; Roster'ın iç listesi bozulmaz.",
+        "Çıktıdaki ilk liste hâlâ yalnız Ada ve Can içerir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Özel değişkenler ve ad bozma",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html#private-variables"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "property",
+      "title": "property",
+      "eyebrow": "Öznitelik gibi görünen, kontrollü erişim",
+      "objectives": [
+        "@property ile hesaplanan bir değeri öznitelik gibi okutur ve sakladığı değerin eskimesini önler.",
+        "Setter ile atamayı doğrular, setter olmayan property'yi salt okunur kurar ve property içinde kendi adını kullanmanın sonsuz özyinelemeye yol açtığını bilir."
+      ],
+      "prerequisites": [
+        "encapsulation",
+        "m7:raising"
+      ],
+      "summary": "@property bir metodu öznitelik gibi okunur hâle getirir (nesne.alan). @ad.setter ile atamaya kural eklenir. Setter yoksa atama AttributeError verir. Veri, property adından farklı bir özniteliğe (_ad) saklanır.",
+      "explanation": "@property, bir metodu parantezsiz öznitelik olarak okutur: circle.diameter, her okunuşta metodu çalıştırır ve güncel değeri verir. Böylece 'çap = yarıçap x 2' gibi türetilmiş değerleri ayrıca saklayıp eskitme riskin kalmaz. (@ ile başlayan satırlar decorator'dır; çalışma biçimini M13'te inceleyeceğiz, burada yalnızca kullanımı gerekir.) Atamayı denetlemek için aynı adla @ad.setter yazılır; setter değeri doğrular, geçerliyse saklar, değilse ValueError fırlatır. Gerçek veri, property adından farklı bir özniteliktedir (self._radius). Property içinde kendi adını okur ya da yazarsan (return self.radius) her erişim kendini çağırır ve RecursionError alırsın. __init__ içinde self.radius = radius yazmak, setter'ı da çalıştırır; böylece doğrulama nesne kurulurken de geçerli olur (self._radius = radius yazsaydın kurulumda denetim atlanırdı). Setter tanımlamazsan property salt okunurdur ve atama AttributeError verir. Öznitelik sözdiziminin avantajı şudur: başta düz bir öznitelik olarak yazılan sınıf, sonradan çağıran kodu değiştirmeden property'ye dönüştürülebilir; bu yüzden en baştan get_x/set_x metotları yazmana gerek yoktur. Property her erişimde çalışır; ağır iş (dosya, ağ) için uygun değildir, öyle işleri açık bir metoda koy.",
+      "code": "class Circle:\n    def __init__(self, radius):\n        self.radius = radius\n\n    @property\n    def radius(self):\n        return self._radius\n\n    @radius.setter\n    def radius(self, value):\n        if value <= 0:\n            raise ValueError(\"yarıçap pozitif olmalı\")\n        self._radius = value\n\n    @property\n    def diameter(self):\n        return self._radius * 2\n\ncircle = Circle(3)\nprint(circle.radius, circle.diameter)\ncircle.radius = 5\nprint(circle.diameter)\ntry:\n    circle.radius = 0\nexcept ValueError as error:\n    print(error)\ntry:\n    circle.diameter = 10\nexcept AttributeError:\n    print(\"diameter salt okunur\")\ntry:\n    Circle(-2)\nexcept ValueError as error:\n    print(\"kurulumda da:\", error)",
+      "expectedOutput": "3 6\n10\nyarıçap pozitif olmalı\ndiameter salt okunur\nkurulumda da: yarıçap pozitif olmalı",
+      "why": "radius dışarıdan düz bir öznitelik gibi okunup yazılıyor ama her atama setter'dan geçiyor. diameter hiç saklanmıyor, her okunuşta _radius'tan hesaplandığı için radius değişince hemen güncelleniyor; setter'ı olmadığı için atama AttributeError veriyor. __init__ self.radius = radius yazdığı için Circle(-2) kurulumda da reddediliyor.",
+      "alternatives": [
+        "Kural ya da hesaplama gerekmiyorsa düz öznitelik yeterlidir.",
+        "Hesaplama ağırsa property yerine açık bir metot (hesapla()) kullan; öznitelik okuma ucuz görünmeli."
+      ],
+      "traps": [
+        "Property içinde kendi adını kullanmak: return self.price → RecursionError. Veriyi self._price'ta sakla.",
+        "__init__ içinde self._radius = radius yazıp setter'ın doğrulamasını atlamak.",
+        "Setter olmayan property'ye atama yapmak (AttributeError).",
+        "Property içinde ağır iş, dosya ya da ağ çağrısı yapmak; her erişim bu işi tekrarlar."
+      ],
+      "realCode": "class Temperature:\n    def __init__(self, celsius):\n        self.celsius = celsius\n\n    @property\n    def fahrenheit(self):\n        return self.celsius * 9 / 5 + 32\n\nt = Temperature(100)\nprint(t.fahrenheit)\nt.celsius = 0\nprint(t.fahrenheit)",
+      "realOutput": "212.0\n32.0",
+      "lineByLine": [
+        "celsius düz bir özniteliktir; kural gerektirmediği için property yapılmadı.",
+        "fahrenheit saklanmaz, her okunuşta celsius'tan hesaplanır.",
+        "İlk okuma 100 derece için 212.0 verir.",
+        "celsius 0 yapılınca fahrenheit ayrıca güncellenmek zorunda kalmadan 32.0 olur."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · property",
+          "url": "https://docs.python.org/3.12/library/functions.html#property"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "static-class-methods",
+      "title": "classmethod ve staticmethod",
+      "eyebrow": "Nesneye değil, sınıfa bağlı metotlar",
+      "objectives": [
+        "@classmethod'u alternatif kurucu (from_string gibi) olarak yazar ve cls sayesinde alt sınıfın nesnesi üretildiğini gösterir.",
+        "@staticmethod'un self ya da cls almadığını, yalnızca sınıfın ad alanında duran bir fonksiyon olduğunu açıklar ve ne zaman gerekmediğini bilir."
+      ],
+      "prerequisites": [
+        "class-object",
+        "instance-class-vars",
+        "inheritance-super"
+      ],
+      "summary": "@classmethod ilk parametre olarak sınıfı (cls) alır; farklı biçimlerden nesne kurmak için kullanılır. @staticmethod hiçbir otomatik parametre almaz; sınıfla ilgili ama nesneye de sınıfa da ihtiyaç duymayan yardımcı işler içindir.",
+      "explanation": "Sıradan metot nesneyi (self), classmethod sınıfı (cls) alır. En yaygın kullanımı alternatif kurucudur: __init__ tek bir biçimde nesne kurar; Date.from_string('2026-10-06') gibi bir classmethod metni ayrıştırıp cls(...) ile nesneyi üretir. Burada Date(...) yazmak yerine cls(...) yazman önemlidir: classmethod alt sınıftan çağrılınca cls alt sınıftır ve alt sınıfın nesnesi döner (EventDate.from_string(...) bir EventDate verir). Classmethod sınıf değişkenlerine de erişebilir ve onları değiştirebilir. @staticmethod'a ne nesne ne sınıf geçer; sınıfın içine konmuş sıradan bir fonksiyondur (Date.is_leap(2028)). Ad alanı düzeni için kullanılır: işlev sınıfla ilgilidir ve çağıran Date.is_leap yazarak ne olduğunu anlar. Bir statik metot self ya da cls'e ihtiyaç duyuyorsa yanlış türdedir. Her ikisi de nesne üzerinden de çağrılabilir (d.is_leap(1900)). İlgisiz bir yardımcı fonksiyonu sırf sınıfın içine koymak için staticmethod kullanma; çoğu zaman modül düzeyindeki düz fonksiyon daha sadedir.",
+      "code": "class Date:\n    def __init__(self, year, month, day):\n        self.year, self.month, self.day = year, month, day\n\n    @classmethod\n    def from_string(cls, text):\n        year, month, day = map(int, text.split(\"-\"))\n        return cls(year, month, day)\n\n    @staticmethod\n    def is_leap(year):\n        return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)\n\n    def __repr__(self):\n        return f\"{type(self).__name__}({self.year}, {self.month}, {self.day})\"\n\nclass EventDate(Date):\n    pass\n\nd = Date.from_string(\"2026-10-06\")\ne = EventDate.from_string(\"2026-12-31\")\nprint(d, e)\nprint(type(e).__name__, Date.is_leap(2028), d.is_leap(1900))",
+      "expectedOutput": "Date(2026, 10, 6) EventDate(2026, 12, 31)\nEventDate True False",
+      "why": "from_string metni ayrıştırıp cls(...) ile nesne kurdu. EventDate.from_string çağrıldığında cls EventDate olduğundan sonuç bir EventDate nesnesidir. is_leap ise self'e de cls'e de ihtiyaç duymaz; hem sınıf hem nesne üzerinden çağrılabilir (1900 artık yıl değil).",
+      "alternatives": [
+        "Alternatif biçimi tek bir fonksiyona sığdırabiliyorsan modül düzeyinde bir fabrika fonksiyonu da yazabilirsin; classmethod, alt sınıfların da kullanmasını istediğinde üstündür.",
+        "Sınıfa bağlı olmayan yardımcı işleri modül düzeyinde düz fonksiyon olarak bırak."
+      ],
+      "traps": [
+        "classmethod içinde sınıf adını sabit yazmak (return Date(...)); alt sınıf çağırınca yine üst sınıfın nesnesi döner. cls kullan.",
+        "@staticmethod içinde self ya da cls kullanmaya çalışmak (NameError).",
+        "@classmethod yazmayı unutup metodun ilk parametresine sınıfı bekleyerek çağırmak.",
+        "Her yardımcı fonksiyonu sınıfa staticmethod olarak taşımak."
+      ],
+      "realCode": "class User:\n    def __init__(self, name, email):\n        self.name = name\n        self.email = email\n\n    @classmethod\n    def from_dict(cls, data):\n        return cls(data[\"name\"].strip().title(), data[\"email\"].lower())\n\n    @staticmethod\n    def valid_email(text):\n        return \"@\" in text and \".\" in text.split(\"@\")[-1]\n\nuser = User.from_dict({\"name\": \" ada lovelace \", \"email\": \"ADA@Ornek.COM\"})\nprint(user.name, user.email, User.valid_email(user.email))",
+      "realOutput": "Ada Lovelace ada@ornek.com True",
+      "lineByLine": [
+        "__init__ hazır değerleri alır; ham sözlüğü işleme sorumluluğu from_dict'te.",
+        "from_dict adı temizleyip büyük harfe çevirir, e-postayı küçültür ve cls(...) ile nesneyi kurar.",
+        "valid_email nesneye ihtiyaç duymaz; sınıf adıyla çağrılan bir doğrulama yardımcısıdır.",
+        "Çıktı, düzeltilmiş ad ve e-postayı ve doğrulamanın True olduğunu gösterir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · classmethod",
+          "url": "https://docs.python.org/3.12/library/functions.html#classmethod"
+        },
+        {
+          "title": "Python 3.12 · staticmethod",
+          "url": "https://docs.python.org/3.12/library/functions.html#staticmethod"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "composition",
+      "title": "Composition: sahip olma ilişkisi",
+      "eyebrow": "Kalıtımdan önce 'bir mi, sahip mi?' diye sor",
+      "objectives": [
+        "'Bir ... dır' (kalıtım) ile 'sahiptir / kullanır' (composition) ilişkisini ayırır.",
+        "Bir nesnenin işini başka bir nesneye devrederek (delegation) çözer ve kalıtımın yanlış seçildiği tasarımı (ör. Stack(list)) tanır."
+      ],
+      "prerequisites": [
+        "inheritance-super",
+        "encapsulation"
+      ],
+      "summary": "Composition'da bir nesne, işini yaptıran başka nesneleri öznitelik olarak tutar (Car bir Engine'e sahiptir). Kalıtım alt sınıfı üst sınıfa bağlar; composition parçaları değiştirilebilir ve sınıfın genel arayüzünü senin kontrolünde bırakır.",
+      "explanation": "Tasarımda iki soru sor: A bir B midir (Yönetici bir çalışandır → kalıtım) yoksa A, B'ye sahip mi / onu kullanıyor mu (Araba bir motora sahiptir → composition)? Composition'da sınıf, iş birliği yaptığı nesneleri öznitelikte tutar ve gerekli işi onlara devreder (delegation): car.start() içinde self.engine.start() çağrılır. Kalıtım güçlü ama sıkı bir bağdır: alt sınıf, üst sınıfın bütün genel arayüzünü de devralır. class Stack(list) yazarsan yığın kuralını bozan insert, remove, sort metotları da yığında kalır; kullanıcı yığının ortasına eleman sokabilir. Stack bir list değildir, bir list kullanır: listeyi iç öznitelikte saklayıp yalnızca push, pop gibi gerçekten istediğin metotları dışarı açmak arayüzü senin elinde tutar. Composition parçaları değiştirmeyi kolaylaştırır: Car bir Engine nesnesini dışarıdan alıyorsa farklı güçte bir motor ya da testte sahte bir motor verebilirsin; kalıtımda bu değişiklik sınıf hiyerarşisini değiştirmeyi gerektirir. Dışarıdan nesne verme (dependency injection) yeni bir araç değil, sadece nesneyi __init__'e parametre olarak geçirmektir. Kalıtım kötü değildir: gerçek bir uzmanlaşma varsa (UrgentNotifier bir Notifier'dır) ve üst sınıfın tüm arayüzünü devralmak mantıklıysa uygundur. Şüphede kaldığında yeni tasarımlarda composition'ı tercih et.",
+      "code": "class Engine:\n    def __init__(self, power):\n        self.power = power\n\n    def start(self):\n        return f\"{self.power} beygir motor çalıştı\"\n\nclass Radio:\n    def __init__(self):\n        self.on = False\n\n    def toggle(self):\n        self.on = not self.on\n        return \"radyo açık\" if self.on else \"radyo kapalı\"\n\nclass Car:\n    def __init__(self, engine, radio=None):\n        self.engine = engine\n        self.radio = radio\n\n    def start(self):\n        return self.engine.start()\n\n    def toggle_radio(self):\n        if self.radio is None:\n            return \"radyo yok\"\n        return self.radio.toggle()\n\ncar = Car(Engine(90), Radio())\nbasic = Car(Engine(60))\nprint(car.start())\nprint(car.toggle_radio(), car.toggle_radio())\nprint(basic.toggle_radio())\nprint(isinstance(car, Engine), isinstance(car.engine, Engine))",
+      "expectedOutput": "90 beygir motor çalıştı\nradyo açık radyo kapalı\nradyo yok\nFalse True",
+      "why": "Car hiçbir sınıftan türemedi; Engine ve Radio nesnelerine sahip olup işi onlara devretti. Radyosu olmayan araba aynı sınıfla (radio=None) çalıştı. Araba bir motor değildir (False), ama motora sahiptir (car.engine bir Engine'dir).",
+      "alternatives": [
+        "Gerçek bir 'bir ... dır' ilişkisinde ve üst sınıfın tüm arayüzü uygunsa kalıtım kullan.",
+        "Parçayı hem sahiplenen hem de dışarıdan değiştirmek istiyorsan nesneyi __init__ parametresi olarak al."
+      ],
+      "traps": [
+        "Sadece list ya da dict'in metotlarını kullanmak için onlardan türemek (class Stack(list)); istenmeyen metotlar da arayüze girer.",
+        "Her ilişkiyi kalıtımla kurmak; 'bir mi, sahip mi?' sorusunu sormamak.",
+        "Devredilen nesne None olabiliyorsa onu denetlemeyi unutup AttributeError almak.",
+        "Delegation için gereksiz metotlar yazıp iç nesnenin bütün arayüzünü kopyalamak."
+      ],
+      "realCode": "class Stack:\n    def __init__(self):\n        self._items = []\n\n    def push(self, item):\n        self._items.append(item)\n\n    def pop(self):\n        if not self._items:\n            raise IndexError(\"yığın boş\")\n        return self._items.pop()\n\n    def size(self):\n        return len(self._items)\n\nstack = Stack()\nstack.push(1)\nstack.push(2)\nprint(stack.pop(), stack.size())\nprint(hasattr(stack, \"insert\"))\ntry:\n    Stack().pop()\nexcept IndexError as error:\n    print(error)",
+      "realOutput": "2 1\nFalse\nyığın boş",
+      "lineByLine": [
+        "Stack bir listeye sahiptir ama list'ten türemez; iç liste _items özniteliğinde saklanır.",
+        "Yalnızca push, pop ve size açıktır: yığının kuralı (son giren ilk çıkar) bozulamaz.",
+        "hasattr(stack, 'insert') False verir; class Stack(list) olsaydı True verecekti.",
+        "Boş yığında pop, açık bir hata mesajıyla reddedilir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Sınıflar (kalıtım ve alternatifler)",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html#inheritance"
+        }
+      ],
+      "runtime": "browser"
+    }
+  ],
+  "questions": [
+    {
+      "id": "m11-q01",
+      "type": "output",
+      "topic": "class-nesne",
+      "sectionId": "class-object",
+      "difficulty": 1,
+      "prompt": "İki nesneden birinin özniteliği değiştiriliyor. Çıktı ne olur?",
+      "code": "class Box:\n    def __init__(self, label):\n        self.label = label\n\na = Box(\"x\")\nb = Box(\"y\")\na.label = \"z\"\nprint(a.label, b.label)",
+      "expectedOutput": "z y",
+      "options": [
+        "z y",
+        "z z",
+        "x y",
+        "y y"
+      ],
+      "hints": [
+        "Her nesnenin kendi label özniteliği vardır.",
+        "a.label ataması yalnızca a'yı değiştirir."
+      ],
+      "explanation": "a ve b aynı sınıftan üretilmiş iki ayrı nesnedir. a.label = 'z' yalnızca a'nın verisini değiştirir; b'nin label'ı 'y' kalır.",
+      "answer": "z y"
+    },
+    {
+      "id": "m11-q02",
+      "type": "output",
+      "topic": "self",
+      "sectionId": "class-object",
+      "difficulty": 2,
+      "prompt": "Metot nesne üzerinden ve sınıf üzerinden çağrılıyor. Karşılaştırma ne verir?",
+      "code": "class Greeter:\n    def hello(self, name):\n        return f\"Merhaba {name}\"\n\ng = Greeter()\nprint(g.hello(\"Ada\") == Greeter.hello(g, \"Ada\"))",
+      "expectedOutput": "True",
+      "options": [
+        "None",
+        "True",
+        "False",
+        "TypeError verir"
+      ],
+      "hints": [
+        "g.hello('Ada') çağrısında g, metoda otomatik geçer.",
+        "Greeter.hello(g, 'Ada') bunu elle yapar."
+      ],
+      "explanation": "Nesne üzerinden çağrıda Python nesneyi self olarak ilk argümana kendisi koyar; ikinci çağrı aynı şeyi elle yapar. İki çağrı da aynı metni döndürür.",
+      "answer": "True"
+    },
+    {
+      "id": "m11-q03",
+      "type": "output",
+      "topic": "referans",
+      "sectionId": "class-object",
+      "difficulty": 3,
+      "prompt": "Sınıf listesine kayıt ve iki ad aynı nesneye bağlı. Çıktı ne olur?",
+      "code": "class Node:\n    created = []\n\n    def __init__(self, value):\n        self.value = value\n        Node.created.append(value)\n\nn1 = Node(1)\nn2 = Node(2)\nn3 = n2\nn3.value = 9\nprint(Node.created, n2.value, n1 is n3)",
+      "expectedOutput": "[1, 2] 9 False",
+      "options": [
+        "[1, 2] 2 False",
+        "[1, 2] 9 True",
+        "[1, 2] 9 False",
+        "[1, 2, 9] 9 False"
+      ],
+      "hints": [
+        "__init__ yalnızca nesne yaratılırken çalışır; kaç kez?",
+        "n3 = n2 yeni bir nesne üretmez."
+      ],
+      "explanation": "Yalnızca iki Node yaratıldığı için created [1, 2]'dir; n3.value = 9 atamasından sonra __init__ yeniden çalışmaz. n3 ve n2 aynı nesnedir, bu yüzden n2.value 9 olur; n1 ise ayrı bir nesnedir.",
+      "answer": "[1, 2] 9 False"
+    },
+    {
+      "id": "m11-q04",
+      "type": "output",
+      "topic": "str-repr",
+      "sectionId": "methods-state",
+      "difficulty": 2,
+      "prompt": "__str__ ve __repr__ birlikte tanımlı. Üç satırın çıktısı nedir?",
+      "code": "class Point:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\n    def __repr__(self):\n        return f\"Point({self.x}, {self.y})\"\n\n    def __str__(self):\n        return f\"({self.x}, {self.y})\"\n\np = Point(1, 2)\nprint(p)\nprint([p])\nprint(f\"{p!r}\")",
+      "expectedOutput": "(1, 2)\n[Point(1, 2)]\nPoint(1, 2)",
+      "options": [
+        "Point(1, 2) / [Point(1, 2)] / Point(1, 2)",
+        "(1, 2) / [(1, 2)] / (1, 2)",
+        "(1, 2) / [Point(1, 2)] / (1, 2)",
+        "(1, 2) / [Point(1, 2)] / Point(1, 2)"
+      ],
+      "hints": [
+        "print(nesne) __str__'i kullanır.",
+        "Listenin içindeki öğeler repr ile gösterilir; !r de repr ister."
+      ],
+      "explanation": "print(p) __str__'i çağırır. Liste öğelerini repr ile gösterir ve f-string'deki !r de repr'i seçer; ikisi de Point(1, 2) verir.",
+      "answer": "(1, 2) / [Point(1, 2)] / Point(1, 2)"
+    },
+    {
+      "id": "m11-q05",
+      "type": "output",
+      "topic": "komut-metot",
+      "sectionId": "methods-state",
+      "difficulty": 1,
+      "prompt": "add durumu değiştiren bir metot. result neyi tutar?",
+      "code": "class Buffer:\n    def __init__(self):\n        self.parts = []\n\n    def add(self, text):\n        self.parts.append(text)\n\nresult = Buffer().add(\"a\")\nprint(result)",
+      "expectedOutput": "None",
+      "options": [
+        "None",
+        "['a']",
+        "a",
+        "Bir Buffer nesnesi"
+      ],
+      "hints": [
+        "add bir return ifadesi içeriyor mu?",
+        "return yoksa metot None döndürür."
+      ],
+      "explanation": "add listeye ekleme yapar ama bir şey döndürmez; Python return olmayan her fonksiyondan None verir. Zincirleme çağrı istiyorsan metodun sonuna return self yazmalısın.",
+      "answer": "None"
+    },
+    {
+      "id": "m11-q06",
+      "type": "output",
+      "topic": "class-degiskeni",
+      "sectionId": "instance-class-vars",
+      "difficulty": 1,
+      "prompt": "Sınıf değişkeni sınıf üzerinden değiştiriliyor. Çıktı ne olur?",
+      "code": "class Shop:\n    tax = 0.2\n\na = Shop()\nb = Shop()\nShop.tax = 0.1\nprint(a.tax, b.tax)",
+      "expectedOutput": "0.1 0.1",
+      "options": [
+        "AttributeError verir",
+        "0.1 0.1",
+        "0.2 0.2",
+        "0.1 0.2"
+      ],
+      "hints": [
+        "a ve b'nin kendi tax özniteliği var mı?",
+        "Yoksa Python sınıfa bakar."
+      ],
+      "explanation": "a ve b'nin kendi tax özniteliği yoktur; okunurken sınıftaki değer bulunur. Shop.tax değişince ikisi de yeni değeri görür.",
+      "answer": "0.1 0.1"
+    },
+    {
+      "id": "m11-q07",
+      "type": "output",
+      "topic": "golgeleme",
+      "sectionId": "instance-class-vars",
+      "difficulty": 2,
+      "prompt": "Bir nesne üzerinden atama yapılıyor, sonra sınıf değişiyor. Çıktı ne olur?",
+      "code": "class Shop:\n    tax = 0.2\n\na = Shop()\nb = Shop()\na.tax = 0.5\nShop.tax = 0.1\nprint(a.tax, b.tax, Shop.tax)",
+      "expectedOutput": "0.5 0.1 0.1",
+      "options": [
+        "0.1 0.1 0.1",
+        "0.5 0.1 0.2",
+        "0.5 0.1 0.1",
+        "0.5 0.5 0.1"
+      ],
+      "hints": [
+        "a.tax = 0.5 sınıfı mı değiştirir, a'ya yeni bir öznitelik mi ekler?",
+        "Okuma sırası: önce nesne, sonra sınıf."
+      ],
+      "explanation": "a.tax = 0.5 yalnızca a'da kendi tax özniteliğini oluşturur ve sınıftakini gölgeler. Sonradan Shop.tax değişince b yeni değeri görür; a ise kendi 0.5'ini kullanmaya devam eder.",
+      "answer": "0.5 0.1 0.1"
+    },
+    {
+      "id": "m11-q08",
+      "type": "output",
+      "topic": "sayac",
+      "sectionId": "instance-class-vars",
+      "difficulty": 3,
+      "prompt": "self.count += 1 ile sayaç artırılıyor. Çıktı ne olur?",
+      "code": "class Visitor:\n    count = 0\n\n    def visit(self):\n        self.count += 1\n\na, b = Visitor(), Visitor()\na.visit()\na.visit()\nb.visit()\nprint(a.count, b.count, Visitor.count)",
+      "expectedOutput": "2 1 0",
+      "options": [
+        "2 1 3",
+        "3 3 3",
+        "0 0 3",
+        "2 1 0"
+      ],
+      "hints": [
+        "self.count += 1, self.count = self.count + 1 demektir.",
+        "Atama nesnede mi, sınıfta mı yapılır?"
+      ],
+      "explanation": "Sağ taraf sınıftaki (ya da nesnedeki) değeri okur, sol taraf ise nesnede yeni bir count oluşturur. Bu yüzden her nesne kendi sayacını tutar: a 2, b 1; sınıfın count'u hiç değişmez ve 0 kalır. Ortak sayaç için Visitor.count += 1 yazılır.",
+      "answer": "2 1 0"
+    },
+    {
+      "id": "m11-q09",
+      "type": "output",
+      "topic": "override",
+      "sectionId": "inheritance-super",
+      "difficulty": 2,
+      "prompt": "Üç sınıflı kalıtım zincirinde hello çağrılıyor. Çıktı ne olur?",
+      "code": "class A:\n    def hello(self):\n        return \"A\"\n\nclass B(A):\n    def hello(self):\n        return \"B\" + super().hello()\n\nclass C(B):\n    pass\n\nprint(C().hello())",
+      "expectedOutput": "BA",
+      "options": [
+        "BA",
+        "B",
+        "AB",
+        "A"
+      ],
+      "hints": [
+        "C hello'yu kendi içinde tanımlamıyor; kimden devralıyor?",
+        "B.hello, super().hello() ile A'nın sürümünü çağırır."
+      ],
+      "explanation": "C'de hello yok, bu yüzden B'dekini devralır. B.hello önce 'B' yazar, ardından super() ile A.hello'dan 'A' alır ve birleştirir: BA.",
+      "answer": "BA"
+    },
+    {
+      "id": "m11-q10",
+      "type": "output",
+      "topic": "super-sirasi",
+      "sectionId": "inheritance-super",
+      "difficulty": 3,
+      "prompt": "Üst sınıfın __init__'i alt sınıfın geçersiz kıldığı bir metodu çağırıyor. Çıktı ne olur?",
+      "code": "class Base:\n    def __init__(self):\n        print(\"Base\")\n        self.setup()\n\n    def setup(self):\n        print(\"Base.setup\")\n\nclass Child(Base):\n    def __init__(self):\n        print(\"Child önce\")\n        super().__init__()\n        print(\"Child sonra\")\n\n    def setup(self):\n        print(\"Child.setup\")\n\nChild()",
+      "expectedOutput": "Child önce\nBase\nChild.setup\nChild sonra",
+      "options": [
+        "Base / Child önce / Child.setup / Child sonra",
+        "Child önce / Base / Child.setup / Child sonra",
+        "Child önce / Base / Base.setup / Child sonra",
+        "Base / Base.setup / Child önce / Child sonra"
+      ],
+      "hints": [
+        "Child() önce Child.__init__'i çalıştırır.",
+        "self.setup() çağrısında self bir Child nesnesidir."
+      ],
+      "explanation": "Child.__init__ 'Child önce' yazar, super().__init__() ile Base.__init__'e geçer ve 'Base' yazar. Orada self.setup() çağrılır; self bir Child olduğundan Child.setup çalışır. Sonra kontrol Child.__init__'e döner ve 'Child sonra' yazılır.",
+      "answer": "Child önce / Base / Child.setup / Child sonra"
+    },
+    {
+      "id": "m11-q11",
+      "type": "output",
+      "topic": "name-mangling",
+      "sectionId": "encapsulation",
+      "difficulty": 2,
+      "prompt": "Çift alt çizgili öznitelik sınıfın dışından aranıyor. Çıktı ne olur?",
+      "code": "class Vault:\n    def __init__(self):\n        self.__code = 1234\n\nv = Vault()\nprint(hasattr(v, \"__code\"), v._Vault__code)",
+      "expectedOutput": "False 1234",
+      "options": [
+        "AttributeError verir",
+        "False None",
+        "False 1234",
+        "True 1234"
+      ],
+      "hints": [
+        "Sınıf içinde __code adı yeniden adlandırılır.",
+        "Yeni ad _SınıfAdı__ad biçimindedir."
+      ],
+      "explanation": "__code sınıf içinde _Vault__code olarak saklanır; '__code' adıyla aranınca bulunamaz (False) ama gerçek adıyla yine okunabilir. Ad bozma bir güvenlik değil, ad çakışması önlemidir.",
+      "answer": "False 1234"
+    },
+    {
+      "id": "m11-q12",
+      "type": "output",
+      "topic": "property",
+      "sectionId": "property",
+      "difficulty": 2,
+      "prompt": "area bir property. w değişince area ne gösterir?",
+      "code": "class Rect:\n    def __init__(self, w, h):\n        self.w, self.h = w, h\n\n    @property\n    def area(self):\n        return self.w * self.h\n\nr = Rect(2, 3)\nbefore = r.area\nr.w = 10\nprint(before, r.area)",
+      "expectedOutput": "6 30",
+      "options": [
+        "6 6",
+        "30 30",
+        "AttributeError verir",
+        "6 30"
+      ],
+      "hints": [
+        "Property her okunuşta metodu yeniden çalıştırır.",
+        "before, ilk okumanın sonucunu saklar."
+      ],
+      "explanation": "area saklanan bir değer değil, her okunuşta hesaplanan bir sonuçtur. İlk okuma 2 x 3 = 6 verdi ve before'a bağlandı; w 10 olunca ikinci okuma 10 x 3 = 30 hesapladı.",
+      "answer": "6 30"
+    },
+    {
+      "id": "m11-q13",
+      "type": "bug",
+      "topic": "self",
+      "sectionId": "class-object",
+      "difficulty": 1,
+      "prompt": "Bu kod neden TypeError verir?",
+      "code": "class Lamp:\n    def __init__(self):\n        self.on = False\n\n    def toggle():\n        self.on = not self.on\n\nlamp = Lamp()\nlamp.toggle()",
+      "answer": "toggle self parametresini almıyor; nesne ilk argüman olarak geçiliyor",
+      "options": [
+        "toggle self parametresini almıyor; nesne ilk argüman olarak geçiliyor",
+        "__init__ içinde on özniteliği tanımlanamaz",
+        "toggle çağrısında parantez kullanılamaz",
+        "self yerine this yazılmalı"
+      ],
+      "optionFeedback": {
+        "__init__ içinde on özniteliği tanımlanamaz": "__init__ özniteliklerin tam olarak kurulduğu yerdir.",
+        "toggle çağrısında parantez kullanılamaz": "Metot çağrısı parantezlidir; sorun tanımdadır.",
+        "self yerine this yazılmalı": "Python'da this yoktur; ilk parametre geleneksel olarak self adını taşır."
+      },
+      "hints": [
+        "lamp.toggle() çağrısında Python metoda ne geçer?",
+        "Tanımda hangi parametre eksik?"
+      ],
+      "explanation": "lamp.toggle() çağrısı nesneyi ilk argüman olarak geçer ama def toggle(): hiç parametre almaz; Python 'takes 0 positional arguments but 1 was given' hatası verir. Doğrusu def toggle(self): olmalıdır."
+    },
+    {
+      "id": "m11-q14",
+      "type": "bug",
+      "topic": "class-degiskeni",
+      "sectionId": "instance-class-vars",
+      "difficulty": 2,
+      "prompt": "a'ya eklenen ürün neden b'de de görünüyor?",
+      "code": "class Cart:\n    items = []\n\n    def add(self, name):\n        self.items.append(name)\n\na = Cart()\nb = Cart()\na.add(\"elma\")\nprint(b.items)",
+      "answer": "items bir class değişkeni; liste bütün nesnelerce paylaşılıyor, __init__ içinde self.items = [] kurulmalı",
+      "options": [
+        "b.items yazımı a'nın özniteliğini okur",
+        "items bir class değişkeni; liste bütün nesnelerce paylaşılıyor, __init__ içinde self.items = [] kurulmalı",
+        "Python aynı sınıftan üretilen nesneleri birbirine bağlar",
+        "append bir listeyi tüm sınıflara kopyalar"
+      ],
+      "optionFeedback": {
+        "Python aynı sınıftan üretilen nesneleri birbirine bağlar": "Nesneler bağımsızdır; paylaşılan şey sınıftaki tek liste.",
+        "append bir listeyi tüm sınıflara kopyalar": "append hiçbir kopya üretmez; listeyi yerinde büyütür.",
+        "b.items yazımı a'nın özniteliğini okur": "b.items, b'de yoksa sınıfa bakar; a'ya hiç bakmaz."
+      },
+      "hints": [
+        "items nerede tanımlanmış: metodun içinde mi, sınıf gövdesinde mi?",
+        "Tek bir liste nesnesi var mı, iki mi?"
+      ],
+      "explanation": "items sınıf gövdesinde tanımlandığı için a ve b'nin ikisi de aynı listeyi görür; self.items.append bu tek listeyi büyütür. Nesneye özel liste __init__ içinde self.items = [] ile kurulmalıdır."
+    },
+    {
+      "id": "m11-q15",
+      "type": "bug",
+      "topic": "super",
+      "sectionId": "inheritance-super",
+      "difficulty": 2,
+      "prompt": "Bu kod neden AttributeError verir?",
+      "code": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\nclass Dog(Animal):\n    def __init__(self, name, breed):\n        self.breed = breed\n\ndog = Dog(\"Pamuk\", \"Golden\")\nprint(dog.name)",
+      "answer": "Dog.__init__ üst sınıfın __init__'ini çağırmıyor; name hiç kurulmuyor",
+      "options": [
+        "breed özniteliği name'i siler",
+        "name üst sınıfta gizli olduğu için erişilemez",
+        "Dog.__init__ üst sınıfın __init__'ini çağırmıyor; name hiç kurulmuyor",
+        "Dog, Animal'ın metotlarını devralamaz"
+      ],
+      "optionFeedback": {
+        "Dog, Animal'ın metotlarını devralamaz": "Devralma çalışır; sorun __init__'in geçersiz kılınmış olması.",
+        "breed özniteliği name'i siler": "Bir öznitelik atamak ötekini silmez.",
+        "name üst sınıfta gizli olduğu için erişilemez": "name herkese açık bir özniteliktir; sadece hiç atanmadı."
+      },
+      "hints": [
+        "Dog kendi __init__'ini yazınca Animal.__init__ otomatik çalışır mı?",
+        "name özniteliğini kim kuruyor?"
+      ],
+      "explanation": "Alt sınıf kendi __init__'ini tanımlayınca üst sınıfınki çalışmaz. super().__init__(name) çağrılmadığı için self.name hiç atanmaz ve okunurken AttributeError alınır."
+    },
+    {
+      "id": "m11-q16",
+      "type": "bug",
+      "topic": "kapsulleme",
+      "sectionId": "encapsulation",
+      "difficulty": 2,
+      "prompt": "Takım kuralı (aynı ad iki kez olmaz) neden bozulabiliyor?",
+      "code": "class Team:\n    def __init__(self):\n        self._members = []\n\n    def add(self, name):\n        if name not in self._members:\n            self._members.append(name)\n\n    def members(self):\n        return self._members\n\nteam = Team()\nteam.add(\"Ada\")\nteam.members().append(\"Ada\")\nprint(team.members())",
+      "answer": "members() iç listenin kendisini döndürüyor; dışarıdan değiştirilebiliyor, kopya döndürülmeli",
+      "options": [
+        "_members adı Python tarafından gizlenir ve değiştirilemez",
+        "add metodu aynı adı her zaman iki kez ekler",
+        "name not in kontrolü listelerde çalışmaz",
+        "members() iç listenin kendisini döndürüyor; dışarıdan değiştirilebiliyor, kopya döndürülmeli"
+      ],
+      "optionFeedback": {
+        "_members adı Python tarafından gizlenir ve değiştirilemez": "Tek alt çizgi yalnızca bir gelenektir; Python erişimi engellemez.",
+        "add metodu aynı adı her zaman iki kez ekler": "add kuralı doğru uygular; bozulma add'e hiç uğramayan bir yoldan geliyor.",
+        "name not in kontrolü listelerde çalışmaz": "in ve not in listelerde sorunsuz çalışır."
+      },
+      "hints": [
+        "team.members() tam olarak neyi döndürüyor?",
+        "append hangi kurallı metottan geçiyor?"
+      ],
+      "explanation": "members() iç listeyi olduğu gibi verdiği için çağıran taraf append ile add'in kuralını atlayabilir. list(self._members) ya da tuple(self._members) döndürmek iç durumu korur."
+    },
+    {
+      "id": "m11-q17",
+      "type": "bug",
+      "topic": "property",
+      "sectionId": "property",
+      "difficulty": 3,
+      "prompt": "Product(10) neden RecursionError verir?",
+      "code": "class Product:\n    def __init__(self, price):\n        self.price = price\n\n    @property\n    def price(self):\n        return self.price\n\n    @price.setter\n    def price(self, value):\n        if value < 0:\n            raise ValueError(\"fiyat negatif olamaz\")\n        self.price = value\n\nProduct(10)",
+      "answer": "property kendi adını okuyup yazıyor; veri _price gibi ayrı bir özniteliğe saklanmalı",
+      "options": [
+        "property kendi adını okuyup yazıyor; veri _price gibi ayrı bir özniteliğe saklanmalı",
+        "@property ile setter aynı sınıfta kullanılamaz",
+        "value < 0 koşulu tanımsızdır",
+        "__init__ property'den önce tanımlanmalıdır"
+      ],
+      "optionFeedback": {
+        "@property ile setter aynı sınıfta kullanılamaz": "@property ve @ad.setter birlikte yazılır.",
+        "value < 0 koşulu tanımsızdır": "Koşul geçerli; sorun setter'ın içinde self.price'a tekrar atama yapılması.",
+        "__init__ property'den önce tanımlanmalıdır": "Tanım sırası bu hatayla ilgili değildir."
+      },
+      "hints": [
+        "return self.price yazınca hangi property çalışır?",
+        "setter içinde self.price = value yazınca ne olur?"
+      ],
+      "explanation": "Getter'ın içindeki self.price yeniden aynı getter'ı, setter'ın içindeki self.price = value yeniden aynı setter'ı çağırır; bu sonsuz özyinelemedir. Gerçek değer self._price gibi farklı bir adda saklanmalıdır."
+    },
+    {
+      "id": "m11-q18",
+      "type": "bug",
+      "topic": "staticmethod",
+      "sectionId": "static-class-methods",
+      "difficulty": 2,
+      "prompt": "Temp.describe(20) neden çalışmaz?",
+      "code": "class Temp:\n    unit = \"C\"\n\n    @staticmethod\n    def describe(value):\n        return f\"{value}{self.unit}\"\n\nprint(Temp.describe(20))",
+      "answer": "staticmethod self almaz; sınıf değişkenine erişmek için classmethod ve cls gerekir",
+      "options": [
+        "describe yalnızca bir nesne üzerinden çağrılabilir",
+        "staticmethod self almaz; sınıf değişkenine erişmek için classmethod ve cls gerekir",
+        "unit bir sınıf değişkeni olamaz",
+        "staticmethod içinde f-string kullanılamaz"
+      ],
+      "optionFeedback": {
+        "unit bir sınıf değişkeni olamaz": "Sınıf gövdesinde tanımlanan adlar sınıf değişkenidir ve geçerlidir.",
+        "staticmethod içinde f-string kullanılamaz": "Statik metotlar her tür ifadeyi kullanabilir.",
+        "describe yalnızca bir nesne üzerinden çağrılabilir": "Statik ve sınıf metotları sınıf üzerinden de çağrılabilir; sorun self adının tanımsız olması."
+      },
+      "hints": [
+        "describe'ın parametreleri arasında self var mı?",
+        "Sınıf değişkenine erişmenin yolu hangi metot türüdür?"
+      ],
+      "explanation": "@staticmethod hiçbir otomatik parametre geçirmez, bu yüzden self tanımsızdır (NameError). Sınıf değişkenine erişmek istiyorsan @classmethod yazıp cls.unit kullan."
+    },
+    {
+      "id": "m11-q19",
+      "type": "fill",
+      "topic": "self",
+      "sectionId": "class-object",
+      "difficulty": 1,
+      "prompt": "Nesnenin name özniteliğini kuran satırdaki boşluğu tamamla.",
+      "code": "class Dog:\n    def __init__(self, name):\n        ___.name = name\n\nprint(Dog(\"Pamuk\").name)",
+      "answer": "self",
+      "expectedOutput": "Pamuk",
+      "hints": [
+        "Öznitelik, metodun çalıştığı nesneye bağlanır.",
+        "Metodun ilk parametresi bu nesnedir."
+      ],
+      "explanation": "self.name = name, name değerini o an kurulan nesnenin özniteliğine bağlar.",
+      "acceptedAnswers": [
+        "self"
+      ],
+      "solutionCode": "class Dog:\n    def __init__(self, name):\n        self.name = name\n\nprint(Dog(\"Pamuk\").name)"
+    },
+    {
+      "id": "m11-q20",
+      "type": "fill",
+      "topic": "super",
+      "sectionId": "inheritance-super",
+      "difficulty": 2,
+      "prompt": "Alt sınıf, üst sınıfın __init__'ini çağıracak. Boşluğu tamamla.",
+      "code": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\nclass Dog(Animal):\n    def __init__(self, name, breed):\n        ___().__init__(name)\n        self.breed = breed\n\ndog = Dog(\"Pamuk\", \"Golden\")\nprint(dog.name, dog.breed)",
+      "answer": "super",
+      "expectedOutput": "Pamuk Golden",
+      "hints": [
+        "Üst sınıfa doğrudan adını yazmadan erişen yerleşik işlev hangisi?",
+        "Parantezle çağrılır."
+      ],
+      "explanation": "super() üst sınıfın metotlarına erişir; super().__init__(name) Animal'ın kurulum kodunu çalıştırıp name'i atar.",
+      "acceptedAnswers": [
+        "super"
+      ],
+      "solutionCode": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\nclass Dog(Animal):\n    def __init__(self, name, breed):\n        super().__init__(name)\n        self.breed = breed\n\ndog = Dog(\"Pamuk\", \"Golden\")\nprint(dog.name, dog.breed)"
+    },
+    {
+      "id": "m11-q21",
+      "type": "fill",
+      "topic": "property",
+      "sectionId": "property",
+      "difficulty": 1,
+      "prompt": "area, parantezsiz öznitelik gibi okunsun. Decorator'ı tamamla.",
+      "code": "class Square:\n    def __init__(self, side):\n        self.side = side\n\n    @___\n    def area(self):\n        return self.side ** 2\n\nprint(Square(4).area)",
+      "answer": "property",
+      "expectedOutput": "16",
+      "hints": [
+        "Metodu öznitelik gibi okutan yerleşik decorator.",
+        "Adı, özelliğin İngilizcesidir."
+      ],
+      "explanation": "@property, area'yı parantezsiz okunan bir öznitelik yapar: Square(4).area metodu çalıştırıp 16 verir.",
+      "acceptedAnswers": [
+        "property"
+      ],
+      "solutionCode": "class Square:\n    def __init__(self, side):\n        self.side = side\n\n    @property\n    def area(self):\n        return self.side ** 2\n\nprint(Square(4).area)"
+    },
+    {
+      "id": "m11-q22",
+      "type": "fill",
+      "topic": "classmethod",
+      "sectionId": "static-class-methods",
+      "difficulty": 2,
+      "prompt": "Metot sınıfı (cls) alıp nesne kuruyor. Decorator'ı tamamla.",
+      "code": "class Pizza:\n    def __init__(self, toppings):\n        self.toppings = toppings\n\n    @___\n    def margherita(cls):\n        return cls([\"peynir\", \"domates\"])\n\nprint(Pizza.margherita().toppings)",
+      "answer": "classmethod",
+      "expectedOutput": "['peynir', 'domates']",
+      "hints": [
+        "İlk parametre self değil cls.",
+        "Sınıfa bağlı metot decorator'ı."
+      ],
+      "explanation": "@classmethod ilk parametre olarak sınıfı geçirir; margherita cls(...) ile Pizza nesnesi kurar ve alt sınıftan çağrılırsa o alt sınıfın nesnesini verir.",
+      "acceptedAnswers": [
+        "classmethod"
+      ],
+      "solutionCode": "class Pizza:\n    def __init__(self, toppings):\n        self.toppings = toppings\n\n    @classmethod\n    def margherita(cls):\n        return cls([\"peynir\", \"domates\"])\n\nprint(Pizza.margherita().toppings)"
+    },
+    {
+      "id": "m11-q23",
+      "type": "order",
+      "topic": "class-nesne",
+      "sectionId": "class-object",
+      "difficulty": 1,
+      "prompt": "Dog sınıfını tanımlayıp Pamuk'un konuşmasını yazdıracak sırayı kur.",
+      "expectedOutput": "Pamuk havlıyor",
+      "hints": [
+        "Sınıf başlığı önce gelir, gövde girintilidir.",
+        "Nesne kullanılmadan önce sınıf tanımlanmalı."
+      ],
+      "explanation": "class başlığı, ardından __init__ ve speak metotları yazılır; sınıf hazır olunca nesne oluşturulup metot çağrılır.",
+      "answer": "class Dog:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return self.name + ' havlıyor'\nprint(Dog('Pamuk').speak())",
+      "lines": [
+        "print(Dog('Pamuk').speak())",
+        "    def speak(self):",
+        "    def __init__(self, name):",
+        "        return self.name + ' havlıyor'",
+        "class Dog:",
+        "        self.name = name"
+      ],
+      "solutionCode": "class Dog:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return self.name + ' havlıyor'\nprint(Dog('Pamuk').speak())"
+    },
+    {
+      "id": "m11-q24",
+      "type": "order",
+      "topic": "override",
+      "sectionId": "inheritance-super",
+      "difficulty": 2,
+      "prompt": "Cat'in üst sınıftan farklı ses çıkardığı sırayı kur.",
+      "expectedOutput": "miyav",
+      "hints": [
+        "Üst sınıf, alt sınıftan önce tanımlanır.",
+        "Alt sınıf aynı adlı metodu yeniden yazar."
+      ],
+      "explanation": "Animal tanımlandıktan sonra Cat(Animal) onu genişletir ve sound'u geçersiz kılar; son satır Cat'in sürümünü çalıştırır.",
+      "answer": "class Animal:\n    def sound(self):\n        return '...'\nclass Cat(Animal):\n    def sound(self):\n        return 'miyav'\nprint(Cat().sound())",
+      "lines": [
+        "    def sound(self):",
+        "print(Cat().sound())",
+        "class Animal:",
+        "        return '...'",
+        "        return 'miyav'",
+        "class Cat(Animal):",
+        "    def sound(self):"
+      ],
+      "solutionCode": "class Animal:\n    def sound(self):\n        return '...'\nclass Cat(Animal):\n    def sound(self):\n        return 'miyav'\nprint(Cat().sound())"
+    },
+    {
+      "id": "m11-q25",
+      "type": "order",
+      "topic": "classmethod",
+      "sectionId": "static-class-methods",
+      "difficulty": 2,
+      "prompt": "Sınıf düzeyinde bilet numarası veren sayaç sırasını kur.",
+      "expectedOutput": "1 2",
+      "hints": [
+        "Decorator, uyguladığı metodun hemen üstünde durur.",
+        "Sayaç sınıf gövdesinde başlatılır."
+      ],
+      "explanation": "issued sınıf değişkeni olarak başlar; @classmethod ile işaretlenen issue cls.issued'i artırıp döndürür. İki çağrı 1 ve 2 verir.",
+      "answer": "class Ticket:\n    issued = 0\n    @classmethod\n    def issue(cls):\n        cls.issued += 1\n        return cls.issued\nprint(Ticket.issue(), Ticket.issue())",
+      "lines": [
+        "    def issue(cls):",
+        "print(Ticket.issue(), Ticket.issue())",
+        "    issued = 0",
+        "        return cls.issued",
+        "class Ticket:",
+        "    @classmethod",
+        "        cls.issued += 1"
+      ],
+      "solutionCode": "class Ticket:\n    issued = 0\n    @classmethod\n    def issue(cls):\n        cls.issued += 1\n        return cls.issued\nprint(Ticket.issue(), Ticket.issue())"
+    },
+    {
+      "id": "m11-q26",
+      "type": "order",
+      "topic": "composition",
+      "sectionId": "composition",
+      "difficulty": 2,
+      "prompt": "Car'ın işi Engine'e devrettiği sırayı kur.",
+      "expectedOutput": "çalıştı",
+      "hints": [
+        "Car, Engine nesnesini __init__ parametresi olarak alır.",
+        "Program nesneleri sınıflar tanımlandıktan sonra kurar."
+      ],
+      "explanation": "Engine ve Car tanımlanır; Car engine'i saklar ve start çağrısını ona devreder. Son satır Engine'li bir Car kurup çalıştırır.",
+      "answer": "class Engine:\n    def start(self):\n        return 'çalıştı'\nclass Car:\n    def __init__(self, engine):\n        self.engine = engine\n    def start(self):\n        return self.engine.start()\nprint(Car(Engine()).start())",
+      "lines": [
+        "        return self.engine.start()",
+        "class Car:",
+        "print(Car(Engine()).start())",
+        "    def start(self):",
+        "        self.engine = engine",
+        "class Engine:",
+        "    def __init__(self, engine):",
+        "    def start(self):",
+        "        return 'çalıştı'"
+      ],
+      "solutionCode": "class Engine:\n    def start(self):\n        return 'çalıştı'\nclass Car:\n    def __init__(self, engine):\n        self.engine = engine\n    def start(self):\n        return self.engine.start()\nprint(Car(Engine()).start())"
+    },
+    {
+      "id": "m11-q27",
+      "type": "code",
+      "topic": "class-nesne",
+      "sectionId": "class-object",
+      "difficulty": 1,
+      "prompt": "Rectangle sınıfını tamamla: __init__ en ve boyu saklasın, area() alanı, perimeter() çevreyi döndürsün. Program iki satırdan en ve boyu okuyup 'alan çevre' yazdırır.",
+      "starterCode": "class Rectangle:\n    def __init__(self, width, height):\n        # width ve height'ı nesneye kaydet\n        pass\n\n    def area(self):\n        pass\n\n    def perimeter(self):\n        pass\n\nwidth = int(input())\nheight = int(input())\nrect = Rectangle(width, height)\nprint(rect.area(), rect.perimeter())",
+      "answer": "class Rectangle:\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n\n    def area(self):\n        return self.width * self.height\n\n    def perimeter(self):\n        return 2 * (self.width + self.height)\n\nwidth = int(input())\nheight = int(input())\nrect = Rectangle(width, height)\nprint(rect.area(), rect.perimeter())",
+      "exampleInput": "3\n4",
+      "expectedOutput": "12 14",
+      "tests": [
+        {
+          "label": "Normal",
+          "stdin": "3\n4",
+          "expectedOutput": "12 14"
+        },
+        {
+          "label": "Kare",
+          "stdin": "1\n1",
+          "expectedOutput": "1 4"
+        },
+        {
+          "label": "Sıfır kenar",
+          "stdin": "0\n5",
+          "expectedOutput": "0 10"
+        },
+        {
+          "label": "Büyük",
+          "stdin": "10\n2",
+          "expectedOutput": "20 24"
+        }
+      ],
+      "hints": [
+        "Öznitelikleri self.width ve self.height olarak kaydet.",
+        "Metotlar değeri return ile döndürmeli."
+      ],
+      "explanation": "__init__ değerleri self'e bağlar; area ve perimeter bu özniteliklerden hesaplayıp döndürür.",
+      "solutionCode": "class Rectangle:\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n\n    def area(self):\n        return self.width * self.height\n\n    def perimeter(self):\n        return 2 * (self.width + self.height)\n\nwidth = int(input())\nheight = int(input())\nrect = Rectangle(width, height)\nprint(rect.area(), rect.perimeter())"
+    },
+    {
+      "id": "m11-q28",
+      "type": "code",
+      "topic": "metot-durum",
+      "sectionId": "methods-state",
+      "difficulty": 2,
+      "prompt": "ShoppingCart sınıfını yaz: add(name, price) ürünü ekleyip self'i döndürsün; total() fiyatların toplamını versin; __str__ 'ad1, ad2 (toplam 55)' biçiminde (boşsa 'boş sepet (toplam 0)') metin döndürsün. Program ürün sayısını ve her satırda 'ad fiyat' okur, sepeti yazdırır; son satırda add'in self döndürdüğünü gösterir.",
+      "starterCode": "class ShoppingCart:\n    def __init__(self):\n        self.items = []\n\n    def add(self, name, price):\n        # ürünü ekle ve zincirleme için self'i döndür\n        pass\n\n    def total(self):\n        # fiyatların toplamı\n        return 0\n\n    def __str__(self):\n        # 'ad1, ad2 (toplam 55)' ya da 'boş sepet (toplam 0)'\n        return \"\"\n\ncart = ShoppingCart()\nfor _ in range(int(input())):\n    name, price = input().split()\n    cart.add(name, int(price))\nprint(cart)\nprint(cart.add(\"kontrol\", 0) is cart)",
+      "answer": "class ShoppingCart:\n    def __init__(self):\n        self.items = []\n\n    def add(self, name, price):\n        self.items.append((name, price))\n        return self\n\n    def total(self):\n        return sum(price for _, price in self.items)\n\n    def __str__(self):\n        if not self.items:\n            return \"boş sepet (toplam 0)\"\n        names = \", \".join(name for name, _ in self.items)\n        return f\"{names} (toplam {self.total()})\"\n\ncart = ShoppingCart()\nfor _ in range(int(input())):\n    name, price = input().split()\n    cart.add(name, int(price))\nprint(cart)\nprint(cart.add(\"kontrol\", 0) is cart)",
+      "exampleInput": "2\nEkmek 15\nSüt 40",
+      "expectedOutput": "Ekmek, Süt (toplam 55)\nTrue",
+      "tests": [
+        {
+          "label": "İki ürün",
+          "stdin": "2\nEkmek 15\nSüt 40",
+          "expectedOutput": "Ekmek, Süt (toplam 55)\nTrue"
+        },
+        {
+          "label": "Tek ürün",
+          "stdin": "1\nSu 10",
+          "expectedOutput": "Su (toplam 10)\nTrue"
+        },
+        {
+          "label": "Boş sepet",
+          "stdin": "0",
+          "expectedOutput": "boş sepet (toplam 0)\nTrue"
+        },
+        {
+          "label": "Aynı ürün iki kez",
+          "stdin": "3\nA 1\nB 2\nA 3",
+          "expectedOutput": "A, B, A (toplam 6)\nTrue"
+        }
+      ],
+      "hints": [
+        "items listesine (ad, fiyat) çiftleri ekleyebilirsin.",
+        "add'in sonuna return self yaz; boş sepeti ayrı karşıla."
+      ],
+      "explanation": "add çifti listeye ekleyip self döndürür; total fiyatları toplar; __str__ boş sepeti ayrı ele alır, değilse adları ', ' ile birleştirip toplamı ekler.",
+      "solutionCode": "class ShoppingCart:\n    def __init__(self):\n        self.items = []\n\n    def add(self, name, price):\n        self.items.append((name, price))\n        return self\n\n    def total(self):\n        return sum(price for _, price in self.items)\n\n    def __str__(self):\n        if not self.items:\n            return \"boş sepet (toplam 0)\"\n        names = \", \".join(name for name, _ in self.items)\n        return f\"{names} (toplam {self.total()})\"\n\ncart = ShoppingCart()\nfor _ in range(int(input())):\n    name, price = input().split()\n    cart.add(name, int(price))\nprint(cart)\nprint(cart.add(\"kontrol\", 0) is cart)"
+    },
+    {
+      "id": "m11-q29",
+      "type": "code",
+      "topic": "class-degiskeni",
+      "sectionId": "instance-class-vars",
+      "difficulty": 2,
+      "prompt": "Ticket sınıfı, sınıf düzeyindeki issued sayacını her yeni biletle artırsın ve biletin numarasını (1'den başlayarak) number özniteliğine kaydetsin. Program bilet sahiplerinin adlarını okur, 'ad: numara' yazdırır ve son satırda 'toplam: sayı' gösterir.",
+      "starterCode": "class Ticket:\n    issued = 0\n\n    def __init__(self, owner):\n        self.owner = owner\n        # sayacı sınıf üzerinden artır ve numarayı kaydet\n        self.number = 0\n\ncount = int(input())\ntickets = [Ticket(input()) for _ in range(count)]\nfor ticket in tickets:\n    print(f\"{ticket.owner}: {ticket.number}\")\nprint(f\"toplam: {Ticket.issued}\")",
+      "answer": "class Ticket:\n    issued = 0\n\n    def __init__(self, owner):\n        self.owner = owner\n        Ticket.issued += 1\n        self.number = Ticket.issued\n\ncount = int(input())\ntickets = [Ticket(input()) for _ in range(count)]\nfor ticket in tickets:\n    print(f\"{ticket.owner}: {ticket.number}\")\nprint(f\"toplam: {Ticket.issued}\")",
+      "exampleInput": "3\nAda\nCan\nEda",
+      "expectedOutput": "Ada: 1\nCan: 2\nEda: 3\ntoplam: 3",
+      "tests": [
+        {
+          "label": "Üç bilet",
+          "stdin": "3\nAda\nCan\nEda",
+          "expectedOutput": "Ada: 1\nCan: 2\nEda: 3\ntoplam: 3"
+        },
+        {
+          "label": "Tek bilet",
+          "stdin": "1\nAda",
+          "expectedOutput": "Ada: 1\ntoplam: 1"
+        },
+        {
+          "label": "Hiç bilet",
+          "stdin": "0",
+          "expectedOutput": "toplam: 0"
+        },
+        {
+          "label": "Aynı ad iki kez",
+          "stdin": "2\nAda\nAda",
+          "expectedOutput": "Ada: 1\nAda: 2\ntoplam: 2"
+        }
+      ],
+      "hints": [
+        "Ortak sayacı Ticket.issued ile artır; self.issued yazmak nesnede yeni bir öznitelik oluşturur.",
+        "Sayaç artınca değerini number'a ata."
+      ],
+      "explanation": "Ticket.issued += 1 sınıfın sayacını artırır; yeni değer biletin numarası olur. self.issued += 1 yazılsaydı her nesnede ayrı bir sayaç oluşur ve sınıfınki hep 0 kalırdı.",
+      "solutionCode": "class Ticket:\n    issued = 0\n\n    def __init__(self, owner):\n        self.owner = owner\n        Ticket.issued += 1\n        self.number = Ticket.issued\n\ncount = int(input())\ntickets = [Ticket(input()) for _ in range(count)]\nfor ticket in tickets:\n    print(f\"{ticket.owner}: {ticket.number}\")\nprint(f\"toplam: {Ticket.issued}\")"
+    },
+    {
+      "id": "m11-q30",
+      "type": "code",
+      "topic": "super",
+      "sectionId": "inheritance-super",
+      "difficulty": 2,
+      "prompt": "Employee hazır. Manager(Employee) sınıfını yaz: __init__(name, salary, bonus) üst sınıfı super() ile kursun ve bonus'u saklasın; yearly() üst sınıfın yearly() sonucuna bonus'u eklesin. Program 'çalışan' ya da 'yönetici' ile ad ve maaşı okur (yönetici için bonus da gelir) ve 'ad: yıllık gelir' yazdırır.",
+      "starterCode": "class Employee:\n    def __init__(self, name, salary):\n        self.name = name\n        self.salary = salary\n\n    def yearly(self):\n        return self.salary * 12\n\nclass Manager(Employee):\n    def __init__(self, name, salary, bonus):\n        # üst sınıfı super() ile kur, bonus'u sakla\n        pass\n\n    def yearly(self):\n        # üst sınıfın yearly() sonucuna bonus'u ekle\n        return 0\n\nkind = input()\nname = input()\nsalary = int(input())\nif kind == \"yönetici\":\n    person = Manager(name, salary, int(input()))\nelse:\n    person = Employee(name, salary)\nprint(f\"{person.name}: {person.yearly()}\")",
+      "answer": "class Employee:\n    def __init__(self, name, salary):\n        self.name = name\n        self.salary = salary\n\n    def yearly(self):\n        return self.salary * 12\n\nclass Manager(Employee):\n    def __init__(self, name, salary, bonus):\n        super().__init__(name, salary)\n        self.bonus = bonus\n\n    def yearly(self):\n        return super().yearly() + self.bonus\n\nkind = input()\nname = input()\nsalary = int(input())\nif kind == \"yönetici\":\n    person = Manager(name, salary, int(input()))\nelse:\n    person = Employee(name, salary)\nprint(f\"{person.name}: {person.yearly()}\")",
+      "exampleInput": "yönetici\nCan\n1000\n5000",
+      "expectedOutput": "Can: 17000",
+      "tests": [
+        {
+          "label": "Çalışan",
+          "stdin": "çalışan\nAda\n1000",
+          "expectedOutput": "Ada: 12000"
+        },
+        {
+          "label": "Yönetici",
+          "stdin": "yönetici\nCan\n1000\n5000",
+          "expectedOutput": "Can: 17000"
+        },
+        {
+          "label": "Maaşsız yönetici",
+          "stdin": "yönetici\nEda\n0\n20000",
+          "expectedOutput": "Eda: 20000"
+        },
+        {
+          "label": "Maaşsız çalışan",
+          "stdin": "çalışan\nBo\n0",
+          "expectedOutput": "Bo: 0"
+        }
+      ],
+      "hints": [
+        "super().__init__(name, salary) üst sınıfın kurulumunu yapar.",
+        "Yıllık geliri yeniden hesaplama; super().yearly() kullan."
+      ],
+      "explanation": "Manager name ve salary'yi üst sınıfa devreder, yalnızca bonus'u kendisi saklar; yearly de üst sınıfın sonucunu yeniden kullanıp bonus'u ekler.",
+      "solutionCode": "class Employee:\n    def __init__(self, name, salary):\n        self.name = name\n        self.salary = salary\n\n    def yearly(self):\n        return self.salary * 12\n\nclass Manager(Employee):\n    def __init__(self, name, salary, bonus):\n        super().__init__(name, salary)\n        self.bonus = bonus\n\n    def yearly(self):\n        return super().yearly() + self.bonus\n\nkind = input()\nname = input()\nsalary = int(input())\nif kind == \"yönetici\":\n    person = Manager(name, salary, int(input()))\nelse:\n    person = Employee(name, salary)\nprint(f\"{person.name}: {person.yearly()}\")"
+    },
+    {
+      "id": "m11-q31",
+      "type": "code",
+      "topic": "kapsulleme",
+      "sectionId": "encapsulation",
+      "difficulty": 2,
+      "prompt": "Wallet sınıfını yaz. Bakiye _balance özniteliğinde dursun. deposit(amount) ve spend(amount) önce tutarın pozitif olduğunu denetlesin (değilse ValueError('tutar pozitif olmalı')); spend ayrıca bakiyeden büyük tutarı ValueError('yetersiz bakiye') ile reddetsin. balance() bakiyeyi döndürsün. Program 'yatır N' ve 'harca N' komutlarını işler, hataları 'hata: ...' diye yazar ve sonda 'bakiye: X' gösterir.",
+      "starterCode": "class Wallet:\n    def __init__(self):\n        self._balance = 0\n\n    def deposit(self, amount):\n        pass\n\n    def spend(self, amount):\n        pass\n\n    def balance(self):\n        pass\n\nwallet = Wallet()\nfor _ in range(int(input())):\n    command, amount = input().split()\n    try:\n        if command == \"yatır\":\n            wallet.deposit(int(amount))\n        else:\n            wallet.spend(int(amount))\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"bakiye:\", wallet.balance())",
+      "answer": "class Wallet:\n    def __init__(self):\n        self._balance = 0\n\n    def deposit(self, amount):\n        if amount <= 0:\n            raise ValueError(\"tutar pozitif olmalı\")\n        self._balance += amount\n\n    def spend(self, amount):\n        if amount <= 0:\n            raise ValueError(\"tutar pozitif olmalı\")\n        if amount > self._balance:\n            raise ValueError(\"yetersiz bakiye\")\n        self._balance -= amount\n\n    def balance(self):\n        return self._balance\n\nwallet = Wallet()\nfor _ in range(int(input())):\n    command, amount = input().split()\n    try:\n        if command == \"yatır\":\n            wallet.deposit(int(amount))\n        else:\n            wallet.spend(int(amount))\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"bakiye:\", wallet.balance())",
+      "exampleInput": "3\nyatır 100\nharca 30\nharca 500",
+      "expectedOutput": "hata: yetersiz bakiye\nbakiye: 70",
+      "tests": [
+        {
+          "label": "Yetersiz bakiye",
+          "stdin": "3\nyatır 100\nharca 30\nharca 500",
+          "expectedOutput": "hata: yetersiz bakiye\nbakiye: 70"
+        },
+        {
+          "label": "Geçersiz tutarlar",
+          "stdin": "2\nyatır -5\nharca 0",
+          "expectedOutput": "hata: tutar pozitif olmalı\nhata: tutar pozitif olmalı\nbakiye: 0"
+        },
+        {
+          "label": "Komut yok",
+          "stdin": "0",
+          "expectedOutput": "bakiye: 0"
+        },
+        {
+          "label": "Tam bakiyeyi harca",
+          "stdin": "2\nyatır 40\nharca 40",
+          "expectedOutput": "bakiye: 0"
+        },
+        {
+          "label": "Boş cüzdandan harca",
+          "stdin": "1\nharca 10",
+          "expectedOutput": "hata: yetersiz bakiye\nbakiye: 0"
+        }
+      ],
+      "hints": [
+        "Tutar denetimi her iki metotta da ilk adımdır.",
+        "Hata durumunda bakiyeyi değiştirme; önce denetle, sonra güncelle."
+      ],
+      "explanation": "Her metot önce kuralları denetleyip ValueError fırlatır; durum yalnızca geçerli istekte güncellenir, bu yüzden bakiye hiçbir hata sonrası bozulmaz.",
+      "solutionCode": "class Wallet:\n    def __init__(self):\n        self._balance = 0\n\n    def deposit(self, amount):\n        if amount <= 0:\n            raise ValueError(\"tutar pozitif olmalı\")\n        self._balance += amount\n\n    def spend(self, amount):\n        if amount <= 0:\n            raise ValueError(\"tutar pozitif olmalı\")\n        if amount > self._balance:\n            raise ValueError(\"yetersiz bakiye\")\n        self._balance -= amount\n\n    def balance(self):\n        return self._balance\n\nwallet = Wallet()\nfor _ in range(int(input())):\n    command, amount = input().split()\n    try:\n        if command == \"yatır\":\n            wallet.deposit(int(amount))\n        else:\n            wallet.spend(int(amount))\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"bakiye:\", wallet.balance())"
+    },
+    {
+      "id": "m11-q32",
+      "type": "code",
+      "topic": "property",
+      "sectionId": "property",
+      "difficulty": 2,
+      "prompt": "Temperature sınıfında celsius bir property olsun: setter -273.15'in altındaki değeri ValueError('mutlak sıfırın altında') ile reddetsin (kurulumda da denetlensin). fahrenheit saklanmayan, salt okunur bir property olsun (celsius * 9 / 5 + 32). Program bir ondalık sayı okur, fahrenheit'i bir ondalık basamakla yazar; hatada 'hata: ...' yazar.",
+      "starterCode": "class Temperature:\n    def __init__(self, celsius):\n        self.celsius = celsius\n\n    # celsius için property ve setter yaz\n    # fahrenheit için salt okunur property yaz\n\ntry:\n    temp = Temperature(float(input()))\n    print(f\"{temp.fahrenheit:.1f}\")\nexcept ValueError as error:\n    print(\"hata:\", error)",
+      "answer": "class Temperature:\n    def __init__(self, celsius):\n        self.celsius = celsius\n\n    @property\n    def celsius(self):\n        return self._celsius\n\n    @celsius.setter\n    def celsius(self, value):\n        if value < -273.15:\n            raise ValueError(\"mutlak sıfırın altında\")\n        self._celsius = value\n\n    @property\n    def fahrenheit(self):\n        return self._celsius * 9 / 5 + 32\n\ntry:\n    temp = Temperature(float(input()))\n    print(f\"{temp.fahrenheit:.1f}\")\nexcept ValueError as error:\n    print(\"hata:\", error)",
+      "exampleInput": "100",
+      "expectedOutput": "212.0",
+      "tests": [
+        {
+          "label": "Kaynama",
+          "stdin": "100",
+          "expectedOutput": "212.0"
+        },
+        {
+          "label": "Donma",
+          "stdin": "0",
+          "expectedOutput": "32.0"
+        },
+        {
+          "label": "Eşit nokta",
+          "stdin": "-40",
+          "expectedOutput": "-40.0"
+        },
+        {
+          "label": "Mutlak sıfırın altı",
+          "stdin": "-300",
+          "expectedOutput": "hata: mutlak sıfırın altında"
+        },
+        {
+          "label": "Sınır değer kabul",
+          "stdin": "-273.15",
+          "expectedOutput": "-459.7"
+        }
+      ],
+      "hints": [
+        "Gerçek değeri self._celsius'ta sakla.",
+        "__init__ self.celsius = celsius yazmalı ki setter kurulumda da çalışsın."
+      ],
+      "explanation": "celsius için getter ve setter yazılır; setter sınırın altını reddeder, __init__ atamayı setter üzerinden yaptığı için kurulumda da denetim olur. fahrenheit saklanmaz, her okunuşta hesaplanır.",
+      "solutionCode": "class Temperature:\n    def __init__(self, celsius):\n        self.celsius = celsius\n\n    @property\n    def celsius(self):\n        return self._celsius\n\n    @celsius.setter\n    def celsius(self, value):\n        if value < -273.15:\n            raise ValueError(\"mutlak sıfırın altında\")\n        self._celsius = value\n\n    @property\n    def fahrenheit(self):\n        return self._celsius * 9 / 5 + 32\n\ntry:\n    temp = Temperature(float(input()))\n    print(f\"{temp.fahrenheit:.1f}\")\nexcept ValueError as error:\n    print(\"hata:\", error)"
+    },
+    {
+      "id": "m11-q33",
+      "type": "code",
+      "topic": "classmethod",
+      "sectionId": "static-class-methods",
+      "difficulty": 2,
+      "prompt": "Duration'a iki yardımcı ekle: @staticmethod valid(text) 's:dd' biçimini denetlesin (tek ':', saat kısmı rakam, dakika kısmı tam iki rakam ve 0-59); @classmethod from_string(text) toplam dakikadan cls(...) kursun. Program metni okur; geçersizse 'geçersiz', geçerliyse label() sonucunu yazar.",
+      "starterCode": "class Duration:\n    def __init__(self, minutes):\n        self.minutes = minutes\n\n    def label(self):\n        return f\"{self.minutes} dk ({self.minutes // 60} sa {self.minutes % 60} dk)\"\n\n    # valid(text) staticmethod ve from_string(text) classmethod\n\ntext = input()\nif Duration.valid(text):\n    print(Duration.from_string(text).label())\nelse:\n    print(\"geçersiz\")",
+      "answer": "class Duration:\n    def __init__(self, minutes):\n        self.minutes = minutes\n\n    def label(self):\n        return f\"{self.minutes} dk ({self.minutes // 60} sa {self.minutes % 60} dk)\"\n\n    @staticmethod\n    def valid(text):\n        parts = text.split(\":\")\n        if len(parts) != 2:\n            return False\n        hours, minutes = parts\n        return hours.isdigit() and len(minutes) == 2 and minutes.isdigit() and int(minutes) < 60\n\n    @classmethod\n    def from_string(cls, text):\n        hours, minutes = text.split(\":\")\n        return cls(int(hours) * 60 + int(minutes))\n\ntext = input()\nif Duration.valid(text):\n    print(Duration.from_string(text).label())\nelse:\n    print(\"geçersiz\")",
+      "exampleInput": "2:45",
+      "expectedOutput": "165 dk (2 sa 45 dk)",
+      "tests": [
+        {
+          "label": "Normal",
+          "stdin": "2:45",
+          "expectedOutput": "165 dk (2 sa 45 dk)"
+        },
+        {
+          "label": "Baştaki sıfır",
+          "stdin": "0:05",
+          "expectedOutput": "5 dk (0 sa 5 dk)"
+        },
+        {
+          "label": "Dakika 59'dan büyük",
+          "stdin": "1:75",
+          "expectedOutput": "geçersiz"
+        },
+        {
+          "label": "Tek haneli dakika",
+          "stdin": "1:5",
+          "expectedOutput": "geçersiz"
+        },
+        {
+          "label": "Ayraç yok",
+          "stdin": "abc",
+          "expectedOutput": "geçersiz"
+        },
+        {
+          "label": "Çok haneli saat",
+          "stdin": "10:00",
+          "expectedOutput": "600 dk (10 sa 0 dk)"
+        }
+      ],
+      "hints": [
+        "valid, split(':') sonucunun tam iki parça olduğunu da denetlemeli.",
+        "from_string cls(...) döndürmeli; Duration(...) yazma."
+      ],
+      "explanation": "valid yalnızca metni inceler ve nesne gerektirmediği için staticmethod'dur. from_string metni dakikaya çevirip cls(...) ile nesne kuran bir alternatif kurucudur.",
+      "solutionCode": "class Duration:\n    def __init__(self, minutes):\n        self.minutes = minutes\n\n    def label(self):\n        return f\"{self.minutes} dk ({self.minutes // 60} sa {self.minutes % 60} dk)\"\n\n    @staticmethod\n    def valid(text):\n        parts = text.split(\":\")\n        if len(parts) != 2:\n            return False\n        hours, minutes = parts\n        return hours.isdigit() and len(minutes) == 2 and minutes.isdigit() and int(minutes) < 60\n\n    @classmethod\n    def from_string(cls, text):\n        hours, minutes = text.split(\":\")\n        return cls(int(hours) * 60 + int(minutes))\n\ntext = input()\nif Duration.valid(text):\n    print(Duration.from_string(text).label())\nelse:\n    print(\"geçersiz\")"
+    },
+    {
+      "id": "m11-q34",
+      "type": "code",
+      "topic": "composition",
+      "sectionId": "composition",
+      "difficulty": 3,
+      "prompt": "İndirim kuralları hazır. Order sınıfını composition ile yaz: __init__(prices, discount) fiyat listesini ve indirim nesnesini saklasın; total() fiyatların toplamına discount.apply(...) uygulayıp döndürsün. Order bir indirim sınıfından türemesin.",
+      "starterCode": "class NoDiscount:\n    def apply(self, amount):\n        return amount\n\nclass PercentDiscount:\n    def __init__(self, percent):\n        self.percent = percent\n\n    def apply(self, amount):\n        return amount * (100 - self.percent) // 100\n\nclass Order:\n    def __init__(self, prices, discount):\n        # fiyatları ve indirim nesnesini sakla\n        pass\n\n    def total(self):\n        # toplam fiyata indirimi uygula\n        return 0\n\nrule = input().split()\ndiscount = NoDiscount() if rule[0] == \"yok\" else PercentDiscount(int(rule[1]))\nprices = [int(input()) for _ in range(int(input()))]\nprint(Order(prices, discount).total())",
+      "answer": "class NoDiscount:\n    def apply(self, amount):\n        return amount\n\nclass PercentDiscount:\n    def __init__(self, percent):\n        self.percent = percent\n\n    def apply(self, amount):\n        return amount * (100 - self.percent) // 100\n\nclass Order:\n    def __init__(self, prices, discount):\n        self.prices = prices\n        self.discount = discount\n\n    def total(self):\n        return self.discount.apply(sum(self.prices))\n\nrule = input().split()\ndiscount = NoDiscount() if rule[0] == \"yok\" else PercentDiscount(int(rule[1]))\nprices = [int(input()) for _ in range(int(input()))]\nprint(Order(prices, discount).total())",
+      "exampleInput": "yüzde 10\n2\n100\n200",
+      "expectedOutput": "270",
+      "tests": [
+        {
+          "label": "İndirimsiz",
+          "stdin": "yok\n2\n100\n200",
+          "expectedOutput": "300"
+        },
+        {
+          "label": "Yüzde 10",
+          "stdin": "yüzde 10\n2\n100\n200",
+          "expectedOutput": "270"
+        },
+        {
+          "label": "Boş sipariş",
+          "stdin": "yüzde 50\n0",
+          "expectedOutput": "0"
+        },
+        {
+          "label": "Tamsayı bölme",
+          "stdin": "yüzde 33\n1\n100",
+          "expectedOutput": "67"
+        }
+      ],
+      "hints": [
+        "Order iki nesneyi öznitelik olarak tutar: fiyat listesi ve indirim nesnesi.",
+        "İndirimi kendin hesaplama; self.discount.apply(...) çağır."
+      ],
+      "explanation": "Order indirimi kendisi hesaplamaz; indirim nesnesine devreder. Farklı bir indirim kuralı vermek Order'ı değiştirmeyi gerektirmez; bu composition'ın esnekliğidir.",
+      "solutionCode": "class NoDiscount:\n    def apply(self, amount):\n        return amount\n\nclass PercentDiscount:\n    def __init__(self, percent):\n        self.percent = percent\n\n    def apply(self, amount):\n        return amount * (100 - self.percent) // 100\n\nclass Order:\n    def __init__(self, prices, discount):\n        self.prices = prices\n        self.discount = discount\n\n    def total(self):\n        return self.discount.apply(sum(self.prices))\n\nrule = input().split()\ndiscount = NoDiscount() if rule[0] == \"yok\" else PercentDiscount(int(rule[1]))\nprices = [int(input()) for _ in range(int(input()))]\nprint(Order(prices, discount).total())"
+    },
+    {
+      "id": "m11-q35",
+      "type": "code",
+      "topic": "override",
+      "sectionId": "inheritance-super",
+      "difficulty": 2,
+      "prompt": "Product hazır: total() fiyatla shipping()'i toplar, shipping() 30'dur. DigitalProduct(Product) yalnızca shipping()'i geçersiz kılsın (dijital ürünün kargosu yoktur). total()'ı yeniden yazma. Program 'dijital' ya da 'fiziksel' ile fiyatı okur ve toplam tutarı yazdırır.",
+      "starterCode": "class Product:\n    def __init__(self, price):\n        self.price = price\n\n    def shipping(self):\n        return 30\n\n    def total(self):\n        return self.price + self.shipping()\n\nclass DigitalProduct(Product):\n    pass  # yalnızca shipping'i geçersiz kıl\n\nkind = input()\nprice = int(input())\nproduct = DigitalProduct(price) if kind == \"dijital\" else Product(price)\nprint(product.total())",
+      "answer": "class Product:\n    def __init__(self, price):\n        self.price = price\n\n    def shipping(self):\n        return 30\n\n    def total(self):\n        return self.price + self.shipping()\n\nclass DigitalProduct(Product):\n    def shipping(self):\n        return 0\n\nkind = input()\nprice = int(input())\nproduct = DigitalProduct(price) if kind == \"dijital\" else Product(price)\nprint(product.total())",
+      "exampleInput": "dijital\n100",
+      "expectedOutput": "100",
+      "tests": [
+        {
+          "label": "Fiziksel",
+          "stdin": "fiziksel\n100",
+          "expectedOutput": "130"
+        },
+        {
+          "label": "Dijital",
+          "stdin": "dijital\n100",
+          "expectedOutput": "100"
+        },
+        {
+          "label": "Ücretsiz dijital",
+          "stdin": "dijital\n0",
+          "expectedOutput": "0"
+        },
+        {
+          "label": "Ücretsiz fiziksel",
+          "stdin": "fiziksel\n0",
+          "expectedOutput": "30"
+        }
+      ],
+      "hints": [
+        "Yalnızca bir metodu yeniden yaz; __init__ ve total devralınır.",
+        "Product.total, self.shipping()'i çağırıyor: self bir DigitalProduct ise hangi sürüm çalışır?"
+      ],
+      "explanation": "DigitalProduct yalnızca shipping'i geçersiz kılar. Üst sınıfın total'ı self.shipping() çağırdığı için bir DigitalProduct üzerinde alt sınıfın sürümü çalışır ve kargo 0 olur.",
+      "solutionCode": "class Product:\n    def __init__(self, price):\n        self.price = price\n\n    def shipping(self):\n        return 30\n\n    def total(self):\n        return self.price + self.shipping()\n\nclass DigitalProduct(Product):\n    def shipping(self):\n        return 0\n\nkind = input()\nprice = int(input())\nproduct = DigitalProduct(price) if kind == \"dijital\" else Product(price)\nprint(product.total())"
+    },
+    {
+      "id": "m11-q36",
+      "type": "code",
+      "topic": "composition",
+      "sectionId": "composition",
+      "difficulty": 3,
+      "prompt": "Stack sınıfını composition ile yaz: iç listeyi _items'ta tut, list'ten türeme. push(x) ekler, pop() son öğeyi çıkarıp döndürür, peek() çıkarmadan son öğeyi verir (boşken ikisi de IndexError('yığın boş') fırlatır), size() öğe sayısını döndürür. Program 'push X', 'pop', 'peek', 'size' komutlarını işler; sonda yığında insert metodu olmadığını gösterir.",
+      "starterCode": "class Stack:\n    def __init__(self):\n        pass\n\n    def push(self, item):\n        pass\n\n    def pop(self):\n        pass\n\n    def peek(self):\n        pass\n\n    def size(self):\n        pass\n\nstack = Stack()\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[0] == \"push\":\n            stack.push(parts[1])\n        elif parts[0] == \"pop\":\n            print(stack.pop())\n        elif parts[0] == \"peek\":\n            print(stack.peek())\n        elif parts[0] == \"size\":\n            print(stack.size())\n    except IndexError as error:\n        print(\"hata:\", error)\nprint(\"insert yok:\", not hasattr(stack, \"insert\"))",
+      "answer": "class Stack:\n    def __init__(self):\n        self._items = []\n\n    def push(self, item):\n        self._items.append(item)\n\n    def pop(self):\n        if not self._items:\n            raise IndexError(\"yığın boş\")\n        return self._items.pop()\n\n    def peek(self):\n        if not self._items:\n            raise IndexError(\"yığın boş\")\n        return self._items[-1]\n\n    def size(self):\n        return len(self._items)\n\nstack = Stack()\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[0] == \"push\":\n            stack.push(parts[1])\n        elif parts[0] == \"pop\":\n            print(stack.pop())\n        elif parts[0] == \"peek\":\n            print(stack.peek())\n        elif parts[0] == \"size\":\n            print(stack.size())\n    except IndexError as error:\n        print(\"hata:\", error)\nprint(\"insert yok:\", not hasattr(stack, \"insert\"))",
+      "exampleInput": "5\npush a\npush b\npeek\npop\nsize",
+      "expectedOutput": "b\nb\n1\ninsert yok: True",
+      "tests": [
+        {
+          "label": "Normal akış",
+          "stdin": "5\npush a\npush b\npeek\npop\nsize",
+          "expectedOutput": "b\nb\n1\ninsert yok: True"
+        },
+        {
+          "label": "Boş yığında pop",
+          "stdin": "1\npop",
+          "expectedOutput": "hata: yığın boş\ninsert yok: True"
+        },
+        {
+          "label": "Komut yok",
+          "stdin": "0",
+          "expectedOutput": "insert yok: True"
+        },
+        {
+          "label": "Boşalan yığın",
+          "stdin": "3\npush x\npop\npeek",
+          "expectedOutput": "x\nhata: yığın boş\ninsert yok: True"
+        },
+        {
+          "label": "Boş yığın boyutu",
+          "stdin": "2\nsize\npeek",
+          "expectedOutput": "0\nhata: yığın boş\ninsert yok: True"
+        }
+      ],
+      "hints": [
+        "Listeyi self._items özniteliğinde sakla; sınıf başlığına list yazma.",
+        "pop ve peek boş listeyi kendin denetlemeli."
+      ],
+      "explanation": "Stack bir listeye sahiptir ama onun arayüzünü devralmaz: yalnızca push, pop, peek ve size açıktır. Bu yüzden insert gibi yığın kuralını bozan metotlar yoktur.",
+      "solutionCode": "class Stack:\n    def __init__(self):\n        self._items = []\n\n    def push(self, item):\n        self._items.append(item)\n\n    def pop(self):\n        if not self._items:\n            raise IndexError(\"yığın boş\")\n        return self._items.pop()\n\n    def peek(self):\n        if not self._items:\n            raise IndexError(\"yığın boş\")\n        return self._items[-1]\n\n    def size(self):\n        return len(self._items)\n\nstack = Stack()\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[0] == \"push\":\n            stack.push(parts[1])\n        elif parts[0] == \"pop\":\n            print(stack.pop())\n        elif parts[0] == \"peek\":\n            print(stack.peek())\n        elif parts[0] == \"size\":\n            print(stack.size())\n    except IndexError as error:\n        print(\"hata:\", error)\nprint(\"insert yok:\", not hasattr(stack, \"insert\"))"
+    },
+    {
+      "id": "m11-q37",
+      "type": "traceback",
+      "topic": "init",
+      "sectionId": "class-object",
+      "difficulty": 1,
+      "prompt": "__init__'in beklediği argüman verilmeden nesne kuruluyor. Hangi hata oluşur?",
+      "code": "class Dog:\n    def __init__(self, name):\n        self.name = name\n\npet = Dog()",
+      "expectedError": "TypeError",
+      "options": [
+        "TypeError",
+        "AttributeError",
+        "NameError",
+        "ValueError"
+      ],
+      "optionFeedback": {
+        "AttributeError": "Hiçbir öznitelik aranmıyor; çağrı daha nesne kurulurken başarısız oluyor.",
+        "NameError": "Dog ve __init__ tanımlı; eksik olan çağrıdaki argüman.",
+        "ValueError": "Değer geçersiz değil, hiç verilmedi."
+      },
+      "hints": [
+        "Dog() çağrısı __init__'e hangi argümanları geçiriyor?",
+        "Eksik pozisyonel argüman hangi hatayı verir?"
+      ],
+      "explanation": "Dog() __init__'i yalnızca self ile çağırır, name eksik kalır: TypeError: Dog.__init__() missing 1 required positional argument: 'name'.",
+      "answer": "TypeError"
+    },
+    {
+      "id": "m11-q38",
+      "type": "traceback",
+      "topic": "name-mangling",
+      "sectionId": "encapsulation",
+      "difficulty": 2,
+      "prompt": "Çift alt çizgili öznitelik sınıfın dışından okunuyor. Hangi hata oluşur?",
+      "code": "class Vault:\n    def __init__(self):\n        self.__code = 1234\n\nvault = Vault()\nprint(vault.__code)",
+      "expectedError": "AttributeError",
+      "options": [
+        "PermissionError",
+        "AttributeError",
+        "NameError",
+        "KeyError"
+      ],
+      "optionFeedback": {
+        "NameError": "vault tanımlı; hata, nesne üzerinde öznitelik arayışından geliyor.",
+        "KeyError": "Sözlük araması yok; öznitelik erişimi hata veriyor.",
+        "PermissionError": "Python erişimi izinle engellemez; öznitelik yalnızca farklı bir adla saklanıyor."
+      },
+      "hints": [
+        "Sınıf içinde __code hangi adla saklanır?",
+        "Dışarıdan vault.__code aranınca o ad bulunur mu?"
+      ],
+      "explanation": "Ad bozma nedeniyle öznitelik _Vault__code adıyla saklanır; sınıfın dışında vault.__code yazınca bu ad bulunamaz ve AttributeError oluşur.",
+      "answer": "AttributeError"
+    },
+    {
+      "id": "m11-q39",
+      "type": "traceback",
+      "topic": "property",
+      "sectionId": "property",
+      "difficulty": 3,
+      "prompt": "Property kendi adını okuyor. Hangi hata oluşur?",
+      "code": "class User:\n    @property\n    def name(self):\n        return self.name\n\nprint(User().name)",
+      "expectedError": "RecursionError",
+      "options": [
+        "TypeError",
+        "ValueError",
+        "RecursionError",
+        "AttributeError"
+      ],
+      "optionFeedback": {
+        "AttributeError": "name özniteliği var (property olarak); sorun, okunuşunun kendini çağırması.",
+        "TypeError": "Çağrı biçimi doğru; sorun sonsuz kendini çağırma.",
+        "ValueError": "Hiçbir değer dönüşümü yok."
+      },
+      "hints": [
+        "self.name okunduğunda hangi kod çalışır?",
+        "O kod içinde tekrar self.name okunuyor."
+      ],
+      "explanation": "self.name okuması name property'sini çağırır, o da yine self.name okur; bu sonsuz özyineleme Python'un yığın sınırına çarpıp RecursionError verir.",
+      "answer": "RecursionError"
+    },
+    {
+      "id": "m11-q40",
+      "type": "traceback",
+      "topic": "super",
+      "sectionId": "inheritance-super",
+      "difficulty": 2,
+      "prompt": "super().__init__'e fazladan argüman veriliyor. Hangi hata oluşur?",
+      "code": "class Base:\n    def __init__(self, name):\n        self.name = name\n\nclass Child(Base):\n    def __init__(self, name, age):\n        super().__init__(name, age)\n        self.age = age\n\nChild(\"Ada\", 5)",
+      "expectedError": "TypeError",
+      "options": [
+        "AttributeError",
+        "NameError",
+        "KeyError",
+        "TypeError"
+      ],
+      "optionFeedback": {
+        "AttributeError": "Hiçbir öznitelik aranmıyor; Base.__init__ çağrısı argüman sayısı yüzünden başarısız oluyor.",
+        "NameError": "Base, super ve age tanımlı adlardır.",
+        "KeyError": "Sözlük araması yok."
+      },
+      "hints": [
+        "Base.__init__ kaç parametre bekliyor?",
+        "super().__init__(name, age) ona kaç argüman veriyor?"
+      ],
+      "explanation": "Base.__init__ yalnızca self ve name alır; super().__init__(name, age) iki argüman verdiği için TypeError: Base.__init__() takes 2 positional arguments but 3 were given oluşur.",
+      "answer": "TypeError"
+    }
+  ]
+}

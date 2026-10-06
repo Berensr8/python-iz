@@ -1198,5 +1198,132 @@
         "expectedOutput": "GECERSIZ 0"
       }
     ]
+  },
+  {
+    "id": "m11-w1",
+    "moduleId": 11,
+    "sectionId": "instance-class-vars",
+    "title": "Kitap ödünç takibi",
+    "level": "Tamamla",
+    "objective": "Nesneye özel durumu (available) ile sınıfın ortak sayacını (borrow_count) birlikte yönet.",
+    "prompt": "Book sınıfını tamamla. Her kitabın title ve available (başlangıçta True) öznitelikleri vardır. borrow() kitap rafta ise available'ı False yapar, sınıfın borrow_count sayacını artırır ve 'ödünç alındı' döndürür; kitap zaten ödünçteyse sayaca dokunmadan 'zaten ödünçte' döndürür. give_back() ödünçteyse available'ı True yapıp 'iade edildi' döndürür, raftaysa 'zaten rafta' döndürür. Program kitap adını, komut sayısını ve komutları ('al' ya da 'ver') okur; her komutun sonucunu yazar, son satırda 'ad: durum (toplam ödünç: N)' gösterir.",
+    "starterCode": "class Book:\n    borrow_count = 0\n\n    def __init__(self, title):\n        self.title = title\n        self.available = True\n\n    def borrow(self):\n        # raftaysa ödünç ver: available False olsun, sınıf sayacı artsın\n        return \"\"\n\n    def give_back(self):\n        # ödünçteyse iade al\n        return \"\"\n\n    def status(self):\n        return \"rafta\" if self.available else \"ödünçte\"\n\nbook = Book(input())\nfor _ in range(int(input())):\n    command = input()\n    print(book.borrow() if command == \"al\" else book.give_back())\nprint(f\"{book.title}: {book.status()} (toplam ödünç: {Book.borrow_count})\")",
+    "exampleInput": "Dune\n3\nal\nver\nal",
+    "exampleOutput": "ödünç alındı\niade edildi\nödünç alındı\nDune: ödünçte (toplam ödünç: 2)",
+    "hints": [
+      "Her iki metot da önce durumu denetlemeli: kitap zaten istenen durumda mı?",
+      "Ortak sayaç sınıf üzerinden artırılır: Book.borrow_count += 1. self.borrow_count yazmak nesnede yeni bir öznitelik oluşturur."
+    ],
+    "solution": "class Book:\n    borrow_count = 0\n\n    def __init__(self, title):\n        self.title = title\n        self.available = True\n\n    def borrow(self):\n        if not self.available:\n            return \"zaten ödünçte\"\n        self.available = False\n        Book.borrow_count += 1\n        return \"ödünç alındı\"\n\n    def give_back(self):\n        if self.available:\n            return \"zaten rafta\"\n        self.available = True\n        return \"iade edildi\"\n\n    def status(self):\n        return \"rafta\" if self.available else \"ödünçte\"\n\nbook = Book(input())\nfor _ in range(int(input())):\n    command = input()\n    print(book.borrow() if command == \"al\" else book.give_back())\nprint(f\"{book.title}: {book.status()} (toplam ödünç: {Book.borrow_count})\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "Dune\n3\nal\nver\nal",
+        "expectedOutput": "ödünç alındı\niade edildi\nödünç alındı\nDune: ödünçte (toplam ödünç: 2)"
+      },
+      {
+        "label": "Zaten ödünçte",
+        "stdin": "Dune\n2\nal\nal",
+        "expectedOutput": "ödünç alındı\nzaten ödünçte\nDune: ödünçte (toplam ödünç: 1)"
+      },
+      {
+        "label": "Zaten rafta",
+        "stdin": "Dune\n1\nver",
+        "expectedOutput": "zaten rafta\nDune: rafta (toplam ödünç: 0)"
+      },
+      {
+        "label": "Komut yok",
+        "stdin": "Dune\n0",
+        "expectedOutput": "Dune: rafta (toplam ödünç: 0)"
+      }
+    ]
+  },
+  {
+    "id": "m11-w2",
+    "moduleId": 11,
+    "sectionId": "inheritance-super",
+    "title": "Oyuncu puanlarını düzelt",
+    "level": "Düzelt",
+    "objective": "Paylaşılan class değişkeni, eksik super().__init__ çağrısı ve boş liste hatasını bul ve düzelt.",
+    "prompt": "Girdideki her satır bir oyuncudur: 'oyuncu;ad;puanlar' ya da 'kaptan;ad;takım;puanlar' (puanlar virgülle ayrılır ve boş olabilir). Program her oyuncu için 'ad: toplam=T en iyi=E' (kaptanlar için 'ad [takım]: toplam=T en iyi=E') yazar; puanı olmayan oyuncuda ikisi de 0'dır. Kodda üç hata var: her oyuncu aynı puan listesini paylaşıyor; Captain üst sınıfı kurmuyor; puanı olmayan oyuncuda best() hata veriyor. Üçünü de düzelt.",
+    "starterCode": "class Player:\n    scores = []\n\n    def __init__(self, name):\n        self.name = name\n\n    def add(self, points):\n        self.scores.append(points)\n\n    def total(self):\n        return sum(self.scores)\n\n    def best(self):\n        return max(self.scores)\n\n    def label(self):\n        return self.name\n\nclass Captain(Player):\n    def __init__(self, name, team):\n        self.team = team\n\n    def label(self):\n        return f\"{self.name} [{self.team}]\"\n\nfor _ in range(int(input())):\n    parts = input().split(\";\")\n    if parts[0] == \"oyuncu\":\n        player = Player(parts[1])\n        scores = parts[2]\n    else:\n        player = Captain(parts[1], parts[2])\n        scores = parts[3]\n    for text in scores.split(\",\"):\n        if text:\n            player.add(int(text))\n    print(f\"{player.label()}: toplam={player.total()} en iyi={player.best()}\")",
+    "exampleInput": "2\noyuncu;Ada;10,20\nkaptan;Can;Kırmızı;5,30",
+    "exampleOutput": "Ada: toplam=30 en iyi=20\nCan [Kırmızı]: toplam=35 en iyi=30",
+    "hints": [
+      "scores sınıf gövdesinde tanımlı: bütün oyuncular tek bir listeyi paylaşıyor. Nereye taşımalısın? Captain.__init__ da bir şeyi çağırmıyor.",
+      "Player.__init__ içinde self.scores = [] kur; Captain.__init__ başında super().__init__(name) çağır; best() için max(self.scores, default=0) kullan."
+    ],
+    "solution": "class Player:\n    def __init__(self, name):\n        self.name = name\n        self.scores = []\n\n    def add(self, points):\n        self.scores.append(points)\n\n    def total(self):\n        return sum(self.scores)\n\n    def best(self):\n        return max(self.scores, default=0)\n\n    def label(self):\n        return self.name\n\nclass Captain(Player):\n    def __init__(self, name, team):\n        super().__init__(name)\n        self.team = team\n\n    def label(self):\n        return f\"{self.name} [{self.team}]\"\n\nfor _ in range(int(input())):\n    parts = input().split(\";\")\n    if parts[0] == \"oyuncu\":\n        player = Player(parts[1])\n        scores = parts[2]\n    else:\n        player = Captain(parts[1], parts[2])\n        scores = parts[3]\n    for text in scores.split(\",\"):\n        if text:\n            player.add(int(text))\n    print(f\"{player.label()}: toplam={player.total()} en iyi={player.best()}\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "2\noyuncu;Ada;10,20\nkaptan;Can;Kırmızı;5,30",
+        "expectedOutput": "Ada: toplam=30 en iyi=20\nCan [Kırmızı]: toplam=35 en iyi=30"
+      },
+      {
+        "label": "Puanlar paylaşılmaz",
+        "stdin": "2\noyuncu;Ada;10\noyuncu;Can;5",
+        "expectedOutput": "Ada: toplam=10 en iyi=10\nCan: toplam=5 en iyi=5"
+      },
+      {
+        "label": "Puansız oyuncu",
+        "stdin": "1\noyuncu;Eda;",
+        "expectedOutput": "Eda: toplam=0 en iyi=0"
+      },
+      {
+        "label": "Puansız kaptan",
+        "stdin": "1\nkaptan;Bo;Mavi;",
+        "expectedOutput": "Bo [Mavi]: toplam=0 en iyi=0"
+      },
+      {
+        "label": "Karışık",
+        "stdin": "3\nkaptan;Ece;Yeşil;7,3\noyuncu;Ali;4\nkaptan;Ege;Sarı;1",
+        "expectedOutput": "Ece [Yeşil]: toplam=10 en iyi=7\nAli: toplam=4 en iyi=4\nEge [Sarı]: toplam=1 en iyi=1"
+      }
+    ]
+  },
+  {
+    "id": "m11-w3",
+    "moduleId": 11,
+    "sectionId": "composition",
+    "title": "Envanter sınıfları",
+    "level": "Sıfırdan yaz",
+    "objective": "Property, classmethod ve composition ile küçük bir envanter modeli tasarla.",
+    "prompt": "Item ve Inventory sınıflarını yaz. Item(name, price, qty): value property'si price * qty döndürür; Item.from_line('ad fiyat adet') bir classmethod olarak metinden Item kurar (fiyat ve adet tam sayıdır). Inventory ürünleri ad → Item sözlüğünde tutar; dict'ten türemez (yalnızca object'ten türer, program bunu denetler). add(item): aynı adlı ürün varsa adedi artırır ve fiyatı yenisiyle günceller, yoksa ürünü ekler. remove(name, qty): ürün yoksa ValueError(f'bilinmeyen ürün: {name}'), qty stoktan büyükse ValueError(f'yetersiz stok: {name}') fırlatır; stok sıfıra inerse ürün envanterden silinir. report(): ürünleri ada göre sıralı 'ad: adet x fiyat = değer' satırları ve son satır olarak 'toplam: değer' içeren bir liste döndürür. Programın girdi okuma kısmı hazır; sınıfları üstüne yaz.",
+    "starterCode": "# Item ve Inventory sınıflarını buraya yaz.\n\n\ninventory = Inventory()\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[0] == \"ekle\":\n            inventory.add(Item.from_line(\" \".join(parts[1:])))\n        elif parts[0] == \"çıkar\":\n            inventory.remove(parts[1], int(parts[2]))\n        elif parts[0] == \"rapor\":\n            print(\"\\n\".join(inventory.report()))\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"kalıtım yok:\", Inventory.__bases__ == (object,))",
+    "exampleInput": "5\nekle elma 10 5\nekle armut 20 2\nekle elma 12 3\nçıkar elma 4\nrapor",
+    "exampleOutput": "armut: 2 x 20 = 40\nelma: 4 x 12 = 48\ntoplam: 88\nkalıtım yok: True",
+    "hints": [
+      "Item küçük bir veri sınıfıdır; Inventory ise Item'ları _items sözlüğünde tutar ve işi onlara devreder.",
+      "add içinde self._items.get(item.name) ile ürünü ara; remove'da stok 0 olunca del self._items[name] yaz; report'ta sorted(self._items.values(), key=...) kullan."
+    ],
+    "solution": "class Item:\n    def __init__(self, name, price, qty):\n        self.name = name\n        self.price = price\n        self.qty = qty\n\n    @property\n    def value(self):\n        return self.price * self.qty\n\n    @classmethod\n    def from_line(cls, text):\n        name, price, qty = text.split()\n        return cls(name, int(price), int(qty))\n\nclass Inventory:\n    def __init__(self):\n        self._items = {}\n\n    def add(self, item):\n        known = self._items.get(item.name)\n        if known:\n            known.qty += item.qty\n            known.price = item.price\n        else:\n            self._items[item.name] = item\n\n    def remove(self, name, qty):\n        item = self._items.get(name)\n        if item is None:\n            raise ValueError(f\"bilinmeyen ürün: {name}\")\n        if qty > item.qty:\n            raise ValueError(f\"yetersiz stok: {name}\")\n        item.qty -= qty\n        if item.qty == 0:\n            del self._items[name]\n\n    def report(self):\n        items = sorted(self._items.values(), key=lambda item: item.name)\n        lines = [f\"{item.name}: {item.qty} x {item.price} = {item.value}\" for item in items]\n        lines.append(f\"toplam: {sum(item.value for item in items)}\")\n        return lines\n\ninventory = Inventory()\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[0] == \"ekle\":\n            inventory.add(Item.from_line(\" \".join(parts[1:])))\n        elif parts[0] == \"çıkar\":\n            inventory.remove(parts[1], int(parts[2]))\n        elif parts[0] == \"rapor\":\n            print(\"\\n\".join(inventory.report()))\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"kalıtım yok:\", Inventory.__bases__ == (object,))",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "5\nekle elma 10 5\nekle armut 20 2\nekle elma 12 3\nçıkar elma 4\nrapor",
+        "expectedOutput": "armut: 2 x 20 = 40\nelma: 4 x 12 = 48\ntoplam: 88\nkalıtım yok: True"
+      },
+      {
+        "label": "Bilinmeyen ürün ve yetersiz stok",
+        "stdin": "3\nçıkar süt 1\nekle süt 5 2\nçıkar süt 3",
+        "expectedOutput": "hata: bilinmeyen ürün: süt\nhata: yetersiz stok: süt\nkalıtım yok: True"
+      },
+      {
+        "label": "Stok bitince ürün silinir",
+        "stdin": "4\nekle su 3 2\nçıkar su 2\nçıkar su 1\nrapor",
+        "expectedOutput": "hata: bilinmeyen ürün: su\ntoplam: 0\nkalıtım yok: True"
+      },
+      {
+        "label": "Boş envanter",
+        "stdin": "1\nrapor",
+        "expectedOutput": "toplam: 0\nkalıtım yok: True"
+      },
+      {
+        "label": "Fiyat güncellenir",
+        "stdin": "3\nekle kalem 5 10\nekle kalem 6 5\nrapor",
+        "expectedOutput": "kalem: 15 x 6 = 90\ntoplam: 90\nkalıtım yok: True"
+      }
+    ]
   }
 ]

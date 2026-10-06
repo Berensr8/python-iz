@@ -85,7 +85,7 @@ Kapanış: Öğrenci traceback'ten kendi kodundaki ilgili satıra ulaşabiliyor;
 
 - [x] M9: import, kendi modülü, __main__, relative import, pip/venv, requirements.txt/pyproject.toml, uv/poetry, ortam değişkenleri ve .env. Araçlar tek önerilen başlangıç akışı üzerinden tanıtılır; alternatiflerin rolü açıklanır.
 - [x] M10: math/random, datetime/time/timezone, collections, itertools, functools, enum, heapq, bisect, re, sys/subprocess/argparse; ilk istekteki alt türler dâhil. subprocess yerel ortamda okuma düzeyinde; diğerleri tarayıcı alıştırmalarıyla.
-- [ ] M11: class/object, __init__/self, instance/class değişkenleri, inheritance/super, kapsülleme, property/staticmethod/classmethod. Composition alternatifini ekle.
+- [x] M11: class/object, __init__/self, instance/class değişkenleri, inheritance/super, kapsülleme, property/staticmethod/classmethod. Composition alternatifini ekle. (6 Ekim 2026: 8 bölüm, 40 soru, 15 pratik, 3 yazma görevi; Python 3.12.7 ile doğrulandı.)
 - [ ] Yerel geliştirme rehberi: Python, editör, terminal, sanal ortam, bağımlılık yükleme ve örnek projeyi çalıştırma adımları.
 - [ ] Ortam etiketleri: Tarayıcıda çalışır / yerel Python gerekir / kaydedilmiş veriyle incelenir. Desteklenmeyen komutlar başarılı çalışmış gibi gösterilmez.
 - [ ] Atölye 4 (M10 sonrası): Çok dosyalı bir CLI uygulamasını incele; ardından argparse, pathlib ve kendi modüllerinle dosya raporlama aracı oluştur.
@@ -348,3 +348,15 @@ Açık kalanlar: Atölye 4–6, Ara sınav 3–4, Görselleştirme 1–4, Genel 
 - [x] Yükleme hatası: tarayıcı başarısız bir `import()` sonucunu sayfa ömrü boyunca hatırladığı için aynı sayfada yeniden denemek işe yaramıyor (denendi). Bu yüzden "Sayfayı yenile ve tekrar dene" düğmesi sayfayı yeniler ve öğrenciyi kaldığı ekrana (modül ve aşama) geri getirir; ilerleme etkilenmez.
 - [x] Testler: dizin her modülün yapısını verir ve metin taşımaz; dizin tam içeriğin %20'sinden küçük; test soru seçimi (ilk modülde önceki konu yok, sonrakilerde 4/18, ≥3 kod sorusu, M18 testi en çok 4 önceki modül yükler) ve pratik soru sırası. Tarayıcıda: açılışta yalnız M1 (+boşta M2), M8'e girince M8, M8 testinde yalnız 2 ek modül, ara sınav kartları modül yüklemeden, ara sınav başlatınca gereken modüller, parça kaldırılınca hata ve geri dönüş.
 - [ ] Ana pakette hâlâ yazma görevleri (92 KB), atölye verileri ve CodeMirror var; ileride onlar da ihtiyaç olunca yüklenebilir.
+
+### 6 Ekim 2026 — M11 OOP 1
+
+- [x] M11 yazıldı: 8 bölüm (class/nesne/`__init__`/`self`, metotlar ve nesne durumu + `__repr__`/`__str__`, instance ve class değişkenleri, kalıtım ve `super()`, kapsülleme, `property`, `classmethod`/`staticmethod`, composition), 40 soru (12 çıktı, 6 hata bulma, 4 boşluk, 4 sıralama, 10 kod, 4 traceback), 15 pratik, 3 yazma görevi. Kapsam haritasında 6 alt başlığın hepsi doğrulandı (109'dan 76, %70).
+- [x] Öne çıkan sorular: class değişkeninin gölgelenmesi (`a.tax = 0.5`), `self.count += 1` sayaç tuzağı (`2 1 0`), üst sınıf `__init__`'inin alt sınıfın geçersiz kıldığı metodu çağırması, ad bozma (`_Vault__code`), property'nin kendi adını okuyup `RecursionError` vermesi, `Stack(list)` yerine composition (`insert` yok denetimi).
+- [x] Yazma görevleri: m11-w1 Kitap ödünç takibi (Tamamla; nesne durumu + sınıf sayacı), m11-w2 Oyuncu puanlarını düzelt (Düzelt; paylaşılan class listesi, eksik `super().__init__`, boş listede `max`), m11-w3 Envanter sınıfları (Sıfırdan yaz; `property`, `classmethod`, composition; `Inventory` yalnız `object`'ten türer, program bunu denetler).
+- [x] M11'de çıktı sorularının doğru seçeneği, gerçek çıktıdan türetilir (çok satırlı çıktı `satır1 / satır2` biçimli tek seçenek) ve `test-learning` bunu denetler; yani cevap anahtarı koddan ayrışamaz. Önceki modüllerde bu seçenekler elle yazılmıştı.
+- [x] Düzelt görevinin üç hatasının tek tek ve ikili kombinasyonlarının (6 varyant) en az bir testte kaldığı sınandı. M11 kod sorularının başlangıç kodu tek başına geçmiyor; her bölümü en az bir soru ölçüyor.
+- [x] `test-learning` artık modül dosyalarını klasörden okur (önceden `length: 10` ile sabitti; yeni modül sessizce sınanmayacaktı) ve dosya numaralarının 1'den ardışık olduğunu denetler.
+- [x] Kontroller: 1.195 çalıştırılabilir içerik, 239 regresyon kontrolü, 182 yazma referans vakası; TypeScript, normal ve Pages derlemeleri başarılı. Yerel Windows CPython 3.11'de bütün bölüm/soru/test çıktıları aynı. Tarayıcıda: M11 menüde, uyarıyla açılıyor, bölüm kodları Worker'da çalışıyor, Pratik açılıyor, seçenekler karışık geliyor.
+
+Açık kalanlar: Atölye 4–6, Ara sınav 3–4, Görselleştirme 1–4, Genel sınav ve bitirme projesi, M8 dosya yükleme/indirme, M12–M18, A1.5/A1.6/A1.7/A1.12. Sıradaki içerik: M12 OOP 2.

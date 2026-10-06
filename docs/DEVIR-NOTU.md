@@ -13,16 +13,16 @@ Türkçe, tarayıcıda çalışan bir Python öğrenme sitesi. Öğrenci 18 mod�
 
 | | Durum |
 |---|---|
-| İçerik modülleri | **M1–M10 hazır** (`content/module-01.json` … `module-10.json`) |
-| Soru | 400 (modül başına 40) |
-| Yazma görevi | 30 (modül başına 3: Tamamla, Düzelt, Sıfırdan yaz) |
-| Kapsam haritası | 109 alt başlıktan 70'i doğrulanmış (%64); `npm run coverage` |
-| Doğrulama | 1082 çalıştırılabilir içerik kontrolü, 205 regresyon kontrolü, 168 yazma referans vakası, `tsc` ve `build` başarılı; büyük paket uyarısı sürüyor |
+| İçerik modülleri | **M1–M11 hazır** (`content/module-01.json` … `module-11.json`) |
+| Soru | 440 (modül başına 40) |
+| Yazma görevi | 33 (modül başına 3: Tamamla, Düzelt, Sıfırdan yaz) |
+| Kapsam haritası | 109 alt başlıktan 76'sı doğrulanmış (%70); `npm run coverage` |
+| Doğrulama | 1195 çalıştırılabilir içerik kontrolü, 239 regresyon kontrolü, 182 yazma referans vakası, `tsc`, `build` ve `build:pages` başarılı |
 | Git/yayın | M10 öncesi değişiklikler korunmuştur. Güncel commit ve yayın durumunu git ve Sites üzerinden kontrol et; yayın kaynak kaydı oluşturur. |
 
 ## 3. Sıradaki iş
 
-Plan sırasına göre bir sonraki içerik modülü **M11 OOP 1**'dir. Alt başlıkları `content/coverage.json` içinde `"id": 11` altında. M10 tamamlandı: kaynak ve ortam etiketleri bu modülde bulunur; subprocess yalnız yerel Python için okuma örneğidir. M10 JSON'u doğrudan düzenlenir; M8/M9 üreticileri M10'u üretmez.
+Plan sırasına göre bir sonraki içerik modülü **M12 OOP 2**'dir (polimorfizm ve abc, dunder metotlar ve operator overloading, multiple inheritance/MRO, dataclass ve slots, descriptor/metaclass tanıma düzeyi). Alt başlıkları `content/coverage.json` içinde `"id": 12` altında. M11 tamamlandı; M12 sınıf kavramlarını M11'de bırakılan yerden alır: `__repr__`/`__str__` M11'de tanıtıldı, çoklu kalıtım ve `abc` ise bilerek M12'ye bırakıldı. M11 `scripts/content-builders/build_m11.py` ile üretilir (bölümler `m11_sections.py`, sorular `m11_questions.py`, yazma görevleri `m11_tasks.py`); M12 için bu dört dosya şablon olarak kopyalanabilir. M10 JSON'u doğrudan düzenlenir; M8/M9 üreticileri M10'u üretmez.
 
 Kullanıcı şimdiye kadar her seferinde arayüz işleri yerine bir sonraki içerik modülünü seçti, ama karar onundur. Bekleyen arayüz işleri:
 
@@ -92,7 +92,7 @@ npm run build
 
 - M1–M2 mevcuttu; Aşama 1'de şemaya göre işaretlenip düzeltildi.
 - M3–M7 JSON olarak yazıldı.
-- M8 ve M9, `scripts/content-builders/build_m8.py` ve `build_m9.py` betikleriyle üretildi. Kod blokları Python'da `r'''...'''` dizeleri olarak yazılır, betik JSON'u ve ilgili yazma görevlerini (`writing-tasks.json` içindeki o modülün kayıtlarını değiştirerek) yazar. M10 için bu iki betikten biri şablon olarak kopyalanabilir. Çalıştırma: `PYTHONIOENCODING=utf-8 python scripts/content-builders/build_m9.py` (yerel Python 3.11 yeterli; doğrulama yine Pyodide'de yapılır).
+- M8 ve M9, `scripts/content-builders/build_m8.py` ve `build_m9.py` betikleriyle üretildi. Kod blokları Python'da `r'''...'''` dizeleri olarak yazılır, betik JSON'u ve ilgili yazma görevlerini (`writing-tasks.json` içindeki o modülün kayıtlarını değiştirerek) yazar. M10 için bu iki betikten biri şablon olarak kopyalanabilir. M11 ise üç parça modül (`m11_sections.py`, `m11_questions.py`, `m11_tasks.py`) ve bunları birleştiren `build_m11.py` olarak yazıldı; tek dev dosyadan daha rahat düzenlenir. `m11_questions.py` içindeki `q()` yardımcısı çıktı sorularının doğru seçeneğini `expectedOutput`'tan türetir, boşluk sorularının `solutionCode`'unu `___`'u cevapla değiştirerek kurar, sıralama sorularının satırlarını `perm` ile karıştırır ve seçenekleri sıraya göre döndürür; yeni modül yazarken bu yardımcıyı kullan. Çalıştırma: `PYTHONIOENCODING=utf-8 python scripts/content-builders/build_m9.py` (yerel Python 3.11 yeterli; doğrulama yine Pyodide'de yapılır).
 - Dikkat: Bash heredoc içinde ters bölü (`\n`) kaçışları bozuluyor; kaçış içeren betikleri dosya yazma aracıyla oluştur.
 
 ## 8. Bu çalışmada yapılanlar (kronolojik)

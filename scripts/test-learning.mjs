@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { loadPyodide } from "pyodide";
 import { defaultProgress, parseProgress, markStudy, recordWriting, studyDay, exportProgress, importProgress, mergeProgress, encodeTransfer, decodeTransfer } from "../lib/progress-repository.ts";
 import { isAnswerCorrect, wrongOptionFeedback, answerKind, selectedAnswer } from "../lib/answer-check.ts";
@@ -34,6 +34,22 @@ for (const [label, partial] of [
 ]) {
   const results = await runtime.assess(py, partial, durationTask.tests);
   check(label, () => assert.ok(results.some(result => !result.passed)));
+}
+// M11 "Düzelt" görevinin üç hatası: her biri tek başına ya da ikili kombinasyonla düzeltilince en az bir test kalmalı.
+const playerTask = tasks.find(task => task.id === "m11-w2");
+assert.ok(playerTask);
+const playerFixes = {
+  "paylaşılan puan listesi": ["class Player:\n    scores = []\n\n    def __init__(self, name):\n        self.name = name\n", "class Player:\n    def __init__(self, name):\n        self.name = name\n        self.scores = []\n"],
+  "Captain'da super().__init__": ["    def __init__(self, name, team):\n        self.team = team", "    def __init__(self, name, team):\n        super().__init__(name)\n        self.team = team"],
+  "boş listede best": ["return max(self.scores)", "return max(self.scores, default=0)"],
+};
+const fixNames = Object.keys(playerFixes);
+for (let mask = 1; mask < 7; mask++) {
+  let partial = playerTask.starterCode;
+  const applied = fixNames.filter((_, index) => mask & (1 << index));
+  for (const name of applied) { const [from, to] = playerFixes[name]; assert.ok(partial.includes(from), name); partial = partial.replace(from, to); }
+  const results = await runtime.assess(py, partial, playerTask.tests);
+  check(`m11-w2: yalnız ${applied.join(" + ")} düzeltilirse testlerde kalır`, () => assert.ok(results.some(result => !result.passed)));
 }
 const alternate = await runtime.assess(py, "value = int(input())\nprint(60 * value)", tasks[0].tests);
 check("Farklı doğru çözüm kabul edilir", () => assert.ok(alternate.every(item => item.passed)));
@@ -178,7 +194,9 @@ check("Seçmeli soru yalnız tam seçenekle doğru; yanlış seçeneğin gerekç
   assert.ok(isAnswerCorrect(q, "TypeError")); assert.ok(!isAnswerCorrect(q, "typeerror"));
   assert.equal(wrongOptionFeedback(q, "ValueError"), "neden"); assert.equal(wrongOptionFeedback(q, "TypeError"), undefined);
 });
-const modules = await Promise.all(Array.from({ length: 10 }, async (_, i) => JSON.parse(await readFile(new URL(`../content/module-${String(i + 1).padStart(2, "0")}.json`, import.meta.url), "utf8"))));
+const moduleFiles = (await readdir(new URL("../content/", import.meta.url))).filter(name => /^module-\d+\.json$/.test(name)).sort();
+const modules = await Promise.all(moduleFiles.map(async name => JSON.parse(await readFile(new URL(`../content/${name}`, import.meta.url), "utf8"))));
+check("Modül dosyaları 1'den ardışık numaralı", () => assert.deepEqual(modules.map(item => item.id), modules.map((_, index) => index + 1)));
 const milestones = JSON.parse(await readFile(new URL("../content/milestones.json", import.meta.url), "utf8"));
 const checkpoint = examQuestions(examByModule(milestones.exams, 4), modules);
 check("Ara sınav M1–M4'ten eşit kapsam ve dört yazma sorusu içerir", () => {
@@ -189,6 +207,23 @@ check("Ara sınav M1–M4'ten eşit kapsam ve dört yazma sorusu içerir", () =>
 check("M10 zorluk dağılımı 16 kolay / 16 orta / 8 zor", () => {
   assert.deepEqual([1, 2, 3].map(level => modules[9].questions.filter(q => q.difficulty === level).length), [16, 16, 8]);
 });
+// Kod sorusunun başlangıç kodu kendi başına geçmemeli ve çıktı sorularının doğru seçeneği gerçek çıktıyla aynı olmalı.
+for (const module of modules.filter(item => item.id >= 11)) {
+  for (const question of module.questions.filter(item => item.type === "code")) {
+    const starter = await runtime.assess(py, question.starterCode, question.tests);
+    check(`${question.id}: başlangıç kodu tek başına geçmez`, () => assert.ok(starter.some(result => !result.passed)));
+  }
+  check(`M${module.id}: çıktı sorusunun doğru seçeneği gerçek çıktıdır ve seçenekler benzersizdir`, () => {
+    for (const question of module.questions.filter(item => item.type === "output")) {
+      assert.equal(question.answer, question.expectedOutput.split("\n").join(" / "), question.id);
+      assert.ok(question.options.includes(question.answer) && new Set(question.options).size === question.options.length, question.id);
+    }
+  });
+  check(`M${module.id}: her bölümü en az bir soru ölçer ve üç zorluk düzeyi de vardır`, () => {
+    for (const section of module.sections) assert.ok(module.questions.some(item => item.sectionId === section.id), section.id);
+    for (const level of [1, 2, 3]) assert.ok(module.questions.some(item => item.difficulty === level), `zorluk ${level}`);
+  });
+}
 check("M1–M2 gerçek örneklerinde öğretilmemiş fonksiyon ve döngü yok", () => {
   for (const module of modules.slice(0, 2)) for (const section of module.sections) assert.ok(!/(^|\n)\s*(def |for |while |try:|if )/.test(section.realCode), section.id);
   assert.ok(!modules[0].sections[0].code.includes("if "));

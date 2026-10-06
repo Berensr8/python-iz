@@ -93,12 +93,12 @@
       { "id": "sys-subprocess-argparse", "title": "sys, subprocess ve argparse", "depth": "okuma", "status": "doğrulandı", "sections": ["m10:sys-subprocess-argparse"] }
     ] },
     { "id": 11, "title": "OOP 1", "subtopics": [
-      { "id": "class-object", "title": "class, object, __init__ ve self", "depth": "temel", "status": "planlandı", "sections": [] },
-      { "id": "instance-class-degisken", "title": "Instance ve class değişkenleri", "depth": "temel", "status": "planlandı", "sections": [] },
-      { "id": "inheritance-super", "title": "Inheritance ve super()", "depth": "temel", "status": "planlandı", "sections": [] },
-      { "id": "kapsulleme", "title": "Kapsülleme", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "property-static-class", "title": "property, staticmethod, classmethod", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "composition", "title": "Composition alternatifi", "depth": "okuma", "status": "planlandı", "sections": [] }
+      { "id": "class-object", "title": "class, object, __init__ ve self", "depth": "temel", "status": "doğrulandı", "sections": ["m11:class-object", "m11:methods-state"] },
+      { "id": "instance-class-degisken", "title": "Instance ve class değişkenleri", "depth": "temel", "status": "doğrulandı", "sections": ["m11:instance-class-vars"] },
+      { "id": "inheritance-super", "title": "Inheritance ve super()", "depth": "temel", "status": "doğrulandı", "sections": ["m11:inheritance-super"] },
+      { "id": "kapsulleme", "title": "Kapsülleme", "depth": "okuma", "status": "doğrulandı", "sections": ["m11:encapsulation"] },
+      { "id": "property-static-class", "title": "property, staticmethod, classmethod", "depth": "okuma", "status": "doğrulandı", "sections": ["m11:property", "m11:static-class-methods"] },
+      { "id": "composition", "title": "Composition alternatifi", "depth": "okuma", "status": "doğrulandı", "sections": ["m11:composition"] }
     ] },
     { "id": 12, "title": "OOP 2", "subtopics": [
       { "id": "polimorfizm-abc", "title": "Polimorfizm ve abc", "depth": "okuma", "status": "planlandı", "sections": [] },
