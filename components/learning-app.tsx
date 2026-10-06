@@ -15,7 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { CodeRunner, usePythonRunner } from "@/components/code-runner";
 import { curriculum, getModule, getPracticeQuestions, getSection, learningModules, questionModuleId, seededTestQuestions } from "@/lib/content";
 import { isAnswerCorrect, wrongOptionFeedback } from "@/lib/answer-check";
-import { completeLesson, defaultProgress, markStudy, progressRepository } from "@/lib/progress-repository";
+import { completeLesson, decodeTransfer, defaultProgress, markStudy, progressRepository } from "@/lib/progress-repository";
 import type { LearningProgress, Question, QuizDraft } from "@/lib/learning-types";
 
 import { WritingLab, writingTasks } from "@/components/writing-lab";
@@ -23,7 +23,7 @@ import { WritingLab, writingTasks } from "@/components/writing-lab";
 import { createQuiz, initialDraft, quizSummary, secondsLeft, saveQuizDraft, answerQuiz, nextQuizQuestion, expireQuiz } from "@/lib/quiz-engine";
 import { Milestones, workshopTasks } from "@/components/milestones";
 import { midtermQuestions, milestonesAvailable } from "@/lib/milestones";
-import { ProgressBackup } from "@/components/progress-backup";
+import { ProgressBackup, type IncomingProgress } from "@/components/progress-backup";
 
 type Stage = "lesson" | "practice" | "writing" | "test" | "stats" | "midterm" | "milestones";
 type OpenRequest = { moduleId: number; stage: Stage; sectionId?: string };
@@ -317,6 +317,11 @@ export function LearningApp() {
   const [focus, setFocus] = useState<{ sectionId: string; nonce: number } | null>(null);
   // A locked module the student asked to open; waits for confirmation of the warning.
   const [pendingModule, setPendingModule] = useState<number | null>(null);
+  // Progress that arrived through a transfer link (#aktar=...) and waits for the student's decision.
+  const [incoming, setIncoming] = useState<IncomingProgress | null>(null);
+  const [incomingError, setIncomingError] = useState("");
+  const [mountedAt] = useState(() => Date.now());
+  const [reminderSnoozed, setReminderSnoozed] = useState(true);
   const module = getModule(moduleId);
   const completed = module.sections.filter((section) => progress.completedSections[`m${moduleId}:${section.id}`]).length;
   const lessonDone = completed === module.sections.length;
@@ -352,7 +357,19 @@ export function LearningApp() {
     return () => { window.clearInterval(timer); window.removeEventListener("focus", tick); document.removeEventListener("visibilitychange", tick); };
   }, [hydrated, updateProgress]);
   useEffect(() => {
+    if (!hydrated) return;
+    const match = /^#aktar=(.+)$/.exec(window.location.hash);
+    if (!match) return;
+    // The code is only read here; drop it from the address bar and history right away.
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    decodeTransfer(match[1]).then(
+      value => { setIncoming({ progress: value, source: "Bağlantıdan gelen ilerleme" }); setIncomingError(""); setStage("stats"); },
+      error => { setIncoming(null); setIncomingError(`Bağlantıdaki aktarım kodu okunamadı.${error instanceof Error ? ` Neden: ${error.message.replace(/\.$/, "")}.` : ""} Mevcut ilerlemen değiştirilmedi.`); setStage("stats"); },
+    );
+  }, [hydrated]);
+  useEffect(() => {
     const stored = expireQuiz(progressRepository.load());
+    try { setReminderSnoozed(Date.parse(window.localStorage.getItem("python-iz-backup-snooze") ?? "") > Date.now()); } catch { setReminderSnoozed(false); }
     progressRef.current = stored; setProgress(stored); progressRepository.save(stored);
     document.documentElement.classList.toggle("dark", stored.theme === "dark");
     if (stored.activeQuiz && learningModules.some(item => item.id === stored.activeQuiz?.moduleId)) {
@@ -383,6 +400,13 @@ export function LearningApp() {
 
   // Ordinary navigation drops a pending "Dersi aç" focus so a remounted lesson starts at the first unfinished section.
   function changeModule(id: number) { setFocus(null); setModuleId(id); setStage("lesson"); setWeakOnly(false); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function markBackup() { updateProgress(current => ({ ...current, lastBackupAt: new Date().toISOString() })); }
+  function snoozeReminder() {
+    setReminderSnoozed(true);
+    try { window.localStorage.setItem("python-iz-backup-snooze", new Date(Date.now() + 7 * 86400000).toISOString()); } catch { /* the reminder simply returns next visit */ }
+  }
+  // Worth a nudge once there is something to lose and no backup in the last two weeks.
+  const backupStale = progress.xp >= 100 && (!progress.lastBackupAt || mountedAt - Date.parse(progress.lastBackupAt) > 14 * 86400000);
   function selectModule(id: number, locked: boolean) { if (locked) setPendingModule(id); else changeModule(id); }
   function changeStage(next: Stage) { setFocus(null); if (next === "practice" && !lessonDone) return; if (next === "test" && (!practiceDone || !writingDone)) { setStage("writing"); return; } setWeakOnly(false); setStage(next); window.scrollTo({ top: 0, behavior: "smooth" }); }
   function toggleTheme() { updateProgress((current) => { const theme = current.theme === "dark" ? "light" : "dark"; document.documentElement.classList.toggle("dark", theme === "dark"); return { ...current, theme }; }); }
@@ -416,13 +440,14 @@ export function LearningApp() {
           {stage === "milestones" && <Milestones progress={progress} updateProgress={updateProgress} onExam={() => { if (milestonesAvailable(progress)) { setModuleId(4); setWeakOnly(false); setStage("midterm"); } }} />}
           {stage === "midterm" && milestonesAvailable(progress) && <QuizView moduleId={4} mode="midterm" progress={progress} updateProgress={updateProgress} onStage={changeStage} />}
           {storageWarning && <p role="alert" className="mb-5 border border-amber-500 p-3 text-sm">{storageWarning}</p>}
+          {backupStale && !reminderSnoozed && stage !== "stats" && <div role="note" className="mx-auto mb-5 flex max-w-3xl flex-wrap items-center gap-3 border border-amber-500 p-3 text-sm leading-6"><span className="min-w-0 flex-1">İlerlemen yalnızca bu tarayıcıda saklanıyor{progress.lastBackupAt ? "; son yedeğin 2 haftadan eski" : " ve henüz yedek almadın"}. Yedek alabilir ya da başka cihaza aktarabilirsin.</span><Button size="sm" onClick={() => setStage("stats")}>Yedek al / aktar</Button><Button size="sm" variant="ghost" onClick={snoozeReminder}>1 hafta sonra hatırlat</Button></div>}
           {moduleId > progress.unlockedModule && !["stats", "midterm", "milestones"].includes(stage) && <p role="note" className="mx-auto mb-5 max-w-3xl border border-amber-500 p-3 text-sm leading-6">Bu modül kilitli: önceki modülleri ve testlerini bitirmen önerilir. Burada çalıştıkların kaydedilir.</p>}
           {progress.activeQuiz && (stage !== progress.activeQuiz.mode || moduleId !== progress.activeQuiz.moduleId || weakOnly !== progress.activeQuiz.weakOnly) && <div className="lesson-card mx-auto mb-5 flex max-w-3xl flex-wrap items-center justify-between gap-3 p-4"><p className="text-sm">Modül {progress.activeQuiz.moduleId} · {progress.activeQuiz.completedAt === null ? "Devam eden oturumun saklanıyor. Süreli testte saat işlemeye devam eder." : "Son oturumunun sonucu hazır."}</p><Button variant="outline" onClick={resumeQuiz}>Oturuma dön</Button></div>}
           {stage === "writing" && <WritingLab key={moduleId} moduleId={moduleId} progress={progress} updateProgress={updateProgress} />}
           {stage === "lesson" && <LessonView key={`${moduleId}:${focus?.nonce ?? ""}`}moduleId={moduleId} progress={progress} updateProgress={updateProgress} onStage={changeStage} focus={focus} />}
           {(stage === "practice" || stage === "test") && <QuizView key={`${moduleId}:${stage}:${weakOnly}`} moduleId={moduleId} mode={stage} progress={progress} updateProgress={updateProgress} onStage={changeStage} weakOnly={weakOnly} />}
           {stage === "stats" && <StatsView progress={progress} onReview={() => { const weakestModule = Math.max(...learningModules.filter(item => item.id <= progress.unlockedModule).map(item => item.id)); setModuleId(weakestModule); setWeakOnly(true); setStage("practice"); }} />}
-          {stage === "stats" && <ProgressBackup progress={progress} onRestore={restoreProgress} />}
+          {stage === "stats" && <ProgressBackup progress={progress} onRestore={restoreProgress} onBackup={markBackup} incoming={incoming} incomingError={incomingError} onIncomingHandled={() => { setIncoming(null); setIncomingError(""); }} />}
         </section>
 
         <aside className="progress-rail hidden min-h-[calc(100vh-72px)] px-5 py-7 xl:block"><div className="flex items-center justify-between"><p className="rail-kicker text-muted-foreground">İlerlemen</p><Button variant="ghost" size="icon-sm" onClick={() => setStage("stats")} aria-label="İstatistikleri aç"><BarChart3 /></Button></div><div className="lesson-card mt-4 p-5"><div className="flex items-center justify-between"><strong className="text-sm">Modül {moduleId}</strong><span className="font-mono text-xs text-primary">%{Math.round((completed / module.sections.length) * 100)}</span></div><Progress value={(completed / module.sections.length) * 100} className="mt-3 h-2" /><div className="mt-5 space-y-3 text-sm">{module.sections.slice(0, 5).map((section, index) => { const done = progress.completedSections[`m${moduleId}:${section.id}`]; return <button key={section.id} onClick={() => setStage("lesson")} className={`flex w-full items-center gap-3 text-left ${done ? "text-foreground" : "text-muted-foreground"}`}><span className={`grid size-6 shrink-0 place-items-center border ${done ? "border-emerald-500 bg-emerald-500/15 text-emerald-500" : "border-border"}`}>{done ? <Check className="size-3.5" /> : index + 1}</span><span className="truncate">{section.title}</span></button>; })}</div></div><div className="lesson-card mt-4 p-5"><Trophy className="size-5 text-amber-500" /><strong className="mt-3 block text-sm">Sıradaki hedef</strong><p className="mt-1 text-sm leading-6 text-muted-foreground">{lessonDone ? practiceDone ? "Bitiriş testinde %70'e ulaş." : "15 pratik sorusunu tamamla." : `${module.sections.length - completed} ders bölümü kaldı.`}</p><Progress value={lessonDone ? practiceDone ? 85 : 65 : (completed / module.sections.length) * 60} className="mt-3 h-1.5" /></div><Button variant="outline" className="mt-4 w-full" onClick={() => setStage("stats")}><BarChart3 /> İstatistikler</Button></aside>

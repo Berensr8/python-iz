@@ -318,3 +318,11 @@ M10 sonrası siteyi öğrenci gözüyle gezen bir inceleme sonucunda yapıldı.
 - [x] Kontroller: 1.049 çalıştırılabilir içerik, 144 regresyon kontrolü, 137 yazma referans vakası; TypeScript ve üretim derlemesi başarılı (büyük paket uyarısı sürüyor).
 
 Açık kalanlar: Atölye 2–4, Ara sınav 2–4, Görselleştirme 1–4, M8 dosya yükleme/indirme, A1.5 (tam), A1.6, A1.7 (traceback satır seçimi), A1.12 (bağımsız metin denetimi). Sıradaki içerik: M11 OOP 1.
+
+### 6 Ekim 2026 — İlerleme aktarımı ve kilitli modüller
+
+- [x] Kilitli modüller uyarıyla açılabiliyor ("Vazgeç" / "Yine de aç"); ilerleme (`unlockedModule`) değişmez, modül içi Pratik/Test kilitleri sürer. Kilitliyken çözülen sorular istatistiğe ve zayıf konu tekrarına dahil.
+- [x] GitHub Pages yayını: `npm run build:pages`, `.github/workflows/pages.yml`. `package-lock.json` Linux'ta eksik iç içe paketler yüzünden `npm ci`'yi kırıyordu; yeni npm ile yeniden üretildi (hiçbir sürüm değişmedi).
+- [x] İlerleme aktarımı: aktarım kodu/bağlantısı, birleştirme, yedek hatırlatması (`docs/DEVIR-NOTU.md` bölüm 11). Kalıcı depolama izni bilerek istenmiyor.
+- [ ] Klavye sesleri ve geliştirilmiş doğru cevap sesi: şimdilik ertelendi. Araştırma notu: lisansı net ve yeniden dağıtılabilir gerçek anahtar kaydı olarak yalnızca OpenGameArt "Keyboard Soundpack #1" (CC0, tek klavye) bulundu; Mechvibes paket lisansları belirsiz, eklee paketi CC-BY (atıf ister).
+- [ ] Hesapla bulut senkronu: gerekmedi, bilerek yapılmadı (sunucu, giriş ve gizlilik yükü).

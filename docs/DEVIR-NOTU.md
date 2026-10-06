@@ -146,3 +146,15 @@ Site iki yerde yayınlanabilir; ikisi birbirini etkilemez.
 - **Yerelde deneme:** Pages çıktısı alt dizin altında sunulmalı; kök adreste sunmak yolları bozar. Windows'ta derleme sonunda `Assertion failed ... async.c` mesajı görülebilir; Node'un kapanış hatasıdır, betik çıktıya bakıp yok sayar.
 - **Dış bağımlılık:** Python motoru (Pyodide) jsDelivr CDN'inden yüklenir.
 - **İlerleme:** localStorage adrese bağlıdır; Sites adresindeki ilerleme Pages adresine otomatik taşınmaz (sitedeki yedek dışa/içe aktarma kullanılabilir).
+
+## 11. İlerleme aktarımı ve yedek hatırlatması
+
+İlerleme yalnızca tarayıcının `localStorage`'ında durur; cihaz değişince ya da tarayıcı verisi silinince kaybolur. Sunucu veya hesap kullanılmaz. Kalıcı depolama izni (`navigator.storage.persist()`) bilerek **istenmez**: Firefox gibi tarayıcılarda öğrenciye "izin ver" kutusu çıkarır.
+
+- **Aktarım kodu:** `encodeTransfer` / `decodeTransfer` (`lib/progress-repository.ts`). Biçim `PYIZ1.` + base64url(gzip(JSON)); `CompressionStream` yoksa sıkıştırmasız `PYIZ1R.`. Canlı sınav (`activeQuiz`) taşınmaz. Çözerken boyut sınırı (5 MB, sıkıştırma bombasına karşı), önek ve JSON şeması denetlenir. Tam dolu bir ilerleme yaklaşık 45 KB, kod birkaç KB'tır.
+- **Bağlantı:** `https://…/python-iz/#aktar=<kod>`. `#` sonrası sunucuya gitmez. Uygulama açılışta okur, adres çubuğundan ve geçmişten hemen siler, İstatistikler sayfasında onay kutusunu açar. Bozuk kodda anlaşılır hata gösterilir, ilerleme değişmez.
+- **Birleştirme** (`mergeProgress`): tamamlananlar (bölüm, pratik, ders çalıştırma) birleşir; XP, soru sayaçları ve ipucu sayısı **toplanmaz, büyüğü alınır** (iki cihaz aynı eski çalışmayı içerebilir, toplamak çift sayar); testler tarih/oturumla tekrarsız birleşir; seri en son çalışılan taraftan gelir; yazma sonucunda başarı ve ipucusuzluk korunur; taslak ve tema yerelde kalır; canlı sınav yerelde kalır. Bilinen sınır: iki cihazda ayrı kazanılmış XP toplanmaz, büyük olan alınır.
+- **Onay:** Birleştir (önerilir) / Yerine koy / Vazgeç. Uygulanmadan önce yerel kayıt `python-iz-before-import` anahtarına kurtarma kopyası olarak yazılır. Yedek dosyası içe aktarma da aynı onay kutusunu kullanır.
+- **Hatırlatma:** `lastBackupAt` alanı (şema alanı, eski kayıtlarda `null`) yedek indirince ve kod üretince güncellenir. 100 XP'ten fazlası olup 14 gündür yedeği olmayan öğrenciye bir bant gösterilir; "1 hafta sonra hatırlat" `python-iz-backup-snooze` anahtarında tutulur (ilerleme dosyasının parçası değildir).
+- **Testler:** `scripts/test-learning.mjs` içinde birleştirme (kayıpsızlık, çift sayım yok, kendisiyle birleşince değişmeme, girdiyi bozmama), kod gidiş-dönüşü, satır sonu/boşluk toleransı, bozuk/kesik/yabancı/şişirilmiş kod reddi. Mutasyon denemesi yapıldı: XP'yi toplayan ya da boyut sınırını kaldıran bozuk kod testlerce yakalanıyor.
+- **Tarayıcıda denendi:** iki adres (`localhost` ve `127.0.0.1`) iki cihaz gibi kullanıldı; bağlantıyla ve elle yapıştırarak aktarım, bozuk kod, birleşik sonucun kaydedilen veriyle karşılaştırması.

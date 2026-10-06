@@ -100,6 +100,8 @@ export type LearningProgress = {
   writingResults: Record<string, { passed: boolean; independent: boolean; attempts: number }>;
   activeQuiz: QuizSession | null;
   creditedQuizIds: string[];
+  // When the student last downloaded a backup or made a transfer code; drives the "back up" reminder.
+  lastBackupAt: string | null;
 };
 
 export type QuizDraft = { choice: string; fill: string; ordered: string[]; code: string; hints: number; stdin: string };

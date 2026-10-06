@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { loadPyodide } from "pyodide";
-import { defaultProgress, parseProgress, markStudy, recordWriting, studyDay, exportProgress, importProgress } from "../lib/progress-repository.ts";
+import { defaultProgress, parseProgress, markStudy, recordWriting, studyDay, exportProgress, importProgress, mergeProgress, encodeTransfer, decodeTransfer } from "../lib/progress-repository.ts";
 import { isAnswerCorrect, wrongOptionFeedback } from "../lib/answer-check.ts";
 import { pythonErrorHint } from "../lib/python-error-hint.ts";
 import { completeLesson } from "../lib/progress-repository.ts";
@@ -215,4 +215,80 @@ for (const [label, code] of [["Yalnız sınır", fix.starterCode.replace("amount
   const results = await runtime.assess(py, code, fix.tests);
   check(`Atölye 1: ${label} düzeltmesi yeterli değil`, () => assert.ok(results.some(result => !result.passed)));
 }
+// --- Cihazlar arası aktarım: birleştirme ve aktarım kodu ---
+const phone = parseProgress({ ...defaultProgress, xp: 300, streak: 4, lastStudyDate: "2026-10-05", unlockedModule: 3, theme: "light",
+  completedSections: { "m1:a": true, "m1:b": true }, lessonRuns: { "m1:a": true }, hintUsage: { "m1-q01": 1 },
+  questionResults: { "m1-q01": { correct: 2, wrong: 1 }, "m1-q02": { correct: 1, wrong: 0 } },
+  attempts: [{ kind: "module", moduleId: 1, score: 80, date: "2026-10-01T10:00:00.000Z", weakTopics: [] }],
+  writingResults: { "m1-w1": { passed: true, independent: false, attempts: 3 } }, writingDrafts: { "m1-w1": "telefon taslağı" },
+  creditedQuizIds: ["s1"] });
+const laptop = parseProgress({ ...defaultProgress, xp: 450, streak: 7, lastStudyDate: "2026-10-06", unlockedModule: 2, theme: "dark",
+  completedSections: { "m1:b": true, "m2:c": true }, hintUsage: { "m1-q01": 3 },
+  questionResults: { "m1-q01": { correct: 1, wrong: 4 }, "m2-q01": { correct: 1, wrong: 0 } },
+  attempts: [{ kind: "module", moduleId: 1, score: 80, date: "2026-10-01T10:00:00.000Z", weakTopics: [] }, { kind: "module", moduleId: 2, score: 90, date: "2026-10-04T10:00:00.000Z", weakTopics: [] }],
+  writingResults: { "m1-w1": { passed: true, independent: true, attempts: 1 }, "m2-w1": { passed: false, independent: false, attempts: 2 } },
+  writingDrafts: { "m1-w1": "bilgisayar taslağı", "m2-w1": "yeni görev" }, creditedQuizIds: ["s1", "s2"] });
+const merged = mergeProgress(phone, laptop);
+check("Birleştirme: tamamlananlar birleşir, hiçbir şey kaybolmaz", () => {
+  assert.deepEqual(Object.keys(merged.completedSections).sort(), ["m1:a", "m1:b", "m2:c"]);
+  assert.equal(merged.lessonRuns["m1:a"], true);
+  assert.equal(merged.unlockedModule, 3);
+  assert.deepEqual([...merged.creditedQuizIds].sort(), ["s1", "s2"]);
+});
+check("Birleştirme: sayaçlar toplanmaz, büyüğü alınır (çift sayım yok)", () => {
+  assert.equal(merged.xp, 450);
+  assert.deepEqual(merged.questionResults["m1-q01"], { correct: 2, wrong: 4 });
+  assert.equal(merged.hintUsage["m1-q01"], 3);
+  assert.equal(merged.attempts.length, 2, "aynı test iki kez sayılmamalı");
+  assert.deepEqual(merged.attempts.map(item => item.date), ["2026-10-01T10:00:00.000Z", "2026-10-04T10:00:00.000Z"]);
+});
+check("Birleştirme: seri en son çalışılan taraftan gelir; tema yerel kalır", () => {
+  assert.equal(merged.streak, 7);
+  assert.equal(merged.lastStudyDate, "2026-10-06");
+  assert.equal(mergeProgress(laptop, phone).streak, 7);
+  assert.equal(merged.theme, "light");
+});
+check("Birleştirme: yazma sonucu ve taslak — başarı ve ipucusuzluk korunur, yerel taslak ezilmez", () => {
+  assert.deepEqual(merged.writingResults["m1-w1"], { passed: true, independent: true, attempts: 3 });
+  assert.equal(merged.writingResults["m2-w1"].passed, false);
+  assert.equal(merged.writingDrafts["m1-w1"], "telefon taslağı");
+  assert.equal(merged.writingDrafts["m2-w1"], "yeni görev");
+});
+check("Birleştirme: kendisiyle birleşince değişmez, girdileri bozmaz", () => {
+  assert.deepEqual(mergeProgress(phone, phone), phone);
+  const before = structuredClone(laptop); mergeProgress(phone, laptop);
+  assert.deepEqual(laptop, before);
+});
+const withExam = createQuiz("canli", 1, "test", modules[0].questions.slice(0, 3), true);
+check("Birleştirme: yerel canlı sınav korunur, gelen sınav alınmaz", () => {
+  assert.equal(mergeProgress({ ...phone, activeQuiz: withExam }, laptop).activeQuiz?.id, "canli");
+  assert.equal(mergeProgress(phone, { ...laptop, activeQuiz: withExam }).activeQuiz, null);
+});
+const code = await encodeTransfer({ ...phone, activeQuiz: withExam });
+const decoded = await decodeTransfer(code);
+check("Aktarım kodu: gidiş-dönüş ilerlemeyi korur ve canlı sınavı taşımaz", () => {
+  assert.ok(code.startsWith("PYIZ1.") && /^[A-Za-z0-9._-]+$/.test(code));
+  assert.deepEqual(decoded, { ...phone, activeQuiz: null });
+});
+const wrapped = await decodeTransfer(code.replace(/(.{60})/g, "$1\n  "));
+check("Aktarım kodu: mesajlaşma uygulamasının eklediği satır sonları ve boşluklar sorun olmaz", () => assert.deepEqual(wrapped, decoded));
+const bigCode = await encodeTransfer(parseProgress({ ...defaultProgress, writingDrafts: Object.fromEntries(Array.from({ length: 30 }, (_, index) => [`t${index}`, "print('merhaba')\n".repeat(300)])) }));
+check("Aktarım kodu: büyük bir ilerleme makul boyutta kalır", () => assert.ok(bigCode.length < 30000, `kod ${bigCode.length} karakter`));
+const b64url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const outcome = text => decodeTransfer(text).then(() => "KABUL EDİLDİ", error => error.message);
+const rejected = [];
+for (const [label, bad] of [["rastgele metin", "merhaba dünya"], ["yanlış önek", "PYIZ2." + code.slice(6)], ["kesilmiş", code.slice(0, code.length - 40)],
+  ["bozuk karakter", "PYIZ1.***"], ["gzip değil", "PYIZ1." + b64url(new TextEncoder().encode("düz metin"))], ["boş", "PYIZ1."]]) rejected.push([label, await outcome(bad)]);
+check("Aktarım kodu: bozuk, kesik ve yabancı kodlar anlaşılır hatayla reddedilir", () => {
+  for (const [label, result] of rejected) assert.ok(result !== "KABUL EDİLDİ" && result.length > 5, `${label}: ${result}`);
+});
+const foreignResult = await outcome("PYIZ1R." + b64url(new TextEncoder().encode(JSON.stringify({ app: "baska", formatVersion: 1, progress: phone }))));
+const bombStream = new CompressionStream("gzip"); const bombWriter = bombStream.writable.getWriter(); void bombWriter.write(new Uint8Array(12 * 1024 * 1024)); void bombWriter.close();
+const bombResult = await outcome("PYIZ1." + b64url(new Uint8Array(await new Response(bombStream.readable).arrayBuffer())));
+check("Aktarım kodu: yabancı uygulama kodu ve şişirilmiş (sıkıştırma bombası) kod reddedilir", () => {
+  assert.notEqual(foreignResult, "KABUL EDİLDİ"); assert.match(bombResult, /büyük/);
+});
+const rawResult = await decodeTransfer("PYIZ1R." + b64url(new TextEncoder().encode(JSON.stringify({ app: "python-iz", formatVersion: 1, progress: phone }))));
+check("Aktarım kodu: sıkıştırmasız yedek biçimi de açılır", () => assert.deepEqual(rawResult, phone));
+
 console.log(`\n${checks} regresyon kontrolü geçti; ${tasks.reduce((sum, task) => sum + task.tests.length, 0)} yazma referans vakası doğrulandı.`);
