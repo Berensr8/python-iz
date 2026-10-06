@@ -13,10 +13,12 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { CodeRunner, usePythonRunner } from "@/components/code-runner";
-import { curriculum, getModule, getPracticeQuestions, getSection, learningModules, questionModuleId, seededTestQuestions } from "@/lib/content";
+import { curriculum, getModuleSummary, getSection, loadModules, moduleIndex, prefetchModules, questionModuleId, reloadToRetry, takeReturnTarget } from "@/lib/content";
+import { useModule } from "@/hooks/use-module";
+import { practiceQuestions, previousModulePool, seededTestQuestions } from "@/lib/question-selection";
 import { isAnswerCorrect, selectedAnswer, wrongOptionFeedback } from "@/lib/answer-check";
 import { completeLesson, decodeTransfer, defaultProgress, markStudy, progressRepository } from "@/lib/progress-repository";
-import type { LearningProgress, Question, QuizDraft } from "@/lib/learning-types";
+import type { LearningModule, LearningProgress, Question, QuizDraft } from "@/lib/learning-types";
 
 import { WritingLab, writingTasks } from "@/components/writing-lab";
 
@@ -77,7 +79,7 @@ function ModuleNavigation({ activeModule, progress, onSelect, closeMobile }: { a
     <nav className="space-y-1" aria-label="Modüller">
       {curriculum.map((title, index) => {
         const id = index + 1;
-        const isFutureContent = !learningModules.some(module => module.id === id);
+        const isFutureContent = !moduleIndex.some(module => module.id === id);
         // A locked module stays locked (lock icon, label) but can still be opened after a warning.
         const locked = id > progress.unlockedModule;
         const available = !locked && !isFutureContent;
@@ -93,8 +95,23 @@ function ModuleNavigation({ activeModule, progress, onSelect, closeMobile }: { a
   );
 }
 
-function LessonView({ moduleId, progress, updateProgress, onStage, focus }: { moduleId: number; progress: LearningProgress; updateProgress: (fn: (value: LearningProgress) => LearningProgress) => void; onStage: (stage: Stage) => void; focus: { sectionId: string; nonce: number } | null }) {
-  const module = getModule(moduleId);
+type LessonProps = { moduleId: number; progress: LearningProgress; updateProgress: (fn: (value: LearningProgress) => LearningProgress) => void; onStage: (stage: Stage) => void; focus: { sectionId: string; nonce: number } | null };
+
+function ModuleLoading({ failed, onReload }: { failed: boolean; onReload: () => void }) {
+  return <div className="mx-auto max-w-2xl lesson-card p-6" role={failed ? "alert" : "status"}>
+    {failed
+      ? <><p className="font-black">Modül yüklenemedi.</p><p className="mt-2 text-sm leading-6 text-muted-foreground">İnternet bağlantını kontrol et, sonra sayfayı yenile; kaldığın yere dönersin. İlerlemen etkilenmedi.</p><Button className="mt-4" onClick={onReload}>Sayfayı yenile ve tekrar dene</Button></>
+      : <p className="font-mono text-sm font-bold uppercase tracking-[0.12em] text-muted-foreground">Modül yükleniyor…</p>}
+  </div>;
+}
+
+function LessonView(props: LessonProps) {
+  const { module, failed } = useModule(props.moduleId);
+  if (!module) return <ModuleLoading failed={failed} onReload={() => reloadToRetry({ moduleId: props.moduleId, stage: "lesson" })} />;
+  return <LessonContent {...props} module={module} />;
+}
+
+function LessonContent({ module, moduleId, progress, updateProgress, onStage, focus }: LessonProps & { module: LearningModule }) {
   const firstIncomplete = Math.max(0, module.sections.findIndex((section) => !progress.completedSections[`m${moduleId}:${section.id}`]));
   // Keyed by module and focus nonce: a module change or "Dersi aç" request remounts this view, so state starts fresh here.
   const focusIndex = focus ? module.sections.findIndex((item) => item.id === focus.sectionId) : -1;
@@ -207,6 +224,11 @@ function QuestionCard({ question, number, total, noHints, sound, draft, answer, 
 function QuizView({ moduleId, mode, exam, progress, updateProgress, onStage, weakOnly = false }: { moduleId: number; mode: "practice" | "test" | "midterm"; exam?: Exam; progress: LearningProgress; updateProgress: (fn: (value: LearningProgress) => LearningProgress) => void; onStage: (stage: Stage) => void; weakOnly?: boolean }) {
   const [timed, setTimed] = useState(false);
   const [newRound, setNewRound] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  // A quiz must not start after the student has already left this screen while the modules were loading.
+  const alive = useRef(true);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const [now, setNow] = useState(Date.now());
   const [message, setMessage] = useState("");
   const stored = progress.activeQuiz;
@@ -217,21 +239,42 @@ function QuizView({ moduleId, mode, exam, progress, updateProgress, onStage, wea
     return () => window.clearInterval(timer);
   }, [session?.id, session?.completedAt, session?.deadline]);
 
-  function start() {
+  async function gatherQuestions(): Promise<Question[]> {
+    if (mode === "midterm") {
+      if (!exam) return [];
+      return examQuestions(exam, await loadModules([...new Set(exam.questionIds.map(questionModuleId))]));
+    }
+    if (mode === "test") {
+      const seed = Date.now() & 0xffffffff;
+      const modules = await loadModules([moduleId, ...previousModulePool(moduleId, seed)]);
+      const current = modules.find(item => item.id === moduleId)!;
+      return seededTestQuestions(current, modules.filter(item => item.id !== moduleId).flatMap(item => item.questions), seed, 18);
+    }
+    if (!weakOnly) return practiceQuestions((await loadModules([moduleId]))[0]);
+    // Only modules with at least one wrong answer are needed for a weak-topic round.
+    const withMistakes = moduleIndex.filter(item => item.questions.some(question => (progress.questionResults[question.id]?.wrong ?? 0) > 0)).map(item => item.id);
+    return (await loadModules(withMistakes)).flatMap(item => item.questions)
+      .filter(question => (progress.questionResults[question.id]?.wrong ?? 0) > 0)
+      .sort((a, b) => {
+        const ra = progress.questionResults[a.id], rb = progress.questionResults[b.id];
+        return ra.correct / (ra.correct + ra.wrong) - rb.correct / (rb.correct + rb.wrong);
+      }).slice(0, 15);
+  }
+  async function start() {
+    if (starting) return;
     if (stored && stored.completedAt === null && !window.confirm("Devam eden oturumun yerine yeni bir oturum başlatılsın mı? Önceki cevapların soru istatistiklerinde kalır; tamamlanmamış oturum için bitiriş ödülü verilmez.")) return;
-    const module = getModule(moduleId);
-    const questions = mode === "midterm" ? (exam ? examQuestions(exam, learningModules) : []) : mode === "test" ? seededTestQuestions(module, Date.now() & 0xffffffff, 18) : !weakOnly ? getPracticeQuestions(module) :
-      learningModules.flatMap(item => item.questions)
-        .filter(question => (progress.questionResults[question.id]?.wrong ?? 0) > 0)
-        .sort((a, b) => {
-          const ra = progress.questionResults[a.id], rb = progress.questionResults[b.id];
-          return ra.correct / (ra.correct + ra.wrong) - rb.correct / (rb.correct + rb.wrong);
-        }).slice(0, 15);
-    if (!questions.length) { setMessage("Tekrar gerektiren yanıtlanmış soru yok. Yeni konular için ders ve pratiğe geçebilirsin."); return; }
     if (mode === "midterm" && (!exam || !milestoneAvailable(progress, exam.afterModule))) return;
-    const next = createQuiz(crypto.randomUUID(), moduleId, mode, questions, timed, weakOnly, Date.now(), exam?.minutes);
-    updateProgress(current => ({ ...current, activeQuiz: next }));
-    setNow(Date.now()); setNewRound(false);
+    setStarting(true); setMessage(""); setLoadFailed(false);
+    try {
+      const questions = await gatherQuestions();
+      if (!alive.current) return;
+      if (!questions.length) { setMessage("Tekrar gerektiren yanıtlanmış soru yok. Yeni konular için ders ve pratiğe geçebilirsin."); return; }
+      const next = createQuiz(crypto.randomUUID(), moduleId, mode, questions, timed, weakOnly, Date.now(), exam?.minutes);
+      updateProgress(current => ({ ...current, activeQuiz: next }));
+      setNow(Date.now()); setNewRound(false);
+    } catch {
+      if (alive.current) { setLoadFailed(true); setMessage("Sorular yüklenemedi. İnternet bağlantını kontrol et, sonra sayfayı yenile; ilerlemen etkilenmedi."); }
+    } finally { if (alive.current) setStarting(false); }
   }
   if (!session) return <div className="mx-auto max-w-2xl lesson-card p-6">
     <p className="rail-kicker text-primary">{mode === "midterm" && exam ? `${exam.title} · ${exam.scope}` : `Modül ${moduleId}`} / {weakOnly ? "Zayıf konu tekrarı" : mode !== "practice" ? "Bitiriş testi" : "Pratik"}</p>
@@ -240,8 +283,9 @@ function QuizView({ moduleId, mode, exam, progress, updateProgress, onStage, wea
     <p className="mt-3 text-sm text-muted-foreground">Bu bir yerel öğrenme aracıdır. Cihazlar arasında otomatik eşitleme veya güvenli sınav denetimi yoktur; tek sekmede çalış.</p>
     {mode !== "practice" && <label className="mt-5 flex items-center gap-3"><Switch checked={timed} onCheckedChange={setTimed} />{mode === "midterm" && exam ? exam.minutes : 25} dakikalık süreyi aç</label>}
     {stored?.completedAt === null && <p className="mt-4 text-sm">Modül {stored.moduleId} için devam eden bir oturum var. Üstteki “Oturuma dön” düğmesiyle sürdürebilirsin.</p>}
-    <Button className="mt-6" onClick={start}><Play />{mode !== "practice" ? "Testi başlat" : "Pratiği başlat"}</Button>
+    <Button className="mt-6" onClick={() => void start()} disabled={starting}><Play />{starting ? "Sorular yükleniyor…" : mode !== "practice" ? "Testi başlat" : "Pratiği başlat"}</Button>
     {message && <p role="status" className="mt-4">{message}</p>}
+    {loadFailed && <Button className="mt-4" variant="outline" onClick={() => reloadToRetry({ moduleId, stage: weakOnly ? "stats" : mode })}>Sayfayı yenile ve tekrar dene</Button>}
   </div>;
   const summary = quizSummary(session);
   if (session.completedAt !== null) {
@@ -254,7 +298,7 @@ function QuizView({ moduleId, mode, exam, progress, updateProgress, onStage, wea
         <div className="mt-5 flex flex-wrap gap-3">
           <Button variant="outline" onClick={() => setNewRound(true)}><RotateCcw />Yeni tur</Button>
           {mode === "practice" && !weakOnly && <Button onClick={() => onStage("test")}>Yazma / bitiriş adımına geç</Button>}
-          {mode === "test" && summary.passed && learningModules.some(module => module.id === moduleId + 1) && <Button onClick={() => window.dispatchEvent(new CustomEvent("python-iz-open", { detail: { moduleId: moduleId + 1, stage: "lesson" } }))}>Sonraki modül</Button>}
+          {mode === "test" && summary.passed && moduleIndex.some(module => module.id === moduleId + 1) && <Button onClick={() => window.dispatchEvent(new CustomEvent("python-iz-open", { detail: { moduleId: moduleId + 1, stage: "lesson" } }))}>Sonraki modül</Button>}
           <Button variant="outline" onClick={() => onStage("stats")}><BarChart3 />İstatistikler</Button>
         </div>
       </section>
@@ -286,7 +330,7 @@ function QuizView({ moduleId, mode, exam, progress, updateProgress, onStage, wea
 
 function StatsView({ progress, onReview }: { progress: LearningProgress; onReview: () => void }) {
   // Modules opened early (while still locked) count once the student has answered something in them.
-  const openModules = learningModules.filter((module) => module.id <= progress.unlockedModule || module.questions.some((question) => progress.questionResults[question.id]));
+  const openModules = moduleIndex.filter((module) => module.id <= progress.unlockedModule || module.questions.some((question) => progress.questionResults[question.id]));
   // Per lesson section, so every weak row can link straight to the lesson that teaches it.
   const sectionRows = openModules.flatMap((module) => module.sections.map((section) => {
     const questions = module.questions.filter((question) => question.sectionId === section.id);
@@ -323,7 +367,7 @@ export function LearningApp() {
   const [incomingError, setIncomingError] = useState("");
   const [mountedAt] = useState(() => Date.now());
   const [reminderSnoozed, setReminderSnoozed] = useState(true);
-  const module = getModule(moduleId);
+  const module = getModuleSummary(moduleId);
   const completed = module.sections.filter((section) => progress.completedSections[`m${moduleId}:${section.id}`]).length;
   const lessonDone = completed === module.sections.length;
   const practiceDone = progress.completedPractice[`m${moduleId}`] === true;
@@ -357,6 +401,7 @@ export function LearningApp() {
     window.addEventListener("focus", tick); document.addEventListener("visibilitychange", tick);
     return () => { window.clearInterval(timer); window.removeEventListener("focus", tick); document.removeEventListener("visibilitychange", tick); };
   }, [hydrated, updateProgress]);
+  useEffect(() => { if (hydrated) prefetchModules([moduleId, moduleId + 1]); }, [hydrated, moduleId]);
   useEffect(() => {
     if (!hydrated) return;
     const match = /^#aktar=(.+)$/.exec(window.location.hash);
@@ -373,16 +418,21 @@ export function LearningApp() {
     try { setReminderSnoozed(Date.parse(window.localStorage.getItem("python-iz-backup-snooze") ?? "") > Date.now()); } catch { setReminderSnoozed(false); }
     progressRef.current = stored; setProgress(stored); progressRepository.save(stored);
     document.documentElement.classList.toggle("dark", stored.theme === "dark");
-    if (stored.activeQuiz && learningModules.some(item => item.id === stored.activeQuiz?.moduleId)) {
+    if (stored.activeQuiz && moduleIndex.some(item => item.id === stored.activeQuiz?.moduleId)) {
       setModuleId(stored.activeQuiz.moduleId); setStage(stored.activeQuiz.mode); setWeakOnly(stored.activeQuiz.weakOnly);
+    }
+    // After "Sayfayı yenile ve tekrar dene" the student lands on the screen that failed to load.
+    const back = takeReturnTarget();
+    if (back && (["lesson", "practice", "writing", "test", "stats", "midterm"] as string[]).includes(back.stage)) {
+      setModuleId(back.moduleId); setStage(back.stage as Stage); setWeakOnly(false);
     }
     setHydrated(true);
   }, []);
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<OpenRequest>).detail;
-      if (!detail || detail.moduleId > progress.unlockedModule || !learningModules.some(module => module.id === detail.moduleId) || !["lesson", "practice", "writing", "test", "stats"].includes(detail.stage)) return;
-      const target = getModule(detail.moduleId);
+      if (!detail || detail.moduleId > progress.unlockedModule || !moduleIndex.some(module => module.id === detail.moduleId) || !["lesson", "practice", "writing", "test", "stats"].includes(detail.stage)) return;
+      const target = getModuleSummary(detail.moduleId);
       if (detail.stage === "practice" && !target.sections.every(section => progress.completedSections[`m${target.id}:${section.id}`])) return;
       if (detail.stage === "test" && (!progress.completedPractice[`m${target.id}`] || !writingTasks.filter(task => task.moduleId === target.id).every(task => progress.writingResults[task.id]?.passed))) return;
       if (detail.stage === "lesson" && detail.sectionId && getSection(detail.moduleId, detail.sectionId)) setFocus({ sectionId: detail.sectionId, nonce: Date.now() });
@@ -395,7 +445,7 @@ export function LearningApp() {
     const context = documentWithContext.modelContext; if (!context?.registerTool) return;
     const lifecycle = new AbortController();
     void Promise.resolve(context.registerTool({ name: "get_learning_progress", title: "Öğrenme ilerlemesini getir", description: "Python İz içindeki XP, açık modül ve test geçmişini okur.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, untrustedContentHint: false }, execute: () => { const value = progressRepository.load(); return { xp: value.xp, unlockedModule: value.unlockedModule, attempts: value.attempts.length }; } }, { signal: lifecycle.signal })).catch(() => undefined);
-    void Promise.resolve(context.registerTool({ name: "open_learning_stage", title: "Öğrenme aşamasını aç", description: "Açık bir modülün ders, pratik, test veya istatistik görünümünü açar.", inputSchema: { type: "object", properties: { moduleId: { type: "integer", minimum: 1, maximum: Math.max(...learningModules.map(module => module.id)) }, stage: { type: "string", enum: ["lesson", "practice", "writing", "test", "stats"] } }, required: ["moduleId", "stage"], additionalProperties: false }, annotations: { readOnlyHint: false, untrustedContentHint: false }, execute: (input: unknown) => { const parsed = input as { moduleId: number; stage: Stage }; const current = progressRepository.load(); if (parsed.moduleId > current.unlockedModule) throw new Error("Bu modül henüz kilitli."); window.dispatchEvent(new CustomEvent("python-iz-open", { detail: parsed })); return { opened: true, ...parsed }; } }, { signal: lifecycle.signal })).catch(() => undefined);
+    void Promise.resolve(context.registerTool({ name: "open_learning_stage", title: "Öğrenme aşamasını aç", description: "Açık bir modülün ders, pratik, test veya istatistik görünümünü açar.", inputSchema: { type: "object", properties: { moduleId: { type: "integer", minimum: 1, maximum: Math.max(...moduleIndex.map(module => module.id)) }, stage: { type: "string", enum: ["lesson", "practice", "writing", "test", "stats"] } }, required: ["moduleId", "stage"], additionalProperties: false }, annotations: { readOnlyHint: false, untrustedContentHint: false }, execute: (input: unknown) => { const parsed = input as { moduleId: number; stage: Stage }; const current = progressRepository.load(); if (parsed.moduleId > current.unlockedModule) throw new Error("Bu modül henüz kilitli."); window.dispatchEvent(new CustomEvent("python-iz-open", { detail: parsed })); return { opened: true, ...parsed }; } }, { signal: lifecycle.signal })).catch(() => undefined);
     return () => lifecycle.abort();
   }, []);
 
@@ -430,7 +480,7 @@ export function LearningApp() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <header className="app-header sticky top-0 z-40 backdrop-blur-xl"><div className="mx-auto flex h-[72px] max-w-[1580px] items-center gap-3 px-4 sm:px-6"><Sheet><SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" aria-label="Modülleri aç"><Menu /></Button></SheetTrigger><SheetContent side="left" className="w-[88%] overflow-y-auto p-0"><SheetHeader className="border-b-2 border-border p-5 text-left"><SheetTitle className="brand-word">ÖĞRENME YOLU</SheetTitle><SheetDescription>{curriculum.length} modül · {learningModules.length} modül hazır</SheetDescription></SheetHeader><div className="p-4"><ModuleNavigation activeModule={moduleId} progress={progress} onSelect={selectModule} /><SheetClose asChild><Button variant="outline" className="mt-4 w-full" onClick={() => setStage("stats")}><BarChart3 /> İstatistikler</Button></SheetClose></div></SheetContent></Sheet><button onClick={() => { setStage("lesson"); setModuleId(1); setWeakOnly(false); }} className="flex items-center gap-3 text-left"><span className="brand-mark font-mono text-sm">&gt;_</span><span className="hidden sm:block"><span className="brand-word block text-[17px] font-black">PYTHON İZ</span><span className="block font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Kodu anla. Kendin yaz.</span></span></button><span className="ml-3 hidden border-l-2 border-foreground pl-3 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground lg:block">Etkileşimli Python Lab<br />Sürüm / 01</span><div className="ml-auto flex items-center gap-1.5 sm:gap-3"><div className="utility-stat hidden items-center gap-2 px-3 py-1.5 text-sm md:flex"><Flame className="size-4 text-orange-500" /> <strong>{progress.streak} gün</strong></div><div className="utility-stat flex items-center gap-2 px-3 py-1.5 text-sm"><Sparkles className="size-4 text-amber-500" /> <strong>{progress.xp} XP</strong></div><Button variant="ghost" size="icon" onClick={() => updateProgress((current) => ({ ...current, sound: !current.sound }))} aria-label={progress.sound ? "Sesi kapat" : "Sesi aç"}>{progress.sound ? <Volume2 /> : <VolumeX />}</Button><Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Temayı değiştir">{progress.theme === "dark" ? <Sun /> : <Moon />}</Button></div></div></header>
+      <header className="app-header sticky top-0 z-40 backdrop-blur-xl"><div className="mx-auto flex h-[72px] max-w-[1580px] items-center gap-3 px-4 sm:px-6"><Sheet><SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" aria-label="Modülleri aç"><Menu /></Button></SheetTrigger><SheetContent side="left" className="w-[88%] overflow-y-auto p-0"><SheetHeader className="border-b-2 border-border p-5 text-left"><SheetTitle className="brand-word">ÖĞRENME YOLU</SheetTitle><SheetDescription>{curriculum.length} modül · {moduleIndex.length} modül hazır</SheetDescription></SheetHeader><div className="p-4"><ModuleNavigation activeModule={moduleId} progress={progress} onSelect={selectModule} /><SheetClose asChild><Button variant="outline" className="mt-4 w-full" onClick={() => setStage("stats")}><BarChart3 /> İstatistikler</Button></SheetClose></div></SheetContent></Sheet><button onClick={() => { setStage("lesson"); setModuleId(1); setWeakOnly(false); }} className="flex items-center gap-3 text-left"><span className="brand-mark font-mono text-sm">&gt;_</span><span className="hidden sm:block"><span className="brand-word block text-[17px] font-black">PYTHON İZ</span><span className="block font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Kodu anla. Kendin yaz.</span></span></button><span className="ml-3 hidden border-l-2 border-foreground pl-3 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground lg:block">Etkileşimli Python Lab<br />Sürüm / 01</span><div className="ml-auto flex items-center gap-1.5 sm:gap-3"><div className="utility-stat hidden items-center gap-2 px-3 py-1.5 text-sm md:flex"><Flame className="size-4 text-orange-500" /> <strong>{progress.streak} gün</strong></div><div className="utility-stat flex items-center gap-2 px-3 py-1.5 text-sm"><Sparkles className="size-4 text-amber-500" /> <strong>{progress.xp} XP</strong></div><Button variant="ghost" size="icon" onClick={() => updateProgress((current) => ({ ...current, sound: !current.sound }))} aria-label={progress.sound ? "Sesi kapat" : "Sesi aç"}>{progress.sound ? <Volume2 /> : <VolumeX />}</Button><Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Temayı değiştir">{progress.theme === "dark" ? <Sun /> : <Moon />}</Button></div></div></header>
 
       <div className="mx-auto grid max-w-[1580px] grid-cols-1 lg:grid-cols-[265px_minmax(0,1fr)] xl:grid-cols-[265px_minmax(0,1fr)_300px]">
         <aside className="curriculum-rail hidden min-h-[calc(100vh-72px)] px-4 py-7 lg:block"><p className="rail-kicker mb-5 px-2 text-muted-foreground">Öğrenme yolu</p><div className="max-h-[calc(100vh-145px)] overflow-y-auto pr-1 scrollbar-thin"><ModuleNavigation activeModule={moduleId} progress={progress} onSelect={selectModule} /></div></aside>
@@ -447,7 +497,7 @@ export function LearningApp() {
           {stage === "writing" && <WritingLab key={moduleId} moduleId={moduleId} progress={progress} updateProgress={updateProgress} />}
           {stage === "lesson" && <LessonView key={`${moduleId}:${focus?.nonce ?? ""}`}moduleId={moduleId} progress={progress} updateProgress={updateProgress} onStage={changeStage} focus={focus} />}
           {(stage === "practice" || stage === "test") && <QuizView key={`${moduleId}:${stage}:${weakOnly}`} moduleId={moduleId} mode={stage} progress={progress} updateProgress={updateProgress} onStage={changeStage} weakOnly={weakOnly} />}
-          {stage === "stats" && <StatsView progress={progress} onReview={() => { const weakestModule = Math.max(...learningModules.filter(item => item.id <= progress.unlockedModule).map(item => item.id)); setModuleId(weakestModule); setWeakOnly(true); setStage("practice"); }} />}
+          {stage === "stats" && <StatsView progress={progress} onReview={() => { const weakestModule = Math.max(...moduleIndex.filter(item => item.id <= progress.unlockedModule).map(item => item.id)); setModuleId(weakestModule); setWeakOnly(true); setStage("practice"); }} />}
           {stage === "stats" && <ProgressBackup progress={progress} onRestore={restoreProgress} onBackup={markBackup} incoming={incoming} incomingError={incomingError} onIncomingHandled={() => { setIncoming(null); setIncomingError(""); }} />}
         </section>
 

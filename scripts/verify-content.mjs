@@ -7,6 +7,8 @@ import "../public/python-runtime.js";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const files = (await readdir(path.join(root, "content"))).filter(file => /^module-\d+\.json$/.test(file)).map(file => `content/${file}`);
 const modules = await Promise.all(files.map(async (file) => JSON.parse(await readFile(path.join(root, file), "utf8"))));
+// Loaders and the module index are keyed by file number, so it must match the module's own id.
+files.forEach((file, index) => { const number = Number(/module-(\d+)\.json$/.exec(file)[1]); if (number !== modules[index].id) { console.error(`${file}: dosya numarası (${number}) modülün id'siyle (${modules[index].id}) uyuşmuyor.`); process.exitCode = 1; } });
 const pyodide = await loadPyodide();
 const version = pyodide.runPython("import sys; tuple(sys.version_info[:3])").toJs();
 

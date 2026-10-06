@@ -3,21 +3,21 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { WritingExercise } from "@/components/writing-lab";
 import rawTasks from "@/content/workshop-tasks.json";
-import { learningModules } from "@/lib/content";
+import { moduleIndex } from "@/lib/content";
 import { exams, workshops } from "@/lib/milestone-data";
-import { examPassCount, examQuestions, milestoneAvailable, PASS_SCORE, workshopSteps, type Exam, type ReadStep, type Workshop } from "@/lib/milestones";
+import { examPassCount, examSummary, milestoneAvailable, PASS_SCORE, workshopSteps, type Exam, type ReadStep, type Workshop } from "@/lib/milestones";
 import type { LearningProgress, WritingTask } from "@/lib/learning-types";
 
 export const workshopTasks = rawTasks as WritingTask[];
 type UpdateProgress = (fn: (p: LearningProgress) => LearningProgress) => void;
 
 function ExamCard({ exam, progress, available, onExam }: { exam: Exam; progress: LearningProgress; available: boolean; onExam: (exam: Exam) => void }) {
-  const questions = examQuestions(exam, learningModules);
+  const { count, code } = examSummary(exam, moduleIndex);
   const attempts = progress.attempts.filter(item => item.kind === "midterm" && item.moduleId === exam.afterModule);
   return <section className="lesson-card mt-4 p-5">
     <h3 className="text-xl font-black">{exam.title} <span className="text-base font-bold text-muted-foreground">· {exam.scope}</span></h3>
     <p className="mt-3 leading-7 text-muted-foreground">{exam.description}</p>
-    <p className="mt-3 text-sm">{questions.length} soru · {questions.filter(question => question.type === "code").length} kod yazma · geçme notu %{PASS_SCORE} ({examPassCount(questions.length)} doğru) · isteğe bağlı {exam.minutes} dakika</p>
+    <p className="mt-3 text-sm">{count} soru · {code} kod yazma · geçme notu %{PASS_SCORE} ({examPassCount(count)} doğru) · isteğe bağlı {exam.minutes} dakika</p>
     <Button className="mt-4" disabled={!available} onClick={() => onExam(exam)}>Sınavı aç</Button>
     <p className="mt-3 text-sm">{attempts.length ? `${attempts.length} deneme · son sonuç %${attempts.at(-1)!.score} · en iyi %${Math.max(...attempts.map(item => item.score))}` : "Henüz tamamlanmış deneme yok."}</p>
   </section>;

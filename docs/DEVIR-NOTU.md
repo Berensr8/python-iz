@@ -173,3 +173,19 @@ Site iki yerde yayınlanabilir; ikisi birbirini etkilemez.
 **Kural 2 — doğru cevabın konumu içerikte önemsiz, çünkü oturum seçenekleri karıştırır.** `createQuiz` seçenekleri oturum ve soru kimliğine göre sabit tohumla karıştırır (yenilemede sıra değişmez). İçerikte doğru cevap çoğunlukla ilk sırada yazılıdır; bu bilinçli olarak karıştırmaya güvenilir. Seçeneklerde "yukarıdakilerin hepsi", "hiçbiri" gibi konuma bağlı ifade kullanma.
 
 **Üreticiler:** `build_m8.py`, `build_m9.py` (modül + görev), `build_workshops.py` (atölye). Bash heredoc içinde ters bölü bozulabilir; kaçış içeren Python kodunu ham dizeyle (`r'...'`) ya da dosya yazma aracıyla oluştur.
+
+## 13. Modül içeriği ve talep üzerine yükleme
+
+İki ayrı görünüm vardır; kod yazarken hangisine ihtiyacın olduğuna göre seç.
+
+| İhtiyaç | Kullan | Not |
+|---|---|---|
+| Yapı: modül var mı, bölüm/soru kimlikleri, başlıklar, soru türü/zorluğu | `moduleIndex`, `getModuleSummary`, `getSection` (`lib/content.ts`) | Eşzamanlı, ana pakette, metin yok |
+| Tam metin: ders anlatımı, soru metni, seçenekler, cevaplar | React'ta `useModule(id)` (`hooks/use-module.ts`); olay işleyicide `await loadModules([...])` | Eşzamansız; ilk kullanımda ayrı parça indirilir |
+
+- **Dizin** `build/content-index.mjs` ile `content/module-NN.json` dosyalarından her derlemede ve geliştirme sunucusu başlarken üretilir (`build/content-index-plugin.mjs`, `virtual:content-index`; iki Vite yapılandırmasında da kayıtlı). Dizin dosyası yoktur; içerik değişince geliştirme sunucusunu yeniden başlat. Yeni modül için kod değişikliği gerekmez; **dosya numarası** (`module-07.json`) modülün `id`'siyle aynı olmalı (`verify-content` denetler).
+- **Yeni kod kuralı:** `moduleIndex` metin taşımaz (`explanation`, `prompt`, `hints` vs. yok). Metne ihtiyacın varsa yükle; ihtiyacın yalnız kimlik/başlık/tür ise dizini kullan, çünkü modül yüklemek ağ isteğidir. Ekranlar yükleme (`Modül yükleniyor…`) ve hata durumunu göstermeli (`ModuleLoading` örneği).
+- **Soru oturumları** tam soru verisini ilerlemenin içinde saklar; devam eden oturum modül yüklemeden açılır.
+- **Test soruları** `lib/question-selection.ts` içinde saf işlevlerdir (`previousModulePool`, `seededTestQuestions`, `practiceQuestions`); Node testleri doğrudan yükler. `lib/content.ts` yalnızca Vite altında yüklenebilir (`import.meta.glob`, sanal modül), Node testlerinde içe aktarma.
+- **Yükleme hatası:** Başarısız dinamik `import()` sayfa boyunca önbelleğe alınır; aynı sayfada yeniden deneme çalışmaz. `reloadToRetry` sayfayı yeniler ve `takeReturnTarget` açılışta kaldığı ekranı (modül ve aşama) geri açar. Bunu kaldırma ya da "Tekrar dene" düğmesine çevirme.
+- **Ölçüm** (6 Ekim 2026): ana parça 1356 KB → 829 KB (251 KB gzip); modül parçaları 39–80 KB (12–16 KB gzip). Ana pakette hâlâ yazma görevleri, atölye verisi ve CodeMirror var.

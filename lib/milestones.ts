@@ -1,4 +1,4 @@
-import type { LearningModule, LearningProgress, Question } from "./learning-types";
+import type { LearningModule, LearningProgress, ModuleSummary, Question } from "./learning-types";
 
 // Checkpoints (cumulative exams and project workshops) are described in content/milestones.json.
 // A checkpoint sits "after" a module: it opens once that module's test is passed or the next module is unlocked.
@@ -25,6 +25,12 @@ export function examQuestions(exam: Exam, modules: LearningModule[]): Question[]
     if (!question) throw new Error(`Ara sınav sorusu bulunamadı: ${id}`);
     return question;
   });
+}
+/** Question count and number of code questions, read from the module index so no module text is loaded. */
+export function examSummary(exam: Exam, index: ModuleSummary[]) {
+  const all = new Map(index.flatMap(module => module.questions).map(question => [question.id, question]));
+  const questions = exam.questionIds.map(id => all.get(id));
+  return { count: questions.length, code: questions.filter(question => question?.type === "code").length };
 }
 export function examPassCount(questionCount: number) {
   return Math.ceil(questionCount * PASS_SCORE / 100);

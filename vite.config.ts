@@ -4,6 +4,7 @@ import hostingConfig from "./.openai/hosting.json";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
 import { sites } from "./build/sites-vite-plugin";
 import { connectorPreview } from "./build/connector-preview-plugin.mjs";
+import { contentIndex } from "./build/content-index-plugin.mjs";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
@@ -41,7 +42,7 @@ const localBindingConfig = {
 const pagesBasePath = process.env.PAGES_BASE_PATH ?? "";
 
 export default defineConfig(async ({ command }) => {
-  if (process.env.PAGES_BUILD) return { base: `${pagesBasePath}/`, plugins: [vinext()] };
+  if (process.env.PAGES_BUILD) return { base: `${pagesBasePath}/`, plugins: [vinext(), contentIndex()] };
 
   // Use Miniflare's local Request.cf placeholder unless fetching is requested.
   process.env.CLOUDFLARE_CF_FETCH_ENABLED ??= "false";
@@ -70,6 +71,7 @@ export default defineConfig(async ({ command }) => {
       vinext(),
       sites({ mockAuth: !managedLinux }),
       connectorPreview(),
+      contentIndex(),
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,

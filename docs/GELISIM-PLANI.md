@@ -339,3 +339,12 @@ Açık kalanlar: Atölye 2–4, Ara sınav 2–4, Görselleştirme 1–4, M8 dos
 - [x] Kontroller: 1.082 çalıştırılabilir içerik, 205 regresyon kontrolü, 168 yazma referans vakası; TypeScript, normal ve Pages derlemeleri başarılı. Tarayıcıda: eski ilerlemeyle atölye ve ara sınav, ara sınavın yenilemeden sonra devamı, M8 pratiğinin çözülmesi, Atölye 2 ve 3 okuma adımları, Atölye 2'nin 4. adımı ve Ara Sınav 2 denendi.
 
 Açık kalanlar: Atölye 4–6, Ara sınav 3–4, Görselleştirme 1–4, Genel sınav ve bitirme projesi, M8 dosya yükleme/indirme, M11–M18, modülleri ihtiyaç olunca yükleme (ana JS parçası 1,3 MB), A1.5/A1.6/A1.7/A1.12.
+
+### 6 Ekim 2026 — Modülleri ihtiyaç olunca yükleme
+
+- [x] Modül metinleri artık ana pakette değil: her modül ayrı bir parça (sıkıştırılmış 12–16 KB) ve ilk ihtiyaçta yüklenir. Ana JavaScript parçası 1356 KB → 829 KB (sıkıştırılmış 251 KB). M18'e kadar modül eklendikçe ana paket büyümez; yalnızca açılan modül kadar indirilir.
+- [x] Yapı bilgisi (bölüm ve soru kimlikleri, başlıklar, soru türü ve zorluğu) derleme sırasında modül dosyalarından otomatik üretilen küçük bir dizinde (`virtual:content-index`); gezinti, istatistik, ara sınav kartları ve zayıf konu planı metin yüklemeden çalışır. Üretilmiş dosya yoktur, bayatlayamaz.
+- [x] Bitiriş testi yalnız gereken modülleri yükler: açık modül + en çok 4 önceki modül (soruların 4/18'i önceki modüllerden gelir; hangi modüller olacağı tohumdan seçilir). Ara sınav kapsamındaki modülleri, zayıf konu turu yalnız yanlış cevap olan modülleri yükler. Açılan modül ve sonrakisi boşta zamanda önceden yüklenir.
+- [x] Yükleme hatası: tarayıcı başarısız bir `import()` sonucunu sayfa ömrü boyunca hatırladığı için aynı sayfada yeniden denemek işe yaramıyor (denendi). Bu yüzden "Sayfayı yenile ve tekrar dene" düğmesi sayfayı yeniler ve öğrenciyi kaldığı ekrana (modül ve aşama) geri getirir; ilerleme etkilenmez.
+- [x] Testler: dizin her modülün yapısını verir ve metin taşımaz; dizin tam içeriğin %20'sinden küçük; test soru seçimi (ilk modülde önceki konu yok, sonrakilerde 4/18, ≥3 kod sorusu, M18 testi en çok 4 önceki modül yükler) ve pratik soru sırası. Tarayıcıda: açılışta yalnız M1 (+boşta M2), M8'e girince M8, M8 testinde yalnız 2 ek modül, ara sınav kartları modül yüklemeden, ara sınav başlatınca gereken modüller, parça kaldırılınca hata ve geri dönüş.
+- [ ] Ana pakette hâlâ yazma görevleri (92 KB), atölye verileri ve CodeMirror var; ileride onlar da ihtiyaç olunca yüklenebilir.

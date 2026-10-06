@@ -1,9 +1,17 @@
-import type { LearningModule } from "@/lib/learning-types";
+import contentIndex from "virtual:content-index";
+import type { LearningModule, ModuleSummary } from "@/lib/learning-types";
 
 // Every content/module-NN.json is picked up at build time; adding a module needs no code change.
+// Two views of the same files:
+//  - moduleIndex: structure only (ids, titles, question types). Always in the main bundle, a few KB per module.
+//  - loadModule: the full text, one separate chunk per module, fetched the first time it is needed.
+export const moduleIndex: ModuleSummary[] = [...contentIndex].sort((a, b) => a.id - b.id);
+
 // A non-generic glob declaration in the toolchain types shadows Vite's, hence the cast.
-const moduleFiles = import.meta.glob("../content/module-*.json", { eager: true, import: "default" }) as unknown as Record<string, LearningModule>;
-export const learningModules = Object.values(moduleFiles).sort((a, b) => a.id - b.id);
+const moduleLoaders = import.meta.glob("../content/module-*.json", { import: "default" }) as unknown as Record<string, () => Promise<LearningModule>>;
+const loaderById = new Map(Object.entries(moduleLoaders).map(([file, load]) => [Number(/module-(\d+)\.json$/.exec(file)?.[1]), load] as const));
+const loaded = new Map<number, LearningModule>();
+const pending = new Map<number, Promise<LearningModule>>();
 
 export const curriculum = [
   "Temeller", "String'ler", "Akış kontrolü", "Veri yapıları", "Referans ve kopyalama", "Fonksiyonlar",
@@ -11,12 +19,12 @@ export const curriculum = [
   "İleri yapılar", "Type hints", "Eşzamanlılık", "Kod kalitesi", "Algoritmik düşünme", "Ekosisteme bakış",
 ];
 
-export function getModule(id: number) {
-  return learningModules.find((item) => item.id === id) ?? learningModules[0];
+export function getModuleSummary(id: number) {
+  return moduleIndex.find((item) => item.id === id) ?? moduleIndex[0];
 }
 
 export function getSection(moduleId: number, sectionId: string) {
-  return learningModules.find((item) => item.id === moduleId)?.sections.find((section) => section.id === sectionId);
+  return moduleIndex.find((item) => item.id === moduleId)?.sections.find((section) => section.id === sectionId);
 }
 
 /** Module that owns a question, derived from its id prefix ("m2-q10" → 2). */
@@ -24,19 +32,55 @@ export function questionModuleId(questionId: string) {
   return Number(/^m(\d+)-/.exec(questionId)?.[1] ?? 0);
 }
 
-export function getPracticeQuestions(module: LearningModule) {
-  return module.practiceIds.map((id) => module.questions.find((q) => q.id === id)).filter(Boolean) as LearningModule["questions"];
+/** The full module if it has been fetched already. */
+export function loadedModule(id: number) {
+  return loaded.get(id);
 }
 
-export function seededTestQuestions(module: LearningModule, seed: number, count = 18) {
-  const current = [...module.questions];
-  const previous = learningModules.filter((item) => item.id < module.id).flatMap((item) => item.questions);
-  let state = seed || 1;
-  const random = () => ((state = (state * 1664525 + 1013904223) >>> 0) / 4294967296);
-  const shuffle = <T,>(items: T[]) => items.map((value) => ({ value, key: random() })).sort((a, b) => a.key - b.key).map(({ value }) => value);
-  const previousCount = previous.length ? Math.round(count * 0.2) : 0;
-  // Every module test includes writing, rather than leaving it to chance.
-  const writing = shuffle(current.filter(question => question.type === "code")).slice(0, Math.min(3, count - previousCount));
-  const remaining = current.filter(question => !writing.includes(question));
-  return shuffle([...writing, ...shuffle(remaining).slice(0, count - previousCount - writing.length), ...shuffle(previous).slice(0, previousCount)]);
+/** Fetches a module's text once; simultaneous callers share one request, and a failed fetch can be retried. */
+export function loadModule(id: number): Promise<LearningModule> {
+  const ready = loaded.get(id);
+  if (ready) return Promise.resolve(ready);
+  const running = pending.get(id);
+  if (running) return running;
+  const load = loaderById.get(id);
+  if (!load) return Promise.reject(new Error(`Modül ${id} bulunamadı.`));
+  const request = load().then(
+    (module) => { loaded.set(id, module); pending.delete(id); return module; },
+    (error) => { pending.delete(id); throw error; },
+  );
+  pending.set(id, request);
+  return request;
+}
+
+export function loadModules(ids: number[]) {
+  return Promise.all([...new Set(ids)].map(loadModule));
+}
+
+/** Warms the cache while the browser is idle so opening the next lesson feels instant; failures are ignored. */
+export function prefetchModules(ids: number[]) {
+  const run = () => ids.filter((id) => loaderById.has(id) && !loaded.has(id)).forEach((id) => void loadModule(id).catch(() => undefined));
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) window.requestIdleCallback(run, { timeout: 4000 });
+  else setTimeout(run, 1500);
+}
+
+// A failed dynamic import() is remembered by the browser for the lifetime of the page: the same chunk
+// keeps failing even after the network is back. The only reliable retry is a reload, so the screen the
+// student was on is saved for the new page load to reopen.
+const returnKey = "python-iz-return";
+export type ReturnTarget = { moduleId: number; stage: string };
+
+export function reloadToRetry(target: ReturnTarget) {
+  try { window.sessionStorage.setItem(returnKey, JSON.stringify(target)); } catch { /* the reload still helps */ }
+  window.location.reload();
+}
+
+/** The screen to reopen after reloadToRetry; reading it removes it, so it applies once. */
+export function takeReturnTarget(): ReturnTarget | null {
+  try {
+    const raw = window.sessionStorage.getItem(returnKey);
+    window.sessionStorage.removeItem(returnKey);
+    const value = raw ? JSON.parse(raw) : null;
+    return value && typeof value.stage === "string" && moduleIndex.some((item) => item.id === value.moduleId) ? { moduleId: value.moduleId, stage: value.stage } : null;
+  } catch { return null; }
 }

@@ -70,6 +70,12 @@ export type LearningModule = {
   questions: Question[];
 };
 
+/** Structure of a module without its text; built from the module files (see build/content-index.mjs). */
+export type ModuleSummary = Pick<LearningModule, "id" | "slug" | "title" | "description" | "contentVersion" | "estimatedMinutes" | "practiceIds"> & {
+  sections: { id: string; title: string }[];
+  questions: Pick<Question, "id" | "type" | "sectionId" | "difficulty">[];
+};
+
 export type TestAttempt = {
   kind?: "module" | "midterm";
   sessionId?: string;

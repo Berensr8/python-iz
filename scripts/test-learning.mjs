@@ -7,6 +7,9 @@ import { pythonErrorHint } from "../lib/python-error-hint.ts";
 import { completeLesson } from "../lib/progress-repository.ts";
 import { examQuestions, examByModule, examPassCount, milestoneAvailable, workshopSteps, workshopComplete, attemptLabel } from "../lib/milestones.ts";
 import { createQuiz, answerQuiz, nextQuizQuestion, finishQuiz, expireQuiz, saveQuizDraft, initialDraft } from "../lib/quiz-engine.ts";
+import { fileURLToPath } from "node:url";
+import { buildContentIndex } from "../build/content-index.mjs";
+import { practiceQuestions, previousModulePool, seededTestQuestions } from "../lib/question-selection.ts";
 import "../public/python-runtime.js";
 
 let checks = 0;
@@ -348,6 +351,60 @@ for (const [id, label, from, find, replacement] of mutants) {
   const results = await runtime.assess(py, source.replace(find, replacement), task.tests);
   check(`${id}: ${label} — testlerde kalır`, () => assert.ok(results.some(result => !result.passed), "bozuk çözüm bütün testleri geçti"));
 }
+
+// --- Modülleri ihtiyaç olunca yükleme: dizin ve soru seçimi ---
+const contentIndex = buildContentIndex(fileURLToPath(new URL("../content/", import.meta.url)));
+check("Modül dizini her modülün yapısını verir, metni taşımaz", () => {
+  assert.deepEqual(contentIndex.map(item => item.id), modules.map(item => item.id));
+  for (const [index, module] of modules.entries()) {
+    const summary = contentIndex[index];
+    assert.deepEqual(summary.sections.map(item => item.id), module.sections.map(item => item.id));
+    assert.deepEqual(summary.sections.map(item => item.title), module.sections.map(item => item.title));
+    assert.deepEqual(summary.questions.map(item => item.id), module.questions.map(item => item.id));
+    assert.deepEqual(summary.practiceIds, module.practiceIds);
+    for (const [position, question] of module.questions.entries()) {
+      const light = summary.questions[position];
+      assert.equal(light.type, question.type); assert.equal(light.sectionId, question.sectionId); assert.equal(light.difficulty, question.difficulty);
+    }
+  }
+  const text = JSON.stringify(contentIndex);
+  for (const heavy of ["explanation", "\"prompt\"", "realCode", "hints", "solutionCode", "lineByLine"]) assert.ok(!text.includes(heavy), `dizinde ${heavy} var`);
+});
+check("Dizin tam içeriğin küçük bir kısmıdır (ana pakette kalan bu)", () => {
+  const full = JSON.stringify(modules).length, light = JSON.stringify(contentIndex).length;
+  assert.ok(light < full * 0.2, `dizin ${light} bayt, tam içerik ${full} bayt`);
+});
+check("Her sorunun modül kimliği kimlik önekinden ve dizinden aynı çıkar", () => {
+  const owner = new Map(contentIndex.flatMap(module => module.questions.map(question => [question.id, module.id])));
+  for (const [id, moduleId] of owner) assert.equal(Number(/^m(\d+)-/.exec(id)[1]), moduleId, id);
+});
+check("Test soruları: ilk modülde önceki konu yok; sonrakilerde dörtte biri yerine 4/18 önceki modüllerden", () => {
+  const first = seededTestQuestions(modules[0], [], 7, 18);
+  assert.equal(first.length, 18); assert.equal(new Set(first.map(q => q.id)).size, 18);
+  assert.ok(first.every(q => q.id.startsWith("m1-")));
+  assert.ok(first.filter(q => q.type === "code").length >= 3, "yazma sorusu garantisi");
+  assert.deepEqual(previousModulePool(1, 7), []);
+  const pool = previousModulePool(10, 7);
+  const previous = pool.flatMap(id => modules[id - 1].questions);
+  const mixed = seededTestQuestions(modules[9], previous, 7, 18);
+  assert.equal(mixed.length, 18); assert.equal(new Set(mixed.map(q => q.id)).size, 18);
+  assert.equal(mixed.filter(q => !q.id.startsWith("m10-")).length, 4);
+  assert.ok(mixed.filter(q => q.id.startsWith("m10-") && q.type === "code").length >= 3);
+});
+check("Önceki modül havuzu: en çok 4 farklı modül, hepsi öncekilerden, aynı tohumla aynı, farklı tohumla farklı", () => {
+  for (const moduleId of [2, 3, 5, 10, 18]) {
+    const pool = previousModulePool(moduleId, 12345);
+    assert.ok(pool.length >= 1 && pool.length <= 4, `M${moduleId}: ${pool.length}`);
+    assert.equal(new Set(pool).size, pool.length); assert.ok(pool.every(id => id >= 1 && id < moduleId));
+  }
+  assert.deepEqual(previousModulePool(10, 99), previousModulePool(10, 99));
+  const seen = new Set(Array.from({ length: 40 }, (_, seed) => previousModulePool(10, seed + 1).join(",")));
+  assert.ok(seen.size > 5, "havuz her seferinde aynı çıkıyor");
+  assert.ok(previousModulePool(18, 5).length <= 4, "M18 testi en çok dört önceki modül yükler");
+});
+check("Pratik soruları practiceIds sırasıyla gelir", () => {
+  for (const module of modules) assert.deepEqual(practiceQuestions(module).map(q => q.id), module.practiceIds);
+});
 
 // --- Cihazlar arası aktarım: birleştirme ve aktarım kodu ---
 const phone = parseProgress({ ...defaultProgress, xp: 300, streak: 4, lastStudyDate: "2026-10-05", unlockedModule: 3, theme: "light",
