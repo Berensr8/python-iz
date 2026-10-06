@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { CodeRunner, usePythonRunner } from "@/components/code-runner";
 import { curriculum, getModule, getPracticeQuestions, getSection, learningModules, questionModuleId, seededTestQuestions } from "@/lib/content";
 import { isAnswerCorrect, wrongOptionFeedback } from "@/lib/answer-check";
@@ -70,18 +71,20 @@ function CodeBlock({ code, label = "ornek.py" }: { code: string; label?: string 
   );
 }
 
-function ModuleNavigation({ activeModule, progress, onSelect, closeMobile }: { activeModule: number; progress: LearningProgress; onSelect: (id: number) => void; closeMobile?: () => void }) {
+function ModuleNavigation({ activeModule, progress, onSelect, closeMobile }: { activeModule: number; progress: LearningProgress; onSelect: (id: number, locked: boolean) => void; closeMobile?: () => void }) {
   return (
     <nav className="space-y-1" aria-label="Modüller">
       {curriculum.map((title, index) => {
         const id = index + 1;
-        const available = id <= progress.unlockedModule && learningModules.some(module => module.id === id);
-        const current = id === activeModule;
         const isFutureContent = !learningModules.some(module => module.id === id);
+        // A locked module stays locked (lock icon, label) but can still be opened after a warning.
+        const locked = id > progress.unlockedModule;
+        const available = !locked && !isFutureContent;
+        const current = id === activeModule;
         return (
-          <button key={title} disabled={!available} onClick={() => { onSelect(id); closeMobile?.(); }} className={`module-row w-full text-left ${current ? "module-row-active" : ""} disabled:cursor-not-allowed disabled:opacity-50`}>
+          <button key={title} disabled={isFutureContent} title={locked && !isFutureContent ? "Kilitli: önceki modülleri bitirmen önerilir" : undefined} onClick={() => { onSelect(id, locked); closeMobile?.(); }} className={`module-row w-full text-left ${current ? "module-row-active" : ""} ${locked && !isFutureContent ? "opacity-70" : ""} disabled:cursor-not-allowed disabled:opacity-50`}>
             <span className="grid size-8 shrink-0 place-items-center border border-border font-mono text-xs font-bold">{available ? String(id).padStart(2, "0") : <LockKeyhole className="size-3.5" />}</span>
-            <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold">{title}</span><span className="block text-xs text-muted-foreground">{current ? "Şu an buradasın" : isFutureContent ? "Yakında" : available ? "Açık" : "Önceki testi geç"}</span></span>
+            <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold">{title}</span><span className="block text-xs text-muted-foreground">{current ? "Şu an buradasın" : isFutureContent ? "Yakında" : available ? "Açık" : "Kilitli · uyarıyla açılır"}</span></span>
           </button>
         );
       })}
@@ -217,7 +220,7 @@ function QuizView({ moduleId, mode, progress, updateProgress, onStage, weakOnly 
     if (stored && stored.completedAt === null && !window.confirm("Devam eden oturumun yerine yeni bir oturum başlatılsın mı? Önceki cevapların soru istatistiklerinde kalır; tamamlanmamış oturum için bitiriş ödülü verilmez.")) return;
     const module = getModule(moduleId);
     const questions = mode === "midterm" ? midtermQuestions(learningModules) : mode === "test" ? seededTestQuestions(module, Date.now() & 0xffffffff, 18) : !weakOnly ? getPracticeQuestions(module) :
-      learningModules.filter(item => item.id <= progress.unlockedModule).flatMap(item => item.questions)
+      learningModules.flatMap(item => item.questions)
         .filter(question => (progress.questionResults[question.id]?.wrong ?? 0) > 0)
         .sort((a, b) => {
           const ra = progress.questionResults[a.id], rb = progress.questionResults[b.id];
@@ -281,7 +284,8 @@ function QuizView({ moduleId, mode, progress, updateProgress, onStage, weakOnly 
 }
 
 function StatsView({ progress, onReview }: { progress: LearningProgress; onReview: () => void }) {
-  const openModules = learningModules.filter((module) => module.id <= progress.unlockedModule);
+  // Modules opened early (while still locked) count once the student has answered something in them.
+  const openModules = learningModules.filter((module) => module.id <= progress.unlockedModule || module.questions.some((question) => progress.questionResults[question.id]));
   // Per lesson section, so every weak row can link straight to the lesson that teaches it.
   const sectionRows = openModules.flatMap((module) => module.sections.map((section) => {
     const questions = module.questions.filter((question) => question.sectionId === section.id);
@@ -311,6 +315,8 @@ export function LearningApp() {
   const [stage, setStage] = useState<Stage>("lesson");
   const [weakOnly, setWeakOnly] = useState(false);
   const [focus, setFocus] = useState<{ sectionId: string; nonce: number } | null>(null);
+  // A locked module the student asked to open; waits for confirmation of the warning.
+  const [pendingModule, setPendingModule] = useState<number | null>(null);
   const module = getModule(moduleId);
   const completed = module.sections.filter((section) => progress.completedSections[`m${moduleId}:${section.id}`]).length;
   const lessonDone = completed === module.sections.length;
@@ -377,6 +383,7 @@ export function LearningApp() {
 
   // Ordinary navigation drops a pending "Dersi aç" focus so a remounted lesson starts at the first unfinished section.
   function changeModule(id: number) { setFocus(null); setModuleId(id); setStage("lesson"); setWeakOnly(false); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function selectModule(id: number, locked: boolean) { if (locked) setPendingModule(id); else changeModule(id); }
   function changeStage(next: Stage) { setFocus(null); if (next === "practice" && !lessonDone) return; if (next === "test" && (!practiceDone || !writingDone)) { setStage("writing"); return; } setWeakOnly(false); setStage(next); window.scrollTo({ top: 0, behavior: "smooth" }); }
   function toggleTheme() { updateProgress((current) => { const theme = current.theme === "dark" ? "light" : "dark"; document.documentElement.classList.toggle("dark", theme === "dark"); return { ...current, theme }; }); }
 
@@ -384,10 +391,24 @@ export function LearningApp() {
 
   return (
     <main className="app-shell min-h-screen bg-background text-foreground">
-      <header className="app-header sticky top-0 z-40 backdrop-blur-xl"><div className="mx-auto flex h-[72px] max-w-[1580px] items-center gap-3 px-4 sm:px-6"><Sheet><SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" aria-label="Modülleri aç"><Menu /></Button></SheetTrigger><SheetContent side="left" className="w-[88%] overflow-y-auto p-0"><SheetHeader className="border-b-2 border-border p-5 text-left"><SheetTitle className="brand-word">ÖĞRENME YOLU</SheetTitle><SheetDescription>{curriculum.length} modül · {learningModules.length} modül hazır</SheetDescription></SheetHeader><div className="p-4"><ModuleNavigation activeModule={moduleId} progress={progress} onSelect={changeModule} /><SheetClose asChild><Button variant="outline" className="mt-4 w-full" onClick={() => setStage("stats")}><BarChart3 /> İstatistikler</Button></SheetClose></div></SheetContent></Sheet><button onClick={() => { setStage("lesson"); setModuleId(1); setWeakOnly(false); }} className="flex items-center gap-3 text-left"><span className="brand-mark font-mono text-sm">&gt;_</span><span className="hidden sm:block"><span className="brand-word block text-[17px] font-black">PYTHON İZ</span><span className="block font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Kodu anla. Kendin yaz.</span></span></button><span className="ml-3 hidden border-l-2 border-foreground pl-3 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground lg:block">Etkileşimli Python Lab<br />Sürüm / 01</span><div className="ml-auto flex items-center gap-1.5 sm:gap-3"><div className="utility-stat hidden items-center gap-2 px-3 py-1.5 text-sm md:flex"><Flame className="size-4 text-orange-500" /> <strong>{progress.streak} gün</strong></div><div className="utility-stat flex items-center gap-2 px-3 py-1.5 text-sm"><Sparkles className="size-4 text-amber-500" /> <strong>{progress.xp} XP</strong></div><Button variant="ghost" size="icon" onClick={() => updateProgress((current) => ({ ...current, sound: !current.sound }))} aria-label={progress.sound ? "Sesi kapat" : "Sesi aç"}>{progress.sound ? <Volume2 /> : <VolumeX />}</Button><Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Temayı değiştir">{progress.theme === "dark" ? <Sun /> : <Moon />}</Button></div></div></header>
+      <AlertDialog open={pendingModule !== null} onOpenChange={(open) => { if (!open) setPendingModule(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bu modül henüz kilitli</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingModule !== null && curriculum[pendingModule - 1]} modülünü açmadan önce önceki modülleri ve testlerini bitirmen önerilir; yeni konular öncekilerin üzerine kurulur. Yine de açabilirsin, ilerlemen kaydedilir.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (pendingModule !== null) changeModule(pendingModule); setPendingModule(null); }}>Yine de aç</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <header className="app-header sticky top-0 z-40 backdrop-blur-xl"><div className="mx-auto flex h-[72px] max-w-[1580px] items-center gap-3 px-4 sm:px-6"><Sheet><SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" aria-label="Modülleri aç"><Menu /></Button></SheetTrigger><SheetContent side="left" className="w-[88%] overflow-y-auto p-0"><SheetHeader className="border-b-2 border-border p-5 text-left"><SheetTitle className="brand-word">ÖĞRENME YOLU</SheetTitle><SheetDescription>{curriculum.length} modül · {learningModules.length} modül hazır</SheetDescription></SheetHeader><div className="p-4"><ModuleNavigation activeModule={moduleId} progress={progress} onSelect={selectModule} /><SheetClose asChild><Button variant="outline" className="mt-4 w-full" onClick={() => setStage("stats")}><BarChart3 /> İstatistikler</Button></SheetClose></div></SheetContent></Sheet><button onClick={() => { setStage("lesson"); setModuleId(1); setWeakOnly(false); }} className="flex items-center gap-3 text-left"><span className="brand-mark font-mono text-sm">&gt;_</span><span className="hidden sm:block"><span className="brand-word block text-[17px] font-black">PYTHON İZ</span><span className="block font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Kodu anla. Kendin yaz.</span></span></button><span className="ml-3 hidden border-l-2 border-foreground pl-3 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground lg:block">Etkileşimli Python Lab<br />Sürüm / 01</span><div className="ml-auto flex items-center gap-1.5 sm:gap-3"><div className="utility-stat hidden items-center gap-2 px-3 py-1.5 text-sm md:flex"><Flame className="size-4 text-orange-500" /> <strong>{progress.streak} gün</strong></div><div className="utility-stat flex items-center gap-2 px-3 py-1.5 text-sm"><Sparkles className="size-4 text-amber-500" /> <strong>{progress.xp} XP</strong></div><Button variant="ghost" size="icon" onClick={() => updateProgress((current) => ({ ...current, sound: !current.sound }))} aria-label={progress.sound ? "Sesi kapat" : "Sesi aç"}>{progress.sound ? <Volume2 /> : <VolumeX />}</Button><Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Temayı değiştir">{progress.theme === "dark" ? <Sun /> : <Moon />}</Button></div></div></header>
 
       <div className="mx-auto grid max-w-[1580px] grid-cols-1 lg:grid-cols-[265px_minmax(0,1fr)] xl:grid-cols-[265px_minmax(0,1fr)_300px]">
-        <aside className="curriculum-rail hidden min-h-[calc(100vh-72px)] px-4 py-7 lg:block"><p className="rail-kicker mb-5 px-2 text-muted-foreground">Öğrenme yolu</p><div className="max-h-[calc(100vh-145px)] overflow-y-auto pr-1 scrollbar-thin"><ModuleNavigation activeModule={moduleId} progress={progress} onSelect={changeModule} /></div></aside>
+        <aside className="curriculum-rail hidden min-h-[calc(100vh-72px)] px-4 py-7 lg:block"><p className="rail-kicker mb-5 px-2 text-muted-foreground">Öğrenme yolu</p><div className="max-h-[calc(100vh-145px)] overflow-y-auto pr-1 scrollbar-thin"><ModuleNavigation activeModule={moduleId} progress={progress} onSelect={selectModule} /></div></aside>
 
         <section className="learning-canvas min-w-0 px-4 py-6 sm:px-7 lg:px-10 lg:py-9">
           {!["stats", "midterm", "milestones"].includes(stage) && <Tabs value={stage} onValueChange={(value) => changeStage(value as Stage)} className="stage-switcher mx-auto mb-9 max-w-3xl"><TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-4"><TabsTrigger value="lesson"><BookOpen /> Ders</TabsTrigger><TabsTrigger value="writing"><Code2 /> Kod yaz</TabsTrigger><TabsTrigger value="practice" disabled={!lessonDone}><Code2 /> Pratik {!lessonDone && <LockKeyhole className="size-3" />}</TabsTrigger><TabsTrigger value="test" disabled={!practiceDone || !writingDone} title="Önce pratiği ve üç yazma görevini tamamla"><ListChecks /> Test {(!practiceDone || !writingDone) && <LockKeyhole className="size-3" />}</TabsTrigger></TabsList></Tabs>}
@@ -395,6 +416,7 @@ export function LearningApp() {
           {stage === "milestones" && <Milestones progress={progress} updateProgress={updateProgress} onExam={() => { if (milestonesAvailable(progress)) { setModuleId(4); setWeakOnly(false); setStage("midterm"); } }} />}
           {stage === "midterm" && milestonesAvailable(progress) && <QuizView moduleId={4} mode="midterm" progress={progress} updateProgress={updateProgress} onStage={changeStage} />}
           {storageWarning && <p role="alert" className="mb-5 border border-amber-500 p-3 text-sm">{storageWarning}</p>}
+          {moduleId > progress.unlockedModule && !["stats", "midterm", "milestones"].includes(stage) && <p role="note" className="mx-auto mb-5 max-w-3xl border border-amber-500 p-3 text-sm leading-6">Bu modül kilitli: önceki modülleri ve testlerini bitirmen önerilir. Burada çalıştıkların kaydedilir.</p>}
           {progress.activeQuiz && (stage !== progress.activeQuiz.mode || moduleId !== progress.activeQuiz.moduleId || weakOnly !== progress.activeQuiz.weakOnly) && <div className="lesson-card mx-auto mb-5 flex max-w-3xl flex-wrap items-center justify-between gap-3 p-4"><p className="text-sm">Modül {progress.activeQuiz.moduleId} · {progress.activeQuiz.completedAt === null ? "Devam eden oturumun saklanıyor. Süreli testte saat işlemeye devam eder." : "Son oturumunun sonucu hazır."}</p><Button variant="outline" onClick={resumeQuiz}>Oturuma dön</Button></div>}
           {stage === "writing" && <WritingLab key={moduleId} moduleId={moduleId} progress={progress} updateProgress={updateProgress} />}
           {stage === "lesson" && <LessonView key={`${moduleId}:${focus?.nonce ?? ""}`}moduleId={moduleId} progress={progress} updateProgress={updateProgress} onStage={changeStage} focus={focus} />}
