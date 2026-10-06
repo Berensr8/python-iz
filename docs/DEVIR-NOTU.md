@@ -17,7 +17,7 @@ Türkçe, tarayıcıda çalışan bir Python öğrenme sitesi. Öğrenci 18 mod�
 | Soru | 400 (modül başına 40) |
 | Yazma görevi | 30 (modül başına 3: Tamamla, Düzelt, Sıfırdan yaz) |
 | Kapsam haritası | 109 alt başlıktan 70'i doğrulanmış (%64); `npm run coverage` |
-| Doğrulama | 1037 çalıştırılabilir içerik kontrolü, 120 regresyon kontrolü, 126 atölye test vakası, `tsc` ve `build` başarılı; büyük paket uyarısı sürüyor |
+| Doğrulama | 1049 çalıştırılabilir içerik kontrolü, 144 regresyon kontrolü, 137 yazma referans vakası, `tsc` ve `build` başarılı; büyük paket uyarısı sürüyor |
 | Git/yayın | M10 öncesi değişiklikler korunmuştur. Güncel commit ve yayın durumunu git ve Sites üzerinden kontrol et; yayın kaynak kaydı oluşturur. |
 
 ## 3. Sıradaki iş
@@ -27,12 +27,12 @@ Plan sırasına göre bir sonraki içerik modülü **M11 OOP 1**'dir. Alt başl�
 Kullanıcı şimdiye kadar her seferinde arayüz işleri yerine bir sonraki içerik modülünü seçti, ama karar onundur. Bekleyen arayüz işleri:
 
 - Görselleştirme 1 (döngü/değişken tablosu, sığ/derin kopya), Görselleştirme 2 (call stack)
-- Atölye 1 (M4 sonrası), Atölye 2 (M6), Atölye 3 (M8 — CSV→JSON raporlayıcı; M8 yazma görevi m8-w3 ön hazırlığıdır), Atölye 4 (M10 sonrası)
-- Ara sınav 1 (M1–M4), Ara sınav 2 (M1–M8)
+- ~~Atölye 1~~ (yapıldı), Atölye 2 (M6), Atölye 3 (M8 — CSV→JSON raporlayıcı; M8 yazma görevi m8-w3 ön hazırlığıdır), Atölye 4 (M10 sonrası)
+- ~~Ara sınav 1~~ (yapıldı; `lib/milestones.ts`, `components/milestones.tsx`), Ara sınav 2 (M1–M8)
 - M8 için sanal dosya yükleme/indirme ve hazır örnek dosyalar
 - Aşama 4: yerel geliştirme rehberi ve ortam etiketleri (Tarayıcıda çalışır / yerel Python gerekir)
 
-Aşama 1'den açık kalanlar: A1.2 kaynak ve çalışma ortamı etiketi; A1.5 fonksiyon dönüş değeri testleri (kısmen: başlangıç kodunda çağrı + print verilerek print eden çözümler eleniyor); A1.6 test vakalarını çözümden önce gizleme; A1.7 traceback satır seçimi; A1.12 M1–M2 tam metin denetimi.
+Aşama 1'den açık kalanlar: A1.5 fonksiyon dönüş değeri testleri (kısmen: başlangıç kodunda çağrı + print verilerek print eden çözümler eleniyor); A1.6 test vakalarını çözümden önce gizleme; A1.7 traceback satır seçimi; A1.12 M1–M2 tam metin denetimi.
 
 ## 4. Komutlar
 
@@ -125,4 +125,24 @@ Her modülün ayrıntılı günlüğü (öne çıkan sorular, görevler, doğrul
   - `subprocess` ve `time.sleep` gibi konular Pyodide'de sınırlıdır.
   - `random` için `random.seed(...)` ile sabit tohum kullanılmalı; çıktının Python sürümleri arasında aynı olduğu doğrulanmalı.
   - `datetime.now()` çıktısı yazdırılmamalı.
-- **Commit edilmemiş değişiklikler:** Depoda bir önceki commit'ten bu yana çok sayıda değişiklik var; `git status` ile görülebilir.
+- **Commit durumu:** M10'a kadar olan iş commit edilmiştir. Son geri bildirim paketi (traceback düzeltmesi, ders tamamlama koşulu, M1–M2 yeniden yazımı, Ara sınav 1, Atölye 1) henüz commit edilmemiş olabilir; `git status` ile kontrol et.
+- **Çalıştırıcı tracebacki:** `public/python-runtime.js` hata biçimlendirirken `cozum.py` çerçevesine kadar ilerler. Çalıştırıcıyı değiştirirsen çıktıda `<exec>` geçmediğini sınayan regresyon testini koru.
+
+## 10. GitHub Pages yayını
+
+Site iki yerde yayınlanabilir; ikisi birbirini etkilemez.
+
+| | Sites (mevcut) | GitHub Pages |
+|---|---|---|
+| Adres | python-iz.berensr01.chatgpt.site | https://berensr8.github.io/python-iz/ |
+| Derleme | `npm run build` (Cloudflare Worker, `dist/`) | `npm run build:pages` (statik HTML, `dist-pages/client/`) |
+
+- **Anahtar:** `PAGES_BUILD=1` ortam değişkeni `vite.config.ts` ve `next.config.ts`'i statik dışa aktarım moduna alır (Cloudflare/Sites eklentileri devre dışı). Değişken yoksa yapılandırmalar eskisi gibi çalışır. `scripts/build-pages.mjs` bunu ayarlar, çıktıyı `dist-pages/`'e taşır, `.nojekyll` ekler ve HTML'deki her adresin taban yolla başladığını denetler.
+- **Taban yol:** `PAGES_BASE_PATH` (varsayılan `/python-iz`). Kullanıcı sitesi (`berensr8.github.io` deposu) ya da özel alan adı için boş bırak.
+- **vinext sınırı:** `basePath` (Next ayarı) vinext 1.0.0-beta.5'te dışa aktarımda ana sayfayı atlıyor; bu yüzden taban yol Vite'ın `base` ayarıyla veriliyor. vinext güncellenirse yeniden dene.
+- **Mutlak yol yasağı:** Worker ve favicon adresleri göreli/taban yola bağlı yazıldı (`new URL("py-worker.js", document.baseURI)`, `importScripts("python-runtime.js")`). Yeni kodda `/...` ile başlayan sabit adres kullanma; Pages'te alt dizinde bozulur.
+- **Dağıtım:** `.github/workflows/pages.yml`, `main`'e her push'ta içerik doğrulaması ve regresyon testlerini çalıştırır, geçerse yayınlar. Depo ayarlarında Pages kaynağı "GitHub Actions" olmalı.
+- **Dikkat:** `npm run build:pages` yerel `dist/` klasörünü siler (çıktıyı `dist-pages/`'e taşır). Sites derlemesini yeniden üretmek için `npm run build` çalıştır.
+- **Yerelde deneme:** Pages çıktısı alt dizin altında sunulmalı; kök adreste sunmak yolları bozar. Windows'ta derleme sonunda `Assertion failed ... async.c` mesajı görülebilir; Node'un kapanış hatasıdır, betik çıktıya bakıp yok sayar.
+- **Dış bağımlılık:** Python motoru (Pyodide) jsDelivr CDN'inden yüklenir.
+- **İlerleme:** localStorage adrese bağlıdır; Sites adresindeki ilerleme Pages adresine otomatik taşınmaz (sitedeki yedek dışa/içe aktarma kullanılabilir).

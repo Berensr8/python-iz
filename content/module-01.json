@@ -3,7 +3,7 @@
   "slug": "temeller",
   "title": "Temeller",
   "description": "Python kodunun yapı taşlarını okuyup takip etmeyi öğren.",
-  "contentVersion": 2,
+  "contentVersion": 3,
   "estimatedMinutes": 95,
   "practiceIds": [
     "m1-q01",
@@ -29,31 +29,39 @@
       "eyebrow": "Kodu çalıştırmadan önce",
       "objectives": [
         "REPL ile .py dosyası arasındaki farkı açıklar.",
-        "Girintinin blokları nasıl belirlediğini okur."
+        "print ve yorum satırlarıyla ilk programını çalıştırır.",
+        "Girintinin bloklarda anlam taşıdığını tanır; blokları M3'te uygulayacağını bilir."
       ],
       "prerequisites": [],
       "summary": "REPL tek satırlık denemeler içindir; dosyalar ise kalıcı programları taşır. Python kod bloklarını süslü parantezle değil girintiyle tanır.",
-      "explanation": "Bu sitedeki editörler Python 3.12'yi tarayıcında çalıştırır; başlamak için kurulum gerekmez. Kendi bilgisayarında çalışmak için python.org'dan Python 3.12 veya üstünü kur, terminalde python --version (Windows'ta py --version) ile sürümü kontrol et. Terminalde yalnızca python (Windows'ta py) yazınca REPL açılır: >>> işaretinden sonra bir ifade yazıp hemen sonucunu görürsün, exit() ile çıkarsın. Kalıcı programı merhaba.py gibi bir dosyaya yazıp python merhaba.py ile çalıştırırsın; dosyada sonucu görmek için print() gerekir. # ile başlayan bölüm yorumdur ve çalıştırılmaz. PEP 8'e göre bloklar dört boşluk girintilenir; sekme ve boşluğu tutarsız karıştırmak TabError üretir.",
-      "code": "temperature = 24\n\nif temperature > 20:\n    # Bu satır yalnızca koşul doğruysa çalışır.\n    print(\"Hava ılık\")",
-      "expectedOutput": "Hava ılık",
-      "why": "Koşul True olduğu için girintili blok çalışır. Yorum satırı Python tarafından yok sayılır.",
+      "explanation": "Bu sitedeki editörler Python 3.12'yi tarayıcında çalıştırır; başlamak için kurulum gerekmez. Kendi bilgisayarında çalışmak için python.org'dan Python 3.12 veya üstünü kur, terminalde python --version (Windows'ta py --version) ile sürümü kontrol et. Terminalde yalnızca python (Windows'ta py) yazınca REPL açılır: >>> işaretinden sonra bir ifade yazıp hemen sonucunu görürsün, exit() ile çıkarsın. Kalıcı programı merhaba.py gibi bir dosyaya yazıp python merhaba.py ile çalıştırırsın; dosyada sonucu görmek için print() gerekir. # ile başlayan bölüm yorumdur ve çalıştırılmaz. PEP 8'e göre bloklar dört boşluk girintilenir; sekme ve boşluğu tutarsız karıştırmak TabError üretir. Buradaki ilk örnek bir blok içermez; bütün print satırları en soldan başlar. print hazır bir komuttur: paranteze verdiğin metni ekrana yazar; kendi komutunu tanımlaman gerekmez. Tırnaklar metnin nerede başlayıp bittiğini belirtir, çıktıya eklenmez. Kodun tamamını Çalıştır düğmesiyle baştan çalıştırırsın; yalnız bir satırı seçmek akışı değiştirmez. Bir kelimeyi değiştir ve çıktıda neyin değiştiğine bak. Girintili if ve döngü bloklarını M3'te adım adım kuracağız.",
+      "code": "# Ekrana iki ayrı satır yazdır.\nprint(\"Merhaba Python\")\nprint(\"Bugün ilk programımı çalıştırdım.\")",
+      "expectedOutput": "Merhaba Python\nBugün ilk programımı çalıştırdım.",
+      "why": "Python satırları yukarıdan aşağı çalıştırır. # ile başlayan yorum yürütülmez. print parantezindeki tırnaklı metni, tırnakları göstermeden ekrana yazar.",
       "alternatives": [
-        "Kısa denemeler için REPL; tekrar çalıştırılacak kod için .py dosyası kullan.",
-        "Tek satırlık yorum için #; fonksiyon ve sınıf açıklaması için docstring kullan."
+        "Aynı iki print satırını REPL'de ayrı ayrı veya bir .py dosyasında birlikte çalıştırabilirsin.",
+        "Bir dosyada yalnızca tırnaklı metin yazmak çıktı vermez; print kullan."
       ],
       "traps": [
-        "Tab ve boşluğu aynı blokta karıştırmak.",
-        "if satırının sonundaki iki noktayı unutmak.",
-        "Girintiyi görsel süs sanmak; girinti programın anlamının parçasıdır."
+        ">>> işaretlerini editöre kopyalamak; bunlar REPL istemidir, kod değildir.",
+        "Açılan tırnağı veya parantezi kapatmamak.",
+        "Bağımsız satırın başına gereksiz boşluk koymak; beklenmeyen girinti hatası oluşabilir."
       ],
-      "realCode": "def is_ready(status):\n    # Dış servisten gelen değeri sadeleştir.\n    return status.strip().lower() == \"ready\"\n\nprint(is_ready(\" READY \"))",
-      "realOutput": "True",
+      "realCode": "# Küçük bir çalışma günlüğü\nprint(\"Çalışma başladı\")\nprint(\"İlk örnek tamamlandı\")",
+      "realOutput": "Çalışma başladı\nİlk örnek tamamlandı",
       "lineByLine": [
-        "Fonksiyon İngilizce ve snake_case biçiminde adlandırılır.",
-        "Yorum, neden sadeleştirme yapıldığını açıklar.",
-        "strip boşlukları, lower büyük/küçük harf farkını kaldırır.",
-        "Fonksiyonun ürettiği bool değer yazdırılır."
-      ]
+        "İlk satır insan için açıklamadır; çıktı üretmez.",
+        "İlk print çalışma başlangıcını bildirir.",
+        "İkinci print başka bir satıra sonuç mesajı yazar."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Kurulum, REPL, girinti ve yorumlar",
+          "url": "https://docs.python.org/3.12/tutorial/interpreter.html"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "print örnekleri tarayıcıda çalışır. Kurulum, REPL ve terminal komutları kendi bilgisayarında uygulanır."
     },
     {
       "id": "variables-types",
@@ -67,7 +75,7 @@
         "repl-syntax"
       ],
       "summary": "Bir değişken kutu değildir; bir nesneye bağlanan isimdir. Python tip bilgisini isimde değil değerde taşır.",
-      "explanation": "int tam sayı, float ondalıklı sayı, str metin, bool True/False ve None değer yokluğunu temsil eder. type() bir nesnenin tipini gösterir. Değişken ve fonksiyon adlarında PEP 8 snake_case önerir.",
+      "explanation": "Atamada sağdaki değer önce hesaplanır, soldaki isim o değere bağlanır: user_count = 12. int tam sayıları, float yaklaşık ondalık sayıları, str tırnaklı metni, bool True/False değerlerini taşır; None ise değerin henüz bulunmadığını anlatır. Aynı isim sonradan başka değere bağlanabilir; bu, önceki nesneyi değiştirmek değildir. İsimler büyük/küçük harfe duyarlıdır: score ile Score farklıdır. Rakamla başlatma, araya boşluk koyma ve print gibi hazır adları kendi değişkeninle gölgeleme. type(value) tip bilgisi verir; örnekteki .__name__ bu tipin yalnız adını gösterir, şimdilik bir tanılama kalıbı olarak oku. is None yokluk denetimidir; 0 ve boş metin de gerçek değerlerdir, None ile aynı değildir. Örnekte user_count değerini tırnaklı \"12\" yapıp tipi yeniden incele.",
       "code": "user_count = 12\naverage_score = 8.5\ncourse_name = \"Python\"\nis_active = True\nlast_error = None\n\nprint(type(user_count).__name__)\nprint(last_error is None)",
       "expectedOutput": "int\nTrue",
       "why": "12 bir int nesnesidir. None tekil bir nesne olduğu için yokluk kontrolü is None biçiminde yapılır.",
@@ -80,14 +88,21 @@
         "None ile karşılaştırmada == kullanmak; çalışsa da tercih edilen is None'dır.",
         "userCount gibi camelCase kullanmak; Python kodunda çoğunlukla user_count görülür."
       ],
-      "realCode": "def build_profile(name, age=None):\n    profile = {\"name\": name, \"age\": age}\n    profile[\"has_age\"] = age is not None\n    return profile\n\nprint(build_profile(\"Ada\", 27))",
-      "realOutput": "{'name': 'Ada', 'age': 27, 'has_age': True}",
+      "realCode": "name = \"Ada\"\nage = 27\nlast_error = None\nprint(name)\nprint(age)\nprint(last_error is None)",
+      "realOutput": "Ada\n27\nTrue",
       "lineByLine": [
-        "age verilmezse None olur.",
-        "İsim ve yaş bir sözlükte toplanır.",
-        "Yaşın gerçekten verilip verilmediği bool olarak eklenir.",
-        "Hazırlanan veri çağırana döndürülür."
-      ]
+        "name bir metne, age tam sayıya bağlanır.",
+        "last_error henüz hata olmadığını None ile temsil eder.",
+        "print değerleri sırayla gösterir.",
+        "is None denetimi True üretir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Değişkenler ve temel tipler",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "conversion-input",
@@ -101,7 +116,7 @@
         "variables-types"
       ],
       "summary": "input() sonucunun tipi str'dir. Sayısal işlemden önce uygun dönüşümü açıkça yapmalısın.",
-      "explanation": "int(), float(), str() ve bool() yeni bir değer üretir. int('12') çalışır; int('12.5') ValueError üretir. bool('False') bile True'dur çünkü boş olmayan her metin truthy kabul edilir.",
+      "explanation": "input() program girdisinden bir satır okur ve str döndürür; kullanıcı 21 yazsa da elde edilen şey önce metindir. Hesap yapmak için int(raw) veya float(raw) ile dönüştür. int('12') geçerliyken int('12.5') ValueError verir; float ondalık ayırıcı olarak nokta bekler. int(12.9) kesirli kısmı atar; negatifte de sıfıra doğru gider, // ile karıştırma. str(12) sayıyı metin olarak sunar. bool metindeki kelimenin anlamını yorumlamaz: bool('False') True, bool('') False olur. Editörün Program girdisi alanına her input() için bir satır yazmalısın; eksik satır EOFError üretir. Alttaki sabit ham değer, input() sonucunun tipini dönüşümden ayrı görmen içindir. Gerçek deneme için raw_age = input() yazıp girdi alanına 21 koy; otomatik testlerde ekstra soru metni yazdırma. Geçersiz girdiyi yakalamayı M7'de öğreneceksin.",
       "code": "raw_age = \"21\"\nage = int(raw_age)\nnext_age = age + 1\n\nprint(next_age)\nprint(type(next_age).__name__)",
       "expectedOutput": "22\nint",
       "why": "int() metni sayıya dönüştürdüğü için + işlemi toplama yapar; metin birleştirme yapmaz.",
@@ -114,14 +129,20 @@
         "bool('False') sonucunun False olacağını sanmak.",
         "Virgüllü ondalık metni float'a doğrudan vermek."
       ],
-      "realCode": "def parse_limit(raw_value):\n    cleaned = raw_value.strip()\n    if not cleaned:\n        return 10\n    return int(cleaned)\n\nprint(parse_limit(\" 25 \"))",
-      "realOutput": "25",
+      "realCode": "raw_limit = \"25\"\nlimit = int(raw_limit)\nprint(limit)\nprint(type(raw_limit).__name__)\nprint(type(limit).__name__)",
+      "realOutput": "25\nstr\nint",
       "lineByLine": [
-        "Fonksiyon dışarıdan gelen metni alır.",
-        "Baş ve sondaki boşluklar temizlenir.",
-        "Boş girişte güvenli varsayılan değer döner.",
-        "Diğer durumda metin int'e çevrilir."
-      ]
+        "Ham değer metindir; sayı gibi görünmesi tipini değiştirmez.",
+        "int sonucu limit adına bağlanır.",
+        "İki tipin str ve int olduğu gösterilir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Tip dönüşümleri ve input()",
+          "url": "https://docs.python.org/3.12/library/functions.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "arithmetic",
@@ -135,7 +156,7 @@
         "variables-types"
       ],
       "summary": "+, -, *, / temel işlemlerdir. // taban bölme, % kalan, ** üs alma yapar. += gibi işlemler değeri günceller.",
-      "explanation": "/ her zaman float üretir. // sonucu aşağı yuvarlar; negatif sayılarda sıfıra değil eksi sonsuza yaklaşır. ** sağdan birleşir: 2 ** 3 ** 2 ifadesi 2 ** 9 olur.",
+      "explanation": "Tam sayılarda +, -, * ve ** toplama, çıkarma, çarpma ve üs alır. / ile iki int bölünse bile sonuç float olur; 6 / 3 sonucu 2.0'dır. // tabana yuvarlanmış bölüm verir; int girdilerde int, float girdi varsa float sonucu olabilir. Negatifte sıfıra kesmez: -7 // 3, -3'tür. % kalan için a == (a // b) * b + a % b ilişkisini korur; -7 % 3 bu yüzden 2 olur. Bölen sıfırsa ZeroDivisionError alırsın. Parantezler hesap sırasını açıklar; çarpma toplamadan önce yapılır. Üs sağdan birleşir: 2 ** 3 ** 2, 2 ** 9 demektir. total += 3 burada sayısal değeri üç artırıp isme yeniden bağlar. Örnekte total'ı 18 yaparak bölüm ve kalanı önce tahmin et, sonra çalıştır.",
       "code": "total = 17\nbox_size = 5\n\nprint(total // box_size)\nprint(total % box_size)\ntotal += 3\nprint(total)",
       "expectedOutput": "3\n2\n20",
       "why": "17 içinde üç tam 5 vardır ve 2 artar. += 3, total = total + 3 ile aynı sonucu üretir.",
@@ -148,14 +169,20 @@
         "^ işaretini üs sanmak; Python'da bit düzeyinde XOR'dur.",
         "Negatif sayılarda // sonucunu sıfıra doğru beklemek."
       ],
-      "realCode": "def paginate(item_count, page_size):\n    full_pages, remainder = divmod(item_count, page_size)\n    return full_pages + (1 if remainder else 0)\n\nprint(paginate(53, 10))",
+      "realCode": "item_count = 53\npage_size = 10\npage_count = (item_count + page_size - 1) // page_size\nprint(page_count)",
       "realOutput": "6",
       "lineByLine": [
-        "Fonksiyon toplam kayıt ve sayfa boyutunu alır.",
-        "divmod hem bölüm hem kalanı üretir.",
-        "Kalan varsa bir sayfa daha eklenir.",
-        "53 kayıt, 10'luk altı sayfaya ihtiyaç duyar."
-      ]
+        "Ürün sayısı negatif olmayan, sayfa kapasitesi pozitif tam sayıdır.",
+        "Kapasitenin bir eksiği eklenerek kalan ürünler için de sayfa ayrılır.",
+        "53 ürün 10'arlık kapasitede 6 sayfa gerektirir; bu kalıp negatif ürün sayısı için tasarlanmamıştır."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Aritmetik ve atama operatörleri",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "comparison-logic",
@@ -169,27 +196,33 @@
         "variables-types"
       ],
       "summary": "== değer eşitliğini, is nesne kimliğini kontrol eder. and, or, not koşulları; in üyeliği birleştirir.",
-      "explanation": "Karşılaştırmalar bool üretir. and ilk falsy değeri, hiç yoksa son değeri döndürür. or ilk truthy değeri, hiç yoksa son değeri döndürür. Bu nedenle yalnızca bool değil nesnenin kendisini de döndürebilirler: \"\" or \"misafir\" ifadesi \"misafir\" metnini, 0 and 5 ifadesi 0 değerini verir.",
-      "code": "role = \"editor\"\nis_active = True\nallowed_roles = {\"admin\", \"editor\"}\n\nprint(role in allowed_roles and is_active)\nprint(role is None)",
-      "expectedOutput": "True\nFalse",
-      "why": "editor kümenin üyesidir ve hesap aktiftir. role bir metne bağlı olduğu için None nesnesi değildir.",
+      "explanation": "== değerleri karşılaştırır; = atama yapar. != eşit değil, < ve > küçük/büyük, <= ve >= sınırı da kapsayan karşılaştırmalardır. 0 <= age < 120 zinciri iki koşulun birlikte geçmesini ister. is aynı nesneye bağlı olmayı denetler; metinlerin içeriğini karşılaştırmak için == kullan, yoklukta is None kalıbını seç. Metinde in bir alt metnin bulunup bulunmadığını sorar; harf büyüklüğü önemlidir. and ilk falsy değerde, or ilk truthy değerde durur ve o nesneyi döndürür; bu yüzden sonuç her zaman bool değildir. '' or 'misafir' metin, 0 and 5 tam sayı döndürür. not ise her zaman bool üretir. Boş metin, 0 ve None falsy örnekleridir. Karmaşık ifadede parantezle niyetini göster; örnekte yaş ve etkinlik değerlerini ayrı ayrı değiştirip izni hangi koşulun kapattığını gözle.",
+      "code": "age = 20\nis_active = True\nrole = \"editor\"\nprint(age >= 18 and is_active)\nprint(\"edit\" in role)\nprint(role is None)",
+      "expectedOutput": "True\nTrue\nFalse",
+      "why": "Yaş koşulu ve etkinlik birlikte True'dur. edit alt metni editor içinde bulunur. role None değil bir metindir.",
       "alternatives": [
-        "Birçok eşitlik kontrolü yerine value in {'a', 'b'} daha okunur.",
-        "None, True ve False gibi tekil nesnelerde is; değerlerde == kullan."
+        "Bir aralık için 0 <= value < 10 zinciri okunurdur.",
+        "Metin içeriğinde ==, yokluk kontrolünde is None kullan. Birden fazla rolü koleksiyonda aramayı M4'te göreceksin."
       ],
       "traps": [
         "Metinleri is ile karşılaştırmak.",
         "and ve or sonucunu her zaman bool sanmak.",
         "not in yerine not value in yazmak; çalışır ama daha zor okunur."
       ],
-      "realCode": "def can_publish(user):\n    valid_role = user.get(\"role\") in {\"editor\", \"admin\"}\n    return valid_role and user.get(\"active\", False)\n\nprint(can_publish({\"role\": \"editor\", \"active\": True}))",
+      "realCode": "stock = 5\nrequested = 3\nis_active = True\ncan_order = requested > 0 and requested <= stock and is_active\nprint(can_order)",
       "realOutput": "True",
       "lineByLine": [
-        "Kabul edilen roller küme üyeliğiyle kontrol edilir.",
-        "and iki koşulun da geçmesini ister.",
-        "get ile eksik active alanı güvenli biçimde False olur.",
-        "Örnek kullanıcı iki koşulu da sağlar."
-      ]
+        "Stok ve istenen miktar tam sayı olarak tutulur.",
+        "Sipariş miktarı pozitif olmalı ve stoku aşmamalı.",
+        "Etkinlik koşulu da sağlanınca can_order True olur."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Karşılaştırma, mantık, in ve is",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "bitwise",
@@ -203,7 +236,7 @@
         "arithmetic"
       ],
       "summary": "&, |, ^, ~, << ve >> sayıları bit bit işler. Günlük uygulamalarda seyrektir; izin bayrakları ve düşük seviye kodda görülür.",
-      "explanation": "5 ikilik sistemde 0101, 3 ise 0011'dir. & yalnızca iki tarafta da 1 olan bitleri korur. | taraflardan en az birinde 1 olan biti korur. Kaydırma işlemleri bitleri sağa veya sola taşır.",
+      "explanation": "Bu bölümün hedefi bit bayraklarını görünce okuyabilmektir; günlük programlarında bunları zorla kullanmana gerek yok. 0b öneki ikilik yazımı belirtir: 0b0101 onluk 5'tir. & iki tarafta da 1 olan bitleri, | en az birinde 1 olan bitleri korur; ^ yalnız farklı olan bitleri seçer. 5 & 3 sonucu 1, 5 | 3 sonucu 7, 5 ^ 3 sonucu 6'dır. << n bitleri sola taşır; negatif olmayan sayılarda n basamak kaydırma 2 ** n ile çarpmaya denktir. >> n taban bölmeye benzer. Python int sabit genişlikli olmadığı için ~x değeri -(x + 1)'dir; ~5, -6 olur. and/or nesnelerin doğruluğuyla, &/| ise burada tam sayıların bitleriyle ilgilenir. İzin örneğinde her özellik farklı tek bite atanır; maskeyle kesişimin sıfır olmaması o iznin varlığını söyler. execute bitini ekleyip son kontrolü yeniden çalıştır.",
       "code": "read = 0b001\nwrite = 0b010\nexecute = 0b100\npermissions = read | write\n\nprint(permissions)\nprint(bool(permissions & write))\nprint(bool(permissions & execute))",
       "expectedOutput": "3\nTrue\nFalse",
       "why": "001 | 010 sonucu 011, yani 3'tür. Yazma biti vardır; çalıştırma biti yoktur.",
@@ -216,14 +249,21 @@
         "& ile and, | ile or operatörlerini aynı sanmak.",
         "~ sonucunun Python'da negatif tam sayı olabileceğini unutmak."
       ],
-      "realCode": "READ = 1 << 0\nWRITE = 1 << 1\nflags = READ | WRITE\n\nif flags & WRITE:\n    print(\"Yazma izni var\")",
-      "realOutput": "Yazma izni var",
+      "realCode": "READ = 1 << 0\nWRITE = 1 << 1\nflags = READ | WRITE\nprint(bool(flags & WRITE))",
+      "realOutput": "True",
       "lineByLine": [
-        "İlk bit okuma iznini temsil eder.",
-        "İkinci bit yazma iznini temsil eder.",
-        "| iki izni tek sayıda birleştirir.",
-        "& yazma bitinin açık olup olmadığını sınar."
-      ]
+        "READ ve WRITE çakışmayan bit değerleridir.",
+        "| iki izni aynı tam sayıda toplar.",
+        "& yazma bitini ayırır; bool sıfır olmayan sonucu True yapar."
+      ],
+      "depth": "okuma",
+      "sources": [
+        {
+          "title": "Python 3.12 · Bit düzeyi operatörler",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "float-precision",
@@ -237,7 +277,7 @@
         "arithmetic"
       ],
       "summary": "0.1 gibi bazı değerler ikilik sistemde tam temsil edilemez. Bu yüzden float değerleri doğrudan eşitlikle karşılaştırmak risklidir.",
-      "explanation": "0.1 + 0.2 işlemi matematikte 0.3 olsa da bellekteki yaklaşık değer 0.30000000000000004 görünür. Yakınlık karşılaştırması için math.isclose kullanılır; para için Decimal daha uygundur.",
+      "explanation": "float sayıları sınırlı sayıda ikilik basamakla temsil eder; bazı ondalık değerler bu sistemde ancak yaklaşık saklanabilir. 0.1 + 0.2 bu nedenle 0.30000000000000004 görünür. Bu her float karşılaştırmasının yanlış olduğu anlamına gelmez; örneğin tam temsil edilen 0.5 güvenlidir. Ancak hesaplanmış yaklaşık değerlerde toleransı düşünmek gerekir. import math hazır matematik araçlarını kullanıma açar; math.isclose iki değerin yeterince yakın olup olmadığını sorar. rel_tol göreli, abs_tol mutlak fark eşiğidir; sıfıra yakın değerlerde yalnız göreli tolerans yetmeyebilir. round veya .2f gösterimi yuvarlar ama önceki hesap hatasını sihirli biçimde yok etmez. decimal.Decimal metinden kurulunca ondalık veriyi daha uygun temsil eder; yine hassasiyet ve yuvarlama kuralı seçmek gerekir. Aşağıdaki örnekte import satırını hazır araç yükleme kalıbı olarak oku; modül sistemi M9'da ayrıntılanacak.",
       "code": "import math\n\nresult = 0.1 + 0.2\nprint(result)\nprint(math.isclose(result, 0.3))",
       "expectedOutput": "0.30000000000000004\nTrue",
       "why": "İlk satır yaklaşık temsil farkını gösterir. isclose küçük farkı tolerans içinde kabul eder.",
@@ -247,17 +287,23 @@
       ],
       "traps": [
         "round() kullanımını her hassasiyet sorununa kalıcı çözüm sanmak.",
-        "Float sonuçlarını == ile karşılaştırmak.",
-        "Decimal oluştururken Decimal(0.1) yazmak; metinden Decimal('0.1') tercih edilir."
+        "Hesaplanmış yaklaşık sonuçlarda tolerans gereksinimini unutmak.",
+        "Decimal(0.1) ile önce float yaklaşımını içeri taşımak; Decimal('0.1') tercih edilir."
       ],
-      "realCode": "from math import isclose\n\ndef reached_target(progress, target):\n    return isclose(progress, target, rel_tol=1e-9)\n\nprint(reached_target(0.1 + 0.2, 0.3))",
-      "realOutput": "True",
+      "realCode": "from decimal import Decimal\nprice = Decimal(\"0.10\")\nfee = Decimal(\"0.20\")\nprint(price + fee)",
+      "realOutput": "0.30",
       "lineByLine": [
-        "isclose doğrudan içe aktarılır.",
-        "Fonksiyon iki float değeri alır.",
-        "Kabul edilen göreli fark açıkça belirtilir.",
-        "Yaklaşık değer hedefe yeterince yakındır."
-      ]
+        "Decimal hazır ondalık sayı aracını içe aktarır.",
+        "Değerler float değil tırnaklı metinden oluşturulur.",
+        "Toplam ondalık olarak 0.30 görünür; finansal uygulamalarda yuvarlama kuralı ayrıca belirlenir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Float hassasiyeti",
+          "url": "https://docs.python.org/3.12/tutorial/floatingpoint.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "truthy-ternary-walrus",
@@ -271,27 +317,34 @@
         "comparison-logic"
       ],
       "summary": "Boş koleksiyonlar, boş metin, 0 ve None falsy'dir. Ternary tek ifadede seçim, := ise atama yaparken değer üretir.",
-      "explanation": "value if condition else fallback ifadesi iki değerden birini seçer. Walrus operatörü (:=), hesaplanan değeri koşul içinde isimlendirir. Okunabilirliği artırdığı yerde kullanılmalı; her atamayı kısaltmak için değil.",
-      "code": "items = [\"dosya.py\", \"test.py\"]\nlabel = \"Dolu\" if items else \"Boş\"\nprint(label)\n\nif (count := len(items)) > 1:\n    print(f\"{count} öğe bulundu\")",
-      "expectedOutput": "Dolu\n2 öğe bulundu",
-      "why": "Boş olmayan liste truthy'dir. len sonucu count adına bağlanır ve aynı koşulda karşılaştırılır.",
+      "explanation": "Bu bölüm kısa ifadeleri okumaya hazırlıktır; ilk programını yazarken normal atamalar yeterlidir. bool('') False, bool('Python') True olur; 0 ve None da falsy'dir. Dolu metin 'False' yazsa bile truthy kalır, Python sözcüğün anlamını yorumlamaz. 'Dolu' if text else 'Boş' bir koşullu ifadedir: önce text'in doğruluğuna bakılır, sonra yalnız seçilen değer hesaplanır. Buradaki if/else tek bir değeri seçer; girintili koşul bloklarını M3'te kuracağız. Walrus := hem atar hem atanan değeri ifade olarak üretir. print(count := len(text)) uzunluğu count'a bağlar ve yazdırır; len hazır uzunluk komutudur. Normal count = len(text) ataması ise ifade değildir. Parantez kullanımı bazı bağlamlarda zorunludur; karmaşık koşulları kısaltmaya çalışma. Örnekte text'i boş yapınca label ve count'un nasıl değiştiğini tahmin et.",
+      "code": "text = \"Python\"\nlabel = \"Dolu\" if text else \"Boş\"\nprint(label)\nprint(count := len(text))",
+      "expectedOutput": "Dolu\n6",
+      "why": "Boş olmayan text truthy olduğu için Dolu seçilir. := uzunluğu count adına bağlar ve print'e 6 verir.",
       "alternatives": [
-        "Ternary uzuyorsa normal if/else daha okunur.",
-        "Walrus olmadan önce count = len(items), ardından if count > 1 yazılabilir."
+        "Walrus kullanmadan count = len(text) yazmak çoğu başlangıç örneğinde daha açıktır.",
+        "Uzun bir koşullu ifade yerine M3'teki if/else bloklarını kullan."
       ],
       "traps": [
         ":= ile = işaretini karıştırmak.",
         "Karmaşık ve iç içe ternary ifadeler yazmak.",
         "'False' metnini falsy sanmak; boş olmayan her metin truthy'dir."
       ],
-      "realCode": "def first_valid(values):\n    for raw in values:\n        if cleaned := raw.strip():\n            return cleaned\n    return None\n\nprint(first_valid([\"  \", \"  Python  \"]))",
-      "realOutput": "Python",
+      "realCode": "text = \"rapor\"\ncount = len(text)\nprint(count)\nprint(\"Var\" if count > 0 else \"Yok\")",
+      "realOutput": "5\nVar",
       "lineByLine": [
-        "Fonksiyon bir değer dizisi alır.",
-        "Her ham metin sırayla incelenir.",
-        "strip sonucu boş değilse aynı anda cleaned adına bağlanır.",
-        "İlk dolu değer döner; hiçbiri yoksa None döner."
-      ]
+        "Uzunluk normal bir atamayla saklanır; walrus şart değildir.",
+        "Uzunluk yazdırılır.",
+        "Koşullu ifade pozitif uzunluk için Var metnini seçer."
+      ],
+      "depth": "okuma",
+      "sources": [
+        {
+          "title": "Python 3.12 · Truthy/falsy, ternary ve walrus",
+          "url": "https://docs.python.org/3.12/reference/expressions.html"
+        }
+      ],
+      "runtime": "browser"
     }
   ],
   "questions": [
@@ -675,8 +728,8 @@
       "topic": "truthy-falsy",
       "sectionId": "truthy-ternary-walrus",
       "difficulty": 1,
-      "prompt": "Boş liste hangi dalı seçer?",
-      "code": "items = []\nprint(\"var\" if items else \"yok\")",
+      "prompt": "Boş metin hangi değerin seçilmesini sağlar?",
+      "code": "text = \"\"\nprint(\"var\" if text else \"yok\")",
       "options": [
         "var",
         "yok",
@@ -689,7 +742,7 @@
         "Boş liste falsy'dir.",
         "Koşul yanlışsa else değeri seçilir."
       ],
-      "explanation": "[] falsy olduğundan ifade 'yok' üretir."
+      "explanation": "Boş metin falsy olduğundan ifade yok üretir."
     },
     {
       "id": "m1-q19",
@@ -698,7 +751,7 @@
       "sectionId": "truthy-ternary-walrus",
       "difficulty": 1,
       "prompt": "Walrus ile bağlanan n değeri ne olur?",
-      "code": "if (n := len(\"python\")) > 5:\n    print(n)",
+      "code": "print(n := len(\"python\"))",
       "options": [
         "5",
         "6",
@@ -711,7 +764,7 @@
         "len('python') sonucunu say.",
         ":= sonucu n adına da bağlar."
       ],
-      "explanation": "Metin 6 karakterlidir; 6 > 5 olduğu için 6 yazdırılır."
+      "explanation": "len 6 verir; := bu değeri n adına bağlar ve print'e taşır."
     },
     {
       "id": "m1-q20",
@@ -768,25 +821,23 @@
       "topic": "girinti",
       "sectionId": "repl-syntax",
       "difficulty": 2,
-      "prompt": "Kod neden çalışmaz?",
-      "code": "if True:\nprint(\"merhaba\")",
+      "prompt": "Bağımsız satır neden çalışmaz?",
+      "code": "    print(\"merhaba\")",
       "options": [
-        "print girintili olmalı",
-        "True küçük yazılmalı",
-        "İki nokta kaldırılmalı",
-        "Metin tek tırnak olmalı"
+        "Gereksiz başlangıç girintisi kaldırılmalı",
+        "print metin yazdıramaz",
+        "Tırnaklar kaldırılmalı"
       ],
-      "answer": "print girintili olmalı",
+      "answer": "Gereksiz başlangıç girintisi kaldırılmalı",
       "expectedError": "IndentationError",
       "hints": [
         "if yeni bir blok başlatır.",
         "Blok gövdesi dört boşluk içeriden başlar."
       ],
-      "explanation": "Python if sonrasında girintili bir blok bekler.",
+      "explanation": "Bir blok içinde olmayan bağımsız satır en soldan başlamalıdır; gereksiz girinti IndentationError üretir.",
       "optionFeedback": {
-        "True küçük yazılmalı": "Python'da doğru sabit True'dur; küçük true tanımsız bir isimdir.",
-        "İki nokta kaldırılmalı": "if satırı iki noktayla bitmek zorundadır; sorun gövdenin girintisizliğidir.",
-        "Metin tek tırnak olmalı": "Tek ve çift tırnak aynı str değerini üretir."
+        "print metin yazdıramaz": "print tırnaklı metni yazdırabilir; sorun satır başındaki boşluklardır.",
+        "Tırnaklar kaldırılmalı": "Tırnakları kaldırmak metni bir isim gibi yorumlatır; girinti sorununu çözmez."
       }
     },
     {
@@ -823,7 +874,7 @@
       "sectionId": "comparison-logic",
       "difficulty": 3,
       "prompt": "Bu karşılaştırmada hangi düzeltme gerekir?",
-      "code": "name = \"Ada\"\nif name is \"Ada\":\n    print(\"eşit\")",
+      "code": "name = \"Ada\"\nprint(name is \"Ada\")",
       "options": [
         "is yerine == kullanılmalı",
         "== yerine in kullanılmalı",
@@ -1004,20 +1055,20 @@
       "topic": "koşul",
       "sectionId": "repl-syntax",
       "difficulty": 2,
-      "prompt": "Doğru girintili koşulu oluştur.",
+      "prompt": "Pozitiflik kontrolünü True yazdıracak sıraya koy.",
       "lines": [
-        "    print(\"pozitif\")",
-        "value = 3",
-        "if value > 0:"
+        "print(is_positive)",
+        "is_positive = value > 0",
+        "value = 3"
       ],
-      "answer": "value = 3\nif value > 0:\n    print(\"pozitif\")",
-      "solutionCode": "value = 3\nif value > 0:\n    print(\"pozitif\")",
-      "expectedOutput": "pozitif",
+      "answer": "value = 3\nis_positive = value > 0\nprint(is_positive)",
+      "solutionCode": "value = 3\nis_positive = value > 0\nprint(is_positive)",
+      "expectedOutput": "True",
       "hints": [
         "value koşuldan önce tanımlanmalı.",
         "print if bloğunun içinde olmalı."
       ],
-      "explanation": "Değer oluşturulur, koşul başlar ve girintili gövde çalışır."
+      "explanation": "Değer atanır, bool sonuç hesaplanır ve yazdırılır."
     },
     {
       "id": "m1-q34",
@@ -1215,14 +1266,14 @@
       "difficulty": 2,
       "prompt": "İki satırdan iki tam sayı oku; değerleri ters sırayla, aralarında tek boşlukla yazdır. Örnek girdiler: 1 ve 2.",
       "starterCode": "a = int(input())\nb = int(input())\n# Değerleri değiştir ve yazdır\n",
-      "answer": "a = int(input())\nb = int(input())\na, b = b, a\nprint(a, b)",
-      "solutionCode": "a = int(input())\nb = int(input())\na, b = b, a\nprint(a, b)",
+      "answer": "first = int(input())\nsecond = int(input())\nprint(second, first)",
+      "solutionCode": "first = int(input())\nsecond = int(input())\nprint(second, first)",
       "expectedOutput": "2 1",
       "hints": [
         "Python iki atamayı aynı satırda yapabilir.",
         "a, b = b, a yaz."
       ],
-      "explanation": "Sağ tarafın eski değerleri önce hazırlanır, ardından iki isim çapraz bağlanır.",
+      "explanation": "İki değer okunur ve print'e ters sırayla verilir; ayrı bir takas işlemi gerekmez.",
       "tests": [
         {
           "label": "Örnek",

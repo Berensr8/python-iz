@@ -14,15 +14,17 @@ import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTi
 import { CodeRunner, usePythonRunner } from "@/components/code-runner";
 import { curriculum, getModule, getPracticeQuestions, getSection, learningModules, questionModuleId, seededTestQuestions } from "@/lib/content";
 import { isAnswerCorrect, wrongOptionFeedback } from "@/lib/answer-check";
-import { defaultProgress, markStudy, progressRepository } from "@/lib/progress-repository";
+import { completeLesson, defaultProgress, markStudy, progressRepository } from "@/lib/progress-repository";
 import type { LearningProgress, Question, QuizDraft } from "@/lib/learning-types";
 
 import { WritingLab, writingTasks } from "@/components/writing-lab";
 
 import { createQuiz, initialDraft, quizSummary, secondsLeft, saveQuizDraft, answerQuiz, nextQuizQuestion, expireQuiz } from "@/lib/quiz-engine";
+import { Milestones, workshopTasks } from "@/components/milestones";
+import { midtermQuestions, milestonesAvailable } from "@/lib/milestones";
 import { ProgressBackup } from "@/components/progress-backup";
 
-type Stage = "lesson" | "practice" | "writing" | "test" | "stats";
+type Stage = "lesson" | "practice" | "writing" | "test" | "stats" | "midterm" | "milestones";
 type OpenRequest = { moduleId: number; stage: Stage; sectionId?: string };
 
 /** Opens the lesson section a question assesses; LearningApp validates and applies it. */
@@ -96,10 +98,13 @@ function LessonView({ moduleId, progress, updateProgress, onStage, focus }: { mo
   const section = module.sections[sectionIndex];
   const completeCount = module.sections.filter((item) => progress.completedSections[`m${moduleId}:${item.id}`]).length;
   const lessonDone = completeCount === module.sections.length;
+  const sectionKey = `m${moduleId}:${section.id}`;
+  const canComplete = !!progress.lessonRuns[sectionKey] || !!progress.completedSections[sectionKey];
 
   function completeSection() {
+    if (!canComplete) return;
     const key = `m${moduleId}:${section.id}`;
-    updateProgress((current) => ({ ...current, xp: current.xp + (current.completedSections[key] ? 0 : 20), lastStudyDate: todayKey(), completedSections: { ...current.completedSections, [key]: true } }));
+    updateProgress((current) => completeLesson(current, key));
     if (sectionIndex < module.sections.length - 1) setSectionIndex(sectionIndex + 1);
   }
 
@@ -119,9 +124,11 @@ function LessonView({ moduleId, progress, updateProgress, onStage, focus }: { mo
 
       <section className="lesson-card p-5 sm:p-7"><p className="rail-kicker text-primary">{section.eyebrow}</p><p className="mt-4 text-[17px] leading-8 text-muted-foreground">{section.explanation}</p>{section.objectives.length > 0 && <div className="mt-5 border-t border-border pt-4"><p className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">Bu bölümün sonunda</p><ul className="mt-2 space-y-1 text-sm leading-6">{section.objectives.map((item) => <li key={item} className="flex gap-2"><Check className="mt-1 size-3.5 shrink-0 text-primary" />{item}</li>)}</ul></div>}</section>
       {section.id === "variables-types" && <section className="memory-lab mt-5 lesson-card overflow-hidden p-5 sm:p-6"><p className="rail-kicker text-cyan-600 dark:text-cyan-300">Bellekte ne oluyor?</p><div className="mt-5 grid items-center gap-4 sm:grid-cols-[1fr_70px_1fr]"><div className="memory-node p-4"><span className="text-xs text-muted-foreground">İsim alanı</span><code className="mt-2 block text-lg font-black text-cyan-600 dark:text-cyan-300">user_count</code></div><div className="flex items-center justify-center"><span className="memory-arrow" /></div><div className="memory-node p-4"><span className="text-xs text-muted-foreground">int nesnesi</span><strong className="mt-2 block font-mono text-2xl text-amber-500">12</strong></div></div><p className="mt-4 text-sm leading-6 text-muted-foreground">Atama, değeri bir kutuya koymaz. Soldaki ismi sağdaki nesneye bağlar; sonraki modüllerde kopyalama tuzaklarını bu ok üzerinden izleyeceğiz.</p></section>}
-      {section.runtime && <aside className="mt-5 border-l-2 border-primary pl-4 text-sm leading-6 text-muted-foreground"><strong className="text-foreground">Çalışma ortamı: </strong>{section.runtime === "mixed" ? "Editördeki örnekler tarayıcıda çalışır. Anlatımdaki subprocess komutları için yerel Python gerekir." : "Tarayıcıda çalışır · Python 3.12"}</aside>}
+      {section.depth === "okuma" && <p className="mt-5 text-sm font-bold text-primary">Okuma düzeyi · Önce davranışını tanı; kendi kodunda kullanmak zorunda değilsin.</p>}
+      {section.runtime && <aside className="mt-5 border-l-2 border-primary pl-4 text-sm leading-6 text-muted-foreground"><strong className="text-foreground">Çalışma ortamı: </strong>{section.runtimeNote ?? (section.runtime === "mixed" ? "Editördeki örnekler tarayıcıda çalışır. Anlatımdaki subprocess komutları için yerel Python gerekir." : "Tarayıcıda çalışır · Python 3.12")}</aside>}
       {section.sources?.length ? <nav aria-label="Ders kaynakları" className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs">{section.sources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="underline decoration-primary/50 underline-offset-4 hover:text-primary">{source.title} ↗</a>)}</nav> : null}
-      <div className="mt-5"><CodeRunner initialCode={section.code} expectedOutput={section.expectedOutput} /></div>
+      <div className="mt-5"><CodeRunner key={sectionKey} initialCode={section.code} expectedOutput={section.expectedOutput} onRun={result => { if (result.version) updateProgress(current => ({ ...current, lessonRuns: { ...current.lessonRuns, [sectionKey]: true } })); }} /></div>
+      {!canComplete && <p className="mt-3 text-sm text-muted-foreground">Bölümü tamamlamak için önce kodu en az bir kez çalıştır. Hata alman da bir denemedir; çıktıyı okuyup tekrar deneyebilirsin.</p>}
 
       <section className="note-grid mt-5 sm:grid-cols-2">
         <div className="note-card lesson-card p-5"><p className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-primary"><BrainCircuit className="size-4" /> Neden böyle?</p><p className="leading-7 text-muted-foreground">{section.why}</p></div>
@@ -134,7 +141,7 @@ function LessonView({ moduleId, progress, updateProgress, onStage, focus }: { mo
 
       <div className="mt-7 flex flex-col-reverse justify-between gap-3 border-t border-border pt-6 sm:flex-row">
         <Button variant="outline" onClick={() => setSectionIndex(Math.max(0, sectionIndex - 1))} disabled={sectionIndex === 0}>Önceki bölüm</Button>
-        {lessonDone && sectionIndex === module.sections.length - 1 ? <Button onClick={() => onStage("practice")} className="font-bold"><Code2 /> Pratiğe geç</Button> : <Button onClick={completeSection} className="font-bold"><Check /> Tamamla ve devam et</Button>}
+        {lessonDone && sectionIndex === module.sections.length - 1 ? <Button onClick={() => onStage("practice")} className="font-bold"><Code2 /> Pratiğe geç</Button> : <Button onClick={completeSection} disabled={!canComplete} className="font-bold"><Check /> Tamamla ve devam et</Button>}
       </div>
     </div>
   );
@@ -193,7 +200,7 @@ function QuestionCard({ question, number, total, noHints, sound, draft, answer, 
   </div>;
 }
 
-function QuizView({ moduleId, mode, progress, updateProgress, onStage, weakOnly = false }: { moduleId: number; mode: "practice" | "test"; progress: LearningProgress; updateProgress: (fn: (value: LearningProgress) => LearningProgress) => void; onStage: (stage: Stage) => void; weakOnly?: boolean }) {
+function QuizView({ moduleId, mode, progress, updateProgress, onStage, weakOnly = false }: { moduleId: number; mode: "practice" | "test" | "midterm"; progress: LearningProgress; updateProgress: (fn: (value: LearningProgress) => LearningProgress) => void; onStage: (stage: Stage) => void; weakOnly?: boolean }) {
   const [timed, setTimed] = useState(false);
   const [newRound, setNewRound] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -209,7 +216,7 @@ function QuizView({ moduleId, mode, progress, updateProgress, onStage, weakOnly 
   function start() {
     if (stored && stored.completedAt === null && !window.confirm("Devam eden oturumun yerine yeni bir oturum başlatılsın mı? Önceki cevapların soru istatistiklerinde kalır; tamamlanmamış oturum için bitiriş ödülü verilmez.")) return;
     const module = getModule(moduleId);
-    const questions = mode === "test" ? seededTestQuestions(module, Date.now() & 0xffffffff, 18) : !weakOnly ? getPracticeQuestions(module) :
+    const questions = mode === "midterm" ? midtermQuestions(learningModules) : mode === "test" ? seededTestQuestions(module, Date.now() & 0xffffffff, 18) : !weakOnly ? getPracticeQuestions(module) :
       learningModules.filter(item => item.id <= progress.unlockedModule).flatMap(item => item.questions)
         .filter(question => (progress.questionResults[question.id]?.wrong ?? 0) > 0)
         .sort((a, b) => {
@@ -217,25 +224,26 @@ function QuizView({ moduleId, mode, progress, updateProgress, onStage, weakOnly 
           return ra.correct / (ra.correct + ra.wrong) - rb.correct / (rb.correct + rb.wrong);
         }).slice(0, 15);
     if (!questions.length) { setMessage("Tekrar gerektiren yanıtlanmış soru yok. Yeni konular için ders ve pratiğe geçebilirsin."); return; }
+    if (mode === "midterm" && !milestonesAvailable(progress)) return;
     const next = createQuiz(crypto.randomUUID(), moduleId, mode, questions, timed, weakOnly);
     updateProgress(current => ({ ...current, activeQuiz: next }));
     setNow(Date.now()); setNewRound(false);
   }
   if (!session) return <div className="mx-auto max-w-2xl lesson-card p-6">
-    <p className="rail-kicker text-primary">Modül {moduleId} / {weakOnly ? "Zayıf konu tekrarı" : mode === "test" ? "Bitiriş testi" : "Pratik"}</p>
-    <h1 className="mt-4 text-3xl font-black">{mode === "test" ? "18 soru · geçme notu %70" : weakOnly ? "Yanlışlarından yeni bir tur" : "Öğrendiklerini dene"}</h1>
-    <p className="mt-4 leading-7 text-muted-foreground">{mode === "test" ? "En az 3 kod yazma sorusu var. İpuçları kapalı; açıklamalar sonuçta açılır. Süreli testte sayfayı kapatmak süreyi durdurmaz. Süre sonunda boş sorular puana katkı sağlamaz." : "Cevapların, kodun ve ipuçların bu tarayıcıda saklanır. İstersen derse dönüp sonra aynı sorudan devam edebilirsin."}</p>
+    <p className="rail-kicker text-primary">{mode === "midterm" ? "Ara Sınav 1 · M1–M4" : `Modül ${moduleId}`} / {weakOnly ? "Zayıf konu tekrarı" : mode !== "practice" ? "Bitiriş testi" : "Pratik"}</p>
+    <h1 className="mt-4 text-3xl font-black">{mode !== "practice" ? (mode === "midterm" ? "20 soru · geçme notu %70" : "18 soru · geçme notu %70") : weakOnly ? "Yanlışlarından yeni bir tur" : "Öğrendiklerini dene"}</h1>
+    <p className="mt-4 leading-7 text-muted-foreground">{mode !== "practice" ? "En az 3 kod yazma sorusu var. İpuçları kapalı; açıklamalar sonuçta açılır. Süreli testte sayfayı kapatmak süreyi durdurmaz. Süre sonunda boş sorular puana katkı sağlamaz." : "Cevapların, kodun ve ipuçların bu tarayıcıda saklanır. İstersen derse dönüp sonra aynı sorudan devam edebilirsin."}</p>
     <p className="mt-3 text-sm text-muted-foreground">Bu bir yerel öğrenme aracıdır. Cihazlar arasında otomatik eşitleme veya güvenli sınav denetimi yoktur; tek sekmede çalış.</p>
-    {mode === "test" && <label className="mt-5 flex items-center gap-3"><Switch checked={timed} onCheckedChange={setTimed} />25 dakikalık süreyi aç</label>}
+    {mode !== "practice" && <label className="mt-5 flex items-center gap-3"><Switch checked={timed} onCheckedChange={setTimed} />25 dakikalık süreyi aç</label>}
     {stored?.completedAt === null && <p className="mt-4 text-sm">Modül {stored.moduleId} için devam eden bir oturum var. Üstteki “Oturuma dön” düğmesiyle sürdürebilirsin.</p>}
-    <Button className="mt-6" onClick={start}><Play />{mode === "test" ? "Testi başlat" : "Pratiği başlat"}</Button>
+    <Button className="mt-6" onClick={start}><Play />{mode !== "practice" ? "Testi başlat" : "Pratiği başlat"}</Button>
     {message && <p role="status" className="mt-4">{message}</p>}
   </div>;
   const summary = quizSummary(session);
   if (session.completedAt !== null) {
     return <div className="mx-auto max-w-3xl">
       <section className="lesson-card p-6"><p className="rail-kicker text-primary">{session.finishReason === "timeout" ? "Süre doldu · sonuç kaydedildi" : "Oturum tamamlandı"}</p>
-        <h1 className="mt-4 text-3xl font-black">{mode === "test" ? summary.passed ? "Testi geçtin!" : "Bir tur daha güçlenelim" : weakOnly ? "Tekrar tamamlandı" : "Pratik tamamlandı"}</h1>
+        <h1 className="mt-4 text-3xl font-black">{mode !== "practice" ? summary.passed ? "Testi geçtin!" : "Bir tur daha güçlenelim" : weakOnly ? "Tekrar tamamlandı" : "Pratik tamamlandı"}</h1>
         <p className="mt-4 text-lg">%{summary.score} · {summary.correct} doğru / {session.questions.length} soru</p>
         <p className="mt-2 text-sm text-muted-foreground">{summary.unanswered} boş soru. Sonuç ve bitiriş ödülü bu oturum için yalnızca bir kez kaydedilir.</p>
         <Progress value={summary.score} className="mt-5" />
@@ -247,6 +255,7 @@ function QuizView({ moduleId, mode, progress, updateProgress, onStage, weakOnly 
         </div>
       </section>
       <h2 className="mt-7 text-xl font-black">Yanıt incelemesi</h2>
+      {mode === "midterm" && <Button className="mt-4" variant="outline" onClick={() => onStage("milestones")}>Atölye ve ara sınavlara dön</Button>}
       <div className="mt-4 space-y-3">{session.questions.map(question => {
         const answer = session.answers[question.id], draft = session.drafts[question.id];
         return <details key={question.id} className="lesson-card p-4"><summary className="cursor-pointer font-bold">{!answer ? "Boş" : answer.correct ? "✓" : "×"} · {question.prompt}</summary>
@@ -264,7 +273,7 @@ function QuizView({ moduleId, mode, progress, updateProgress, onStage, weakOnly 
   const remaining = secondsLeft(session, now);
   return <div>
     <div className="mx-auto mb-6 flex max-w-3xl flex-wrap items-center gap-4"><Progress value={100 * summary.answered / session.questions.length} className="min-w-24 flex-1" /><span className="text-sm">{summary.answered}/{session.questions.length} yanıt kaydedildi</span>{remaining !== null && <span role="timer" aria-label="Kalan süre" className="section-count px-3 py-2 font-mono">{String(Math.floor(remaining / 60)).padStart(2, "0")}:{String(remaining % 60).padStart(2, "0")}</span>}</div>
-    <QuestionCard key={session.id + question.id} question={question} number={session.index + 1} total={session.questions.length} noHints={mode === "test"} sound={progress.sound} draft={draft} answer={session.answers[question.id]}
+    <QuestionCard key={session.id + question.id} question={question} number={session.index + 1} total={session.questions.length} noHints={mode !== "practice"} sound={progress.sound} draft={draft} answer={session.answers[question.id]}
       onDraft={value => updateProgress(current => saveQuizDraft(current, session.id, question.id, value))}
       onAnswered={correct => updateProgress(current => answerQuiz(current, session.id, question.id, correct))} />
     {session.answers[question.id] && <div className="mx-auto mt-5 flex max-w-3xl justify-end"><Button onClick={() => updateProgress(current => nextQuizQuestion(current, session.id, question.id))}>{session.index === session.questions.length - 1 ? "Sonucu gör" : "Sonraki soru"}</Button></div>}
@@ -289,7 +298,7 @@ function StatsView({ progress, onReview }: { progress: LearningProgress; onRevie
   const totalWrong = Object.values(progress.questionResults).reduce((sum, item) => sum + item.wrong, 0);
   const rate = Math.round((totalCorrect / Math.max(1, totalCorrect + totalWrong)) * 100);
   return (
-    <div className="mx-auto max-w-5xl"><p className="rail-kicker text-primary">Öğrenme raporun</p><h1 className="brand-word mt-3 text-4xl font-black tracking-[-0.05em] sm:text-5xl">İSTATİSTİKLER</h1><div className="lesson-card mt-6 p-5"><h2 className="font-black">Kod yazma / ayrı beceri takibi</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{writingTasks.filter(task => progress.writingResults[task.id]?.passed).length}/{writingTasks.length} görev tamamlandı · {writingTasks.filter(task => progress.writingResults[task.id]?.independent).length} görev ipucusuz çözüldü. Bu ölçüm, okuma sorularındaki başarıdan ayrıdır.</p></div><div className="mt-7 grid gap-4 sm:grid-cols-3"><div className="metric-card"><span>Genel başarı</span><strong>%{rate}</strong><Progress value={rate} className="mt-3" /></div><div className="metric-card"><span>Toplam XP</span><strong>{progress.xp}</strong><p>{totalCorrect + totalWrong} soru yanıtlandı</p></div><div className="metric-card"><span>İpucu kullanımı</span><strong>{Object.values(progress.hintUsage).reduce((a, b) => a + b, 0)}</strong><p>öğrenme desteği</p></div></div><div className="mt-5 grid gap-5 lg:grid-cols-[1fr_320px]"><section className="lesson-card p-5 sm:p-6"><div className="flex items-center justify-between"><h2 className="text-lg font-black">Ders bölümü bazında başarı</h2><span className="text-xs text-muted-foreground">Zayıftan güçlüye</span></div><p className="mt-2 text-sm leading-6 text-muted-foreground">Açık modüllerde <strong>{misread}</strong> soru yanlış yanıtlandı ve henüz doğru çözülmedi (yanlış öğrenilmiş olabilir); <strong>{unseen}</strong> soru hiç denenmedi (henüz çalışılmamış).</p>{rows.length === 0 ? <div className="py-12 text-center text-muted-foreground"><BrainCircuit className="mx-auto mb-3 size-8" />Soruları çözdükçe konu haritan burada oluşacak.</div> : <div className="mt-5 space-y-4">{rows.map((row) => { const rowRate = Math.round(row.correct / (row.correct + row.wrong) * 100); return <div key={`${row.module.id}:${row.section.id}`}><div className="mb-2 flex items-center justify-between gap-3 text-sm"><button className="min-w-0 truncate text-left font-bold underline-offset-4 hover:underline" onClick={() => openSection(row.module.id, row.section.id)} title="Bu bölümün dersini aç">M{row.module.id} · {row.section.title}</button><span className="shrink-0 font-mono text-muted-foreground">{row.misread > 0 && <span className="mr-2 text-rose-500">{row.misread} yanlış</span>}{row.attempted}/{row.total} soru · %{rowRate}</span></div><Progress value={rowRate} /></div>; })}</div>}</section><aside className="lesson-card p-5 sm:p-6"><Trophy className="size-6 text-amber-400" /><h2 className="mt-4 text-lg font-black">Test geçmişi</h2>{progress.attempts.length === 0 ? <p className="mt-2 text-sm leading-6 text-muted-foreground">İlk bitiriş testinden sonra sonuçların burada görünür.</p> : <div className="mt-4 space-y-3">{[...progress.attempts].reverse().slice(0, 5).map((attempt, index) => <div key={`${attempt.date}-${index}`} className="flex items-center justify-between border-l-2 border-primary bg-muted p-3 text-sm"><span>Modül {attempt.moduleId}</span><strong className={attempt.score >= 70 ? "text-emerald-500" : "text-rose-500"}>%{attempt.score}</strong></div>)}</div>}<Button className="mt-5 w-full" onClick={onReview} disabled={rows.length === 0}><BrainCircuit /> Zayıf konulardan test</Button></aside></div></div>
+    <div className="mx-auto max-w-5xl"><p className="rail-kicker text-primary">Öğrenme raporun</p><h1 className="brand-word mt-3 text-4xl font-black tracking-[-0.05em] sm:text-5xl">İSTATİSTİKLER</h1><div className="lesson-card mt-6 p-5"><h2 className="font-black">Kod yazma / ayrı beceri takibi</h2><p className="mt-2 text-sm">Atölye 1: {workshopTasks.filter(task => progress.writingResults[task.id]?.passed).length}/2 yazma adımı · inceleme {progress.workshopRead.workshop1 ? "tamamlandı" : "bekliyor"}.</p><p className="mt-2 text-sm leading-6 text-muted-foreground">{writingTasks.filter(task => progress.writingResults[task.id]?.passed).length}/{writingTasks.length} görev tamamlandı · {writingTasks.filter(task => progress.writingResults[task.id]?.independent).length} görev ipucusuz çözüldü. Bu ölçüm, okuma sorularındaki başarıdan ayrıdır.</p></div><div className="mt-7 grid gap-4 sm:grid-cols-3"><div className="metric-card"><span>Genel başarı</span><strong>%{rate}</strong><Progress value={rate} className="mt-3" /></div><div className="metric-card"><span>Toplam XP</span><strong>{progress.xp}</strong><p>{totalCorrect + totalWrong} soru yanıtlandı</p></div><div className="metric-card"><span>İpucu kullanımı</span><strong>{Object.values(progress.hintUsage).reduce((a, b) => a + b, 0)}</strong><p>öğrenme desteği</p></div></div><div className="mt-5 grid gap-5 lg:grid-cols-[1fr_320px]"><section className="lesson-card p-5 sm:p-6"><div className="flex items-center justify-between"><h2 className="text-lg font-black">Ders bölümü bazında başarı</h2><span className="text-xs text-muted-foreground">Zayıftan güçlüye</span></div><p className="mt-2 text-sm leading-6 text-muted-foreground">Açık modüllerde <strong>{misread}</strong> soru yanlış yanıtlandı ve henüz doğru çözülmedi (yanlış öğrenilmiş olabilir); <strong>{unseen}</strong> soru hiç denenmedi (henüz çalışılmamış).</p>{rows.length === 0 ? <div className="py-12 text-center text-muted-foreground"><BrainCircuit className="mx-auto mb-3 size-8" />Soruları çözdükçe konu haritan burada oluşacak.</div> : <div className="mt-5 space-y-4">{rows.map((row) => { const rowRate = Math.round(row.correct / (row.correct + row.wrong) * 100); return <div key={`${row.module.id}:${row.section.id}`}><div className="mb-2 flex items-center justify-between gap-3 text-sm"><button className="min-w-0 truncate text-left font-bold underline-offset-4 hover:underline" onClick={() => openSection(row.module.id, row.section.id)} title="Bu bölümün dersini aç">M{row.module.id} · {row.section.title}</button><span className="shrink-0 font-mono text-muted-foreground">{row.misread > 0 && <span className="mr-2 text-rose-500">{row.misread} yanlış</span>}{row.attempted}/{row.total} soru · %{rowRate}</span></div><Progress value={rowRate} /></div>; })}</div>}</section><aside className="lesson-card p-5 sm:p-6"><Trophy className="size-6 text-amber-400" /><h2 className="mt-4 text-lg font-black">Test geçmişi</h2>{progress.attempts.length === 0 ? <p className="mt-2 text-sm leading-6 text-muted-foreground">İlk bitiriş testinden sonra sonuçların burada görünür.</p> : <div className="mt-4 space-y-3">{[...progress.attempts].reverse().slice(0, 5).map((attempt, index) => <div key={`${attempt.date}-${index}`} className="flex items-center justify-between border-l-2 border-primary bg-muted p-3 text-sm"><span>{attempt.kind === "midterm" ? "Ara Sınav 1" : `Modül ${attempt.moduleId}`}</span><strong className={attempt.score >= 70 ? "text-emerald-500" : "text-rose-500"}>%{attempt.score}</strong></div>)}</div>}<Button className="mt-5 w-full" onClick={onReview} disabled={rows.length === 0}><BrainCircuit /> Zayıf konulardan test</Button></aside></div></div>
   );
 }
 
@@ -381,7 +390,10 @@ export function LearningApp() {
         <aside className="curriculum-rail hidden min-h-[calc(100vh-72px)] px-4 py-7 lg:block"><p className="rail-kicker mb-5 px-2 text-muted-foreground">Öğrenme yolu</p><div className="max-h-[calc(100vh-145px)] overflow-y-auto pr-1 scrollbar-thin"><ModuleNavigation activeModule={moduleId} progress={progress} onSelect={changeModule} /></div></aside>
 
         <section className="learning-canvas min-w-0 px-4 py-6 sm:px-7 lg:px-10 lg:py-9">
-          {stage !== "stats" && <Tabs value={stage} onValueChange={(value) => changeStage(value as Stage)} className="stage-switcher mx-auto mb-9 max-w-3xl"><TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-4"><TabsTrigger value="lesson"><BookOpen /> Ders</TabsTrigger><TabsTrigger value="writing"><Code2 /> Kod yaz</TabsTrigger><TabsTrigger value="practice" disabled={!lessonDone}><Code2 /> Pratik {!lessonDone && <LockKeyhole className="size-3" />}</TabsTrigger><TabsTrigger value="test" disabled={!practiceDone || !writingDone} title="Önce pratiği ve üç yazma görevini tamamla"><ListChecks /> Test {(!practiceDone || !writingDone) && <LockKeyhole className="size-3" />}</TabsTrigger></TabsList></Tabs>}
+          {!["stats", "midterm", "milestones"].includes(stage) && <Tabs value={stage} onValueChange={(value) => changeStage(value as Stage)} className="stage-switcher mx-auto mb-9 max-w-3xl"><TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-4"><TabsTrigger value="lesson"><BookOpen /> Ders</TabsTrigger><TabsTrigger value="writing"><Code2 /> Kod yaz</TabsTrigger><TabsTrigger value="practice" disabled={!lessonDone}><Code2 /> Pratik {!lessonDone && <LockKeyhole className="size-3" />}</TabsTrigger><TabsTrigger value="test" disabled={!practiceDone || !writingDone} title="Önce pratiği ve üç yazma görevini tamamla"><ListChecks /> Test {(!practiceDone || !writingDone) && <LockKeyhole className="size-3" />}</TabsTrigger></TabsList></Tabs>}
+          <div className="mx-auto mb-6 flex max-w-3xl flex-wrap gap-2"><Button variant="outline" onClick={() => setStage("milestones")}>Ara sınav ve atölye</Button>{["milestones", "midterm", "stats"].includes(stage) && <Button variant="ghost" onClick={() => changeStage("lesson")}>Derse dön</Button>}</div>
+          {stage === "milestones" && <Milestones progress={progress} updateProgress={updateProgress} onExam={() => { if (milestonesAvailable(progress)) { setModuleId(4); setWeakOnly(false); setStage("midterm"); } }} />}
+          {stage === "midterm" && milestonesAvailable(progress) && <QuizView moduleId={4} mode="midterm" progress={progress} updateProgress={updateProgress} onStage={changeStage} />}
           {storageWarning && <p role="alert" className="mb-5 border border-amber-500 p-3 text-sm">{storageWarning}</p>}
           {progress.activeQuiz && (stage !== progress.activeQuiz.mode || moduleId !== progress.activeQuiz.moduleId || weakOnly !== progress.activeQuiz.weakOnly) && <div className="lesson-card mx-auto mb-5 flex max-w-3xl flex-wrap items-center justify-between gap-3 p-4"><p className="text-sm">Modül {progress.activeQuiz.moduleId} · {progress.activeQuiz.completedAt === null ? "Devam eden oturumun saklanıyor. Süreli testte saat işlemeye devam eder." : "Son oturumunun sonucu hazır."}</p><Button variant="outline" onClick={resumeQuiz}>Oturuma dön</Button></div>}
           {stage === "writing" && <WritingLab key={moduleId} moduleId={moduleId} progress={progress} updateProgress={updateProgress} />}

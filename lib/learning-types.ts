@@ -18,6 +18,8 @@ export type LessonSection = {
   prerequisites: string[];
   sources?: { title: string; url: string }[];
   runtime?: "browser" | "mixed";
+  runtimeNote?: string;
+  depth?: "temel" | "okuma";
   summary: string;
   explanation: string;
   code: string;
@@ -69,6 +71,7 @@ export type LearningModule = {
 };
 
 export type TestAttempt = {
+  kind?: "module" | "midterm";
   sessionId?: string;
   reason?: "submitted" | "timeout";
   moduleId: number;
@@ -84,6 +87,8 @@ export type LearningProgress = {
   lastStudyDate: string | null;
   unlockedModule: number;
   completedSections: Record<string, boolean>;
+  lessonRuns: Record<string, boolean>;
+  workshopRead: Record<string, boolean>;
   completedPractice: Record<string, boolean>;
   hintUsage: Record<string, number>;
   questionResults: Record<string, { correct: number; wrong: number }>;
@@ -99,7 +104,7 @@ export type LearningProgress = {
 
 export type QuizDraft = { choice: string; fill: string; ordered: string[]; code: string; hints: number; stdin: string };
 export type QuizSession = {
-  id: string; moduleId: number; mode: "practice" | "test"; weakOnly: boolean;
+  id: string; moduleId: number; mode: "practice" | "test" | "midterm"; weakOnly: boolean;
   questions: Question[]; startedAt: number; deadline: number | null;
   index: number; drafts: Record<string, QuizDraft>;
   answers: Record<string, { correct: boolean; hints: number; submittedAt: number }>;

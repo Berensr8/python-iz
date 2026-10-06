@@ -3,6 +3,9 @@ import { readFile } from "node:fs/promises";
 import { loadPyodide } from "pyodide";
 import { defaultProgress, parseProgress, markStudy, recordWriting, studyDay, exportProgress, importProgress } from "../lib/progress-repository.ts";
 import { isAnswerCorrect, wrongOptionFeedback } from "../lib/answer-check.ts";
+import { pythonErrorHint } from "../lib/python-error-hint.ts";
+import { completeLesson } from "../lib/progress-repository.ts";
+import { midtermQuestions, milestonesAvailable } from "../lib/milestones.ts";
 import { createQuiz, answerQuiz, nextQuizQuestion, finishQuiz, expireQuiz, saveQuizDraft } from "../lib/quiz-engine.ts";
 import "../public/python-runtime.js";
 
@@ -10,7 +13,7 @@ let checks = 0;
 function check(name, fn) { fn(); checks++; console.log(`✓ ${name}`); }
 const py = await loadPyodide();
 const runtime = globalThis.pythonRuntime;
-const tasks = JSON.parse(await readFile(new URL("../content/writing-tasks.json", import.meta.url), "utf8"));
+const tasks = [...JSON.parse(await readFile(new URL("../content/writing-tasks.json", import.meta.url), "utf8")), ...JSON.parse(await readFile(new URL("../content/workshop-tasks.json", import.meta.url), "utf8"))];
 for (const task of tasks) {
   const results = await runtime.assess(py, task.solution, task.tests);
   check(`${task.id}: referans çözüm / ${task.tests.length} girdi`, () => assert.ok(results.every(result => result.passed), JSON.stringify(results)));
@@ -46,6 +49,28 @@ const missing = await runtime.execute(py, "input()", "");
 check("Eksik girdi EOFError üretir", () => assert.ok(!missing.ok && missing.output.includes("EOFError")));
 const traceback = await runtime.execute(py, "print(1 / 0)");
 check("Traceback dosya, satır ve hata içerir", () => assert.ok(!traceback.ok && traceback.output.includes('cozum.py", line 1') && traceback.output.includes("ZeroDivisionError")));
+check("Traceback çıktısında <exec> geçmez", () => assert.ok(!traceback.output.includes("<exec>")));
+for (const code of ["if True\n    print(1)", " print(1)", "print(unknown)", "print('x' + 2)", "def divide():\n    return 1 / 0\ndivide()", "try:\n    int('x')\nexcept ValueError as e:\n    raise RuntimeError('üst hata') from e"]) {
+  const result = await runtime.execute(py, code);
+  check(`Öğrenci traceback korunur: ${code.split("\n")[0]}`, () => { assert.ok(!result.ok); assert.ok(result.output.includes('cozum.py')); assert.ok(!result.output.includes('<exec>'), result.output); });
+}
+const syntax = await runtime.execute(py, "if True\n    print(1)");
+check("SyntaxError yalnız öğrenci dosyası ve hata satırını gösterir", () => { assert.ok(!syntax.output.includes("Traceback (most recent")); assert.ok(syntax.output.includes("if True")); assert.ok(pythonErrorHint(syntax.output)?.includes("iki nokta")); });
+check("Türkçe ipuçları hata türüne göre, çıktı metnine göre değil seçilir", () => {
+  for (const name of ["IndentationError", "TabError", "NameError", "TypeError"]) assert.ok(pythonErrorHint(`${name}: test`));
+  assert.equal(pythonErrorHint("NameError örneği\nValueError: test"), null);
+  assert.equal(pythonErrorHint("Başarılı çıktı"), null);
+});
+check("Ders çalıştırılmadan tamamlanamaz; bölüm ve XP bir kez kaydedilir", () => {
+  assert.equal(completeLesson(defaultProgress, "m1:repl-syntax"), defaultProgress);
+  const ran = { ...defaultProgress, lessonRuns: { "m1:repl-syntax": true } };
+  assert.equal(completeLesson(ran, "m1:variables-types"), ran);
+  const done = completeLesson(ran, "m1:repl-syntax");
+  assert.equal(done.xp, 20); assert.ok(done.completedSections["m1:repl-syntax"]);
+  assert.equal(completeLesson(done, "m1:repl-syntax"), done);
+  assert.deepEqual(parseProgress({ ...done, lessonRuns: undefined }).lessonRuns, {});
+  assert.ok(parseProgress({ ...done, lessonRuns: undefined }).completedSections["m1:repl-syntax"]);
+});
 const empty = await runtime.execute(py, "x = 1");
 check("Çıktısız geçerli program kabul edilir", () => assert.deepEqual(empty, { ok: true, output: "" }));
 const large = await runtime.execute(py, 'print("x" * 21000)');
@@ -150,4 +175,44 @@ check("Seçmeli soru yalnız tam seçenekle doğru; yanlış seçeneğin gerekç
   assert.ok(isAnswerCorrect(q, "TypeError")); assert.ok(!isAnswerCorrect(q, "typeerror"));
   assert.equal(wrongOptionFeedback(q, "ValueError"), "neden"); assert.equal(wrongOptionFeedback(q, "TypeError"), undefined);
 });
-console.log(`\n${checks} regresyon kontrolü geçti; ${tasks.reduce((sum, task) => sum + task.tests.length, 0)} atölye referans vakası doğrulandı.`);
+const modules = await Promise.all(Array.from({ length: 10 }, async (_, i) => JSON.parse(await readFile(new URL(`../content/module-${String(i + 1).padStart(2, "0")}.json`, import.meta.url), "utf8"))));
+const checkpoint = midtermQuestions(modules);
+check("Ara sınav M1–M4'ten eşit kapsam ve dört yazma sorusu içerir", () => {
+  assert.equal(checkpoint.length, 20); assert.equal(new Set(checkpoint.map(q => q.id)).size, 20);
+  for (let i = 1; i <= 4; i++) assert.equal(checkpoint.filter(q => q.id.startsWith(`m${i}-`)).length, 5);
+  assert.equal(checkpoint.filter(q => q.type === "code").length, 4);
+});
+check("M10 zorluk dağılımı 16 kolay / 16 orta / 8 zor", () => {
+  assert.deepEqual([1, 2, 3].map(level => modules[9].questions.filter(q => q.difficulty === level).length), [16, 16, 8]);
+});
+check("M1–M2 gerçek örneklerinde öğretilmemiş fonksiyon ve döngü yok", () => {
+  for (const module of modules.slice(0, 2)) for (const section of module.sections) assert.ok(!/(^|\n)\s*(def |for |while |try:|if )/.test(section.realCode), section.id);
+  assert.ok(!modules[0].sections[0].code.includes("if "));
+});
+check("Ara sınav kilidi ve eski ilerleme uyumluluğu", () => {
+  assert.equal(milestonesAvailable(defaultProgress), false);
+  assert.equal(milestonesAvailable({ ...defaultProgress, unlockedModule: 5 }), true);
+  const old = { ...defaultProgress }; delete old.workshopRead; delete old.lessonRuns;
+  assert.deepEqual(parseProgress(old).workshopRead, {});
+});
+check("Ara sınav kaydolur, yenilenir ve modül açmaz; ödül tekrarlanmaz", () => {
+  let p = { ...defaultProgress, unlockedModule: 5, activeQuiz: createQuiz("mid1", 4, "midterm", checkpoint, true, false, t0) };
+  p = parseProgress(JSON.parse(JSON.stringify(p)));
+  for (const q of checkpoint) { p = answerQuiz(p, "mid1", q.id, true, t0); p = nextQuizQuestion(p, "mid1", q.id, t0); }
+  assert.equal(p.unlockedModule, 5); assert.equal(p.attempts[0].kind, "midterm"); assert.equal(p.attempts[0].score, 100);
+  assert.equal(p.completedPractice.m4, undefined); assert.equal(p.xp, 300);
+  assert.equal(finishQuiz(p, "mid1", "submitted", t0), p);
+  assert.equal(parseProgress(p).activeQuiz.mode, "midterm");
+});
+check("Süreli ara sınav boşları yanlış sayar ve bir kez kapanır", () => {
+  let p = { ...defaultProgress, unlockedModule: 5, activeQuiz: createQuiz("mid2", 4, "midterm", checkpoint, true, false, t0) };
+  p = expireQuiz(p, t0 + 1500001);
+  assert.equal(p.attempts[0].score, 0); assert.equal(p.attempts[0].kind, "midterm"); assert.equal(p.attempts[0].reason, "timeout");
+  assert.equal(expireQuiz(p, t0 + 2000000), p);
+});
+const fix = tasks.find(task => task.id === "workshop1-fix");
+for (const [label, code] of [["Yalnız sınır", fix.starterCode.replace("amount > limit", "amount >= limit")], ["Yalnız toplama", fix.starterCode.replace("total = amount", "total += amount")]]) {
+  const results = await runtime.assess(py, code, fix.tests);
+  check(`Atölye 1: ${label} düzeltmesi yeterli değil`, () => assert.ok(results.some(result => !result.passed)));
+}
+console.log(`\n${checks} regresyon kontrolü geçti; ${tasks.reduce((sum, task) => sum + task.tests.length, 0)} yazma referans vakası doğrulandı.`);

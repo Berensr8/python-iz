@@ -48,12 +48,16 @@ async function verifyCode(label, code, expectedOutput, expectedError, stdin = ""
 modules.sort((a, b) => a.id - b.id);
 modules.forEach((module, index) => { if (module.id !== index + 1) failures.push(`Modül kimlikleri 1'den ardışık olmalı; ${index + 1} yerine ${module.id} bulundu.`); });
 const writingTasks = JSON.parse(await readFile(path.join(root, "content/writing-tasks.json"), "utf8"));
+const workshopTasks = JSON.parse(await readFile(path.join(root, "content/workshop-tasks.json"), "utf8"));
+const reading = JSON.parse(await readFile(path.join(root, "content/workshop-reading.json"), "utf8"));
+await verifyCode("Atölye 1 okuma", reading.code, reading.expectedOutput);
 const sectionKeys = new Set(modules.flatMap(module => module.sections.map(section => `m${module.id}:${section.id}`)));
 
 for (const module of modules) {
   if (!Number.isInteger(module.contentVersion) || module.contentVersion < 1) failures.push(`Modül ${module.id}: contentVersion eksik.`);
   const sectionIds = new Set(module.sections.map(section => section.id));
   for (const section of module.sections) {
+    if (!["browser", "mixed"].includes(section.runtime) || !section.sources?.length || section.sources.some(source => !source.title || !source.url.startsWith("https://"))) failures.push(`M${module.id} ${section.id}: kaynak/ortam etiketi eksik.`);
     if (!section.objectives?.length) failures.push(`M${module.id} ${section.id}: kazanım (objectives) eksik.`);
     for (const prerequisite of section.prerequisites ?? ["?"]) {
       const key = prerequisite.includes(":") ? prerequisite : `m${module.id}:${prerequisite}`;
@@ -79,7 +83,7 @@ for (const module of modules) {
     }
   }
 }
-for (const task of writingTasks) {
+for (const task of [...writingTasks, ...workshopTasks]) {
   if (!sectionKeys.has(`m${task.moduleId}:${task.sectionId}`)) failures.push(`${task.id}: bilinmeyen bölüm ${task.sectionId}.`);
   if (task.tests.length < 3) failures.push(`${task.id}: en az üç test gerekli.`);
   for (const test of task.tests) await verifyCode(`${task.id} ${test.label}`, task.solution, test.expectedOutput, undefined, test.stdin);

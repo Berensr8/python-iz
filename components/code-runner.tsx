@@ -5,6 +5,7 @@ import { python } from "@codemirror/lang-python";
 import { LoaderCircle, Play, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CodeTest } from "@/lib/learning-types";
+import { pythonErrorHint } from "@/lib/python-error-hint";
 
 export type RunResult = {
   ok: boolean; output: string; version?: string | null;
@@ -33,7 +34,7 @@ export function usePythonRunner() {
       const id = crypto.randomUUID();
       try {
         if (!workerRef.current) {
-          const worker = new Worker("/py-worker.js");
+          const worker = new Worker(new URL("py-worker.js", document.baseURI));
           worker.onmessage = ({ data }) => {
             const pending = active.current;
             if (!pending || pending.id !== data.id) return;
@@ -65,6 +66,7 @@ export function CodeRunner({ initialCode, expectedOutput, compact = false, onRun
   const [running, setRunning] = useState(false);
   const revision = useRef(0);
   const runPython = usePythonRunner();
+  const hint = result && !result.ok ? pythonErrorHint(result.output) : null;
   useEffect(() => { revision.current++; setCode(initialCode); setStdin(initialInput); setResult(null); }, [initialCode, initialInput]);
   function edit(value: string) { revision.current++; setCode(value); setResult(null); onChange?.(value); }
   async function execute() {
@@ -92,6 +94,7 @@ export function CodeRunner({ initialCode, expectedOutput, compact = false, onRun
         <span className="mb-2 block text-[10px]">ÇIKTI {result?.version ? `· Python ${result.version}` : ""}</span>
         <pre className="whitespace-pre-wrap break-words">{result ? result.output || "Tamamlandı; program çıktı üretmedi." : "Çalıştırınca sonuç burada görünecek."}</pre>
       </div>
+      {hint && <p role="note" className="mt-3 border-l-2 border-amber-400 pl-3 text-sm leading-6 text-amber-200"><strong>İpucu: </strong>{hint}</p>}
     </div>
   </div>;
 }

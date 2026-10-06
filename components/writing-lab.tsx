@@ -29,7 +29,7 @@ export function WritingLab({ moduleId, progress, updateProgress }: { moduleId: n
   </div>;
 }
 
-function WritingExercise({ task, progress, updateProgress }: { task: WritingTask; progress: LearningProgress; updateProgress: Update }) {
+export function WritingExercise({ task, progress, updateProgress }: { task: WritingTask; progress: LearningProgress; updateProgress: Update }) {
   const [initialCode, setInitialCode] = useState(progress.writingDrafts[task.id] ?? task.starterCode);
   const [editorKey, setEditorKey] = useState(0);
   const code = useRef(initialCode);

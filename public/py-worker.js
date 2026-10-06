@@ -1,5 +1,5 @@
 const PYODIDE_BASE = "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/";
-importScripts("/python-runtime.js");
+importScripts("python-runtime.js");
 let pyodideReady;
 let queue = Promise.resolve();
 self.onmessage = ({ data }) => {

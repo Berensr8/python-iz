@@ -1,0 +1,6 @@
+{
+  "code": "expenses = [(\"yemek\", 120), (\"kitap\", 80), (\"yemek\", 50)]\ntotal = 0\ncount = 0\nfor category, amount in expenses:\n    if amount >= 100:\n        total += amount\n        count += 1\nprint(count, total)",
+  "answer": "1 120",
+  "expectedOutput": "1 120",
+  "explanation": "Filtre her kayda ayrı uygulanır. Yalnız 120 kuruşluk kayıt geçer; yemek kategorisinin toplamını önce hesaplamıyoruz. count kayıt sayısı, total geçen tutarların toplamıdır."
+}

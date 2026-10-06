@@ -1738,6 +1738,92 @@ module = {
     "questions": questions,
 }
 
+# Source links and execution labels must survive regeneration.
+section_metadata = {
+  "open-modes": {
+    "sources": [
+      {
+        "title": "Python 3.12 · open ve dosya modları",
+        "url": "https://docs.python.org/3.12/tutorial/inputoutput.html"
+      }
+    ],
+    "runtime": "browser",
+    "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
+  },
+  "with-lifecycle": {
+    "sources": [
+      {
+        "title": "Python 3.12 · with ve dosya yaşam döngüsü",
+        "url": "https://docs.python.org/3.12/reference/compound_stmts.html#the-with-statement"
+      }
+    ],
+    "runtime": "browser",
+    "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
+  },
+  "reading-lines": {
+    "sources": [
+      {
+        "title": "Python 3.12 · Satır satır okuma",
+        "url": "https://docs.python.org/3.12/tutorial/inputoutput.html"
+      }
+    ],
+    "runtime": "browser",
+    "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
+  },
+  "pathlib": {
+    "sources": [
+      {
+        "title": "Python 3.12 · pathlib ile yollar",
+        "url": "https://docs.python.org/3.12/library/pathlib.html"
+      }
+    ],
+    "runtime": "browser",
+    "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
+  },
+  "os-shutil": {
+    "sources": [
+      {
+        "title": "Python 3.12 · os ve shutil ile dosya işlemleri",
+        "url": "https://docs.python.org/3.12/library/shutil.html"
+      }
+    ],
+    "runtime": "browser",
+    "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
+  },
+  "encoding": {
+    "sources": [
+      {
+        "title": "Python 3.12 · Dosya encoding'i",
+        "url": "https://docs.python.org/3.12/howto/unicode.html"
+      }
+    ],
+    "runtime": "browser",
+    "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
+  },
+  "csv": {
+    "sources": [
+      {
+        "title": "Python 3.12 · CSV okuma ve yazma",
+        "url": "https://docs.python.org/3.12/library/csv.html"
+      }
+    ],
+    "runtime": "browser",
+    "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
+  },
+  "json": {
+    "sources": [
+      {
+        "title": "Python 3.12 · JSON okuma ve yazma",
+        "url": "https://docs.python.org/3.12/library/json.html"
+      }
+    ],
+    "runtime": "browser",
+    "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
+  }
+}
+for section in module["sections"]:
+    section.update(section_metadata[section["id"]])
+module["contentVersion"] = 2
 (ROOT / "module-08.json").write_text(json.dumps(module, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 # ---- writing tasks

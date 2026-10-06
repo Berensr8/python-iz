@@ -3,7 +3,7 @@
   "slug": "moduller-ve-ekosistem",
   "title": "Modüller ve ekosistem",
   "description": "Kodunu modüllere ve paketlere böl, doğru çalıştır; sanal ortam, bağımlılık dosyaları, uv/poetry ve ortam değişkenleriyle gerçek bir Python projesini kur ve oku.",
-  "contentVersion": 1,
+  "contentVersion": 2,
   "estimatedMinutes": 120,
   "practiceIds": [
     "m9-q01",
@@ -55,7 +55,15 @@
         "summarize dosyayı Path ile okur, JSON'u çözer ve her kişinin ortalamasını hesaplar.",
         "Örnek veri dosyası oluşturulur; gerçekte başka bir programdan gelirdi.",
         "Can'ın notları tam bölündüğü için mean 75 (int) döndürür; round onu değiştirmez."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · import biçimleri",
+          "url": "https://docs.python.org/3.12/tutorial/modules.html"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
     },
     {
       "id": "own-module",
@@ -91,7 +99,15 @@
         "rapor.header bayrağı her çağrıda ayarlar.DEBUG ile modül üzerinden okur.",
         "Ana program bayrağı değiştirince rapor da yeni değeri görür; ikisi aynı modül nesnesini paylaşır.",
         "sys.modules'teki kayıt, ana programın elindeki ayarlar nesnesinin ta kendisidir."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Kendi modülün",
+          "url": "https://docs.python.org/3.12/tutorial/modules.html"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
     },
     {
       "id": "main-guard",
@@ -125,7 +141,15 @@
         "main programın akışını toplar; gerçek bir programda veriyi input ya da dosyadan okurdu.",
         "Korumalı blok yalnızca dosya doğrudan çalıştırıldığında main'i çağırır.",
         "Bu sitede kod __main__ olarak çalıştığından main çalıştı; başka bir dosya parse_scores'u import etseydi hiçbir çıktı oluşmazdı."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · __name__ == \"__main__\"",
+          "url": "https://docs.python.org/3.12/library/__main__.html"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
     },
     {
       "id": "packages-relative",
@@ -159,7 +183,15 @@
         "Dosyayı yolu ile çalıştırmak (python app/cli.py) modülü paketsiz bırakır; .core çözülemez.",
         "Hata yakalanıp mesajı gösterilir; gerçek terminalde aynı mesajı traceback olarak görürsün.",
         "Modül adıyla çalıştırmak (python -m app.cli) paketi tanır ve relative import çalışır."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Paketler ve relative import",
+          "url": "https://docs.python.org/3.12/tutorial/modules.html"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
     },
     {
       "id": "pip-venv",
@@ -194,7 +226,15 @@
         "find_spec None döndüren modüllerin kurulum adları toplanır.",
         "Eksik varsa kullanıcıya hangi paketlerin eksik olduğu ve doğru kurulum komutu gösterilir.",
         "Komut python -m pip biçimindedir: paket, programı çalıştıran Python'a kurulur."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · pip ve venv",
+          "url": "https://docs.python.org/3.12/tutorial/venv.html"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
     },
     {
       "id": "dependency-files",
@@ -230,7 +270,15 @@
         "Paket adı, ilk kısıt ya da özel karakterin görüldüğü yere kadar olan kısımdır; geri kalanı kısıttır.",
         "Döngü hiç kırılmazsa (for-else) satırda kısıt yoktur; sürüm serbest bırakılmıştır.",
         "Adlar küçük harfe çevrilir; pip paket adlarında büyük/küçük harf ayırmaz."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · requirements.txt ve pyproject.toml",
+          "url": "https://docs.python.org/3.12/installing/index.html"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
     },
     {
       "id": "uv-poetry",
@@ -264,7 +312,19 @@
         "uv ve standart araçlar [project] tablosunu ve geliştirme araçları için [dependency-groups]'u kullanır.",
         "Kod tool.poetry tablosunun varlığına bakarak biçimi ayırt eder; get ile eksik tablo hata vermez.",
         "Python sürüm kısıtı paket değildir; bağımlılık listesinden çıkarılır."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "uv · Resmî belgeler",
+          "url": "https://docs.astral.sh/uv/"
+        },
+        {
+          "title": "Poetry · Resmî belgeler",
+          "url": "https://python-poetry.org/docs/"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
     },
     {
       "id": "env-vars",
@@ -300,7 +360,15 @@
         "Her satır ilk = işaretinden ikiye bölünür; boş satırlar ve yorumlar atlanır, değerin çevresindeki tırnaklar temizlenir.",
         "setdefault zaten tanımlı değişkeni ezmez: terminalden gelen APP_PORT=8080, .env'deki 9000'e üstün gelir.",
         "Gizli anahtarın kendisi değil yalnızca uzunluğu yazdırılır; gizli değerler çıktıya dökülmez."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Ortam değişkenleri ve .env",
+          "url": "https://docs.python.org/3.12/library/os.html"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
     }
   ],
   "questions": [

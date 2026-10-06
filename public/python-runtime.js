@@ -41,9 +41,12 @@ def _from_workdir(module):
 with _contextlib.redirect_stdout(_output), _contextlib.redirect_stderr(_output):
     try:
         exec(compile(source_code, "cozum.py", "exec"), _namespace)
-    except BaseException:
+    except BaseException as _exception:
         _ok = False
-        _error = _traceback.format_exc()
+        _tb = _exception.__traceback__
+        while _tb is not None and _tb.tb_frame.f_code.co_filename != "cozum.py":
+            _tb = _tb.tb_next
+        _error = "".join(_traceback.format_exception(type(_exception), _exception, _tb))
     finally:
         for _name in [name for name, module in list(_sys.modules.items()) if _from_workdir(module)]:
             del _sys.modules[_name]

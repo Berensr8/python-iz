@@ -3,7 +3,7 @@
   "slug": "stringler",
   "title": "String'ler",
   "description": "Metinleri indeksle, dönüştür, biçimlendir ve byte dünyasına güvenle geçir.",
-  "contentVersion": 2,
+  "contentVersion": 3,
   "estimatedMinutes": 90,
   "practiceIds": [
     "m2-q01",
@@ -33,7 +33,7 @@
       ],
       "prerequisites": [],
       "summary": "Metindeki tek karaktere köşeli parantezle erişilir. İlk karakter 0, son karakter -1 indeksindedir.",
-      "explanation": "Python soldan 0, 1, 2 diye; sağdan -1, -2, -3 diye sayar. Geçerli aralığın dışındaki tek indeks IndexError üretir. İndeks sonucu yine uzunluğu 1 olan bir str değeridir.",
+      "explanation": "Bir str içindeki konumları sıfırdan sayarsın: 'Python'[0] P, [1] y verir. len(text) uzunluğu bildirir; son pozitif indeks len(text) - 1'dir. Negatif indeksler sondan başlar: -1 son, -2 sondan ikinci karakterdir; -0 yine 0 demektir. Tek indeks geçerli aralığın dışına çıkarsa IndexError oluşur; boş metinde 0 da -1 de geçersizdir. Sonuç bir karakterlik str'dir, Python'da ayrı bir char tipi yoktur. İndeks tam sayı olmalıdır; 1.5 kullanmak TypeError verir. Örnekte baş ve son karakteri tahmin ederek çalıştır; sonra text'i tek harfe indir. Gerçek örneğin girdisinin boş olmadığı varsayılır. Boş metin denetimini M3 koşullarıyla ekleyeceksin; şimdilik bütün indekslerin her girdide güvenli olmadığını bil. Unicode'da bir görünen simge birden fazla kod noktasından oluşabilir; bu ayrımı ilerideki encoding bölümünde açacağız.",
       "code": "language = \"Python\"\n\nprint(language[0])\nprint(language[-1])\nprint(type(language[1]).__name__)",
       "expectedOutput": "P\nn\nstr",
       "why": "0 ilk P karakterini, -1 son n karakterini seçer. Python'da ayrı bir char tipi yoktur.",
@@ -46,14 +46,20 @@
         "Boş metinde text[0] kullanmak.",
         "Negatif indekslerin metni ters çevirdiğini sanmak."
       ],
-      "realCode": "def mask_code(code):\n    if not code:\n        return \"?\"\n    return code[0] + \"***\" + code[-1]\n\nprint(mask_code(\"A72Z\"))",
+      "realCode": "code = \"A72Z\"\nmasked = code[0] + \"***\" + code[-1]\nprint(masked)",
       "realOutput": "A***Z",
       "lineByLine": [
-        "Fonksiyon bir kod alır.",
-        "Boş metin indeks hatasından önce ele alınır.",
-        "İlk ve son karakter korunup orta bölüm maskelenir.",
-        "A72Z güvenli biçimde görüntülenir."
-      ]
+        "Örneğin önkoşulu: code boş olmayan bir metindir.",
+        "İlk ve son karakter alınır, ortası yıldızlarla değiştirilmiş yeni bir metin kurulur.",
+        "Orijinal code değişmez; bu maskeleme şifreleme değildir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Metin ve byte türleri",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "slicing",
@@ -67,7 +73,7 @@
         "indexing"
       ],
       "summary": "text[start:stop:step] bir metin parçası üretir. stop indeksi sonuca dahil edilmez.",
-      "explanation": "Eksik start baştan, eksik stop sona kadar demektir. step kaç karakterde bir seçileceğini belirler. Negatif adım sağdan sola ilerler; text[::-1] yaygın ters çevirme kalıbıdır.",
+      "explanation": "Dilimleme tek karakter yerine bir parça seçer: text[start:stop:step]. Başlangıç dahildir, bitiş hariçtir. Pozitif adımda eksik başlangıç 0, eksik bitiş metnin sonudur; text[:3] ilk üç karakteri alır. Adım varsayılan olarak 1'dir. Negatif adımda yön tersine döner ve eksik sınırlar da bu yöne göre seçilir: text[::-1] son karakterden başlayıp başa ilerler. Açıkça verilen -1 bitişi ile bitişin boş bırakılması aynı değildir. Pozitif adımda başlangıç bitişten büyükse boş metin çıkar. Dilim sınırları taşarsa Python uygun sınıra kırpar; tek indeksin aksine text[:999] hata vermez. step=0 ise ValueError'dır. Metin değişmez, sonuç başka bir metin değeridir. Önce küçük bir kelime üzerinde start ve stop'u değiştir, ardından adımı 2 ve -1 yaparak hangi indeksleri seçtiğini kâğıda yaz.",
       "code": "word = \"programlama\"\n\nprint(word[0:7])\nprint(word[::2])\nprint(word[::-1])",
       "expectedOutput": "program\npormaa\namalmargorp",
       "why": "İlk dilim 0–6 indekslerini alır. İkinci dilim çift indeksleri, üçüncü dilim metni tersten seçer.",
@@ -80,14 +86,20 @@
         "step değerini 0 vermek; ValueError üretir.",
         "Negatif adımda başlangıç ve bitiş yönünü karıştırmak."
       ],
-      "realCode": "def short_id(identifier):\n    prefix = identifier[:4]\n    suffix = identifier[-4:]\n    return f\"{prefix}…{suffix}\"\n\nprint(short_id(\"usr_81f97a42\"))",
+      "realCode": "identifier = \"usr_81f97a42\"\nprefix = identifier[:4]\nsuffix = identifier[-4:]\nprint(prefix + \"…\" + suffix)",
       "realOutput": "usr_…7a42",
       "lineByLine": [
-        "İlk dört karakter alınır.",
-        "Son dört karakter negatif dilimle alınır.",
-        "İki parça üç nokta ile birleştirilir.",
-        "Uzun kimlik kısa ama ayırt edilebilir görünür."
-      ]
+        "Kimlik sabit bir metin olarak alınır.",
+        "İlk dört ve son dört karakter ayrı dilimlerdir.",
+        "+ iki parçayı birleştirir; kısa kimliklerde dilimler örtüşebilir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Metin ve byte türleri",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "methods",
@@ -100,8 +112,8 @@
       "prerequisites": [
         "slicing"
       ],
-      "summary": "strip, lower, upper, replace, split, join, startswith ve benzeri metotlar yeni metinler üretir.",
-      "explanation": "strip uçlardaki boşlukları, split metni parçalara ayırır. join birleştirilecek listenin değil ayraç metninin metodudur. find bulunamazsa -1, index ise ValueError üretir.",
+      "summary": "String metotlarının dönüş tipleri farklıdır: strip metin, split liste, startswith bool, find tam sayı döndürür.",
+      "explanation": "Noktadan sonra yazılan metot, soldaki metin üzerinde bir işlem yapar. strip() iki uçtaki boşlukları temizler; içteki boşlukları silmez. strip('ab') tam 'ab' önekini değil uçlardaki a ve b karakterlerini siler; belirli önek için removeprefix kullan. lower/upper harfleri dönüştürür; casefold harf duyarsız karşılaştırmaya yöneliktir ama Türkçeye özel yerel dil kuralı uygulamaz. replace(eski, yeni) eşleşmeleri değiştirir. Bu işlemler orijinali yerinde değiştirmez. split(',') parçaları bir listeye koyar; listeyi M4'te ayrıntılandıracağız, burada yalnız join'e taşıyoruz. ','.join(parts) ayraç üzerinde çağrılır ve parçaların hepsi str olmalıdır. find konumu veya -1'i verir; index bulamazsa ValueError üretir. startswith, endswith, isdigit gibi sorgular bool döndürür. Metot zincirini okurken her adımın dönüş tipini kontrol et; split sonrasında elinde artık metin değil liste vardır.",
       "code": "raw = \"  Python,AI,Veri  \"\nclean = raw.strip().lower()\nparts = clean.split(\",\")\n\nprint(clean)\nprint(\" | \".join(parts))",
       "expectedOutput": "python,ai,veri\npython | ai | veri",
       "why": "Metot zinciri her adımda yeni bir str üretir. split liste, join yeniden tek metin üretir.",
@@ -114,14 +126,20 @@
         "strip'in metnin ortasındaki boşlukları da sileceğini sanmak.",
         "replace'in orijinal metni değiştirdiğini sanmak."
       ],
-      "realCode": "def normalize_tags(raw_tags):\n    tags = raw_tags.split(\",\")\n    cleaned = [tag.strip().casefold() for tag in tags]\n    return [tag for tag in cleaned if tag]\n\nprint(normalize_tags(\" Python, AI, python \"))",
-      "realOutput": "['python', 'ai', 'python']",
+      "realCode": "raw_tags = \" Python,AI,Veri \"\nclean = raw_tags.strip().lower()\nparts = clean.split(\",\")\nprint(\" / \".join(parts))",
+      "realOutput": "python / ai / veri",
       "lineByLine": [
-        "Virgüllü metin listeye ayrılır.",
-        "Her etiket temizlenip Unicode uyumlu küçültülür.",
-        "Boş etiketler elenir.",
-        "Tekrarlı değerler bu aşamada korunur."
-      ]
+        "Ham metnin yalnız dış boşlukları temizlenir ve harfler küçültülür.",
+        "split üç str parçasını bir listede toplar; listeyi burada değiştirmiyoruz.",
+        "join aynı parçaları yeni bir ayraçla tek metne dönüştürür; her parçanın iç boşluğu ayrıca temizlenmiş sayılmaz."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Metin ve byte türleri",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "formatting",
@@ -135,7 +153,7 @@
         "methods"
       ],
       "summary": "f-string içinde {ifade} değerlendirilir. : sonrası genişlik, hizalama ve sayı biçimini belirler.",
-      "explanation": "f'{price:.2f}' iki ondalık basamak gösterir ama price değerini değiştirmez. = biçimi hata ayıklarken hem ifade adını hem değeri yazar. Eski .format yöntemi hâlâ kodlarda görülür.",
+      "explanation": "f öneki olan metindeki {ifade} çalıştırılır ve sonucu metne eklenir. f'{name}' değişkenin değerini gösterirken f olmadan '{name}' yalnız süslü parantezli metindir. İki nokta sonrası biçim kuralıdır: .2f iki ondalık basamak, >6 en az altı karakterlik alanda sağ hizalama, <6 sol, ^6 orta hizalamadır. Genişlik sınır değil minimumdur; uzun metin kesilmez. .0% bir oranı gösterim için 100 ile çarpar, ondalıksız yazar ve yüzde işareti ekler. {score=} hata ayıklama için adı ve değeri birlikte gösterir. {{ ve }} gerçek süslü parantez yazar. Biçimlendirme asıl sayıyı değiştirmez; sonraki hesap eski değeri kullanır. Float yuvarlama ikilik yaklaşık değere uygulandığından her ondalık yarım beklediğin gibi davranmayabilir. .format ve yüzdeyle biçimlendirme eski kodlarda görülür; yeni örneğini önce f-string ile kur.",
       "code": "name = \"Ada\"\nscore = 92.456\n\nprint(f\"{name}: {score:.1f}\")\nprint(f\"{score=:.2f}\")",
       "expectedOutput": "Ada: 92.5\nscore=92.46",
       "why": ".1f bir, .2f iki ondalık basamak ister. f-string içindeki score= ifadenin adını da ekler.",
@@ -148,14 +166,21 @@
         "Para değerini yalnız görünümde yuvarlayıp hesapta da değiştiğini sanmak.",
         "Kullanıcıdan gelen metni doğrudan format şablonu olarak çalıştırmak."
       ],
-      "realCode": "def format_summary(done, total):\n    ratio = done / total\n    return f\"{done:>3}/{total:<3} · {ratio:.0%}\"\n\nprint(format_summary(7, 10))",
+      "realCode": "done = 7\ntotal = 10\nratio = done / total\nprint(f\"{done:>3}/{total:<3} · {ratio:.0%}\")",
       "realOutput": "  7/10  · 70%",
       "lineByLine": [
-        "Tamamlanan ve toplam sayıları alınır.",
-        "Oran float olarak hesaplanır.",
-        ">3 sağa, <3 sola hizalama yapar; .0% oranı 100 ile çarpıp ondalıksız yazar ve sona % ekler.",
-        "Biçim yalnızca gösterimi etkiler."
-      ]
+        "done ve total sayıları atanır; total bu örnekte sıfır değildir.",
+        "Bölme oranı üretir.",
+        ">3 ve <3 en az üç karakterlik alanlarda hizalar; .0% yüzde gösterir.",
+        "Hizalama boşlukları çıktının bir parçasıdır."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Metin ve byte türleri",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "escape-raw",
@@ -168,7 +193,7 @@
         "indexing"
       ],
       "summary": "\\n yeni satır, \\t sekme, \\\\ tek ters eğik çizgidir. r öneki çoğu escape dizisini olduğu gibi korur.",
-      "explanation": "Normal metinde ters eğik çizgi özel dizileri başlatır. Dosya yolları ve regex ifadelerinde raw string daha okunur olabilir. Ancak raw string tek bir ters eğik çizgiyle bitemez.",
+      "explanation": "Normal string içindeki ters eğik çizgi bir kaçış dizisini başlatabilir. \\n yeni satır, \\t sekme, \\\\ tek ters eğik çizgi verir; \\' veya \\\" uygun tırnağı metne ekler. Kaynakta iki sembol gördüğün \\n, çalışan metinde tek yeni satır karakteridir. r öneki çoğu kaçışın yorumlanmasını önler; r'C:\\new\\test.txt' içinde \\n ve \\t harfleriyle kalır. Raw string de tırnakla açılıp kapanır; sonunda tek sayıda ters eğik çizgi bulunamaz, çünkü kapanış tırnağıyla çakışır. Üç tırnak birden fazla fiziksel satırı taşıyabilir; bu tek başına yorum oluşturmaz. print okunur metni, repr ise kaçışların görünür olduğu temsili verir. Dosya yolunu metin olarak göstermek dosyayı açmak değildir. Burada yalnız metni inceliyoruz; gerçek dosya işlemleri M8'de gelecek.",
       "code": "print(\"satır 1\\nsatır 2\")\npath = r\"C:\\new\\test.txt\"\nprint(path)",
       "expectedOutput": "satır 1\nsatır 2\nC:\\new\\test.txt",
       "why": "İlk metindeki \\n gerçek yeni satıra dönüşür. Raw metindeki ters eğik çizgiler karakter olarak kalır.",
@@ -181,28 +206,34 @@
         "Raw string'in tüm kaçışları sihirli biçimde çözdüğünü sanmak.",
         "Raw string'i tek ters eğik çizgiyle bitirmek."
       ],
-      "realCode": "from pathlib import PureWindowsPath\n\nconfig_path = PureWindowsPath(r\"C:\\app\\config.json\")\nprint(config_path.name)\nprint(config_path.suffix)",
-      "realOutput": "config.json\n.json",
+      "realCode": "path = r\"C:\\app\\config.json\"\nprint(path)\nprint(\"Kayıt\\ntamamlandı\")",
+      "realOutput": "C:\\app\\config.json\nKayıt\ntamamlandı",
       "lineByLine": [
-        "Path dosya yolu işlemlerini üstlenir.",
-        "Raw metin Windows ters eğik çizgilerini korur.",
-        "name son dosya adını verir.",
-        "suffix dosya uzantısını verir."
-      ]
+        "r öneki dosya yolundaki ters eğik çizgileri korur.",
+        "Yol yalnız yazdırılır; diske erişilmez.",
+        "Normal metindeki \\n iki çıktı satırı oluşturur."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Metin ve byte türleri",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "immutability",
       "title": "String değiştirilemezliği",
-      "eyebrow": "Her dönüşüm yeni bir nesne üretir",
+      "eyebrow": "Metin değişmez; sonuç yeniden bağlanır",
       "objectives": [
-        "String metotlarının yeni nesne döndürdüğünü açıklar.",
+        "String metotlarının orijinal metni değiştirmediğini açıklar.",
         "Sonucu kaydedilmeyen metot çağrısını fark eder."
       ],
       "prerequisites": [
         "methods"
       ],
-      "summary": "str immutable'dır; karakterleri yerinde değiştiremezsin. Metot sonucu yeni bir isme bağlanmalıdır.",
-      "explanation": "text[0] = 'P' TypeError üretir. replace, upper ve strip gibi metotlar orijinali değiştirmez. Bu özellik metinlerin güvenle paylaşılmasını ve sözlük anahtarı olmasını sağlar.",
+      "summary": "str immutable'dır; karakterleri yerinde değiştiremezsin. Dönüştürülmüş değeri kullanmak için sonucu kaydet.",
+      "explanation": "str değiştirilemezdir: text[0] = 'P' mevcut metnin bir karakterini değiştiremez ve TypeError verir. upper(), replace() ve strip() sonucu kullanmak için bir isme atamalısın. text.upper() tek başına çağrılırsa dönüştürülmüş değer hesaplanır ama text eski değere bağlı kalır. text = text.upper() ise eski nesneyi değiştirmez; ismi sonuç değerine yeniden bağlar. İki isim aynı metne bağlıyken bunlardan birini yeniden atamak diğerini değiştirmez. Bir metot sonucu aynı değer olduğunda Python aynı nesneyi yeniden kullanabilir; bu nedenle 'her çağrı kesinlikle yeni nesnedir' diye genelleme yapma. İçerik denetiminde == kullan, is nesne kimliği içindir. Aşağıdaki replace gerçekten farklı içerik üretir; original ile updated arasındaki ayrımı önce çıktılarından izle. Çok parçalı metni birleştirmede join'i, tek parçayı değiştirmede replace'i seçebilirsin.",
       "code": "original = \"python\"\nupdated = original.replace(\"p\", \"P\")\n\nprint(original)\nprint(updated)\nprint(original is updated)",
       "expectedOutput": "python\nPython\nFalse",
       "why": "replace yeni bir str nesnesi döndürür; original eski nesneye bağlı kalır.",
@@ -215,14 +246,21 @@
         "Tek karakteri indeks üzerinden değiştirmeye çalışmak.",
         "Her + işleminin mevcut metni yerinde büyüttüğünü sanmak."
       ],
-      "realCode": "def normalize_username(username):\n    normalized = username.strip().casefold()\n    return normalized.replace(\" \", \"-\")\n\nraw = \"  Ada Lovelace  \"\nprint(normalize_username(raw))\nprint(raw)",
-      "realOutput": "ada-lovelace\n  Ada Lovelace",
+      "realCode": "raw = \"  Ada Lovelace  \"\nnormalized = raw.strip().casefold()\nnormalized = normalized.replace(\" \", \"-\")\nprint(normalized)\nprint(raw == \"  Ada Lovelace  \")",
+      "realOutput": "ada-lovelace\nTrue",
       "lineByLine": [
-        "Ham kullanıcı adı alınır.",
-        "Temizleme ve casefold yeni metin üretir.",
-        "Boşluklar tireye çevrilmiş yeni metin döner.",
-        "Ham değer değişmeden kalır."
-      ]
+        "Ham metin raw adına bağlanır.",
+        "Temizlenmiş sonuç normalized'a atanır, raw değişmez.",
+        "İç boşlukları tireye dönüştüren sonuç yeniden atanır.",
+        "Son True, ham metnin korunmuş olduğunu gösterir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Metin ve byte türleri",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "unicode-encoding",
@@ -236,7 +274,7 @@
         "immutability"
       ],
       "summary": "str Unicode karakterlerini taşır. encode str → bytes, decode bytes → str dönüşümüdür.",
-      "explanation": "UTF-8 değişken uzunluklu bir encoding'dir. Türkçe ş tek karakterdir ama UTF-8'de iki byte tutar. Dosya ve ağ sınırlarında encoding'i açık seçmek bozuk karakterleri önler.",
+      "explanation": "str Unicode kod noktalarıyla çalışır; bytes ise 0–255 aralığındaki ham byte değerleridir. Encoding bu iki gösterim arasındaki kuraldır: text.encode('utf-8') metinden byte'a, data.decode('utf-8') byte'tan metne gider. UTF-8'de bir kod noktası birden fazla byte kullanabilir; ş iki, bu örnekteki kilit emojisi dört byte kaplar. len(str) kod noktalarını, len(bytes) byte sayısını ölçer. Ekranda tek harf gibi görünen 'é', tek kod noktası veya e ve birleştirici vurgu olarak saklanabilir; dolayısıyla len her zaman görünen simge sayısı değildir. Encoding'i tahmin ederek seçmek yerine veri kaynağının kuralını kullan. Hatalı byte dizisini katı decode etmek UnicodeDecodeError üretir; errors='replace' bozuk kısmı görünür biçimde değiştirir, errors='ignore' ise sessizce atar. İkisi de kayıpsız düzeltme değildir. Bu örnekler dosya açmadan yalnız bellekte dönüşüm yapar.",
       "code": "text = \"şifre 🔐\"\ndata = text.encode(\"utf-8\")\n\nprint(len(text))\nprint(len(data))\nprint(data.decode(\"utf-8\"))",
       "expectedOutput": "7\n11\nşifre 🔐",
       "why": "Metin 7 Unicode karakterinden oluşur. ş iki, emoji dört UTF-8 byte tuttuğu için byte uzunluğu 11 olur.",
@@ -249,14 +287,20 @@
         "bytes değerini str ile doğrudan birleştirmek.",
         "Sistemin varsayılan encoding'ine güvenmek."
       ],
-      "realCode": "def decode_payload(payload):\n    try:\n        return payload.decode(\"utf-8\")\n    except UnicodeDecodeError as error:\n        return f\"Geçersiz veri: {error.start}. byte\"\n\nprint(decode_payload(b\"Merhaba\"))",
-      "realOutput": "Merhaba",
+      "realCode": "text = \"çağrı\"\npayload = text.encode(\"utf-8\")\nrestored = payload.decode(\"utf-8\")\nprint(len(text), len(payload))\nprint(restored == text)",
+      "realOutput": "5 8\nTrue",
       "lineByLine": [
-        "Fonksiyon bytes alır.",
-        "UTF-8 ile str üretmeye çalışır.",
-        "Geçersiz byte varsa özel hata yakalanır.",
-        "Geçerli örnek normal metne dönüşür."
-      ]
+        "Beş kod noktalı Türkçe metin hazırlanır.",
+        "ç, ğ ve ı UTF-8'de ikişer byte kullanır; toplam sekiz byte olur.",
+        "Aynı encoding ile geri dönüşüm orijinal metinle eşittir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Metin ve byte türleri",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "bytes-vs-str",
@@ -269,7 +313,7 @@
         "unicode-encoding"
       ],
       "summary": "str insan metni, bytes ham byte dizisidir. Ağ, dosya ve şifreleme API'leri çoğunlukla bytes ister.",
-      "explanation": "b'abc' bir bytes değeridir ve indeksleme karakter değil int byte değeri döndürür. str ile bytes + kullanılamaz. Sınırda encode/decode yapıp uygulama içinde tek tipe bağlı kalmak en güvenli yaklaşımdır.",
+      "explanation": "b'ABC' bir bytes, 'ABC' bir str değeridir; benzer görünmeleri onları aynı tip yapmaz. bytes[0] tek byte'ın sayısal değerini, bytes[0:1] ise yine bir bytes parçasını verir. str[0] bir karakterlik str döndürür. Byte literaline doğrudan Türkçe harf yazmak yerine 'ş'.encode('utf-8') kullan. str ile bytes + işlemi TypeError üretir; birleştirmeden önce verinin anlamına uygun dönüşümü seç. str(payload) decode yerine geçmez, çoğu zaman b'...' biçimindeki temsili verir. Ağ ya da dosya sınırında hangi tip beklendiğini açık tut: uygulama içinde metinle işle, aktarırken encode et, gelen byte'ı belirtilen encoding ile decode et. Görüntü veya sıkıştırılmış veri gibi her bytes içeriği metin değildir; rastgele veriye decode uygulama. İsimlendirmede text ve payload gibi ayrım sağlayan adlar yanlış dönüşümü fark etmeyi kolaylaştırır.",
       "code": "data = b\"ABC\"\nprint(data[0])\nprint(data.decode(\"ascii\"))\nprint(type(data).__name__)",
       "expectedOutput": "65\nABC\nbytes",
       "why": "bytes indekslemesi A'nın sayısal byte değeri 65'i verir. decode insan metnine dönüştürür.",
@@ -282,14 +326,21 @@
         "bytes indeksinin tek karakterlik bytes döndürmesini beklemek.",
         "Yanlış encoding ile decode edip UnicodeDecodeError üretmek."
       ],
-      "realCode": "def build_message(name):\n    text = f\"Merhaba, {name}!\"\n    payload = text.encode(\"utf-8\")\n    return len(payload), payload\n\nsize, payload = build_message(\"İpek\")\nprint(size)\nprint(payload.decode(\"utf-8\"))",
+      "realCode": "name = \"İpek\"\ntext = f\"Merhaba, {name}!\"\npayload = text.encode(\"utf-8\")\nprint(len(payload))\nprint(payload.decode(\"utf-8\"))",
       "realOutput": "15\nMerhaba, İpek!",
       "lineByLine": [
-        "İnsan tarafından okunacak str hazırlanır.",
-        "Ağ için UTF-8 bytes üretilir.",
-        "Byte uzunluğu ve veri birlikte döner.",
-        "Alıcı aynı encoding ile tekrar str üretir."
-      ]
+        "Önce kullanıcıya gösterilecek str kurulur.",
+        "encode gönderilebilecek UTF-8 byte dizisi üretir.",
+        "Uzunluk karakter değil byte sayısıdır.",
+        "decode aynı kuralla okunur metne döner."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Metin ve byte türleri",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html"
+        }
+      ],
+      "runtime": "browser"
     }
   ],
   "questions": [
@@ -968,20 +1019,20 @@
       "topic": "metotlar",
       "sectionId": "methods",
       "difficulty": 2,
-      "prompt": "Etiketleri temizleyip 'python|ai' yazdıracak sırayı kur.",
+      "prompt": "Etiketleri ayırıp 'python|ai' yazdıracak sırayı kur.",
       "lines": [
         "print(\"|\".join(parts))",
-        "parts = [item.strip() for item in raw.split(\",\")]",
-        "raw = \" python, ai \""
+        "parts = raw.strip().split(\",\")",
+        "raw = \" python,ai \""
       ],
-      "answer": "raw = \" python, ai \"\nparts = [item.strip() for item in raw.split(\",\")]\nprint(\"|\".join(parts))",
-      "solutionCode": "raw = \" python, ai \"\nparts = [item.strip() for item in raw.split(\",\")]\nprint(\"|\".join(parts))",
+      "answer": "raw = \" python,ai \"\nparts = raw.strip().split(\",\")\nprint(\"|\".join(parts))",
+      "solutionCode": "raw = \" python,ai \"\nparts = raw.strip().split(\",\")\nprint(\"|\".join(parts))",
       "expectedOutput": "python|ai",
       "hints": [
         "Ham değer önce oluşturulur.",
         "Sonra böl ve temizle; en son birleştir."
       ],
-      "explanation": "Veri önce tanımlanır, listeye dönüştürülür ve ayraçla birleştirilir."
+      "explanation": "Dış boşluklar temizlenir, virgülden bölünür ve parçalar | ile birleştirilir. Her parçanın içindeki boşluklar bu işlemde ayrıca temizlenmez."
     },
     {
       "id": "m2-q32",

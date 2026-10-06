@@ -3,7 +3,7 @@
   "slug": "dosyalar",
   "title": "Dosyalar",
   "description": "Dosyaları doğru modda aç, with ile güvenle kapat, yolları pathlib ile kur; CSV ve JSON verisini doğru encoding ile oku ve yaz.",
-  "contentVersion": 1,
+  "contentVersion": 2,
   "estimatedMinutes": 120,
   "practiceIds": [
     "m8-q01",
@@ -56,7 +56,15 @@
         "İlk çağrı dosyayı oluşturup v1 yazar; ikinci çağrı mevcut raporu ezmez.",
         "Okuma dosyada hâlâ v1 olduğunu gösterir.",
         "Olmayan dosyayı okumak FileNotFoundError verir; error.filename hangi yolun bulunamadığını söyler."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · open ve dosya modları",
+          "url": "https://docs.python.org/3.12/tutorial/inputoutput.html"
+        }
+      ],
+      "runtime": "browser",
+      "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
     },
     {
       "id": "with-lifecycle",
@@ -91,7 +99,15 @@
         "\"\\n\" elle eklenir; yoksa mesajlar aynı satıra yapışırdı.",
         "read_log dosyayı satır satır dolaşır ve satır sonlarını atar.",
         "İki çağrının yazdığı satırlar sırasıyla okunur; dosya hiçbir anda açık unutulmadı."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · with ve dosya yaşam döngüsü",
+          "url": "https://docs.python.org/3.12/reference/compound_stmts.html#the-with-statement"
+        }
+      ],
+      "runtime": "browser",
+      "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
     },
     {
       "id": "reading-lines",
@@ -126,7 +142,15 @@
         "Dosya satır satır dolaşılır, enumerate 1'den başlayan satır numarası verir.",
         "partition(\" \") satırı ilk boşluktan seviye ve mesaj olarak ikiye ayırır.",
         "Yalnızca ERROR satırları numaralarıyla birlikte toplanır ve rapor edilir."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Satır satır okuma",
+          "url": "https://docs.python.org/3.12/tutorial/inputoutput.html"
+        }
+      ],
+      "runtime": "browser",
+      "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
     },
     {
       "id": "pathlib",
@@ -161,7 +185,15 @@
         "glob(\"*.txt\") yalnızca notlar klasörünün kendisine bakar; alt klasördeki aralik.txt gelmez.",
         "rglob tüm alt klasörleri de tarar; relative_to yolu kök klasöre göre kısaltır.",
         "iterdir doğrudan içerikleri verir; is_dir ile yalnızca klasörler seçilir. Hepsi sorted ile sabit sıraya alınır."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · pathlib ile yollar",
+          "url": "https://docs.python.org/3.12/library/pathlib.html"
+        }
+      ],
+      "runtime": "browser",
+      "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
     },
     {
       "id": "os-shutil",
@@ -195,7 +227,15 @@
         "İlk çağrıda dosya yoktur; yedek alınmadan v1 yazılır.",
         "İkinci çağrıda v1 yedeğe kopyalanır, sonra dosyaya v2 yazılır.",
         "Klasörde asıl dosya ve yedeği vardır; yedek önceki sürümü taşır."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · os ve shutil ile dosya işlemleri",
+          "url": "https://docs.python.org/3.12/library/shutil.html"
+        }
+      ],
+      "runtime": "browser",
+      "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
     },
     {
       "id": "encoding",
@@ -230,7 +270,15 @@
         "UTF-8 ile okumak, ş harfinin baytı UTF-8'de geçersiz bir başlangıç olduğu için hata verir; reason nedeni kısa söyler.",
         "Doğru encoding ile okununca başlık satırı düzgün gelir.",
         "errors=\"replace\" okumayı sürdürür ama ş ve ü kaybolup � olur; bu bir çözüm değil, teşhis aracıdır."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Dosya encoding'i",
+          "url": "https://docs.python.org/3.12/howto/unicode.html"
+        }
+      ],
+      "runtime": "browser",
+      "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
     },
     {
       "id": "csv",
@@ -266,7 +314,15 @@
         "DictReader ilk satırı başlık olarak okur; her satır ad, vize, final anahtarlı bir sözlüktür.",
         "Boş alan \"\" olarak gelir ve False sayılır; o satır raporlanıp atlanır.",
         "Notlar metin olduğundan int ile çevrilir, ağırlıklı ortalama bir ondalıkla yazdırılır."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · CSV okuma ve yazma",
+          "url": "https://docs.python.org/3.12/library/csv.html"
+        }
+      ],
+      "runtime": "browser",
+      "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
     },
     {
       "id": "json",
@@ -302,7 +358,15 @@
         "Sondaki virgül JSON'da geçersizdir; JSONDecodeError yakalanır ve satır numarasıyla bildirilir.",
         "Geçerli dosya yazıldığında json.load kaydedilen sözlüğü döndürür.",
         "Eksik ve bozuk dosya iki ayrı except ile ayrıldı; her durumda program çalışmaya devam eder."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · JSON okuma ve yazma",
+          "url": "https://docs.python.org/3.12/library/json.html"
+        }
+      ],
+      "runtime": "browser",
+      "runtimeNote": "Tarayıcıda geçici sanal dosyalarla çalışır. Dosyalar her çalıştırma sonunda silinir; bilgisayarındaki dosyalara erişilmez."
     }
   ],
   "questions": [

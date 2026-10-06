@@ -3,7 +3,7 @@ import type { LearningProgress, Question, QuizDraft, QuizSession } from "./learn
 export function createQuiz(id: string, moduleId: number, mode: QuizSession["mode"], questions: Question[], timed: boolean, weakOnly = false, now = Date.now()): QuizSession {
   if (!questions.length || new Set(questions.map(q => q.id)).size !== questions.length) throw new Error("Geçerli, benzersiz sorular gerekli.");
   return { id, moduleId, mode, weakOnly, questions: structuredClone(questions), startedAt: now,
-    deadline: mode === "test" && timed ? now + 25 * 60 * 1000 : null,
+    deadline: mode !== "practice" && timed ? now + 25 * 60 * 1000 : null,
     index: 0, drafts: {}, answers: {}, completedAt: null, finishReason: null };
 }
 export function initialDraft(question: Question): QuizDraft {
@@ -42,12 +42,12 @@ export function finishQuiz(progress: LearningProgress, id: string, reason: "subm
   if (progress.creditedQuizIds.includes(id) || progress.attempts.some(attempt => attempt.sessionId === id)) return { ...progress, activeQuiz: finished };
   const practiceKey = `m${session.moduleId}`;
   const regularPractice = session.mode === "practice" && !session.weakOnly;
-  const bonus = session.mode === "test" ? (summary.passed ? 100 : 20) : regularPractice && !progress.completedPractice[practiceKey] ? 40 : 0;
+  const bonus = session.mode !== "practice" ? (summary.passed ? 100 : 20) : regularPractice && !progress.completedPractice[practiceKey] ? 40 : 0;
   return { ...studied(progress, now), activeQuiz: finished, xp: progress.xp + bonus,
     creditedQuizIds: [...progress.creditedQuizIds, id],
     completedPractice: regularPractice ? { ...progress.completedPractice, [practiceKey]: true } : progress.completedPractice,
     unlockedModule: session.mode === "test" && summary.passed ? Math.max(progress.unlockedModule, Math.min(18, session.moduleId + 1)) : progress.unlockedModule,
-    attempts: session.mode === "test" ? [...progress.attempts, { sessionId: id, moduleId: session.moduleId, score: summary.score, date: new Date(completedAt).toISOString(), weakTopics: summary.weakTopics, reason: finished.finishReason! }] : progress.attempts,
+    attempts: session.mode !== "practice" ? [...progress.attempts, { kind: session.mode === "midterm" ? "midterm" : "module", sessionId: id, moduleId: session.moduleId, score: summary.score, date: new Date(completedAt).toISOString(), weakTopics: summary.weakTopics, reason: finished.finishReason! }] : progress.attempts,
   };
 }
 export function expireQuiz(progress: LearningProgress, now = Date.now()) {
@@ -63,7 +63,7 @@ export function answerQuiz(progress: LearningProgress, id: string, questionId: s
   const checked = expireQuiz(progress, now);
   const session = matching(checked, id);
   if (!session || session.questions[session.index]?.id !== questionId || session.answers[questionId] || progress.creditedQuizIds.includes(id)) return checked;
-  const hints = session.mode === "test" ? 0 : session.drafts[questionId]?.hints ?? 0;
+  const hints = session.mode !== "practice" ? 0 : session.drafts[questionId]?.hints ?? 0;
   const old = checked.questionResults[questionId] ?? { correct: 0, wrong: 0 };
   return { ...studied(checked, now), xp: checked.xp + (correct ? Math.max(2, 10 - hints * 2) : 1),
     questionResults: { ...checked.questionResults, [questionId]: { correct: old.correct + Number(correct), wrong: old.wrong + Number(!correct) } },

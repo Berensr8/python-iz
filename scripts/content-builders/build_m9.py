@@ -1578,6 +1578,96 @@ module = {
     "questions": questions,
 }
 
+# Source links and execution labels must survive regeneration.
+section_metadata = {
+  "import-forms": {
+    "sources": [
+      {
+        "title": "Python 3.12 · import biçimleri",
+        "url": "https://docs.python.org/3.12/tutorial/modules.html"
+      }
+    ],
+    "runtime": "mixed",
+    "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
+  },
+  "own-module": {
+    "sources": [
+      {
+        "title": "Python 3.12 · Kendi modülün",
+        "url": "https://docs.python.org/3.12/tutorial/modules.html"
+      }
+    ],
+    "runtime": "mixed",
+    "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
+  },
+  "main-guard": {
+    "sources": [
+      {
+        "title": "Python 3.12 · __name__ == \"__main__\"",
+        "url": "https://docs.python.org/3.12/library/__main__.html"
+      }
+    ],
+    "runtime": "mixed",
+    "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
+  },
+  "packages-relative": {
+    "sources": [
+      {
+        "title": "Python 3.12 · Paketler ve relative import",
+        "url": "https://docs.python.org/3.12/tutorial/modules.html"
+      }
+    ],
+    "runtime": "mixed",
+    "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
+  },
+  "pip-venv": {
+    "sources": [
+      {
+        "title": "Python 3.12 · pip ve venv",
+        "url": "https://docs.python.org/3.12/tutorial/venv.html"
+      }
+    ],
+    "runtime": "mixed",
+    "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
+  },
+  "dependency-files": {
+    "sources": [
+      {
+        "title": "Python 3.12 · requirements.txt ve pyproject.toml",
+        "url": "https://docs.python.org/3.12/installing/index.html"
+      }
+    ],
+    "runtime": "mixed",
+    "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
+  },
+  "uv-poetry": {
+    "sources": [
+      {
+        "title": "uv · Resmî belgeler",
+        "url": "https://docs.astral.sh/uv/"
+      },
+      {
+        "title": "Poetry · Resmî belgeler",
+        "url": "https://python-poetry.org/docs/"
+      }
+    ],
+    "runtime": "mixed",
+    "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
+  },
+  "env-vars": {
+    "sources": [
+      {
+        "title": "Python 3.12 · Ortam değişkenleri ve .env",
+        "url": "https://docs.python.org/3.12/library/os.html"
+      }
+    ],
+    "runtime": "mixed",
+    "runtimeNote": "Editör örnekleri tarayıcıda çalışır. Terminal, paket kurulumu, sanal ortam ve çok dosyalı proje yönergeleri yerel Python içindir; her çalıştırmada sanal dosyalar ve ortam sıfırlanır."
+  }
+}
+for section in module["sections"]:
+    section.update(section_metadata[section["id"]])
+module["contentVersion"] = 2
 (ROOT / "module-09.json").write_text(json.dumps(module, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 # ---- writing tasks

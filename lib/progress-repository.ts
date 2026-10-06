@@ -16,7 +16,7 @@ const questionSchema = z.object({
   tests: z.array(z.object({ label: shortText, stdin: shortText, expectedOutput: shortText })).max(100).optional(),
 });
 const sessionSchema = z.object({
-  id: z.string().min(1).max(100), moduleId: z.number().int().min(1).max(18), mode: z.enum(["practice", "test"]), weakOnly: z.boolean(),
+  id: z.string().min(1).max(100), moduleId: z.number().int().min(1).max(18), mode: z.enum(["practice", "test", "midterm"]), weakOnly: z.boolean(),
   questions: z.array(questionSchema).min(1).max(100), startedAt: count, deadline: count.nullable(), index: count,
   drafts: z.record(z.object({ choice: shortText, fill: shortText, ordered: z.array(shortText).max(100), code: shortText, hints: z.number().int().min(0).max(3), stdin: shortText })),
   answers: z.record(z.object({ correct: z.boolean(), hints: z.number().int().min(0).max(3), submittedAt: count })),
@@ -27,7 +27,7 @@ const sessionSchema = z.object({
     (session.completedAt === null && session.index >= session.questions.length) ||
     (session.completedAt === null) !== (session.finishReason === null) ||
     (session.completedAt !== null && session.index !== session.questions.length) ||
-    (session.deadline !== null && (session.mode !== "test" || session.deadline !== session.startedAt + 1500000)) ||
+    (session.deadline !== null && (session.mode === "practice" || session.deadline !== session.startedAt + 1500000)) ||
     [...Object.keys(session.answers), ...Object.keys(session.drafts)].some(id => !ids.has(id)) ||
     session.questions.slice(0, session.index).some(q => !session.answers[q.id] && session.finishReason !== "timeout");
   if (invalid) context.addIssue({ code: z.ZodIssueCode.custom, message: "Sınav oturumu tutarsız." });
@@ -37,9 +37,11 @@ const schema = z.object({
   lastStudyDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null),
   unlockedModule: z.number().int().min(1).max(18).default(1),
   completedSections: flags.default({}), completedPractice: flags.default({}),
+  lessonRuns: flags.default({}),
+  workshopRead: flags.default({}),
   hintUsage: z.record(count).default({}),
   questionResults: z.record(z.object({ correct: count, wrong: count })).default({}),
-  attempts: z.array(z.object({ sessionId: z.string().optional(), reason: z.enum(["submitted", "timeout"]).optional(), moduleId: z.number().int().min(1).max(18), score: z.number().min(0).max(100), date: z.string().datetime(), weakTopics: z.array(z.string()) })).default([]),
+  attempts: z.array(z.object({ kind: z.enum(["module", "midterm"]).optional(), sessionId: z.string().optional(), reason: z.enum(["submitted", "timeout"]).optional(), moduleId: z.number().int().min(1).max(18), score: z.number().min(0).max(100), date: z.string().datetime(), weakTopics: z.array(z.string()) })).default([]),
   theme: z.enum(["light", "dark"]).default("dark"), sound: z.boolean().default(true),
   writingDrafts: z.record(z.string().max(50000)).default({}), writingHelp: flags.default({}),
   writingResults: z.record(z.object({ passed: z.boolean(), independent: z.boolean(), attempts: count })).default({}),
@@ -80,6 +82,11 @@ export function recordWriting(progress: LearningProgress, id: string, passed: bo
       attempts: (old?.attempts ?? 0) + 1,
     } },
   };
+}
+
+export function completeLesson(progress: LearningProgress, key: string): LearningProgress {
+  if (progress.completedSections[key] || !progress.lessonRuns[key]) return progress;
+  return { ...markStudy(progress), xp: progress.xp + 20, completedSections: { ...progress.completedSections, [key]: true } };
 }
 
 export class LocalStorageProgressRepository {

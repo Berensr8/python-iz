@@ -43,17 +43,17 @@ Durum (6 Ekim 2026): Aşama 1 uygulanıyor. İlk yazma paketi hazır; aşağıda
 Yeni modüllerden önce uygulanır.
 
 - [x] A1.1: 18 modülün bütün alt başlıklarını ders/soru/test kimliklerine bağlayan kapsam matrisi oluştur. Durumlar: planlandı, yazıldı, doğrulandı, yayınlandı. (`content/coverage.json`, `npm run coverage`. M3–M18 alt başlıkları bu plandaki modül tanımlarından alındı; ilk istekteki listeyle karşılaştırılmalı.)
-- [ ] A1.2: İçerik şemasına kazanım, önkoşul, zorluk, kaynak, bölüm bağlantısı, çalışma ortamı, test vakaları ve içerik sürümü ekle. Mevcut kimlikleri koru. (Yapıldı: kazanım, önkoşul, zorluk, bölüm bağlantısı, içerik sürümü. Açık: kaynak ve çalışma ortamı etiketi.)
+- [x] A1.2: İçerik şemasına kazanım, önkoşul, zorluk, kaynak, bölüm bağlantısı, çalışma ortamı, test vakaları ve içerik sürümü ekle. Mevcut kimlikleri koru. (Tamam: M1–M10'un 80 bölümünün hepsinde kaynak bağlantısı ve çalışma ortamı etiketi var.)
 - [x] A1.3: Modül kaydını ve doğrulayıcıyı tüm içerik dosyalarını keşfedecek şekilde geliştir. Sabit iki-modül sınırlarını yayınlanmış içerik/ilerleme verisinden türet.
 - [x] A1.4: Her değerlendirmeyi temiz Python ad alanında çalıştır; paralel istekleri sırala; eski sonuçların yeni koda uygulanmasını engelle. İlk çalışma ortamı yüklenmesi ile kod çalışma süresini ayrı yönet.
 - [ ] A1.5: Kısa kod sorularına birden çok girdi, sınır durumları ve hata senaryolarıyla test ekle. Fonksiyon sorularında dönüş değerini, çıktı sorularında çıktıyı doğrula. Farklı doğru çözümleri kabul et.
 - [ ] A1.6: Test vakalarını çözümden önce arayüzde göstermeme özelliği ekle. Tarayıcıdaki testleri güvenli/gizli sınav altyapısı olarak sunma; öğrenme aracı olduklarını esas al.
-- [ ] A1.7: Gerçek traceback metni ve satır seçimi ekle. Boşluk doldurmada birden çok geçerli cevap desteğini, hata bulmada neden açıklamalarını tanımla. (Yapıldı: çoklu cevap, bug/traceback yanlış seçenek gerekçeleri. Açık: traceback satır seçimi.)
+- [ ] A1.7: Gerçek traceback metni ve satır seçimi ekle. Boşluk doldurmada birden çok geçerli cevap desteğini, hata bulmada neden açıklamalarını tanımla. (Yapıldı: çoklu cevap, bug/traceback yanlış seçenek gerekçeleri; çalıştırıcı çerçevesi traceback'ten çıkarıldı, öğrencinin hatası `cozum.py` satırından başlıyor. Açık: traceback satır seçimi.)
 - [x] A1.8: Sınav oturumunun soru listesini sabitle; yanıt geldikçe yeniden sıralanmasını engelle. Süre dolması ve normal bitirme aynı kayıt yolunu kullansın. Yenilemede süre uzamasın, ödül/sonuç iki kez yazılmasın.
 - [x] A1.9: Yanlışların bağlantısı ilgili modülün ilgili ders bölümünü açsın. Zayıf konu testi sadece son modülden değil tüm açık konulardan seçim yapsın. Çözülmemiş konu ile yanlış öğrenilmiş konuyu ayır.
 - [x] A1.10: İlerleme sürüm geçişi, bozuk veri durumları, dışa/içe aktarma ve depolama hatası geri bildirimi ekle. Eski XP, tema ve tamamlanmalar korunsun.
 - [x] A1.11: Günlük çalışma serisini İstanbul tarihine göre hesapla; aynı gün tekrarı, ara verilen gün ve gün değişimini doğrula.
-- [ ] A1.12: M1–M2 anlatımlarını yeniden denetle. Kurulum/REPL gerçek kullanım yönergelerini tamamla; input() için giriş alanı sağla. Taban bölmede negatif sayılar ve bool dışındaki and/or sonuçları gibi aşırı genellemeleri düzelt.
+- [ ] A1.12: (M1–M2'nin 16 bölümü 6 Ekim'de yeniden yazıldı: ilk ders if gerektirmiyor, gerçek kod örnekleri henüz öğretilmemiş yapılardan arındırıldı, bitwise ve walrus okuma düzeyi olarak işaretlendi. Açık: metinlerin bağımsız bir gözle baştan sona okunması.) M1–M2 anlatımlarını yeniden denetle. Kurulum/REPL gerçek kullanım yönergelerini tamamla; input() için giriş alanı sağla. Taban bölmede negatif sayılar ve bool dışındaki and/or sonuçları gibi aşırı genellemeleri düzelt.
 
 Kapanış: Yanlış bir algoritma tek örneği geçerek doğru sayılmıyor; doğru alternatif çözümler kabul ediliyor; sınav süre bitiminde bir kez kaydediliyor; eski ilerleme okunuyor; tüm mevcut içerik doğrulanıyor. Bu davranışları hedefleyen regresyon testleri ve kısa tarayıcı kontrolü geçiyor.
 
@@ -63,8 +63,8 @@ Kapanış: Yanlış bir algoritma tek örneği geçerek doğru sayılmıyor; do�
 - [x] M4: list/tuple/set/dict, metotlar, iç içe veriler, sorted/min/max ve key; alias ve mutasyon konularına hazırlık. (6 Ekim 2026: 8 bölüm, 40 soru, 15 pratik, 3 yazma görevi; Python 3.12.7 ile doğrulandı.)
 - [x] M5: Referanslar, id, is/==, mutable/immutable, shallow/deep copy, unpacking ve comprehension'lar. (6 Ekim 2026: 8 bölüm, 40 soru, 15 pratik, 3 yazma görevi; Python 3.12.7 ile doğrulandı.)
 - [ ] Görselleştirme 1: Döngüde aktif satır ve değişken tablosu; aynı listeye bağlı iki isim ve sığ/derin kopya için adım ileri/geri kontrolleri.
-- [ ] Atölye 1 (M4 sonrası): Sipariş/harcama analiz kodunu incele ve düzelt; ardından gereksinimden kendi filtreleme ve özetleme programını yaz, boş veriyle test et.
-- [ ] Ara sınav 1 (M4 sonrası): M1–M4 kapsamı.
+- [x] Atölye 1 (M4 sonrası): Sipariş/harcama analiz kodunu incele ve düzelt; ardından gereksinimden kendi filtreleme ve özetleme programını yaz, boş veriyle test et. (İncele → Düzelt → Sıfırdan yaz; adımlar sırayla açılır; `components/milestones.tsx`.)
+- [x] Ara sınav 1 (M4 sonrası): M1–M4 kapsamı. (Her modülden 5, toplam 20 soru, 4'ü kod yazma; %70 baraj; ipucusuz; modül kilitlerini değiştirmez.)
 
 Kapanış: Öğrenci iç içe yapıdaki verinin hangi döngüyle işlendiğini ve bir liste değişikliğinin hangi isimleri etkilediğini açıklayabiliyor. M3, M4, M5 sırasıyla eklenir; grup sonunda tüm içerik doğrulanır ve raporlanır.
 
@@ -301,3 +301,20 @@ M9 sonundaki sıradaki teslim M10 idi; aşağıdaki teslimle tamamlandı.
 - Durum: 10 modül / 400 soru / 30 yazma görevi; kapsam 70/109 (%64). Bu oran öğrenme başarısı değil, kapsam haritasındaki doğrulanmış içerik oranıdır.
 
 Sıradaki içerik: M11 OOP 1. Atölye 1–4, Ara sınav 1–2, Görselleştirme 1–2 ve M8 dosya arayüzü açık kalır. Çıktı temelli testler kullanılan yöntemi veya bütün girdiler için doğruluğu kanıtlamaz.
+
+### 6 Ekim 2026 — Geri bildirim paketi ve Ara sınav 1 / Atölye 1
+
+M10 sonrası siteyi öğrenci gözüyle gezen bir inceleme sonucunda yapıldı.
+
+- [x] Hata çıktısı: Yakalanmayan hatada çalıştırıcının kendi çerçevesi (`File "<exec>", line 37`) gösteriliyordu. Traceback artık öğrencinin `cozum.py` çerçevesinden başlıyor; SyntaxError'da yalnızca `cozum.py` satırı ve hata satırı görünür. Çıktıda `<exec>` geçmemesi için regresyon testi var.
+- [x] Sık hatalar için Türkçe ipucu (`lib/python-error-hint.ts`): `expected ':'`, IndentationError/TabError, NameError, TypeError. İpucu yalnızca hata türünü içeren son satıra bakar, öğrencinin kodunda yazdırdığı bir sözcüğe değil.
+- [x] Ders bölümünü tamamlamak için o bölümün kodunu en az bir kez çalıştırmak gerekiyor (`lessonRuns`); hata almak da deneme sayılır. Önceki ilerleme korunur.
+- [x] M1–M2: 16 bölüm yeniden yazıldı (ilk ders `if` gerektirmiyor; gerçek kod örnekleri def/for/sözlük gibi henüz öğretilmemiş yapılardan arındırıldı; bitwise ve walrus "okuma düzeyi").
+- [x] M10 soru zorlukları 40'ın hepsi 2 iken 16 kolay / 16 orta / 8 zor olarak dağıtıldı.
+- [x] Kaynak bağlantıları ve çalışma ortamı etiketleri M1–M9'a da eklendi (A1.2 kapandı).
+- [x] Ara sınav 1: M1–M4'ten 20 soru (her modülden 5; 8 çıktı, 4 hata bulma, 4 boşluk, 4 kod). Sabit soru listesi, ipucusuz, isteğe bağlı 25 dakika, yenilemede kaldığı yerden devam, sonuç ve ödül oturum başına bir kez. Modül kilitlerini değiştirmez; M4 testi geçilince veya M5 açılınca erişilir.
+- [x] Atölye 1: harcama analizi. İncele (çıktıyı tahmin et) → Düzelt (iki hata: sınır karşılaştırması ve toplama) → Sıfırdan yaz (kategori raporu). Düzelt görevinde yalnız sınırı düzeltmek 3/5'te kalıyor.
+- [x] Tarayıcıda uçtan uca denendi: Atölye 1'in üç adımı ve kilitleri; sabit çıktı yazan ve boş çözümler 0/6; Ara sınav 1'in başlatılması, yenilemeden sonra devamı, bitirilmesi (tek `midterm` kaydı, modül kilidi değişmedi, XP bir kez), ders tamamlama kilidi, traceback ve Türkçe ipucu. Deneme sonunda tarayıcı ilerlemesi başlangıç durumuna döndürüldü.
+- [x] Kontroller: 1.049 çalıştırılabilir içerik, 144 regresyon kontrolü, 137 yazma referans vakası; TypeScript ve üretim derlemesi başarılı (büyük paket uyarısı sürüyor).
+
+Açık kalanlar: Atölye 2–4, Ara sınav 2–4, Görselleştirme 1–4, M8 dosya yükleme/indirme, A1.5 (tam), A1.6, A1.7 (traceback satır seçimi), A1.12 (bağımsız metin denetimi). Sıradaki içerik: M11 OOP 1.

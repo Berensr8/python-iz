@@ -36,7 +36,13 @@ const localBindingConfig = {
     : [],
 };
 
+// GitHub Pages build (npm run build:pages): plain static output, no Cloudflare/Sites plugins.
+// PAGES_BASE_PATH is "/repo-name" for a project site and empty for a user site or custom domain.
+const pagesBasePath = process.env.PAGES_BASE_PATH ?? "";
+
 export default defineConfig(async ({ command }) => {
+  if (process.env.PAGES_BUILD) return { base: `${pagesBasePath}/`, plugins: [vinext()] };
+
   // Use Miniflare's local Request.cf placeholder unless fetching is requested.
   process.env.CLOUDFLARE_CF_FETCH_ENABLED ??= "false";
   process.env.WRANGLER_SEND_METRICS ??= "false";

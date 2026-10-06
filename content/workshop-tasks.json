@@ -1,0 +1,95 @@
+[
+  {
+    "id": "workshop1-fix",
+    "moduleId": 4,
+    "sectionId": "nested-data",
+    "title": "Harcama filtresinin iki hatasını düzelt",
+    "level": "Düzelt",
+    "objective": "Sınır koşulunu ve biriktirici güncellemesini denetle.",
+    "prompt": "İlk satır N, ikinci satır alt sınır (tam sayı kuruş). Sonraki N satır 'kategori tutar'; kategori tek kelime, tutar negatif olmayan tam sayıdır. Sınır dahil olmak üzere tutarı en az sınır kadar olan kayıtların sayısını ve toplamını 'adet toplam' biçiminde tek satırda yazdır. Boş veri veya eşleşme yoksa 0 0 yazdır. Başlangıç kodunda hem sınır karşılaştırması hem toplama hatalı.",
+    "starterCode": "n = int(input())\nlimit = int(input())\ncount = 0\ntotal = 0\nfor _ in range(n):\n    category, raw = input().split()\n    amount = int(raw)\n    if amount > limit:\n        count += 1\n        total = amount\nprint(count, total)",
+    "exampleInput": "3\n100\nkitap 100\nyemek 150\nyol 20",
+    "exampleOutput": "2 250",
+    "hints": [
+      "'En az' karşılaştırması eşit değeri de kapsar.",
+      "Koşul >= olmalı. total = amount yerine total += amount kullan."
+    ],
+    "solution": "n = int(input())\nlimit = int(input())\ncount = 0\ntotal = 0\nfor _ in range(n):\n    category, raw = input().split()\n    amount = int(raw)\n    if amount >= limit:\n        count += 1\n        total += amount\nprint(count, total)",
+    "tests": [
+      {
+        "label": "Sınır dahil",
+        "stdin": "3\n100\nkitap 100\nyemek 150\nyol 20",
+        "expectedOutput": "2 250"
+      },
+      {
+        "label": "Birden fazla kayıt",
+        "stdin": "3\n10\na 11\nb 12\nc 13",
+        "expectedOutput": "3 36"
+      },
+      {
+        "label": "Boş veri",
+        "stdin": "0\n10",
+        "expectedOutput": "0 0"
+      },
+      {
+        "label": "Eşleşme yok",
+        "stdin": "2\n100\na 10\nb 99",
+        "expectedOutput": "0 0"
+      },
+      {
+        "label": "Sıfır da bir kayıttır",
+        "stdin": "2\n0\na 0\nb 5",
+        "expectedOutput": "2 5"
+      }
+    ]
+  },
+  {
+    "id": "workshop1-build",
+    "moduleId": 4,
+    "sectionId": "dict-iteration",
+    "title": "Kategori bazlı harcama raporunu yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "M1–M4 araçlarıyla girdiyi oku, filtrele, sözlükte grupla ve raporla.",
+    "prompt": "İlk satır N, ikinci satır alt sınır (negatif olmayan tam sayı kuruş). Ardından N satır 'kategori tutar' gelir; kategori tek kelime ve harf duyarlıdır, tutar negatif olmayan tam sayıdır. Tutara göre filtrele: her tekil kaydın tutarı >= sınır olmalı; kategori toplamını filtreleme! Yalnız geçen kayıtları sözlükte kategoriye göre topla. Önce 'ADET <geçen kayıt sayısı>', sonra 'TOPLAM <toplam kuruş>' yazdır. Ardından her kategoriyi alfabetik sırayla 'kategori toplam' biçiminde yazdır. Hiç eşleşme yoksa yalnız ADET 0 ve TOPLAM 0 çıkar. Fonksiyon veya harici modül gerekmez. Kendi çözümünü boş editörden kur.",
+    "starterCode": "# Girdiyi oku; her kaydı filtrele; kategori toplamlarını raporla.\n",
+    "exampleInput": "4\n100\nyemek 150\nkitap 90\nyemek 100\nkitap 200",
+    "exampleOutput": "ADET 3\nTOPLAM 450\nkitap 200\nyemek 250",
+    "hints": [
+      "count ve total sayısal biriktiriciler, totals ise sözlük olabilir.",
+      "Geçen her kayıtta totals[category] = totals.get(category, 0) + amount kullan. sorted(totals) anahtarları sıralar; sırayla anahtarı ve değerini yazdır."
+    ],
+    "solution": "n = int(input())\nlimit = int(input())\ncount = 0\ntotal = 0\ntotals = {}\nfor _ in range(n):\n    category, raw = input().split()\n    amount = int(raw)\n    if amount >= limit:\n        count += 1\n        total += amount\n        totals[category] = totals.get(category, 0) + amount\nprint('ADET', count)\nprint('TOPLAM', total)\nfor category in sorted(totals):\n    print(category, totals[category])",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "4\n100\nyemek 150\nkitap 90\nyemek 100\nkitap 200",
+        "expectedOutput": "ADET 3\nTOPLAM 450\nkitap 200\nyemek 250"
+      },
+      {
+        "label": "Boş veri",
+        "stdin": "0\n0",
+        "expectedOutput": "ADET 0\nTOPLAM 0"
+      },
+      {
+        "label": "Önce kayıt filtresi",
+        "stdin": "3\n100\na 60\na 70\nb 100",
+        "expectedOutput": "ADET 1\nTOPLAM 100\nb 100"
+      },
+      {
+        "label": "Sıfır ve sıralama",
+        "stdin": "3\n0\nz 0\na 5\nz 7",
+        "expectedOutput": "ADET 3\nTOPLAM 12\na 5\nz 7"
+      },
+      {
+        "label": "Harf duyarlı",
+        "stdin": "3\n1\nada 2\nAda 3\nada 4",
+        "expectedOutput": "ADET 3\nTOPLAM 9\nAda 3\nada 6"
+      },
+      {
+        "label": "Eşleşme yok",
+        "stdin": "1\n2\na 1",
+        "expectedOutput": "ADET 0\nTOPLAM 0"
+      }
+    ]
+  }
+]

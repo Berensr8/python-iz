@@ -3,7 +3,7 @@
   "slug": "akis-kontrolu",
   "title": "Akış kontrolü",
   "description": "Koşulların ve döngülerin hangi satırı kaç kez çalıştırdığını izle, kendi akışını kur.",
-  "contentVersion": 1,
+  "contentVersion": 2,
   "estimatedMinutes": 110,
   "practiceIds": [
     "m3-q01",
@@ -56,7 +56,14 @@
         "Önce geçersiz değer elenir; return fonksiyonu hemen bitirir (erken dönüş).",
         "İkinci kontrole yalnızca ilk koşul yanlışsa gelinir; return sayesinde elif gerekmez.",
         "Hiçbir erken dönüş olmazsa son satır çalışır."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Koşullar: if, elif, else",
+          "url": "https://docs.python.org/3.12/tutorial/controlflow.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "match-case",
@@ -90,7 +97,14 @@
         "(0, 0) deseni yalnızca tam başlangıç noktasıyla eşleşir.",
         "(0, y) ilk eleman 0 ise eşleşir ve ikinci elemanı y adına bağlar.",
         "(0, 5) ikinci desenle eşleşir; y=5 metne yerleşir."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · match-case ile desen eşleme",
+          "url": "https://docs.python.org/3.12/tutorial/controlflow.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "while",
@@ -124,7 +138,14 @@
         "Koşul, deneme sayısı sınırı aşılana kadar doğru kalır.",
         "Her turda bekleme süresi ikiye katlanır (üstel geri çekilme).",
         "attempt += 1 olmasaydı döngü hiç bitmezdi."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · while döngüsü",
+          "url": "https://docs.python.org/3.12/tutorial/controlflow.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "for-range",
@@ -159,7 +180,14 @@
         "lower() büyük harfleri de saymak için metni küçültür; for her karakteri sırayla verir.",
         "in, karakterin ünlü harfler metninde olup olmadığını sınar.",
         "Döngü bitince toplam sayı döndürülür: o, o, a, ı."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · for döngüsü ve range",
+          "url": "https://docs.python.org/3.12/tutorial/controlflow.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "break-continue-pass",
@@ -193,7 +221,14 @@
         "Boş satırlar continue ile atlanır.",
         "ERROR ile başlayan ilk satır bulununca return hem döngüyü hem fonksiyonu bitirir; break gerekmez.",
         "Hiç hata satırı yoksa döngü biter ve None döner."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · break, continue ve pass",
+          "url": "https://docs.python.org/3.12/tutorial/controlflow.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "loop-else",
@@ -227,7 +262,14 @@
         "2'den n - 1'e kadar her bölen denenir.",
         "Bölen bulunursa break döngüyü keser; else atlanır ve son satırdaki return False çalışır.",
         "Hiç bölen yoksa döngü normal biter, else çalışır ve True döner."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Döngü else bloğu",
+          "url": "https://docs.python.org/3.12/tutorial/controlflow.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "enumerate-zip",
@@ -261,7 +303,14 @@
         "zip her başlığı kendi değeriyle eşleştirir.",
         "enumerate bu ikililere 1'den başlayan sıra numarası ekler; (header, value) ikiliyi açar.",
         "Her satır numara, başlık ve değerle yazdırılır."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · enumerate ve zip",
+          "url": "https://docs.python.org/3.12/tutorial/controlflow.html"
+        }
+      ],
+      "runtime": "browser"
     },
     {
       "id": "nested-loops",
@@ -296,7 +345,14 @@
         "İç döngü i'den sonraki indekslerden başlar; aynı çift iki kez denenmez.",
         "Toplam hedefe eşitse indeks ikilisi hemen döndürülür: 5 + 2 = 7.",
         "Hiç çift yoksa None döner; bu yöntem yaklaşık n² karşılaştırma yapar."
-      ]
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · İç içe döngüler ve döngüyü izleme",
+          "url": "https://docs.python.org/3.12/tutorial/controlflow.html"
+        }
+      ],
+      "runtime": "browser"
     }
   ],
   "questions": [
@@ -308,10 +364,18 @@
       "difficulty": 1,
       "prompt": "Bu kodun çıktısı ne?",
       "code": "x = 15\nif x > 10:\n    print(\"büyük\")\nelif x > 5:\n    print(\"orta\")\nelse:\n    print(\"küçük\")",
-      "options": ["büyük", "orta", "küçük", "büyük ve orta"],
+      "options": [
+        "büyük",
+        "orta",
+        "küçük",
+        "büyük ve orta"
+      ],
       "answer": "büyük",
       "expectedOutput": "büyük",
-      "hints": ["İlk doğru koşulun dalı çalışır.", "15 > 10 doğrudur; elif'e hiç bakılmaz."],
+      "hints": [
+        "İlk doğru koşulun dalı çalışır.",
+        "15 > 10 doğrudur; elif'e hiç bakılmaz."
+      ],
       "explanation": "Zincirde ilk koşul doğru olduğu için yalnızca \"büyük\" yazdırılır; x > 5 de doğru olsa da denenmez."
     },
     {
@@ -322,10 +386,18 @@
       "difficulty": 2,
       "prompt": "İki ayrı if var. Çıktı ne?",
       "code": "x = 15\nif x > 10:\n    print(\"A\")\nif x > 5:\n    print(\"B\")",
-      "options": ["Yalnız A", "Yalnız B", "A ve B (iki satır)", "Çıktı yok"],
+      "options": [
+        "Yalnız A",
+        "Yalnız B",
+        "A ve B (iki satır)",
+        "Çıktı yok"
+      ],
       "answer": "A ve B (iki satır)",
       "expectedOutput": "A\nB",
-      "hints": ["İkinci satır elif değil, yeni bir if.", "Bağımsız if'lerin her biri ayrı kontrol edilir."],
+      "hints": [
+        "İkinci satır elif değil, yeni bir if.",
+        "Bağımsız if'lerin her biri ayrı kontrol edilir."
+      ],
       "explanation": "Ayrı if'ler bir zincir oluşturmaz; iki koşul da doğru olduğu için A ve B yazdırılır."
     },
     {
@@ -336,10 +408,18 @@
       "difficulty": 2,
       "prompt": "Döngü bittiğinde ne yazdırılır?",
       "code": "n = 1\nsteps = 0\nwhile n < 20:\n    n *= 3\n    steps += 1\nprint(steps, n)",
-      "options": ["2 9", "3 27", "3 9", "4 81"],
+      "options": [
+        "2 9",
+        "3 27",
+        "3 9",
+        "4 81"
+      ],
       "answer": "3 27",
       "expectedOutput": "3 27",
-      "hints": ["Her turda n üçle çarpılır: 3, 9, 27.", "Koşul tur başında kontrol edilir; 27 < 20 yanlıştır."],
+      "hints": [
+        "Her turda n üçle çarpılır: 3, 9, 27.",
+        "Koşul tur başında kontrol edilir; 27 < 20 yanlıştır."
+      ],
       "explanation": "n sırasıyla 3, 9, 27 olur. 9 < 20 olduğu için üçüncü tur çalışır; sonra 27 < 20 yanlıştır ve döngü 3 turda biter."
     },
     {
@@ -350,10 +430,18 @@
       "difficulty": 1,
       "prompt": "range hangi sayıları üretir?",
       "code": "print(list(range(2, 11, 4)))",
-      "options": ["[2, 6, 10]", "[2, 6]", "[2, 4, 6, 8, 10]", "[4, 8]"],
+      "options": [
+        "[2, 6, 10]",
+        "[2, 6]",
+        "[2, 4, 6, 8, 10]",
+        "[4, 8]"
+      ],
       "answer": "[2, 6, 10]",
       "expectedOutput": "[2, 6, 10]",
-      "hints": ["2'den başla, 4'er ekle.", "Bitiş 11 olduğu için 10 dahildir; 14 değildir."],
+      "hints": [
+        "2'den başla, 4'er ekle.",
+        "Bitiş 11 olduğu için 10 dahildir; 14 değildir."
+      ],
       "explanation": "2, 6, 10 üretilir; bir sonraki 14 değeri 11 sınırını aşar."
     },
     {
@@ -364,10 +452,18 @@
       "difficulty": 1,
       "prompt": "Hangi case çalışır?",
       "code": "status = 404\nmatch status:\n    case 200:\n        print(\"tamam\")\n    case 404 | 410:\n        print(\"bulunamadı\")\n    case _:\n        print(\"diğer\")",
-      "options": ["tamam", "bulunamadı", "diğer", "bulunamadı ve diğer"],
+      "options": [
+        "tamam",
+        "bulunamadı",
+        "diğer",
+        "bulunamadı ve diğer"
+      ],
       "answer": "bulunamadı",
       "expectedOutput": "bulunamadı",
-      "hints": ["| iki değerden birini kabul eder.", "İlk eşleşen case çalışır, sonrası atlanır."],
+      "hints": [
+        "| iki değerden birini kabul eder.",
+        "İlk eşleşen case çalışır, sonrası atlanır."
+      ],
       "explanation": "404, 404 | 410 deseniyle eşleşir. Bir case çalıştıktan sonra _ dahil diğerlerine bakılmaz."
     },
     {
@@ -378,10 +474,18 @@
       "difficulty": 2,
       "prompt": "continue sonrası çıktı ne olur? (end=\"\" satır sonu eklemez.)",
       "code": "for ch in \"python\":\n    if ch in \"aeiou\":\n        continue\n    print(ch, end=\"\")",
-      "options": ["pythn", "o", "python", "p"],
+      "options": [
+        "pythn",
+        "o",
+        "python",
+        "p"
+      ],
       "answer": "pythn",
       "expectedOutput": "pythn",
-      "hints": ["Yalnızca ünlü harfler atlanır.", "\"python\" içinde tek ünlü o'dur."],
+      "hints": [
+        "Yalnızca ünlü harfler atlanır.",
+        "\"python\" içinde tek ünlü o'dur."
+      ],
       "explanation": "o harfinde continue print'i atlar; diğer harfler yan yana yazdırılır. y, \"aeiou\" içinde olmadığı için yazılır."
     },
     {
@@ -392,10 +496,18 @@
       "difficulty": 2,
       "prompt": "Döngüden sonra i'nin değeri ne?",
       "code": "for i in range(10):\n    if i == 3:\n        break\nprint(i)",
-      "options": ["3", "2", "9", "10"],
+      "options": [
+        "3",
+        "2",
+        "9",
+        "10"
+      ],
       "answer": "3",
       "expectedOutput": "3",
-      "hints": ["break, i 3 iken çalışır.", "Döngü değişkeni döngü bittikten sonra da son değerini korur."],
+      "hints": [
+        "break, i 3 iken çalışır.",
+        "Döngü değişkeni döngü bittikten sonra da son değerini korur."
+      ],
       "explanation": "i = 3 iken break döngüyü bitirir. Döngü değişkeni silinmez; print son değer olan 3'ü yazar."
     },
     {
@@ -406,10 +518,18 @@
       "difficulty": 2,
       "prompt": "Döngü else bloğu çalışır mı?",
       "code": "for i in range(3):\n    pass\nelse:\n    print(\"bitti\")",
-      "options": ["bitti", "Çıktı yok", "0 1 2", "Hata"],
+      "options": [
+        "bitti",
+        "Çıktı yok",
+        "0 1 2",
+        "Hata"
+      ],
       "answer": "bitti",
       "expectedOutput": "bitti",
-      "hints": ["pass hiçbir şey yapmaz.", "break olmadığı için döngü normal biter."],
+      "hints": [
+        "pass hiçbir şey yapmaz.",
+        "break olmadığı için döngü normal biter."
+      ],
       "explanation": "Döngü üç tur boyunca hiçbir şey yapmadan normal biter; break olmadığı için else çalışır."
     },
     {
@@ -420,10 +540,18 @@
       "difficulty": 2,
       "prompt": "Çıktı ne?",
       "code": "for n in [4, 7, 9]:\n    if n % 2 == 1:\n        print(\"tek:\", n)\n        break\nelse:\n    print(\"tek yok\")",
-      "options": ["tek: 7", "tek yok", "tek: 7 ve tek yok", "tek: 9"],
+      "options": [
+        "tek: 7",
+        "tek yok",
+        "tek: 7 ve tek yok",
+        "tek: 9"
+      ],
       "answer": "tek: 7",
       "expectedOutput": "tek: 7",
-      "hints": ["İlk tek sayı 7'dir.", "break olduğu için else atlanır."],
+      "hints": [
+        "İlk tek sayı 7'dir.",
+        "break olduğu için else atlanır."
+      ],
       "explanation": "7 bulununca yazdırılır ve break döngüyü keser. Döngü normal bitmediği için else çalışmaz."
     },
     {
@@ -434,10 +562,18 @@
       "difficulty": 1,
       "prompt": "enumerate ne yazdırır?",
       "code": "for i, ch in enumerate(\"ab\"):\n    print(i, ch)",
-      "options": ["0 a ve 1 b (iki satır)", "1 a ve 2 b (iki satır)", "a 0 ve b 1 (iki satır)", "0 1"],
+      "options": [
+        "0 a ve 1 b (iki satır)",
+        "1 a ve 2 b (iki satır)",
+        "a 0 ve b 1 (iki satır)",
+        "0 1"
+      ],
       "answer": "0 a ve 1 b (iki satır)",
       "expectedOutput": "0 a\n1 b",
-      "hints": ["enumerate varsayılan olarak 0'dan sayar.", "Önce sayı, sonra öğe gelir."],
+      "hints": [
+        "enumerate varsayılan olarak 0'dan sayar.",
+        "Önce sayı, sonra öğe gelir."
+      ],
       "explanation": "start verilmediği için numaralar 0'dan başlar; her turda (numara, karakter) ikilisi gelir."
     },
     {
@@ -448,10 +584,18 @@
       "difficulty": 2,
       "prompt": "Farklı uzunluktaki dizilerle zip ne üretir?",
       "code": "for a, b in zip(\"abc\", \"12\"):\n    print(a + b)",
-      "options": ["a1 ve b2 (iki satır)", "a1, b2 ve c (üç satır)", "Hata", "abc12"],
+      "options": [
+        "a1 ve b2 (iki satır)",
+        "a1, b2 ve c (üç satır)",
+        "Hata",
+        "abc12"
+      ],
       "answer": "a1 ve b2 (iki satır)",
       "expectedOutput": "a1\nb2",
-      "hints": ["zip en kısa dizi bitince durur.", "\"12\" yalnızca iki karakterlidir."],
+      "hints": [
+        "zip en kısa dizi bitince durur.",
+        "\"12\" yalnızca iki karakterlidir."
+      ],
       "explanation": "İkinci dizi iki karakter olduğu için yalnızca iki eşleşme oluşur; c sessizce atlanır."
     },
     {
@@ -462,10 +606,18 @@
       "difficulty": 1,
       "prompt": "İç gövde toplam kaç kez çalışır?",
       "code": "count = 0\nfor i in range(3):\n    for j in range(4):\n        count += 1\nprint(count)",
-      "options": ["7", "12", "4", "3"],
+      "options": [
+        "7",
+        "12",
+        "4",
+        "3"
+      ],
       "answer": "12",
       "expectedOutput": "12",
-      "hints": ["Dış döngünün her turunda iç döngü baştan çalışır.", "3 × 4."],
+      "hints": [
+        "Dış döngünün her turunda iç döngü baştan çalışır.",
+        "3 × 4."
+      ],
       "explanation": "Dış döngü 3 tur döner ve her turda iç döngü 4 tur döner: 3 × 4 = 12."
     },
     {
@@ -488,7 +640,10 @@
         "95 >= 90 yanlış değerlendirilir": "95 >= 90 doğrudur; sorun bu koşula hiç sıra gelmemesidir.",
         "Bir programda iki print kullanılamaz": "İstediğin kadar print kullanabilirsin; burada yalnızca biri çalışır."
       },
-      "hints": ["Zincirde ilk doğru koşul kazanır.", "score >= 90 koşulunu üste taşı."],
+      "hints": [
+        "Zincirde ilk doğru koşul kazanır.",
+        "score >= 90 koşulunu üste taşı."
+      ],
       "explanation": "95 >= 50 doğru olduğu için ilk dal çalışır ve zincir biter. Dar koşul (>= 90) geniş koşuldan (>= 50) önce yazılmalıdır."
     },
     {
@@ -511,7 +666,10 @@
         "print döngüyü durdurur": "print yalnızca yazar; akışı değiştirmez.",
         "i 1'den başlamalı": "Başlangıç değeri ne olursa olsun i artmadığı için koşul hep doğru kalır."
       },
-      "hints": ["Girintiye bak: hangi satırlar while bloğunda?", "Son satır sütun 0'da."],
+      "hints": [
+        "Girintiye bak: hangi satırlar while bloğunda?",
+        "Son satır sütun 0'da."
+      ],
       "explanation": "Girintisiz i += 1 döngüden sonra çalışacaktır, ama döngü hiç bitmediği için oraya ulaşılmaz; ekrana sonsuza dek 0 yazılır. Satırı dört boşluk içeri al."
     },
     {
@@ -535,7 +693,10 @@
         "print girintisiz olmalı": "if gövdesi girintili olmak zorundadır; buradaki girinti doğru.",
         "3 metin olarak yazılmalı": "x bir int'e bağlı; tip doğru, sorun operatörde."
       },
-      "hints": ["= atama yapar.", "if sonrasında bir karşılaştırma ifadesi bekler."],
+      "hints": [
+        "= atama yapar.",
+        "if sonrasında bir karşılaştırma ifadesi bekler."
+      ],
       "explanation": "if x = 3 bir atama denemesidir ve koşul yerinde kullanılamaz; SyntaxError oluşur. Doğrusu if x == 3: biçimidir."
     },
     {
@@ -558,7 +719,10 @@
         "+= yerine = kullanılmalı": "= biriktirmez, her turda üzerine yazar; sonuç 4 olurdu.",
         "range 0'dan başlamalı": "0 eklemek toplamı değiştirmez; eksik olan 5'tir."
       },
-      "hints": ["range'in bitiş değeri dahil değildir.", "Döngüde hangi sayılar dönüyor: 1, 2, 3, 4."],
+      "hints": [
+        "range'in bitiş değeri dahil değildir.",
+        "Döngüde hangi sayılar dönüyor: 1, 2, 3, 4."
+      ],
       "explanation": "range(1, 5) 1–4 arasını üretir ve toplam 10 olur. 5'i dahil etmek için bitiş 6 olmalıdır; toplam 15 olur."
     },
     {
@@ -582,7 +746,10 @@
         "case _ ilk sırada olmalı": "_ ilk sırada olursa diğer case'lere hiç sıra gelmez; joker hep en sonda olmalı.",
         "Metinler case içinde kullanılamaz": "case \"ok\": gibi metin desenleri geçerlidir; sorun düz isim kullanılması."
       },
-      "hints": ["case expected: expected değişkeninin değerine bakmaz.", "Python bu durumda sonraki case'lere ulaşılamayacağını söyleyip SyntaxError verir."],
+      "hints": [
+        "case expected: expected değişkeninin değerine bakmaz.",
+        "Python bu durumda sonraki case'lere ulaşılamayacağını söyleyip SyntaxError verir."
+      ],
       "explanation": "case expected: her değeri yakalayıp expected adına bağlar; ardından gelen case'ler ulaşılamaz olduğu için Python kodu çalıştırmadan SyntaxError verir. Sabit değer için case \"ok\": yaz."
     },
     {
@@ -605,7 +772,10 @@
         "print i'yi değiştirir": "print yalnızca okur ve yazar; değişkeni değiştirmez.",
         "while içinde continue kullanılamaz": "continue hem for hem while içinde geçerlidir."
       },
-      "hints": ["continue'dan sonra hangi satırlar atlanıyor?", "i += 1 continue'nun altında."],
+      "hints": [
+        "continue'dan sonra hangi satırlar atlanıyor?",
+        "i += 1 continue'nun altında."
+      ],
       "explanation": "i 2 olduğunda continue, i += 1 satırını atlar. i hiç artmadığı için her tur yine i == 2 olur ve döngü sonsuza dek döner. Artırmayı continue'dan önce yap."
     },
     {
@@ -619,7 +789,10 @@
       "answer": "range",
       "solutionCode": "for i in range(3):\n    print(i)",
       "expectedOutput": "0\n1\n2",
-      "hints": ["Sayı aralığı üreten yerleşik fonksiyon.", "range(3)."],
+      "hints": [
+        "Sayı aralığı üreten yerleşik fonksiyon.",
+        "range(3)."
+      ],
       "explanation": "range(3) 0'dan başlayıp 3'e kadar (3 hariç) sayı üretir."
     },
     {
@@ -633,7 +806,10 @@
       "answer": "break",
       "solutionCode": "for n in range(10):\n    if n == 4:\n        break\nprint(n)",
       "expectedOutput": "4",
-      "hints": ["Turu atlamak değil, döngüden çıkmak istiyoruz.", "Kelime break."],
+      "hints": [
+        "Turu atlamak değil, döngüden çıkmak istiyoruz.",
+        "Kelime break."
+      ],
       "explanation": "break döngüyü bitirir; n son değeri olan 4'te kalır. continue yazılsaydı döngü 9'a kadar sürerdi."
     },
     {
@@ -647,7 +823,10 @@
       "answer": "enumerate",
       "solutionCode": "for i, name in enumerate([\"Ada\", \"Can\"], start=1):\n    print(i, name)",
       "expectedOutput": "1 Ada\n2 Can",
-      "hints": ["İngilizcede \"numaralandırmak\".", "Fonksiyon enumerate."],
+      "hints": [
+        "İngilizcede \"numaralandırmak\".",
+        "Fonksiyon enumerate."
+      ],
       "explanation": "enumerate her öğeyi bir sıra numarasıyla verir; start=1 numaraları 1'den başlatır."
     },
     {
@@ -661,7 +840,10 @@
       "answer": "_",
       "solutionCode": "match 99:\n    case 1:\n        print(\"bir\")\n    case _:\n        print(\"başka\")",
       "expectedOutput": "başka",
-      "hints": ["Tek bir karakter.", "Alt çizgi."],
+      "hints": [
+        "Tek bir karakter.",
+        "Alt çizgi."
+      ],
       "explanation": "_ her değerle eşleşen ama değeri bir isme bağlamayan jokerdir; en sona yazılır."
     },
     {
@@ -671,11 +853,20 @@
       "sectionId": "while",
       "difficulty": 2,
       "prompt": "3, 2, 1 sayıp ardından \"Kalkış\" yazdıracak sırayı kur.",
-      "lines": ["    n -= 1", "print(\"Kalkış\")", "while n > 0:", "n = 3", "    print(n)"],
+      "lines": [
+        "    n -= 1",
+        "print(\"Kalkış\")",
+        "while n > 0:",
+        "n = 3",
+        "    print(n)"
+      ],
       "answer": "n = 3\nwhile n > 0:\n    print(n)\n    n -= 1\nprint(\"Kalkış\")",
       "solutionCode": "n = 3\nwhile n > 0:\n    print(n)\n    n -= 1\nprint(\"Kalkış\")",
       "expectedOutput": "3\n2\n1\nKalkış",
-      "hints": ["Sayaç döngüden önce oluşturulur.", "Önce yazdır, sonra azalt; Kalkış döngüden sonra."],
+      "hints": [
+        "Sayaç döngüden önce oluşturulur.",
+        "Önce yazdır, sonra azalt; Kalkış döngüden sonra."
+      ],
       "explanation": "n önce tanımlanır; döngü her turda önce yazar sonra azaltır. Azaltma önce yapılsaydı çıktı 2, 1, 0 olurdu."
     },
     {
@@ -685,11 +876,20 @@
       "sectionId": "loop-else",
       "difficulty": 2,
       "prompt": "1–3 arasında 5'i arayıp bulamayınca \"yok\" yazdıracak sırayı kur.",
-      "lines": ["    print(\"yok\")", "for n in range(1, 4):", "    if n == 5:", "        break", "else:"],
+      "lines": [
+        "    print(\"yok\")",
+        "for n in range(1, 4):",
+        "    if n == 5:",
+        "        break",
+        "else:"
+      ],
       "answer": "for n in range(1, 4):\n    if n == 5:\n        break\nelse:\n    print(\"yok\")",
       "solutionCode": "for n in range(1, 4):\n    if n == 5:\n        break\nelse:\n    print(\"yok\")",
       "expectedOutput": "yok",
-      "hints": ["else, for ile aynı hizada ve döngünün hemen ardından gelir.", "break, if'in içindedir."],
+      "hints": [
+        "else, for ile aynı hizada ve döngünün hemen ardından gelir.",
+        "break, if'in içindedir."
+      ],
       "explanation": "5 hiç bulunmadığı için break çalışmaz; döngü normal biter ve else \"yok\" yazar."
     },
     {
@@ -699,11 +899,20 @@
       "sectionId": "nested-loops",
       "difficulty": 2,
       "prompt": "İki satır \"***\" yazdıracak iç içe döngüyü kur.",
-      "lines": ["    print(row)", "for i in range(2):", "    row = \"\"", "    for j in range(3):", "        row += \"*\""],
+      "lines": [
+        "    print(row)",
+        "for i in range(2):",
+        "    row = \"\"",
+        "    for j in range(3):",
+        "        row += \"*\""
+      ],
       "answer": "for i in range(2):\n    row = \"\"\n    for j in range(3):\n        row += \"*\"\n    print(row)",
       "solutionCode": "for i in range(2):\n    row = \"\"\n    for j in range(3):\n        row += \"*\"\n    print(row)",
       "expectedOutput": "***\n***",
-      "hints": ["row her dış turun başında boşaltılır.", "print, iç döngü bittikten sonra ama dış döngünün içinde."],
+      "hints": [
+        "row her dış turun başında boşaltılır.",
+        "print, iç döngü bittikten sonra ama dış döngünün içinde."
+      ],
       "explanation": "Dış döngü her satırı başlatır, iç döngü üç yıldız ekler, print satırı tamamlar."
     },
     {
@@ -713,11 +922,22 @@
       "sectionId": "if-elif-else",
       "difficulty": 2,
       "prompt": "18 derece için \"ılık\" yazdıracak koşul zincirini kur.",
-      "lines": ["elif temp < 25:", "    print(\"ılık\")", "temp = 18", "if temp < 10:", "    print(\"soğuk\")", "else:", "    print(\"sıcak\")"],
+      "lines": [
+        "elif temp < 25:",
+        "    print(\"ılık\")",
+        "temp = 18",
+        "if temp < 10:",
+        "    print(\"soğuk\")",
+        "else:",
+        "    print(\"sıcak\")"
+      ],
       "answer": "temp = 18\nif temp < 10:\n    print(\"soğuk\")\nelif temp < 25:\n    print(\"ılık\")\nelse:\n    print(\"sıcak\")",
       "solutionCode": "temp = 18\nif temp < 10:\n    print(\"soğuk\")\nelif temp < 25:\n    print(\"ılık\")\nelse:\n    print(\"sıcak\")",
       "expectedOutput": "ılık",
-      "hints": ["Sıra: değişken, if, elif, else.", "Her koşulun gövdesi hemen altında gelir."],
+      "hints": [
+        "Sıra: değişken, if, elif, else.",
+        "Her koşulun gövdesi hemen altında gelir."
+      ],
       "explanation": "temp < 10 yanlış, temp < 25 doğru olduğu için ılık yazdırılır."
     },
     {
@@ -731,13 +951,32 @@
       "answer": "temp = int(input())\nif temp < 10:\n    print(\"soğuk\")\nelif temp < 25:\n    print(\"ılık\")\nelse:\n    print(\"sıcak\")",
       "solutionCode": "temp = int(input())\nif temp < 10:\n    print(\"soğuk\")\nelif temp < 25:\n    print(\"ılık\")\nelse:\n    print(\"sıcak\")",
       "expectedOutput": "ılık",
-      "hints": ["En dar koşulu (temp < 10) önce yaz.", "if / elif / else ile tek bir zincir kur."],
+      "hints": [
+        "En dar koşulu (temp < 10) önce yaz.",
+        "if / elif / else ile tek bir zincir kur."
+      ],
       "explanation": "Koşullar sırayla denenir; 10 ve 25 sınırlarında hangi dalın çalıştığına dikkat et.",
       "tests": [
-        { "label": "Örnek", "stdin": "18", "expectedOutput": "ılık" },
-        { "label": "Soğuk", "stdin": "5", "expectedOutput": "soğuk" },
-        { "label": "Sınır 10", "stdin": "10", "expectedOutput": "ılık" },
-        { "label": "Sınır 25", "stdin": "25", "expectedOutput": "sıcak" }
+        {
+          "label": "Örnek",
+          "stdin": "18",
+          "expectedOutput": "ılık"
+        },
+        {
+          "label": "Soğuk",
+          "stdin": "5",
+          "expectedOutput": "soğuk"
+        },
+        {
+          "label": "Sınır 10",
+          "stdin": "10",
+          "expectedOutput": "ılık"
+        },
+        {
+          "label": "Sınır 25",
+          "stdin": "25",
+          "expectedOutput": "sıcak"
+        }
       ],
       "exampleInput": "18"
     },
@@ -752,13 +991,32 @@
       "answer": "command = input()\nmatch command:\n    case \"start\" | \"run\":\n        print(\"Başlıyor\")\n    case \"stop\":\n        print(\"Duruyor\")\n    case _:\n        print(\"Bilinmeyen\")",
       "solutionCode": "command = input()\nmatch command:\n    case \"start\" | \"run\":\n        print(\"Başlıyor\")\n    case \"stop\":\n        print(\"Duruyor\")\n    case _:\n        print(\"Bilinmeyen\")",
       "expectedOutput": "Başlıyor",
-      "hints": ["case \"start\" | \"run\": iki değeri birlikte yakalar.", "Joker case _: en sonda olmalı."],
+      "hints": [
+        "case \"start\" | \"run\": iki değeri birlikte yakalar.",
+        "Joker case _: en sonda olmalı."
+      ],
       "explanation": "match komutu sırayla desenlerle karşılaştırır; hiçbiri tutmazsa _ çalışır. if/elif ile yazılmış doğru çözüm de kabul edilir.",
       "tests": [
-        { "label": "Örnek", "stdin": "run", "expectedOutput": "Başlıyor" },
-        { "label": "start", "stdin": "start", "expectedOutput": "Başlıyor" },
-        { "label": "stop", "stdin": "stop", "expectedOutput": "Duruyor" },
-        { "label": "Büyük harf", "stdin": "STOP", "expectedOutput": "Bilinmeyen" }
+        {
+          "label": "Örnek",
+          "stdin": "run",
+          "expectedOutput": "Başlıyor"
+        },
+        {
+          "label": "start",
+          "stdin": "start",
+          "expectedOutput": "Başlıyor"
+        },
+        {
+          "label": "stop",
+          "stdin": "stop",
+          "expectedOutput": "Duruyor"
+        },
+        {
+          "label": "Büyük harf",
+          "stdin": "STOP",
+          "expectedOutput": "Bilinmeyen"
+        }
       ],
       "exampleInput": "run"
     },
@@ -773,13 +1031,32 @@
       "answer": "n = int(input())\nsteps = 0\nwhile n > 1:\n    n //= 2\n    steps += 1\nprint(steps)",
       "solutionCode": "n = int(input())\nsteps = 0\nwhile n > 1:\n    n //= 2\n    steps += 1\nprint(steps)",
       "expectedOutput": "3",
-      "hints": ["Koşul: while n > 1.", "Her turda n //= 2 ve steps += 1."],
+      "hints": [
+        "Koşul: while n > 1.",
+        "Her turda n //= 2 ve steps += 1."
+      ],
       "explanation": "Tekrar sayısı önceden bilinmediği için while uygundur. 1 girilirse döngü hiç dönmez ve 0 yazılır.",
       "tests": [
-        { "label": "Örnek", "stdin": "10", "expectedOutput": "3" },
-        { "label": "Zaten 1", "stdin": "1", "expectedOutput": "0" },
-        { "label": "İkinin kuvveti", "stdin": "8", "expectedOutput": "3" },
-        { "label": "Büyük sayı", "stdin": "1000", "expectedOutput": "9" }
+        {
+          "label": "Örnek",
+          "stdin": "10",
+          "expectedOutput": "3"
+        },
+        {
+          "label": "Zaten 1",
+          "stdin": "1",
+          "expectedOutput": "0"
+        },
+        {
+          "label": "İkinin kuvveti",
+          "stdin": "8",
+          "expectedOutput": "3"
+        },
+        {
+          "label": "Büyük sayı",
+          "stdin": "1000",
+          "expectedOutput": "9"
+        }
       ],
       "exampleInput": "10"
     },
@@ -794,13 +1071,32 @@
       "answer": "n = int(input())\ntotal = 0\nfor i in range(1, n + 1):\n    total += i\nprint(total)",
       "solutionCode": "n = int(input())\ntotal = 0\nfor i in range(1, n + 1):\n    total += i\nprint(total)",
       "expectedOutput": "15",
-      "hints": ["n'i dahil etmek için bitiş n + 1 olmalı.", "total += i ile biriktir."],
+      "hints": [
+        "n'i dahil etmek için bitiş n + 1 olmalı.",
+        "total += i ile biriktir."
+      ],
       "explanation": "range(1, n + 1) 1'den n'e kadar sayıları üretir; total biriktirici olarak döngüden önce başlatılır.",
       "tests": [
-        { "label": "Örnek", "stdin": "5", "expectedOutput": "15" },
-        { "label": "Tek sayı", "stdin": "1", "expectedOutput": "1" },
-        { "label": "Sıfır", "stdin": "0", "expectedOutput": "0" },
-        { "label": "Yüz", "stdin": "100", "expectedOutput": "5050" }
+        {
+          "label": "Örnek",
+          "stdin": "5",
+          "expectedOutput": "15"
+        },
+        {
+          "label": "Tek sayı",
+          "stdin": "1",
+          "expectedOutput": "1"
+        },
+        {
+          "label": "Sıfır",
+          "stdin": "0",
+          "expectedOutput": "0"
+        },
+        {
+          "label": "Yüz",
+          "stdin": "100",
+          "expectedOutput": "5050"
+        }
       ],
       "exampleInput": "5"
     },
@@ -815,13 +1111,32 @@
       "answer": "n = int(input())\nfor i in range(1, 6):\n    print(f\"{n} x {i} = {n * i}\")",
       "solutionCode": "n = int(input())\nfor i in range(1, 6):\n    print(f\"{n} x {i} = {n * i}\")",
       "expectedOutput": "3 x 1 = 3\n3 x 2 = 6\n3 x 3 = 9\n3 x 4 = 12\n3 x 5 = 15",
-      "hints": ["range(1, 6) 1'den 5'e kadar sayı üretir.", "f-string ile f\"{n} x {i} = {n * i}\" yaz."],
+      "hints": [
+        "range(1, 6) 1'den 5'e kadar sayı üretir.",
+        "f-string ile f\"{n} x {i} = {n * i}\" yaz."
+      ],
       "explanation": "Döngü değişkeni i her turda bir artar; satır f-string ile biçimlenir.",
       "tests": [
-        { "label": "Örnek", "stdin": "3", "expectedOutput": "3 x 1 = 3\n3 x 2 = 6\n3 x 3 = 9\n3 x 4 = 12\n3 x 5 = 15" },
-        { "label": "Sıfır", "stdin": "0", "expectedOutput": "0 x 1 = 0\n0 x 2 = 0\n0 x 3 = 0\n0 x 4 = 0\n0 x 5 = 0" },
-        { "label": "Yedi", "stdin": "7", "expectedOutput": "7 x 1 = 7\n7 x 2 = 14\n7 x 3 = 21\n7 x 4 = 28\n7 x 5 = 35" },
-        { "label": "Negatif", "stdin": "-2", "expectedOutput": "-2 x 1 = -2\n-2 x 2 = -4\n-2 x 3 = -6\n-2 x 4 = -8\n-2 x 5 = -10" }
+        {
+          "label": "Örnek",
+          "stdin": "3",
+          "expectedOutput": "3 x 1 = 3\n3 x 2 = 6\n3 x 3 = 9\n3 x 4 = 12\n3 x 5 = 15"
+        },
+        {
+          "label": "Sıfır",
+          "stdin": "0",
+          "expectedOutput": "0 x 1 = 0\n0 x 2 = 0\n0 x 3 = 0\n0 x 4 = 0\n0 x 5 = 0"
+        },
+        {
+          "label": "Yedi",
+          "stdin": "7",
+          "expectedOutput": "7 x 1 = 7\n7 x 2 = 14\n7 x 3 = 21\n7 x 4 = 28\n7 x 5 = 35"
+        },
+        {
+          "label": "Negatif",
+          "stdin": "-2",
+          "expectedOutput": "-2 x 1 = -2\n-2 x 2 = -4\n-2 x 3 = -6\n-2 x 4 = -8\n-2 x 5 = -10"
+        }
       ],
       "exampleInput": "3"
     },
@@ -836,13 +1151,32 @@
       "answer": "word = input()\nresult = \"\"\nfor ch in word:\n    if ch in \"aeıioöuü\":\n        continue\n    result += ch\nprint(result)",
       "solutionCode": "word = input()\nresult = \"\"\nfor ch in word:\n    if ch in \"aeıioöuü\":\n        continue\n    result += ch\nprint(result)",
       "expectedOutput": "blgsyr",
-      "hints": ["for ch in word ile harfleri gez.", "Ünlüyse continue, değilse result += ch."],
+      "hints": [
+        "for ch in word ile harfleri gez.",
+        "Ünlüyse continue, değilse result += ch."
+      ],
       "explanation": "continue ünlü harflerde ekleme satırını atlar. Kelime yalnız ünlülerden oluşuyorsa boş satır yazdırılır.",
       "tests": [
-        { "label": "Örnek", "stdin": "bilgisayar", "expectedOutput": "blgsyr" },
-        { "label": "Kısa", "stdin": "kod", "expectedOutput": "kd" },
-        { "label": "Yalnız ünlü", "stdin": "aaa", "expectedOutput": "" },
-        { "label": "Türkçe ünlüler", "stdin": "gözlük", "expectedOutput": "gzlk" }
+        {
+          "label": "Örnek",
+          "stdin": "bilgisayar",
+          "expectedOutput": "blgsyr"
+        },
+        {
+          "label": "Kısa",
+          "stdin": "kod",
+          "expectedOutput": "kd"
+        },
+        {
+          "label": "Yalnız ünlü",
+          "stdin": "aaa",
+          "expectedOutput": ""
+        },
+        {
+          "label": "Türkçe ünlüler",
+          "stdin": "gözlük",
+          "expectedOutput": "gzlk"
+        }
       ],
       "exampleInput": "bilgisayar"
     },
@@ -857,13 +1191,32 @@
       "answer": "n = int(input())\nfor d in range(2, n):\n    if n % d == 0:\n        print(\"asal değil\")\n        break\nelse:\n    print(\"asal\")",
       "solutionCode": "n = int(input())\nfor d in range(2, n):\n    if n % d == 0:\n        print(\"asal değil\")\n        break\nelse:\n    print(\"asal\")",
       "expectedOutput": "asal",
-      "hints": ["Bölen bulunca yazdır ve break.", "for ile aynı hizada else: break olmadıysa asaldır."],
+      "hints": [
+        "Bölen bulunca yazdır ve break.",
+        "for ile aynı hizada else: break olmadıysa asaldır."
+      ],
       "explanation": "Bölen bulununca break else'i atlar. 2 girildiğinde range(2, 2) boştur; döngü hiç dönmez ama break da olmadığı için else çalışır ve \"asal\" yazılır.",
       "tests": [
-        { "label": "Örnek", "stdin": "13", "expectedOutput": "asal" },
-        { "label": "Bileşik", "stdin": "15", "expectedOutput": "asal değil" },
-        { "label": "En küçük asal", "stdin": "2", "expectedOutput": "asal" },
-        { "label": "Kare sayı", "stdin": "9", "expectedOutput": "asal değil" }
+        {
+          "label": "Örnek",
+          "stdin": "13",
+          "expectedOutput": "asal"
+        },
+        {
+          "label": "Bileşik",
+          "stdin": "15",
+          "expectedOutput": "asal değil"
+        },
+        {
+          "label": "En küçük asal",
+          "stdin": "2",
+          "expectedOutput": "asal"
+        },
+        {
+          "label": "Kare sayı",
+          "stdin": "9",
+          "expectedOutput": "asal değil"
+        }
       ],
       "exampleInput": "13"
     },
@@ -878,13 +1231,32 @@
       "answer": "sentence = input()\nfor i, word in enumerate(sentence.split(), start=1):\n    print(f\"{i}. {word}\")",
       "solutionCode": "sentence = input()\nfor i, word in enumerate(sentence.split(), start=1):\n    print(f\"{i}. {word}\")",
       "expectedOutput": "1. merhaba\n2. dünya",
-      "hints": ["split() boşluklardan böler ve fazla boşlukları yok sayar.", "enumerate(..., start=1)."],
+      "hints": [
+        "split() boşluklardan böler ve fazla boşlukları yok sayar.",
+        "enumerate(..., start=1)."
+      ],
       "explanation": "enumerate numarayı kendisi tutar; elle sayaç değişkeni gerekmez.",
       "tests": [
-        { "label": "Örnek", "stdin": "merhaba dünya", "expectedOutput": "1. merhaba\n2. dünya" },
-        { "label": "Tek kelime", "stdin": "tek", "expectedOutput": "1. tek" },
-        { "label": "Fazla boşluk", "stdin": "  a   b  ", "expectedOutput": "1. a\n2. b" },
-        { "label": "Üç kelime", "stdin": "x y z", "expectedOutput": "1. x\n2. y\n3. z" }
+        {
+          "label": "Örnek",
+          "stdin": "merhaba dünya",
+          "expectedOutput": "1. merhaba\n2. dünya"
+        },
+        {
+          "label": "Tek kelime",
+          "stdin": "tek",
+          "expectedOutput": "1. tek"
+        },
+        {
+          "label": "Fazla boşluk",
+          "stdin": "  a   b  ",
+          "expectedOutput": "1. a\n2. b"
+        },
+        {
+          "label": "Üç kelime",
+          "stdin": "x y z",
+          "expectedOutput": "1. x\n2. y\n3. z"
+        }
       ],
       "exampleInput": "merhaba dünya"
     },
@@ -899,13 +1271,32 @@
       "answer": "names = input().split()\nscores = input().split()\nfor name, score in zip(names, scores):\n    print(f\"{name}: {score}\")",
       "solutionCode": "names = input().split()\nscores = input().split()\nfor name, score in zip(names, scores):\n    print(f\"{name}: {score}\")",
       "expectedOutput": "Ada: 90\nCan: 75",
-      "hints": ["for name, score in zip(names, scores).", "zip en kısa dizide durur; ayrıca kontrol gerekmez."],
+      "hints": [
+        "for name, score in zip(names, scores).",
+        "zip en kısa dizide durur; ayrıca kontrol gerekmez."
+      ],
       "explanation": "zip iki diziyi sırayla eşleştirir ve kısa olan bitince durur.",
       "tests": [
-        { "label": "Örnek", "stdin": "Ada Can\n90 75", "expectedOutput": "Ada: 90\nCan: 75" },
-        { "label": "Fazla isim", "stdin": "Ada Can Ece\n1 2", "expectedOutput": "Ada: 1\nCan: 2" },
-        { "label": "Fazla puan", "stdin": "Tek\n100 50", "expectedOutput": "Tek: 100" },
-        { "label": "Üçlü", "stdin": "a b c\n1 2 3", "expectedOutput": "a: 1\nb: 2\nc: 3" }
+        {
+          "label": "Örnek",
+          "stdin": "Ada Can\n90 75",
+          "expectedOutput": "Ada: 90\nCan: 75"
+        },
+        {
+          "label": "Fazla isim",
+          "stdin": "Ada Can Ece\n1 2",
+          "expectedOutput": "Ada: 1\nCan: 2"
+        },
+        {
+          "label": "Fazla puan",
+          "stdin": "Tek\n100 50",
+          "expectedOutput": "Tek: 100"
+        },
+        {
+          "label": "Üçlü",
+          "stdin": "a b c\n1 2 3",
+          "expectedOutput": "a: 1\nb: 2\nc: 3"
+        }
       ],
       "exampleInput": "Ada Can\n90 75"
     },
@@ -920,13 +1311,32 @@
       "answer": "n = int(input())\nfor row in range(1, n + 1):\n    line = \"\"\n    for _ in range(row):\n        line += \"*\"\n    print(line)",
       "solutionCode": "n = int(input())\nfor row in range(1, n + 1):\n    line = \"\"\n    for _ in range(row):\n        line += \"*\"\n    print(line)",
       "expectedOutput": "*\n**\n***",
-      "hints": ["Dış döngü 1'den n'e kadar satır numarasını verir.", "line her satırda boş başlar; iç döngü row kadar * ekler. \"*\" * row da kabul edilir."],
+      "hints": [
+        "Dış döngü 1'den n'e kadar satır numarasını verir.",
+        "line her satırda boş başlar; iç döngü row kadar * ekler. \"*\" * row da kabul edilir."
+      ],
       "explanation": "İç döngü her dış turda baştan çalışır ve satır uzunluğu row kadar olur. n = 0 iken hiçbir satır yazılmaz.",
       "tests": [
-        { "label": "Örnek", "stdin": "3", "expectedOutput": "*\n**\n***" },
-        { "label": "Tek satır", "stdin": "1", "expectedOutput": "*" },
-        { "label": "Sıfır", "stdin": "0", "expectedOutput": "" },
-        { "label": "Dört satır", "stdin": "4", "expectedOutput": "*\n**\n***\n****" }
+        {
+          "label": "Örnek",
+          "stdin": "3",
+          "expectedOutput": "*\n**\n***"
+        },
+        {
+          "label": "Tek satır",
+          "stdin": "1",
+          "expectedOutput": "*"
+        },
+        {
+          "label": "Sıfır",
+          "stdin": "0",
+          "expectedOutput": ""
+        },
+        {
+          "label": "Dört satır",
+          "stdin": "4",
+          "expectedOutput": "*\n**\n***\n****"
+        }
       ],
       "exampleInput": "3"
     },
@@ -938,7 +1348,12 @@
       "difficulty": 2,
       "prompt": "Bu kod hangi hatayı üretir?",
       "code": "count = \"5\"\nfor i in range(count):\n    print(i)",
-      "options": ["TypeError", "ValueError", "NameError", "IndexError"],
+      "options": [
+        "TypeError",
+        "ValueError",
+        "NameError",
+        "IndexError"
+      ],
       "answer": "TypeError",
       "expectedError": "TypeError",
       "optionFeedback": {
@@ -946,7 +1361,10 @@
         "NameError": "count tanımlı; sorun değerin tipinde.",
         "IndexError": "Kodda indeksleme yok."
       },
-      "hints": ["range tam sayı ister.", "count bir metin; önce int(count) gerekir."],
+      "hints": [
+        "range tam sayı ister.",
+        "count bir metin; önce int(count) gerekir."
+      ],
       "explanation": "range str kabul etmez ve TypeError verir. input() sonucu da str olduğu için önce int'e dönüştürülmelidir."
     },
     {
@@ -957,7 +1375,12 @@
       "difficulty": 2,
       "prompt": "Üç harf yazdırıldıktan sonra hangi hata oluşur?",
       "code": "word = \"abc\"\nfor i in range(4):\n    print(word[i])",
-      "options": ["IndexError", "ValueError", "TypeError", "StopIteration"],
+      "options": [
+        "IndexError",
+        "ValueError",
+        "TypeError",
+        "StopIteration"
+      ],
       "answer": "IndexError",
       "expectedError": "IndexError",
       "optionFeedback": {
@@ -965,7 +1388,10 @@
         "TypeError": "Metinler int ile indekslenebilir; tip sorunu yok.",
         "StopIteration": "for döngüsü StopIteration'ı kendisi yakalar; burada sorun word[3] erişimi."
       },
-      "hints": ["word'ün indeksleri 0, 1, 2.", "range(4) 3'ü de üretir."],
+      "hints": [
+        "word'ün indeksleri 0, 1, 2.",
+        "range(4) 3'ü de üretir."
+      ],
       "explanation": "i = 3 iken word[3] metnin dışındadır ve IndexError oluşur. Harfleri gezmek için for ch in word veya enumerate(word) kullanmak bu hatayı baştan önler."
     },
     {
@@ -976,7 +1402,12 @@
       "difficulty": 2,
       "prompt": "Bu döngü hangi hatayı üretir?",
       "code": "count = 0\nwhile count < 3:\n    count += 1\n    total += count\nprint(total)",
-      "options": ["NameError", "TypeError", "ZeroDivisionError", "ValueError"],
+      "options": [
+        "NameError",
+        "TypeError",
+        "ZeroDivisionError",
+        "ValueError"
+      ],
       "answer": "NameError",
       "expectedError": "NameError",
       "optionFeedback": {
@@ -984,7 +1415,10 @@
         "ZeroDivisionError": "Kodda bölme yok.",
         "ValueError": "Geçersiz bir değer dönüşümü yok; sorun eksik isim."
       },
-      "hints": ["total += count, total'ın önceki değerini okur.", "Biriktirici döngüden önce başlatılmamış."],
+      "hints": [
+        "total += count, total'ın önceki değerini okur.",
+        "Biriktirici döngüden önce başlatılmamış."
+      ],
       "explanation": "total += count ifadesi önce total'ı okur; total hiç tanımlanmadığı için ilk turda NameError oluşur. Döngüden önce total = 0 yaz."
     },
     {
@@ -995,7 +1429,12 @@
       "difficulty": 2,
       "prompt": "Bu kod hangi hatayı üretir?",
       "code": "for n in range(3):\n    print(n)\n  print(\"bitti\")",
-      "options": ["IndentationError", "SyntaxError", "TypeError", "NameError"],
+      "options": [
+        "IndentationError",
+        "SyntaxError",
+        "TypeError",
+        "NameError"
+      ],
       "answer": "IndentationError",
       "expectedError": "IndentationError",
       "optionFeedback": {
@@ -1003,7 +1442,10 @@
         "TypeError": "Kod çalışmaya hiç başlamaz; sorun girinti hizasında.",
         "NameError": "Tüm isimler tanımlı; hata kod çalışmadan önce oluşur."
       },
-      "hints": ["Son satır iki boşlukla girintili.", "Ne döngü gövdesiyle (4) ne de dış blokla (0) aynı hizada."],
+      "hints": [
+        "Son satır iki boşlukla girintili.",
+        "Ne döngü gövdesiyle (4) ne de dış blokla (0) aynı hizada."
+      ],
       "explanation": "Son satırın girintisi hiçbir bloğa uymaz ve IndentationError oluşur. Döngüden sonra çalışacaksa sütun 0'a, döngü içindeyse 4 boşluğa hizala."
     }
   ]
