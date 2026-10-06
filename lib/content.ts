@@ -1,8 +1,9 @@
-import module01 from "@/content/module-01.json";
-import module02 from "@/content/module-02.json";
 import type { LearningModule } from "@/lib/learning-types";
 
-export const learningModules = [module01, module02] as LearningModule[];
+// Every content/module-NN.json is picked up at build time; adding a module needs no code change.
+// A non-generic glob declaration in the toolchain types shadows Vite's, hence the cast.
+const moduleFiles = import.meta.glob("../content/module-*.json", { eager: true, import: "default" }) as unknown as Record<string, LearningModule>;
+export const learningModules = Object.values(moduleFiles).sort((a, b) => a.id - b.id);
 
 export const curriculum = [
   "Temeller", "String'ler", "Akış kontrolü", "Veri yapıları", "Referans ve kopyalama", "Fonksiyonlar",
@@ -12,6 +13,15 @@ export const curriculum = [
 
 export function getModule(id: number) {
   return learningModules.find((item) => item.id === id) ?? learningModules[0];
+}
+
+export function getSection(moduleId: number, sectionId: string) {
+  return learningModules.find((item) => item.id === moduleId)?.sections.find((section) => section.id === sectionId);
+}
+
+/** Module that owns a question, derived from its id prefix ("m2-q10" → 2). */
+export function questionModuleId(questionId: string) {
+  return Number(/^m(\d+)-/.exec(questionId)?.[1] ?? 0);
 }
 
 export function getPracticeQuestions(module: LearningModule) {
@@ -30,4 +40,3 @@ export function seededTestQuestions(module: LearningModule, seed: number, count 
   const remaining = current.filter(question => !writing.includes(question));
   return shuffle([...writing, ...shuffle(remaining).slice(0, count - previousCount - writing.length), ...shuffle(previous).slice(0, previousCount)]);
 }
-

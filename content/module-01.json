@@ -3,6 +3,7 @@
   "slug": "temeller",
   "title": "Temeller",
   "description": "Python kodunun yapı taşlarını okuyup takip etmeyi öğren.",
+  "contentVersion": 2,
   "estimatedMinutes": 95,
   "practiceIds": [
     "m1-q01",
@@ -26,8 +27,13 @@
       "id": "repl-syntax",
       "title": "Kurulum, REPL, girinti ve yorumlar",
       "eyebrow": "Kodu çalıştırmadan önce",
+      "objectives": [
+        "REPL ile .py dosyası arasındaki farkı açıklar.",
+        "Girintinin blokları nasıl belirlediğini okur."
+      ],
+      "prerequisites": [],
       "summary": "REPL tek satırlık denemeler içindir; dosyalar ise kalıcı programları taşır. Python kod bloklarını süslü parantezle değil girintiyle tanır.",
-      "explanation": "REPL'de >>> işaretinden sonra bir ifade yazıp hemen sonucunu görürsün. Dosyada print() kullanırsan değer ekrana basılır. # ile başlayan bölüm yorumdur ve çalıştırılmaz. PEP 8'e göre bloklar dört boşluk girintilenir; sekme ve boşluğu karıştırmak hata üretir.",
+      "explanation": "Bu sitedeki editörler Python 3.12'yi tarayıcında çalıştırır; başlamak için kurulum gerekmez. Kendi bilgisayarında çalışmak için python.org'dan Python 3.12 veya üstünü kur, terminalde python --version (Windows'ta py --version) ile sürümü kontrol et. Terminalde yalnızca python (Windows'ta py) yazınca REPL açılır: >>> işaretinden sonra bir ifade yazıp hemen sonucunu görürsün, exit() ile çıkarsın. Kalıcı programı merhaba.py gibi bir dosyaya yazıp python merhaba.py ile çalıştırırsın; dosyada sonucu görmek için print() gerekir. # ile başlayan bölüm yorumdur ve çalıştırılmaz. PEP 8'e göre bloklar dört boşluk girintilenir; sekme ve boşluğu tutarsız karıştırmak TabError üretir.",
       "code": "temperature = 24\n\nif temperature > 20:\n    # Bu satır yalnızca koşul doğruysa çalışır.\n    print(\"Hava ılık\")",
       "expectedOutput": "Hava ılık",
       "why": "Koşul True olduğu için girintili blok çalışır. Yorum satırı Python tarafından yok sayılır.",
@@ -53,6 +59,13 @@
       "id": "variables-types",
       "title": "Değişkenler ve temel tipler",
       "eyebrow": "İsimler nesnelere bağlanır",
+      "objectives": [
+        "Bir ismin bir nesneye bağlandığını açıklar.",
+        "int, float, str, bool ve None tiplerini tanır."
+      ],
+      "prerequisites": [
+        "repl-syntax"
+      ],
       "summary": "Bir değişken kutu değildir; bir nesneye bağlanan isimdir. Python tip bilgisini isimde değil değerde taşır.",
       "explanation": "int tam sayı, float ondalıklı sayı, str metin, bool True/False ve None değer yokluğunu temsil eder. type() bir nesnenin tipini gösterir. Değişken ve fonksiyon adlarında PEP 8 snake_case önerir.",
       "code": "user_count = 12\naverage_score = 8.5\ncourse_name = \"Python\"\nis_active = True\nlast_error = None\n\nprint(type(user_count).__name__)\nprint(last_error is None)",
@@ -80,6 +93,13 @@
       "id": "conversion-input",
       "title": "Tip dönüşümleri ve input()",
       "eyebrow": "Kullanıcı girdisi her zaman metindir",
+      "objectives": [
+        "input() sonucunun str olduğunu bilir ve uygun dönüşümü yapar.",
+        "Geçersiz dönüşümün ValueError ürettiğini tanır."
+      ],
+      "prerequisites": [
+        "variables-types"
+      ],
       "summary": "input() sonucunun tipi str'dir. Sayısal işlemden önce uygun dönüşümü açıkça yapmalısın.",
       "explanation": "int(), float(), str() ve bool() yeni bir değer üretir. int('12') çalışır; int('12.5') ValueError üretir. bool('False') bile True'dur çünkü boş olmayan her metin truthy kabul edilir.",
       "code": "raw_age = \"21\"\nage = int(raw_age)\nnext_age = age + 1\n\nprint(next_age)\nprint(type(next_age).__name__)",
@@ -107,6 +127,13 @@
       "id": "arithmetic",
       "title": "Aritmetik ve atama operatörleri",
       "eyebrow": "İşlem önceliğini takip et",
+      "objectives": [
+        "/, //, %, ** ve işlem önceliğini okuyup sonucu tahmin eder.",
+        "Artırmalı atamanın (+=) değeri nasıl güncellediğini açıklar."
+      ],
+      "prerequisites": [
+        "variables-types"
+      ],
       "summary": "+, -, *, / temel işlemlerdir. // taban bölme, % kalan, ** üs alma yapar. += gibi işlemler değeri günceller.",
       "explanation": "/ her zaman float üretir. // sonucu aşağı yuvarlar; negatif sayılarda sıfıra değil eksi sonsuza yaklaşır. ** sağdan birleşir: 2 ** 3 ** 2 ifadesi 2 ** 9 olur.",
       "code": "total = 17\nbox_size = 5\n\nprint(total // box_size)\nprint(total % box_size)\ntotal += 3\nprint(total)",
@@ -134,8 +161,15 @@
       "id": "comparison-logic",
       "title": "Karşılaştırma, mantık, in ve is",
       "eyebrow": "Aynı değer ile aynı nesne farklıdır",
+      "objectives": [
+        "== ile is farkını açıklar.",
+        "and/or ifadelerinin hangi değeri döndürdüğünü izler."
+      ],
+      "prerequisites": [
+        "variables-types"
+      ],
       "summary": "== değer eşitliğini, is nesne kimliğini kontrol eder. and, or, not koşulları; in üyeliği birleştirir.",
-      "explanation": "Karşılaştırmalar bool üretir. and ilk falsy değeri, yoksa son değeri; or ilk truthy değeri döndürür. Bu nedenle yalnızca bool değil nesnenin kendisini de döndürebilirler.",
+      "explanation": "Karşılaştırmalar bool üretir. and ilk falsy değeri, hiç yoksa son değeri döndürür. or ilk truthy değeri, hiç yoksa son değeri döndürür. Bu nedenle yalnızca bool değil nesnenin kendisini de döndürebilirler: \"\" or \"misafir\" ifadesi \"misafir\" metnini, 0 and 5 ifadesi 0 değerini verir.",
       "code": "role = \"editor\"\nis_active = True\nallowed_roles = {\"admin\", \"editor\"}\n\nprint(role in allowed_roles and is_active)\nprint(role is None)",
       "expectedOutput": "True\nFalse",
       "why": "editor kümenin üyesidir ve hesap aktiftir. role bir metne bağlı olduğu için None nesnesi değildir.",
@@ -161,6 +195,13 @@
       "id": "bitwise",
       "title": "Bit düzeyi operatörler",
       "eyebrow": "Sayıların ikili gösterimi",
+      "objectives": [
+        "&, |, ^, << işlemlerini ikilik gösterimle hesaplar.",
+        "Bayrak kodunda & ile bit kontrolünü okur."
+      ],
+      "prerequisites": [
+        "arithmetic"
+      ],
       "summary": "&, |, ^, ~, << ve >> sayıları bit bit işler. Günlük uygulamalarda seyrektir; izin bayrakları ve düşük seviye kodda görülür.",
       "explanation": "5 ikilik sistemde 0101, 3 ise 0011'dir. & yalnızca iki tarafta da 1 olan bitleri korur. | taraflardan en az birinde 1 olan biti korur. Kaydırma işlemleri bitleri sağa veya sola taşır.",
       "code": "read = 0b001\nwrite = 0b010\nexecute = 0b100\npermissions = read | write\n\nprint(permissions)\nprint(bool(permissions & write))\nprint(bool(permissions & execute))",
@@ -188,6 +229,13 @@
       "id": "float-precision",
       "title": "Float hassasiyeti",
       "eyebrow": "Ondalık görünen sayı ikilikte yaklaşık tutulur",
+      "objectives": [
+        "Float değerlerinin yaklaşık saklandığını açıklar.",
+        "math.isclose ve Decimal kullanım yerini seçer."
+      ],
+      "prerequisites": [
+        "arithmetic"
+      ],
       "summary": "0.1 gibi bazı değerler ikilik sistemde tam temsil edilemez. Bu yüzden float değerleri doğrudan eşitlikle karşılaştırmak risklidir.",
       "explanation": "0.1 + 0.2 işlemi matematikte 0.3 olsa da bellekteki yaklaşık değer 0.30000000000000004 görünür. Yakınlık karşılaştırması için math.isclose kullanılır; para için Decimal daha uygundur.",
       "code": "import math\n\nresult = 0.1 + 0.2\nprint(result)\nprint(math.isclose(result, 0.3))",
@@ -215,6 +263,13 @@
       "id": "truthy-ternary-walrus",
       "title": "Truthy/falsy, ternary ve walrus",
       "eyebrow": "Kısa ifadeleri doğru oku",
+      "objectives": [
+        "Truthy/falsy değerleri ayırır.",
+        "Ternary ve := ifadelerini okuyup sonucunu izler."
+      ],
+      "prerequisites": [
+        "comparison-logic"
+      ],
       "summary": "Boş koleksiyonlar, boş metin, 0 ve None falsy'dir. Ternary tek ifadede seçim, := ise atama yaparken değer üretir.",
       "explanation": "value if condition else fallback ifadesi iki değerden birini seçer. Walrus operatörü (:=), hesaplanan değeri koşul içinde isimlendirir. Okunabilirliği artırdığı yerde kullanılmalı; her atamayı kısaltmak için değil.",
       "code": "items = [\"dosya.py\", \"test.py\"]\nlabel = \"Dolu\" if items else \"Boş\"\nprint(label)\n\nif (count := len(items)) > 1:\n    print(f\"{count} öğe bulundu\")",
@@ -244,6 +299,8 @@
       "id": "m1-q01",
       "type": "output",
       "topic": "aritmetik",
+      "sectionId": "arithmetic",
+      "difficulty": 1,
       "prompt": "Bu kodun çıktısı ne?",
       "code": "print(2 + 3 * 4)",
       "options": [
@@ -264,6 +321,8 @@
       "id": "m1-q02",
       "type": "output",
       "topic": "aritmetik",
+      "sectionId": "arithmetic",
+      "difficulty": 1,
       "prompt": "Bu kodun çıktısı ne?",
       "code": "print(7 // 2)",
       "options": [
@@ -278,12 +337,14 @@
         "// sonucu negatif sonsuza doğru yuvarlar; yalnız pozitif sayılarda kesir kısmını atmakla aynı sonucu verir.",
         "Ondalık kısım atılır."
       ],
-      "explanation": "7'nin içinde iki kez 3 tam grup vardır; sonuç 3'tür."
+      "explanation": "7'nin içinde 3 tane tam 2 vardır (2 × 3 = 6); artan 1 atılır ve sonuç 3 olur."
     },
     {
       "id": "m1-q03",
       "type": "output",
       "topic": "aritmetik",
+      "sectionId": "arithmetic",
+      "difficulty": 1,
       "prompt": "Bu kodun çıktısı ne?",
       "code": "print(7 % 2)",
       "options": [
@@ -304,6 +365,8 @@
       "id": "m1-q04",
       "type": "output",
       "topic": "aritmetik",
+      "sectionId": "arithmetic",
+      "difficulty": 3,
       "prompt": "Üs alma sağdan birleşir. Çıktı ne?",
       "code": "print(2 ** 3 ** 2)",
       "options": [
@@ -324,6 +387,8 @@
       "id": "m1-q05",
       "type": "output",
       "topic": "dönüşüm",
+      "sectionId": "conversion-input",
+      "difficulty": 1,
       "prompt": "Bu kodun çıktısı ne?",
       "code": "print(int(\"12\") + 3)",
       "options": [
@@ -344,6 +409,8 @@
       "id": "m1-q06",
       "type": "output",
       "topic": "dönüşüm",
+      "sectionId": "conversion-input",
+      "difficulty": 1,
       "prompt": "Bu kodun çıktısı ne?",
       "code": "print(float(\"2.5\") * 2)",
       "options": [
@@ -364,6 +431,8 @@
       "id": "m1-q07",
       "type": "output",
       "topic": "truthy-falsy",
+      "sectionId": "truthy-ternary-walrus",
+      "difficulty": 1,
       "prompt": "Boş metnin bool değeri nedir?",
       "code": "print(bool(\"\"))",
       "options": [
@@ -384,6 +453,8 @@
       "id": "m1-q08",
       "type": "output",
       "topic": "truthy-falsy",
+      "sectionId": "truthy-ternary-walrus",
+      "difficulty": 1,
       "prompt": "İçinde 0 karakteri olan metnin bool değeri nedir?",
       "code": "print(bool(\"0\"))",
       "options": [
@@ -404,6 +475,8 @@
       "id": "m1-q09",
       "type": "output",
       "topic": "float",
+      "sectionId": "float-precision",
+      "difficulty": 1,
       "prompt": "Bu kodun gerçek çıktısı ne?",
       "code": "print(0.1 + 0.2)",
       "options": [
@@ -424,6 +497,8 @@
       "id": "m1-q10",
       "type": "output",
       "topic": "atama",
+      "sectionId": "arithmetic",
+      "difficulty": 1,
       "prompt": "Çıktı ne?",
       "code": "score = 5\nscore += 2\nprint(score)",
       "options": [
@@ -444,6 +519,8 @@
       "id": "m1-q11",
       "type": "output",
       "topic": "mantık",
+      "sectionId": "comparison-logic",
+      "difficulty": 1,
       "prompt": "İki karşılaştırmanın sonucu ne?",
       "code": "print(3 < 5 and 10 != 9)",
       "options": [
@@ -464,6 +541,8 @@
       "id": "m1-q12",
       "type": "output",
       "topic": "üyelik",
+      "sectionId": "comparison-logic",
+      "difficulty": 1,
       "prompt": "Bu üyelik kontrolü ne üretir?",
       "code": "print(\"py\" in \"python\")",
       "options": [
@@ -484,6 +563,8 @@
       "id": "m1-q13",
       "type": "output",
       "topic": "kimlik",
+      "sectionId": "comparison-logic",
+      "difficulty": 1,
       "prompt": "None kimliği kontrolünün çıktısı ne?",
       "code": "value = None\nprint(value is None)",
       "options": [
@@ -504,6 +585,8 @@
       "id": "m1-q14",
       "type": "output",
       "topic": "bitwise",
+      "sectionId": "bitwise",
+      "difficulty": 1,
       "prompt": "5 & 3 işleminin çıktısı ne?",
       "code": "print(5 & 3)",
       "options": [
@@ -524,6 +607,8 @@
       "id": "m1-q15",
       "type": "output",
       "topic": "bitwise",
+      "sectionId": "bitwise",
+      "difficulty": 1,
       "prompt": "5 | 2 işleminin çıktısı ne?",
       "code": "print(5 | 2)",
       "options": [
@@ -544,6 +629,8 @@
       "id": "m1-q16",
       "type": "output",
       "topic": "bitwise",
+      "sectionId": "bitwise",
+      "difficulty": 1,
       "prompt": "Sola kaydırma sonucu ne?",
       "code": "print(1 << 3)",
       "options": [
@@ -564,6 +651,8 @@
       "id": "m1-q17",
       "type": "output",
       "topic": "ternary",
+      "sectionId": "truthy-ternary-walrus",
+      "difficulty": 1,
       "prompt": "Ternary ifade hangi metni seçer?",
       "code": "age = 20\nlabel = \"yetişkin\" if age >= 18 else \"çocuk\"\nprint(label)",
       "options": [
@@ -584,6 +673,8 @@
       "id": "m1-q18",
       "type": "output",
       "topic": "truthy-falsy",
+      "sectionId": "truthy-ternary-walrus",
+      "difficulty": 1,
       "prompt": "Boş liste hangi dalı seçer?",
       "code": "items = []\nprint(\"var\" if items else \"yok\")",
       "options": [
@@ -604,6 +695,8 @@
       "id": "m1-q19",
       "type": "output",
       "topic": "walrus",
+      "sectionId": "truthy-ternary-walrus",
+      "difficulty": 1,
       "prompt": "Walrus ile bağlanan n değeri ne olur?",
       "code": "if (n := len(\"python\")) > 5:\n    print(n)",
       "options": [
@@ -624,6 +717,8 @@
       "id": "m1-q20",
       "type": "output",
       "topic": "float",
+      "sectionId": "float-precision",
+      "difficulty": 3,
       "prompt": "CPython bu yuvarlama için ne yazdırır?",
       "code": "print(round(2.675, 2))",
       "options": [
@@ -644,6 +739,8 @@
       "id": "m1-q21",
       "type": "bug",
       "topic": "isimlendirme",
+      "sectionId": "variables-types",
+      "difficulty": 2,
       "prompt": "Hatalı satırı ve nedeni seç.",
       "code": "user-name = \"Ada\"\nprint(user-name)",
       "options": [
@@ -658,12 +755,19 @@
         "Python tireyi çıkarma operatörü olarak okur.",
         "snake_case kullan: user_name."
       ],
-      "explanation": "Tire tanımlayıcı içinde geçerli değildir; user_name kullanılmalıdır."
+      "explanation": "Tire tanımlayıcı içinde geçerli değildir; user_name kullanılmalıdır.",
+      "optionFeedback": {
+        "2. satır: print metin alamaz": "print her tür değeri yazdırabilir; sorun daha ilk satırda başlar.",
+        "Hata yok": "Python user-name ifadesini user eksi name olarak okur; bir ifadeye atama yapılamaz.",
+        "İki satır da yalnızca PEP 8 uyarısıdır": "PEP 8 stil önerisidir; buradaki tire ise sözdizimi hatası (SyntaxError) üretir."
+      }
     },
     {
       "id": "m1-q22",
       "type": "bug",
       "topic": "girinti",
+      "sectionId": "repl-syntax",
+      "difficulty": 2,
       "prompt": "Kod neden çalışmaz?",
       "code": "if True:\nprint(\"merhaba\")",
       "options": [
@@ -678,12 +782,19 @@
         "if yeni bir blok başlatır.",
         "Blok gövdesi dört boşluk içeriden başlar."
       ],
-      "explanation": "Python if sonrasında girintili bir blok bekler."
+      "explanation": "Python if sonrasında girintili bir blok bekler.",
+      "optionFeedback": {
+        "True küçük yazılmalı": "Python'da doğru sabit True'dur; küçük true tanımsız bir isimdir.",
+        "İki nokta kaldırılmalı": "if satırı iki noktayla bitmek zorundadır; sorun gövdenin girintisizliğidir.",
+        "Metin tek tırnak olmalı": "Tek ve çift tırnak aynı str değerini üretir."
+      }
     },
     {
       "id": "m1-q23",
       "type": "bug",
       "topic": "dönüşüm",
+      "sectionId": "conversion-input",
+      "difficulty": 2,
       "prompt": "Kullanıcı 20 yazarsa sorun nedir?",
       "code": "age = \"20\"  # input() sonucunu temsil ediyor\nprint(age + 1)",
       "options": [
@@ -698,12 +809,19 @@
         "input dönüş tipini düşün.",
         "str ile int + operatörüyle toplanamaz."
       ],
-      "explanation": "age metindir; int(age) yapılmadan 1 ile toplamak TypeError üretir."
+      "explanation": "age metindir; int(age) yapılmadan 1 ile toplamak TypeError üretir.",
+      "optionFeedback": {
+        "input yalnızca sayı döndürür": "input her zaman str döndürür; kullanıcı rakam yazsa bile.",
+        "print toplama yapamaz": "print, içine verilen ifadenin sonucunu yazar; hata toplama ifadesinin kendisinde oluşur.",
+        "1 metin olmalı": "\"1\" yazmak hatayı kaldırır ama 201 üretir; amaç sayısal toplama olduğu için age dönüştürülmelidir."
+      }
     },
     {
       "id": "m1-q24",
       "type": "bug",
       "topic": "kimlik",
+      "sectionId": "comparison-logic",
+      "difficulty": 3,
       "prompt": "Bu karşılaştırmada hangi düzeltme gerekir?",
       "code": "name = \"Ada\"\nif name is \"Ada\":\n    print(\"eşit\")",
       "options": [
@@ -717,12 +835,19 @@
         "is değer değil nesne kimliği sorar.",
         "Metin içeriklerini == ile karşılaştır."
       ],
-      "explanation": "Aynı metin içeriğini sınamak için == kullanılır; is güvenilir değildir."
+      "explanation": "Aynı metin içeriğini sınamak için == kullanılır; is güvenilir değildir.",
+      "optionFeedback": {
+        "== yerine in kullanılmalı": "in alt metin arar; \"Ad\" in \"Ada\" de True olur. Eşitlik için == gerekir.",
+        "Metinler karşılaştırılamaz": "Metinler == ile içerik bakımından karşılaştırılabilir.",
+        "Düzeltme gerekmez": "is bazen tesadüfen True verir; bu CPython'un iç önbelleğine bağlıdır ve SyntaxWarning üretir."
+      }
     },
     {
       "id": "m1-q25",
       "type": "bug",
       "topic": "float",
+      "sectionId": "float-precision",
+      "difficulty": 3,
       "prompt": "Koşulun güvenilmez olma nedeni ne?",
       "code": "total = 0.1 + 0.2\nprint(total == 0.3)",
       "options": [
@@ -736,12 +861,19 @@
         "0.1 ikilikte tam temsil edilmez.",
         "math.isclose daha uygundur."
       ],
-      "explanation": "Yaklaşık float temsili nedeniyle değerler matematiksel olarak eşit görünse de == False olabilir."
+      "explanation": "Yaklaşık float temsili nedeniyle değerler matematiksel olarak eşit görünse de == False olabilir.",
+      "optionFeedback": {
+        "0.3 bir int'tir": "0.3 bir float değeridir; sorun float temsilindedir.",
+        "+ metin birleştirir": "İki taraf da sayı olduğu için + toplama yapar.",
+        "== atama yapar": "Atama = ile yapılır; == karşılaştırmadır."
+      }
     },
     {
       "id": "m1-q26",
       "type": "fill",
       "topic": "dönüşüm",
+      "sectionId": "conversion-input",
+      "difficulty": 1,
       "prompt": "Metni tam sayıya çevirecek boşluğu doldur.",
       "code": "count = ___(\"42\")\nprint(count + 1)",
       "answer": "int",
@@ -757,6 +889,8 @@
       "id": "m1-q27",
       "type": "fill",
       "topic": "aritmetik",
+      "sectionId": "arithmetic",
+      "difficulty": 1,
       "prompt": "Tam bölüm için operatörü yaz.",
       "code": "print(9 ___ 2)",
       "answer": "//",
@@ -772,6 +906,8 @@
       "id": "m1-q28",
       "type": "fill",
       "topic": "mantık",
+      "sectionId": "comparison-logic",
+      "difficulty": 1,
       "prompt": "İki koşulun da doğru olmasını isteyen sözcüğü yaz.",
       "code": "print(True ___ False)",
       "answer": "and",
@@ -787,6 +923,8 @@
       "id": "m1-q29",
       "type": "fill",
       "topic": "tipler",
+      "sectionId": "variables-types",
+      "difficulty": 1,
       "prompt": "Değer yokluğunu temsil eden sabiti yaz.",
       "code": "result = ___\nprint(result is None)",
       "answer": "None",
@@ -802,6 +940,8 @@
       "id": "m1-q30",
       "type": "fill",
       "topic": "isimlendirme",
+      "sectionId": "variables-types",
+      "difficulty": 1,
       "prompt": "PEP 8'e uygun değişken adını seç.",
       "options": [
         "userScore",
@@ -820,6 +960,8 @@
       "id": "m1-q31",
       "type": "order",
       "topic": "atama",
+      "sectionId": "arithmetic",
+      "difficulty": 2,
       "prompt": "Satırları 15 yazdıracak sıraya koy.",
       "lines": [
         "print(total)",
@@ -839,6 +981,8 @@
       "id": "m1-q32",
       "type": "order",
       "topic": "dönüşüm",
+      "sectionId": "conversion-input",
+      "difficulty": 2,
       "prompt": "Metin yaşı sayıya çevirip 21 yazdıracak sırayı kur.",
       "lines": [
         "print(age + 1)",
@@ -858,6 +1002,8 @@
       "id": "m1-q33",
       "type": "order",
       "topic": "koşul",
+      "sectionId": "repl-syntax",
+      "difficulty": 2,
       "prompt": "Doğru girintili koşulu oluştur.",
       "lines": [
         "    print(\"pozitif\")",
@@ -877,6 +1023,8 @@
       "id": "m1-q34",
       "type": "traceback",
       "topic": "traceback",
+      "sectionId": "variables-types",
+      "difficulty": 2,
       "prompt": "Bu kod hangi hata türünü üretir?",
       "code": "total = price * 2\nprint(total)",
       "options": [
@@ -891,12 +1039,19 @@
         "price ismi daha önce bağlanmadı.",
         "Tanımsız isim hatasını ara."
       ],
-      "explanation": "price tanımlı olmadığı için NameError oluşur."
+      "explanation": "price tanımlı olmadığı için NameError oluşur.",
+      "optionFeedback": {
+        "TypeError": "TypeError uyumsuz tiplerde oluşur; burada price hiç tanımlanmamıştır.",
+        "ValueError": "ValueError doğru tipte ama geçersiz değerde oluşur; burada değer yok, isim yok.",
+        "IndexError": "IndexError dizi sınırı dışına çıkınca oluşur; bu kodda indeksleme yok."
+      }
     },
     {
       "id": "m1-q35",
       "type": "traceback",
       "topic": "traceback",
+      "sectionId": "conversion-input",
+      "difficulty": 2,
       "prompt": "Bu kod hangi hata türünü üretir?",
       "code": "print(\"Yaş: \" + 20)",
       "options": [
@@ -911,12 +1066,19 @@
         "str ve int doğrudan + ile birleştirilemez.",
         "İşlem desteklenmeyen tiplerle yapılıyor."
       ],
-      "explanation": "İki farklı ve uyumsuz tip + işlemine verildiği için TypeError oluşur."
+      "explanation": "İki farklı ve uyumsuz tip + işlemine verildiği için TypeError oluşur.",
+      "optionFeedback": {
+        "NameError": "Kullanılan tüm değerler doğrudan yazılmış; tanımsız isim yok.",
+        "ValueError": "Sorun değerde değil, str ile int tiplerinin + ile birleşememesinde.",
+        "SyntaxError": "Kod sözdizimi olarak geçerlidir; hata çalışma sırasında oluşur."
+      }
     },
     {
       "id": "m1-q36",
       "type": "traceback",
       "topic": "traceback",
+      "sectionId": "conversion-input",
+      "difficulty": 2,
       "prompt": "Dönüşüm hangi hatayı üretir?",
       "code": "print(int(\"3.5\"))",
       "options": [
@@ -931,12 +1093,19 @@
         "Metin var ama tam sayı biçiminde değil.",
         "Doğru tipte argüman, geçersiz değer."
       ],
-      "explanation": "'3.5' doğrudan int biçimine uygun olmadığı için ValueError oluşur."
+      "explanation": "'3.5' doğrudan int biçimine uygun olmadığı için ValueError oluşur.",
+      "optionFeedback": {
+        "TypeError": "int() metin kabul eder; tip doğru, değer tam sayı biçiminde değil.",
+        "NameError": "Kodda tanımsız isim yok.",
+        "ZeroDivisionError": "Kodda bölme işlemi yok."
+      }
     },
     {
       "id": "m1-q37",
       "type": "traceback",
       "topic": "traceback",
+      "sectionId": "arithmetic",
+      "difficulty": 2,
       "prompt": "Bu işlem hangi hatayı üretir?",
       "code": "print(10 / 0)",
       "options": [
@@ -951,12 +1120,19 @@
         "Payda sıfırdır.",
         "Sıfıra bölme için özel hata türü vardır."
       ],
-      "explanation": "Bir sayıyı sıfıra bölmek ZeroDivisionError üretir."
+      "explanation": "Bir sayıyı sıfıra bölmek ZeroDivisionError üretir.",
+      "optionFeedback": {
+        "ValueError": "Sıfıra bölme için Python özel bir hata türü kullanır.",
+        "OverflowError": "OverflowError sayı sınırı aşılınca oluşur; burada payda sıfırdır.",
+        "TypeError": "İki taraf da sayı; tipler uyumludur."
+      }
     },
     {
       "id": "m1-q38",
       "type": "code",
       "topic": "mantık",
+      "sectionId": "comparison-logic",
+      "difficulty": 2,
       "prompt": "Bir satırdan tam sayı oku. Sayı çiftse True, değilse False yazdır. Örnek girdi: 18.",
       "starterCode": "number = int(input())\n# Çift olup olmadığını yazdır\n",
       "answer": "number = int(input())\nprint(number % 2 == 0)",
@@ -995,6 +1171,8 @@
       "id": "m1-q39",
       "type": "code",
       "topic": "aritmetik",
+      "sectionId": "arithmetic",
+      "difficulty": 2,
       "prompt": "Bir satır Fahrenheit sıcaklığı oku. (F − 32) × 5 / 9 formülüyle Celsius karşılığını yazdır. Örnek girdi: 77.",
       "starterCode": "fahrenheit = float(input())\n# Celsius karşılığını yazdır\n",
       "answer": "fahrenheit = float(input())\nprint((fahrenheit - 32) * 5 / 9)",
@@ -1033,6 +1211,8 @@
       "id": "m1-q40",
       "type": "code",
       "topic": "atama",
+      "sectionId": "variables-types",
+      "difficulty": 2,
       "prompt": "İki satırdan iki tam sayı oku; değerleri ters sırayla, aralarında tek boşlukla yazdır. Örnek girdiler: 1 ve 2.",
       "starterCode": "a = int(input())\nb = int(input())\n# Değerleri değiştir ve yazdır\n",
       "answer": "a = int(input())\nb = int(input())\na, b = b, a\nprint(a, b)",

@@ -1,0 +1,1010 @@
+{
+  "id": 3,
+  "slug": "akis-kontrolu",
+  "title": "Akış kontrolü",
+  "description": "Koşulların ve döngülerin hangi satırı kaç kez çalıştırdığını izle, kendi akışını kur.",
+  "contentVersion": 1,
+  "estimatedMinutes": 110,
+  "practiceIds": [
+    "m3-q01",
+    "m3-q02",
+    "m3-q03",
+    "m3-q04",
+    "m3-q05",
+    "m3-q06",
+    "m3-q08",
+    "m3-q10",
+    "m3-q12",
+    "m3-q13",
+    "m3-q14",
+    "m3-q19",
+    "m3-q23",
+    "m3-q27",
+    "m3-q37"
+  ],
+  "sections": [
+    {
+      "id": "if-elif-else",
+      "title": "Koşullar: if, elif, else",
+      "eyebrow": "İlk doğru dal kazanır",
+      "objectives": [
+        "if/elif/else zincirinde hangi dalın çalışacağını belirler.",
+        "Koşul sırasının sonucu nasıl değiştirdiğini açıklar."
+      ],
+      "prerequisites": [
+        "m1:comparison-logic",
+        "m1:repl-syntax"
+      ],
+      "summary": "if bir koşul doğruysa bloğunu çalıştırır. elif önceki koşullar yanlışsa denenir; else hiçbiri tutmazsa çalışır. Bir zincirde yalnızca bir dal çalışır.",
+      "explanation": "Python koşulları yukarıdan aşağıya dener ve ilk truthy koşulun bloğunu çalıştırır; kalan elif ve else satırları atlanır. Bu yüzden geniş bir koşulu üste yazarsan alttaki dar koşul hiç çalışmaz. Ayrı ayrı yazılmış if'ler ise birbirinden bağımsızdır: her biri ayrıca kontrol edilir ve birden fazlası çalışabilir.",
+      "code": "score = 72\n\nif score >= 90:\n    grade = \"A\"\nelif score >= 70:\n    grade = \"B\"\nelif score >= 50:\n    grade = \"C\"\nelse:\n    grade = \"F\"\n\nprint(grade)",
+      "expectedOutput": "B",
+      "why": "72 >= 90 yanlıştır; sıradaki 72 >= 70 doğrudur ve B seçilir. 72 >= 50 da doğru olsa bile denenmez, çünkü zincirde bir dal zaten çalıştı.",
+      "alternatives": [
+        "İki değerden birini seçmek için tek satırlık ternary yeterli olabilir: \"geçti\" if score >= 50 else \"kaldı\".",
+        "Birbirinden bağımsız kontroller için elif yerine ayrı if'ler kullan."
+      ],
+      "traps": [
+        "Geniş koşulu (score >= 50) dar koşulun (score >= 90) üstüne yazmak.",
+        "elif yerine ayrı if yazıp birden çok dalın çalışmasına şaşırmak.",
+        "Koşulda = (atama) ile == (karşılaştırma) işaretini karıştırmak."
+      ],
+      "realCode": "def validate_age(age):\n    if age < 0:\n        return \"geçersiz\"\n    if age < 18:\n        return \"reşit değil\"\n    return \"yetişkin\"\n\nprint(validate_age(15))",
+      "realOutput": "reşit değil",
+      "lineByLine": [
+        "Fonksiyon bir yaş değeri alır.",
+        "Önce geçersiz değer elenir; return fonksiyonu hemen bitirir (erken dönüş).",
+        "İkinci kontrole yalnızca ilk koşul yanlışsa gelinir; return sayesinde elif gerekmez.",
+        "Hiçbir erken dönüş olmazsa son satır çalışır."
+      ]
+    },
+    {
+      "id": "match-case",
+      "title": "match-case ile desen eşleme",
+      "eyebrow": "Değerin biçimine göre dal seç",
+      "objectives": [
+        "match-case bloğunda hangi case'in eşleşeceğini belirler.",
+        "_ joker deseninin ve | ile birleşik desenlerin anlamını okur."
+      ],
+      "prerequisites": [
+        "if-elif-else"
+      ],
+      "summary": "match bir değeri sırayla case desenleriyle karşılaştırır ve ilk eşleşen bloğu çalıştırır. _ deseni, hiçbir case tutmazsa çalışan jokerdir.",
+      "explanation": "Python 3.10 ile gelen match-case, art arda gelen birçok elif == kontrolünü daha okunur yazmayı sağlar. case \"a\" | \"b\" iki değerden birini kabul eder. Desenler yalnızca sabit değer değildir: case (x, y) iki elemanlı bir değeri açıp parçalarını isimlere bağlar. Dikkat: case içine düz bir isim yazmak (case color:) karşılaştırma değil yakalamadır; her değerle eşleşir ve değeri o isme bağlar.",
+      "code": "command = \"stop\"\n\nmatch command:\n    case \"start\" | \"run\":\n        print(\"Başlıyor\")\n    case \"stop\":\n        print(\"Duruyor\")\n    case _:\n        print(\"Bilinmeyen komut\")",
+      "expectedOutput": "Duruyor",
+      "why": "İlk case \"start\" veya \"run\" ister; eşleşmez. İkinci case \"stop\" değeriyle eşleşir ve bloğu çalışır. _ yalnızca hiçbir case tutmasaydı çalışırdı.",
+      "alternatives": [
+        "İki üç basit eşitlik için if/elif yeterli ve daha tanıdıktır.",
+        "Değerden sonuca basit bir eşleme için ileride sözlük (dict) kullanmak daha kısa olabilir."
+      ],
+      "traps": [
+        "case içine düz isim yazıp karşılaştırma yaptığını sanmak; case x: her değeri yakalar ve ondan sonra case varsa SyntaxError oluşur.",
+        "_ desenini ilk sıraya koymak; sonraki case'lere hiç sıra gelmez.",
+        "match-case'in Python 3.10'dan eski sürümlerde çalışmadığını unutmak."
+      ],
+      "realCode": "def describe(point):\n    match point:\n        case (0, 0):\n            return \"başlangıç\"\n        case (0, y):\n            return f\"y ekseni, y={y}\"\n        case (x, y):\n            return f\"nokta ({x}, {y})\"\n\nprint(describe((0, 5)))",
+      "realOutput": "y ekseni, y=5",
+      "lineByLine": [
+        "point iki elemanlı bir demettir (tuple; ayrıntısı M4'te).",
+        "(0, 0) deseni yalnızca tam başlangıç noktasıyla eşleşir.",
+        "(0, y) ilk eleman 0 ise eşleşir ve ikinci elemanı y adına bağlar.",
+        "(0, 5) ikinci desenle eşleşir; y=5 metne yerleşir."
+      ]
+    },
+    {
+      "id": "while",
+      "title": "while döngüsü",
+      "eyebrow": "Koşul doğru oldukça tekrar et",
+      "objectives": [
+        "while döngüsünün kaç tur döneceğini değişkenleri izleyerek bulur.",
+        "Sonsuz döngüye yol açan eksik güncellemeyi fark eder."
+      ],
+      "prerequisites": [
+        "if-elif-else"
+      ],
+      "summary": "while koşulu her turun başında kontrol eder; doğruysa gövdeyi çalıştırır. Koşulu değiştiren bir güncelleme yoksa döngü hiç bitmez.",
+      "explanation": "Tekrar sayısı önceden belli değilse while uygundur: kullanıcı doğru giriş yapana kadar, bakiye bitene kadar gibi. Döngüyü izlemenin en güvenilir yolu, her turda koşulu ve değişkenlerin değerini bir tabloya yazmaktır. Koşul ilk kontrolde yanlışsa gövde hiç çalışmaz.",
+      "code": "balance = 100\nmonths = 0\n\nwhile balance > 0:\n    balance -= 30\n    months += 1\n\nprint(months)\nprint(balance)",
+      "expectedOutput": "4\n-20",
+      "why": "Her tur 30 düşer: 70, 40, 10, -20. Dördüncü turdan sonra balance > 0 yanlış olur ve döngü biter. Son değer -20'dir, çünkü koşul tur ortasında değil yalnızca tur başında kontrol edilir.",
+      "alternatives": [
+        "Tekrar sayısı belliyse for ve range daha güvenlidir; sayacı güncellemeyi unutma riski yoktur.",
+        "Döngüden ortada bir yerde çıkmak gerekiyorsa while True ile break kullanılır."
+      ],
+      "traps": [
+        "Koşuldaki değişkeni gövdede güncellemeyi unutup sonsuz döngü yazmak.",
+        "Koşulun tur ortasında değil yalnızca tur başında kontrol edildiğini unutmak.",
+        "Bir eksik/bir fazla tur hatası: < ile <= farkını izlememek."
+      ],
+      "realCode": "def retry_delays(max_attempts):\n    attempt = 1\n    delay = 1\n    while attempt <= max_attempts:\n        print(f\"Deneme {attempt}: {delay} sn bekle\")\n        delay *= 2\n        attempt += 1\n\nretry_delays(3)",
+      "realOutput": "Deneme 1: 1 sn bekle\nDeneme 2: 2 sn bekle\nDeneme 3: 4 sn bekle",
+      "lineByLine": [
+        "Sayaç ve ilk bekleme süresi hazırlanır.",
+        "Koşul, deneme sayısı sınırı aşılana kadar doğru kalır.",
+        "Her turda bekleme süresi ikiye katlanır (üstel geri çekilme).",
+        "attempt += 1 olmasaydı döngü hiç bitmezdi."
+      ]
+    },
+    {
+      "id": "for-range",
+      "title": "for döngüsü ve range",
+      "eyebrow": "Bir dizinin her öğesini sırayla gez",
+      "objectives": [
+        "range(start, stop, step) çağrısının üreteceği sayıları listeler.",
+        "for döngüsündeki biriktirici (toplam/sayaç) değişkeni izler."
+      ],
+      "prerequisites": [
+        "while",
+        "m2:slicing"
+      ],
+      "summary": "for bir dizinin (metin, range, liste) her öğesini sırayla döngü değişkenine bağlar. range(stop) 0'dan stop - 1'e kadar sayı üretir.",
+      "explanation": "range(5) 0, 1, 2, 3, 4 üretir; bitiş dahil değildir, tıpkı dilimlemedeki stop gibi. range(2, 10, 3) 2, 5, 8 verir; negatif adımla geri sayılır: range(3, 0, -1) 3, 2, 1 üretir. for bir metni de gezebilir; her turda bir karakter gelir. Döngüden önce başlatılıp her turda güncellenen toplam gibi değişkenlere biriktirici denir.",
+      "code": "total = 0\nfor number in range(1, 5):\n    total += number\n\nprint(total)\nprint(list(range(10, 0, -3)))",
+      "expectedOutput": "10\n[10, 7, 4, 1]",
+      "why": "range(1, 5) 1, 2, 3, 4 üretir; 5 dahil değildir ve toplam 10 olur. list() burada yalnızca range'in üreteceği sayıları görmek için kullanılır: 10'dan başlar, 3'er azalır ve 0'a ulaşmadan durur.",
+      "alternatives": [
+        "Sayıları toplamak için sum(range(1, 5)) tek adımda aynı sonucu verir.",
+        "Metnin karakterlerini gezmek için range(len(text)) yerine doğrudan for ch in text yaz."
+      ],
+      "traps": [
+        "range(1, 5) içinde 5'in de olduğunu sanmak.",
+        "Biriktiriciyi (total = 0) döngünün içinde başlatıp her turda sıfırlamak.",
+        "Negatif adımda başlangıcın bitişten büyük olması gerektiğini unutmak; range(0, 5, -1) boştur."
+      ],
+      "realCode": "def count_vowels(text):\n    count = 0\n    for char in text.lower():\n        if char in \"aeıioöuü\":\n            count += 1\n    return count\n\nprint(count_vowels(\"Python Programı\"))",
+      "realOutput": "4",
+      "lineByLine": [
+        "Sayaç döngüden önce sıfırlanır.",
+        "lower() büyük harfleri de saymak için metni küçültür; for her karakteri sırayla verir.",
+        "in, karakterin ünlü harfler metninde olup olmadığını sınar.",
+        "Döngü bitince toplam sayı döndürülür: o, o, a, ı."
+      ]
+    },
+    {
+      "id": "break-continue-pass",
+      "title": "break, continue ve pass",
+      "eyebrow": "Döngünün akışını içeriden yönet",
+      "objectives": [
+        "break ve continue sonrasında hangi satırın çalışacağını belirler.",
+        "pass'in yalnızca boş blok yer tutucusu olduğunu açıklar."
+      ],
+      "prerequisites": [
+        "for-range"
+      ],
+      "summary": "break döngüyü tamamen bitirir. continue o turun kalanını atlayıp sonraki tura geçer. pass hiçbir şey yapmaz; sözdizimi bir blok beklediğinde yer tutar.",
+      "explanation": "break ve continue yalnızca içinde bulundukları en yakın döngüyü etkiler; iç içe döngüde dıştaki döngüyü bitirmez. continue'dan sonraki satırlar o tur için atlanır ama döngü sürer. pass ise akışı değiştirmez; henüz yazılmamış bir if gövdesi veya fonksiyon için geçici yer tutucudur.",
+      "code": "for number in range(1, 10):\n    if number % 2 == 0:\n        continue\n    if number > 6:\n        break\n    print(number)",
+      "expectedOutput": "1\n3\n5",
+      "why": "Çift sayılar continue ile atlanır. Tek sayılar 1, 3, 5 yazdırılır. 7 tek olduğu için ikinci koşula gelir; 7 > 6 doğrudur ve break döngüyü bitirir. 9'a hiç sıra gelmez.",
+      "alternatives": [
+        "Koşulu sağlayan ilk öğeyi bulmak için break içeren for yaygın bir kalıptır; ileride next() ile daha kısa yazımlar da göreceksin.",
+        "continue yerine koşulu tersine çevirip gövdeyi if içine almak da mümkündür; girinti derinleşiyorsa continue daha okunur."
+      ],
+      "traps": [
+        "break'in iç içe döngüde dıştaki döngüyü de bitirdiğini sanmak.",
+        "while döngüsünde continue'dan önce sayacı güncellememek; döngü aynı değerde takılır.",
+        "pass'in turu atladığını sanmak; o iş continue'nundur."
+      ],
+      "realCode": "def first_error(lines):\n    for line in lines:\n        if not line.strip():\n            continue\n        if line.startswith(\"ERROR\"):\n            return line\n    return None\n\nprint(first_error([\"\", \"INFO başladı\", \"ERROR disk dolu\", \"ERROR ağ\"]))",
+      "realOutput": "ERROR disk dolu",
+      "lineByLine": [
+        "Fonksiyon bir satır listesi alır (köşeli parantezli liste; ayrıntısı M4'te).",
+        "Boş satırlar continue ile atlanır.",
+        "ERROR ile başlayan ilk satır bulununca return hem döngüyü hem fonksiyonu bitirir; break gerekmez.",
+        "Hiç hata satırı yoksa döngü biter ve None döner."
+      ]
+    },
+    {
+      "id": "loop-else",
+      "title": "Döngü else bloğu",
+      "eyebrow": "break olmadıysa çalışır",
+      "objectives": [
+        "for/while else bloğunun ne zaman çalıştığını belirler.",
+        "Arama döngüsündeki \"bulunamadı\" durumunu else ile okur."
+      ],
+      "prerequisites": [
+        "break-continue-pass"
+      ],
+      "summary": "Döngüye bağlı else, döngü break ile kesilmeden normal biterse çalışır. break olursa else atlanır.",
+      "explanation": "Adı yanıltıcıdır: döngü else'i \"koşul yanlışsa\" değil \"break olmadıysa\" anlamına gelir. En yaygın kullanımı aramadır: aranan bulununca break, hiç bulunamazsa else bloğu çalışır. Döngü hiç dönmese bile (örneğin boş bir range) else çalışır, çünkü break olmamıştır.",
+      "code": "for divisor in range(2, 7):\n    if 49 % divisor == 0:\n        print(\"Bölen bulundu:\", divisor)\n        break\nelse:\n    print(\"Bölen yok\")",
+      "expectedOutput": "Bölen yok",
+      "why": "2'den 6'ya kadar hiçbir sayı 49'u tam bölmez, bu yüzden break hiç çalışmaz. Döngü normal biter ve else bloğu \"Bölen yok\" yazar. 7, range(2, 7) içinde olmadığı için denenmez.",
+      "alternatives": [
+        "Bir bayrak değişkeniyle (found = False) aynı mantık daha uzun ama daha tanıdık biçimde yazılabilir.",
+        "Ekibin çoğu bu yapıyı tanımıyorsa fonksiyon içinden erken return daha okunur olabilir."
+      ],
+      "traps": [
+        "Döngü else'ini \"döngü hiç dönmezse\" veya \"koşul yanlışsa\" sanmak.",
+        "else'i içerideki if'e ait sanmak; girintisi for ile aynı hizadaysa döngüye aittir.",
+        "Döngüden return ile çıkıldığında da else'in çalışmadığını unutmak."
+      ],
+      "realCode": "def is_prime(n):\n    if n < 2:\n        return False\n    for divisor in range(2, n):\n        if n % divisor == 0:\n            break\n    else:\n        return True\n    return False\n\nprint(is_prime(13), is_prime(15))",
+      "realOutput": "True False",
+      "lineByLine": [
+        "2'den küçük sayılar asal değildir.",
+        "2'den n - 1'e kadar her bölen denenir.",
+        "Bölen bulunursa break döngüyü keser; else atlanır ve son satırdaki return False çalışır.",
+        "Hiç bölen yoksa döngü normal biter, else çalışır ve True döner."
+      ]
+    },
+    {
+      "id": "enumerate-zip",
+      "title": "enumerate ve zip",
+      "eyebrow": "Sayaç ve eşleştirme hazır gelsin",
+      "objectives": [
+        "enumerate ile sıra numarasını ve öğeyi birlikte okur.",
+        "zip'in en kısa diziye göre durduğunu açıklar."
+      ],
+      "prerequisites": [
+        "for-range"
+      ],
+      "summary": "enumerate her öğeyi sıra numarasıyla birlikte verir. zip birden çok diziyi aynı sırayla eşleştirir ve en kısa dizi bitince durur.",
+      "explanation": "for index, item in enumerate(items) yazımı, elle sayaç tutmanın veya range(len(items)) kullanmanın daha okunur yoludur; start parametresi numaralandırmayı 1'den başlatabilir. zip(names, scores) her turda bir ikili üretir; for name, score in zip(...) bu ikiliyi iki isme açar. Diziler farklı uzunluktaysa fazlası sessizce atlanır; Python 3.10'dan itibaren zip(..., strict=True) bu durumda hata verir.",
+      "code": "names = [\"Ada\", \"Can\", \"Ece\"]\nscores = [90, 75]\n\nfor rank, name in enumerate(names, start=1):\n    print(rank, name)\n\nfor name, score in zip(names, scores):\n    print(f\"{name}: {score}\")",
+      "expectedOutput": "1 Ada\n2 Can\n3 Ece\nAda: 90\nCan: 75",
+      "why": "enumerate, start=1 sayesinde numaraları 1'den başlatır. zip iki listeyi eşleştirir; scores iki elemanlı olduğu için Ece eşsiz kalır ve yazdırılmaz.",
+      "alternatives": [
+        "range(len(names)) ile indeks üzerinden gezmek çalışır ama daha az okunurdur ve indeks hatasına açıktır.",
+        "Uzunlukların eşit olması gerekiyorsa zip(names, scores, strict=True) kullan; eksik veri sessizce kaybolmaz."
+      ],
+      "traps": [
+        "enumerate'in varsayılan olarak 1'den başladığını sanmak; 0'dan başlar.",
+        "zip'in kısa diziyi None ile doldurduğunu sanmak; fazlalığı atar.",
+        "for name, rank yazıp sırayı karıştırmak; enumerate önce sayıyı verir."
+      ],
+      "realCode": "def report(headers, values):\n    for position, (header, value) in enumerate(zip(headers, values), start=1):\n        print(f\"{position}. {header} = {value}\")\n\nreport([\"ad\", \"şehir\"], [\"Ada\", \"İzmir\"])",
+      "realOutput": "1. ad = Ada\n2. şehir = İzmir",
+      "lineByLine": [
+        "Başlıklar ve değerler iki ayrı liste olarak gelir.",
+        "zip her başlığı kendi değeriyle eşleştirir.",
+        "enumerate bu ikililere 1'den başlayan sıra numarası ekler; (header, value) ikiliyi açar.",
+        "Her satır numara, başlık ve değerle yazdırılır."
+      ]
+    },
+    {
+      "id": "nested-loops",
+      "title": "İç içe döngüler ve döngüyü izleme",
+      "eyebrow": "Dış döngünün her turunda iç döngü baştan başlar",
+      "objectives": [
+        "İç içe döngünün toplam tur sayısını hesaplar.",
+        "Değişken tablosu çıkararak döngünün sonucunu tahmin eder."
+      ],
+      "prerequisites": [
+        "for-range",
+        "break-continue-pass"
+      ],
+      "summary": "İç içe döngüde dış döngünün her turu için iç döngü baştan sona çalışır. 3 turluk dış ve 4 turluk iç döngü toplam 12 tur demektir.",
+      "explanation": "Döngüyü kafadan değil tabloyla izle: her satıra dış değişkeni, iç değişkeni ve güncellenen değerleri yaz. İç döngüdeki break yalnızca iç döngüyü bitirir; dış döngü bir sonraki turuyla devam eder. Tur sayısı çarpımla büyüdüğü için iç içe döngüler büyük verilerde yavaşlar; bunu M17'de Big-O ile ölçeceğiz.",
+      "code": "for row in range(1, 4):\n    line = \"\"\n    for col in range(1, row + 1):\n        line += str(col)\n    print(line)",
+      "expectedOutput": "1\n12\n123",
+      "why": "row=1 iken iç döngü yalnız 1'i, row=2 iken 1 ve 2'yi, row=3 iken 1, 2 ve 3'ü ekler. line her dış turda yeniden boş başlatıldığı için satırlar birbirine karışmaz.",
+      "alternatives": [
+        "Kısa satır üretimi için iç döngü yerine \"\".join(...) ve ileride comprehension kullanılabilir.",
+        "İki diziyi sırayla eşleştirmek istiyorsan iç içe döngü değil zip gerekir; iç içe döngü bütün kombinasyonları üretir."
+      ],
+      "traps": [
+        "İç döngüdeki break'in dış döngüyü de bitirdiğini sanmak.",
+        "Satır biriktiricisini dış döngünün dışında başlatıp satırları birbirine eklemek.",
+        "Tur sayısını toplamla (3 + 4) hesaplamak; doğrusu çarpımdır (3 × 4)."
+      ],
+      "realCode": "def find_pair(numbers, target):\n    for i in range(len(numbers)):\n        for j in range(i + 1, len(numbers)):\n            if numbers[i] + numbers[j] == target:\n                return i, j\n    return None\n\nprint(find_pair([3, 8, 5, 2], 7))",
+      "realOutput": "(2, 3)",
+      "lineByLine": [
+        "Dış döngü her indeksi sırayla seçer.",
+        "İç döngü i'den sonraki indekslerden başlar; aynı çift iki kez denenmez.",
+        "Toplam hedefe eşitse indeks ikilisi hemen döndürülür: 5 + 2 = 7.",
+        "Hiç çift yoksa None döner; bu yöntem yaklaşık n² karşılaştırma yapar."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "m3-q01",
+      "type": "output",
+      "topic": "koşul",
+      "sectionId": "if-elif-else",
+      "difficulty": 1,
+      "prompt": "Bu kodun çıktısı ne?",
+      "code": "x = 15\nif x > 10:\n    print(\"büyük\")\nelif x > 5:\n    print(\"orta\")\nelse:\n    print(\"küçük\")",
+      "options": ["büyük", "orta", "küçük", "büyük ve orta"],
+      "answer": "büyük",
+      "expectedOutput": "büyük",
+      "hints": ["İlk doğru koşulun dalı çalışır.", "15 > 10 doğrudur; elif'e hiç bakılmaz."],
+      "explanation": "Zincirde ilk koşul doğru olduğu için yalnızca \"büyük\" yazdırılır; x > 5 de doğru olsa da denenmez."
+    },
+    {
+      "id": "m3-q02",
+      "type": "output",
+      "topic": "koşul",
+      "sectionId": "if-elif-else",
+      "difficulty": 2,
+      "prompt": "İki ayrı if var. Çıktı ne?",
+      "code": "x = 15\nif x > 10:\n    print(\"A\")\nif x > 5:\n    print(\"B\")",
+      "options": ["Yalnız A", "Yalnız B", "A ve B (iki satır)", "Çıktı yok"],
+      "answer": "A ve B (iki satır)",
+      "expectedOutput": "A\nB",
+      "hints": ["İkinci satır elif değil, yeni bir if.", "Bağımsız if'lerin her biri ayrı kontrol edilir."],
+      "explanation": "Ayrı if'ler bir zincir oluşturmaz; iki koşul da doğru olduğu için A ve B yazdırılır."
+    },
+    {
+      "id": "m3-q03",
+      "type": "output",
+      "topic": "while",
+      "sectionId": "while",
+      "difficulty": 2,
+      "prompt": "Döngü bittiğinde ne yazdırılır?",
+      "code": "n = 1\nsteps = 0\nwhile n < 20:\n    n *= 3\n    steps += 1\nprint(steps, n)",
+      "options": ["2 9", "3 27", "3 9", "4 81"],
+      "answer": "3 27",
+      "expectedOutput": "3 27",
+      "hints": ["Her turda n üçle çarpılır: 3, 9, 27.", "Koşul tur başında kontrol edilir; 27 < 20 yanlıştır."],
+      "explanation": "n sırasıyla 3, 9, 27 olur. 9 < 20 olduğu için üçüncü tur çalışır; sonra 27 < 20 yanlıştır ve döngü 3 turda biter."
+    },
+    {
+      "id": "m3-q04",
+      "type": "output",
+      "topic": "for-range",
+      "sectionId": "for-range",
+      "difficulty": 1,
+      "prompt": "range hangi sayıları üretir?",
+      "code": "print(list(range(2, 11, 4)))",
+      "options": ["[2, 6, 10]", "[2, 6]", "[2, 4, 6, 8, 10]", "[4, 8]"],
+      "answer": "[2, 6, 10]",
+      "expectedOutput": "[2, 6, 10]",
+      "hints": ["2'den başla, 4'er ekle.", "Bitiş 11 olduğu için 10 dahildir; 14 değildir."],
+      "explanation": "2, 6, 10 üretilir; bir sonraki 14 değeri 11 sınırını aşar."
+    },
+    {
+      "id": "m3-q05",
+      "type": "output",
+      "topic": "match",
+      "sectionId": "match-case",
+      "difficulty": 1,
+      "prompt": "Hangi case çalışır?",
+      "code": "status = 404\nmatch status:\n    case 200:\n        print(\"tamam\")\n    case 404 | 410:\n        print(\"bulunamadı\")\n    case _:\n        print(\"diğer\")",
+      "options": ["tamam", "bulunamadı", "diğer", "bulunamadı ve diğer"],
+      "answer": "bulunamadı",
+      "expectedOutput": "bulunamadı",
+      "hints": ["| iki değerden birini kabul eder.", "İlk eşleşen case çalışır, sonrası atlanır."],
+      "explanation": "404, 404 | 410 deseniyle eşleşir. Bir case çalıştıktan sonra _ dahil diğerlerine bakılmaz."
+    },
+    {
+      "id": "m3-q06",
+      "type": "output",
+      "topic": "break-continue",
+      "sectionId": "break-continue-pass",
+      "difficulty": 2,
+      "prompt": "continue sonrası çıktı ne olur? (end=\"\" satır sonu eklemez.)",
+      "code": "for ch in \"python\":\n    if ch in \"aeiou\":\n        continue\n    print(ch, end=\"\")",
+      "options": ["pythn", "o", "python", "p"],
+      "answer": "pythn",
+      "expectedOutput": "pythn",
+      "hints": ["Yalnızca ünlü harfler atlanır.", "\"python\" içinde tek ünlü o'dur."],
+      "explanation": "o harfinde continue print'i atlar; diğer harfler yan yana yazdırılır. y, \"aeiou\" içinde olmadığı için yazılır."
+    },
+    {
+      "id": "m3-q07",
+      "type": "output",
+      "topic": "break-continue",
+      "sectionId": "break-continue-pass",
+      "difficulty": 2,
+      "prompt": "Döngüden sonra i'nin değeri ne?",
+      "code": "for i in range(10):\n    if i == 3:\n        break\nprint(i)",
+      "options": ["3", "2", "9", "10"],
+      "answer": "3",
+      "expectedOutput": "3",
+      "hints": ["break, i 3 iken çalışır.", "Döngü değişkeni döngü bittikten sonra da son değerini korur."],
+      "explanation": "i = 3 iken break döngüyü bitirir. Döngü değişkeni silinmez; print son değer olan 3'ü yazar."
+    },
+    {
+      "id": "m3-q08",
+      "type": "output",
+      "topic": "döngü-else",
+      "sectionId": "loop-else",
+      "difficulty": 2,
+      "prompt": "Döngü else bloğu çalışır mı?",
+      "code": "for i in range(3):\n    pass\nelse:\n    print(\"bitti\")",
+      "options": ["bitti", "Çıktı yok", "0 1 2", "Hata"],
+      "answer": "bitti",
+      "expectedOutput": "bitti",
+      "hints": ["pass hiçbir şey yapmaz.", "break olmadığı için döngü normal biter."],
+      "explanation": "Döngü üç tur boyunca hiçbir şey yapmadan normal biter; break olmadığı için else çalışır."
+    },
+    {
+      "id": "m3-q09",
+      "type": "output",
+      "topic": "döngü-else",
+      "sectionId": "loop-else",
+      "difficulty": 2,
+      "prompt": "Çıktı ne?",
+      "code": "for n in [4, 7, 9]:\n    if n % 2 == 1:\n        print(\"tek:\", n)\n        break\nelse:\n    print(\"tek yok\")",
+      "options": ["tek: 7", "tek yok", "tek: 7 ve tek yok", "tek: 9"],
+      "answer": "tek: 7",
+      "expectedOutput": "tek: 7",
+      "hints": ["İlk tek sayı 7'dir.", "break olduğu için else atlanır."],
+      "explanation": "7 bulununca yazdırılır ve break döngüyü keser. Döngü normal bitmediği için else çalışmaz."
+    },
+    {
+      "id": "m3-q10",
+      "type": "output",
+      "topic": "enumerate-zip",
+      "sectionId": "enumerate-zip",
+      "difficulty": 1,
+      "prompt": "enumerate ne yazdırır?",
+      "code": "for i, ch in enumerate(\"ab\"):\n    print(i, ch)",
+      "options": ["0 a ve 1 b (iki satır)", "1 a ve 2 b (iki satır)", "a 0 ve b 1 (iki satır)", "0 1"],
+      "answer": "0 a ve 1 b (iki satır)",
+      "expectedOutput": "0 a\n1 b",
+      "hints": ["enumerate varsayılan olarak 0'dan sayar.", "Önce sayı, sonra öğe gelir."],
+      "explanation": "start verilmediği için numaralar 0'dan başlar; her turda (numara, karakter) ikilisi gelir."
+    },
+    {
+      "id": "m3-q11",
+      "type": "output",
+      "topic": "enumerate-zip",
+      "sectionId": "enumerate-zip",
+      "difficulty": 2,
+      "prompt": "Farklı uzunluktaki dizilerle zip ne üretir?",
+      "code": "for a, b in zip(\"abc\", \"12\"):\n    print(a + b)",
+      "options": ["a1 ve b2 (iki satır)", "a1, b2 ve c (üç satır)", "Hata", "abc12"],
+      "answer": "a1 ve b2 (iki satır)",
+      "expectedOutput": "a1\nb2",
+      "hints": ["zip en kısa dizi bitince durur.", "\"12\" yalnızca iki karakterlidir."],
+      "explanation": "İkinci dizi iki karakter olduğu için yalnızca iki eşleşme oluşur; c sessizce atlanır."
+    },
+    {
+      "id": "m3-q12",
+      "type": "output",
+      "topic": "iç-içe",
+      "sectionId": "nested-loops",
+      "difficulty": 1,
+      "prompt": "İç gövde toplam kaç kez çalışır?",
+      "code": "count = 0\nfor i in range(3):\n    for j in range(4):\n        count += 1\nprint(count)",
+      "options": ["7", "12", "4", "3"],
+      "answer": "12",
+      "expectedOutput": "12",
+      "hints": ["Dış döngünün her turunda iç döngü baştan çalışır.", "3 × 4."],
+      "explanation": "Dış döngü 3 tur döner ve her turda iç döngü 4 tur döner: 3 × 4 = 12."
+    },
+    {
+      "id": "m3-q13",
+      "type": "bug",
+      "topic": "koşul",
+      "sectionId": "if-elif-else",
+      "difficulty": 2,
+      "prompt": "95 puan neden \"onur\" yazdırmıyor?",
+      "code": "score = 95\nif score >= 50:\n    print(\"geçti\")\nelif score >= 90:\n    print(\"onur\")",
+      "options": [
+        "Geniş koşul önce geldiği için ilk dal çalışıyor; elif hiç denenmiyor",
+        "elif yerine else yazılmalı",
+        "95 >= 90 yanlış değerlendirilir",
+        "Bir programda iki print kullanılamaz"
+      ],
+      "answer": "Geniş koşul önce geldiği için ilk dal çalışıyor; elif hiç denenmiyor",
+      "optionFeedback": {
+        "elif yerine else yazılmalı": "else koşul almaz; yazılsa bile ilk dal çalıştığı için yine atlanırdı.",
+        "95 >= 90 yanlış değerlendirilir": "95 >= 90 doğrudur; sorun bu koşula hiç sıra gelmemesidir.",
+        "Bir programda iki print kullanılamaz": "İstediğin kadar print kullanabilirsin; burada yalnızca biri çalışır."
+      },
+      "hints": ["Zincirde ilk doğru koşul kazanır.", "score >= 90 koşulunu üste taşı."],
+      "explanation": "95 >= 50 doğru olduğu için ilk dal çalışır ve zincir biter. Dar koşul (>= 90) geniş koşuldan (>= 50) önce yazılmalıdır."
+    },
+    {
+      "id": "m3-q14",
+      "type": "bug",
+      "topic": "while",
+      "sectionId": "while",
+      "difficulty": 2,
+      "prompt": "Bu döngü neden hiç bitmez?",
+      "code": "i = 0\nwhile i < 5:\n    print(i)\ni += 1",
+      "options": [
+        "i += 1 döngü gövdesinin dışında; i hiç artmıyor",
+        "while koşulu <= olmalı",
+        "print döngüyü durdurur",
+        "i 1'den başlamalı"
+      ],
+      "answer": "i += 1 döngü gövdesinin dışında; i hiç artmıyor",
+      "optionFeedback": {
+        "while koşulu <= olmalı": "<= yalnızca tur sayısını bir artırır; i değişmedikçe döngü yine bitmez.",
+        "print döngüyü durdurur": "print yalnızca yazar; akışı değiştirmez.",
+        "i 1'den başlamalı": "Başlangıç değeri ne olursa olsun i artmadığı için koşul hep doğru kalır."
+      },
+      "hints": ["Girintiye bak: hangi satırlar while bloğunda?", "Son satır sütun 0'da."],
+      "explanation": "Girintisiz i += 1 döngüden sonra çalışacaktır, ama döngü hiç bitmediği için oraya ulaşılmaz; ekrana sonsuza dek 0 yazılır. Satırı dört boşluk içeri al."
+    },
+    {
+      "id": "m3-q15",
+      "type": "bug",
+      "topic": "koşul",
+      "sectionId": "if-elif-else",
+      "difficulty": 1,
+      "prompt": "Kod neden çalışmaz?",
+      "code": "x = 3\nif x = 3:\n    print(\"üç\")",
+      "options": [
+        "Koşulda karşılaştırma için == gerekir",
+        "if satırının sonunda iki nokta olmamalı",
+        "print girintisiz olmalı",
+        "3 metin olarak yazılmalı"
+      ],
+      "answer": "Koşulda karşılaştırma için == gerekir",
+      "expectedError": "SyntaxError",
+      "optionFeedback": {
+        "if satırının sonunda iki nokta olmamalı": "İki nokta zorunludur; bloğun başladığını gösterir.",
+        "print girintisiz olmalı": "if gövdesi girintili olmak zorundadır; buradaki girinti doğru.",
+        "3 metin olarak yazılmalı": "x bir int'e bağlı; tip doğru, sorun operatörde."
+      },
+      "hints": ["= atama yapar.", "if sonrasında bir karşılaştırma ifadesi bekler."],
+      "explanation": "if x = 3 bir atama denemesidir ve koşul yerinde kullanılamaz; SyntaxError oluşur. Doğrusu if x == 3: biçimidir."
+    },
+    {
+      "id": "m3-q16",
+      "type": "bug",
+      "topic": "for-range",
+      "sectionId": "for-range",
+      "difficulty": 2,
+      "prompt": "1'den 5'e kadar (5 dahil) toplanmak isteniyor ama sonuç 10. Hata nerede?",
+      "code": "total = 0\nfor n in range(1, 5):\n    total += n\nprint(total)",
+      "options": [
+        "range(1, 5) 5'i dahil etmez; range(1, 6) olmalı",
+        "total döngünün içinde başlatılmalı",
+        "+= yerine = kullanılmalı",
+        "range 0'dan başlamalı"
+      ],
+      "answer": "range(1, 5) 5'i dahil etmez; range(1, 6) olmalı",
+      "optionFeedback": {
+        "total döngünün içinde başlatılmalı": "İçeride başlatılırsa her turda sıfırlanır ve yalnızca son sayı kalır.",
+        "+= yerine = kullanılmalı": "= biriktirmez, her turda üzerine yazar; sonuç 4 olurdu.",
+        "range 0'dan başlamalı": "0 eklemek toplamı değiştirmez; eksik olan 5'tir."
+      },
+      "hints": ["range'in bitiş değeri dahil değildir.", "Döngüde hangi sayılar dönüyor: 1, 2, 3, 4."],
+      "explanation": "range(1, 5) 1–4 arasını üretir ve toplam 10 olur. 5'i dahil etmek için bitiş 6 olmalıdır; toplam 15 olur."
+    },
+    {
+      "id": "m3-q17",
+      "type": "bug",
+      "topic": "match",
+      "sectionId": "match-case",
+      "difficulty": 3,
+      "prompt": "Yazar \"hata\" değerinin eşleşmemesini bekliyordu. Sorun ne?",
+      "code": "expected = \"ok\"\nmatch \"hata\":\n    case expected:\n        print(\"eşleşti\")\n    case _:\n        print(\"eşleşmedi\")",
+      "options": [
+        "case içindeki düz isim karşılaştırma değil yakalamadır; her değeri yakalar",
+        "match yalnızca sayılarla çalışır",
+        "case _ ilk sırada olmalı",
+        "Metinler case içinde kullanılamaz"
+      ],
+      "answer": "case içindeki düz isim karşılaştırma değil yakalamadır; her değeri yakalar",
+      "expectedError": "SyntaxError",
+      "optionFeedback": {
+        "match yalnızca sayılarla çalışır": "match metin, sayı, demet ve daha fazlasıyla çalışır.",
+        "case _ ilk sırada olmalı": "_ ilk sırada olursa diğer case'lere hiç sıra gelmez; joker hep en sonda olmalı.",
+        "Metinler case içinde kullanılamaz": "case \"ok\": gibi metin desenleri geçerlidir; sorun düz isim kullanılması."
+      },
+      "hints": ["case expected: expected değişkeninin değerine bakmaz.", "Python bu durumda sonraki case'lere ulaşılamayacağını söyleyip SyntaxError verir."],
+      "explanation": "case expected: her değeri yakalayıp expected adına bağlar; ardından gelen case'ler ulaşılamaz olduğu için Python kodu çalıştırmadan SyntaxError verir. Sabit değer için case \"ok\": yaz."
+    },
+    {
+      "id": "m3-q18",
+      "type": "bug",
+      "topic": "break-continue",
+      "sectionId": "break-continue-pass",
+      "difficulty": 3,
+      "prompt": "Çıktı 0 ve 1'den sonra program donuyor. Neden?",
+      "code": "i = 0\nwhile i < 5:\n    if i == 2:\n        continue\n    print(i)\n    i += 1",
+      "options": [
+        "i 2 iken continue artırmayı atlıyor; i hep 2 kalıyor",
+        "continue döngüyü bitirir",
+        "print i'yi değiştirir",
+        "while içinde continue kullanılamaz"
+      ],
+      "answer": "i 2 iken continue artırmayı atlıyor; i hep 2 kalıyor",
+      "optionFeedback": {
+        "continue döngüyü bitirir": "Döngüyü bitiren break'tir; continue yalnızca turun kalanını atlar.",
+        "print i'yi değiştirir": "print yalnızca okur ve yazar; değişkeni değiştirmez.",
+        "while içinde continue kullanılamaz": "continue hem for hem while içinde geçerlidir."
+      },
+      "hints": ["continue'dan sonra hangi satırlar atlanıyor?", "i += 1 continue'nun altında."],
+      "explanation": "i 2 olduğunda continue, i += 1 satırını atlar. i hiç artmadığı için her tur yine i == 2 olur ve döngü sonsuza dek döner. Artırmayı continue'dan önce yap."
+    },
+    {
+      "id": "m3-q19",
+      "type": "fill",
+      "topic": "for-range",
+      "sectionId": "for-range",
+      "difficulty": 1,
+      "prompt": "0, 1, 2 sayılarını üretecek fonksiyonu yaz.",
+      "code": "for i in ___(3):\n    print(i)",
+      "answer": "range",
+      "solutionCode": "for i in range(3):\n    print(i)",
+      "expectedOutput": "0\n1\n2",
+      "hints": ["Sayı aralığı üreten yerleşik fonksiyon.", "range(3)."],
+      "explanation": "range(3) 0'dan başlayıp 3'e kadar (3 hariç) sayı üretir."
+    },
+    {
+      "id": "m3-q20",
+      "type": "fill",
+      "topic": "break-continue",
+      "sectionId": "break-continue-pass",
+      "difficulty": 1,
+      "prompt": "n 4 olunca döngüyü tamamen bitirecek sözcüğü yaz.",
+      "code": "for n in range(10):\n    if n == 4:\n        ___\nprint(n)",
+      "answer": "break",
+      "solutionCode": "for n in range(10):\n    if n == 4:\n        break\nprint(n)",
+      "expectedOutput": "4",
+      "hints": ["Turu atlamak değil, döngüden çıkmak istiyoruz.", "Kelime break."],
+      "explanation": "break döngüyü bitirir; n son değeri olan 4'te kalır. continue yazılsaydı döngü 9'a kadar sürerdi."
+    },
+    {
+      "id": "m3-q21",
+      "type": "fill",
+      "topic": "enumerate-zip",
+      "sectionId": "enumerate-zip",
+      "difficulty": 1,
+      "prompt": "Sıra numarası ve öğeyi birlikte veren fonksiyonu yaz.",
+      "code": "for i, name in ___([\"Ada\", \"Can\"], start=1):\n    print(i, name)",
+      "answer": "enumerate",
+      "solutionCode": "for i, name in enumerate([\"Ada\", \"Can\"], start=1):\n    print(i, name)",
+      "expectedOutput": "1 Ada\n2 Can",
+      "hints": ["İngilizcede \"numaralandırmak\".", "Fonksiyon enumerate."],
+      "explanation": "enumerate her öğeyi bir sıra numarasıyla verir; start=1 numaraları 1'den başlatır."
+    },
+    {
+      "id": "m3-q22",
+      "type": "fill",
+      "topic": "match",
+      "sectionId": "match-case",
+      "difficulty": 1,
+      "prompt": "Hiçbir case tutmazsa çalışacak joker deseni yaz.",
+      "code": "match 99:\n    case 1:\n        print(\"bir\")\n    case ___:\n        print(\"başka\")",
+      "answer": "_",
+      "solutionCode": "match 99:\n    case 1:\n        print(\"bir\")\n    case _:\n        print(\"başka\")",
+      "expectedOutput": "başka",
+      "hints": ["Tek bir karakter.", "Alt çizgi."],
+      "explanation": "_ her değerle eşleşen ama değeri bir isme bağlamayan jokerdir; en sona yazılır."
+    },
+    {
+      "id": "m3-q23",
+      "type": "order",
+      "topic": "while",
+      "sectionId": "while",
+      "difficulty": 2,
+      "prompt": "3, 2, 1 sayıp ardından \"Kalkış\" yazdıracak sırayı kur.",
+      "lines": ["    n -= 1", "print(\"Kalkış\")", "while n > 0:", "n = 3", "    print(n)"],
+      "answer": "n = 3\nwhile n > 0:\n    print(n)\n    n -= 1\nprint(\"Kalkış\")",
+      "solutionCode": "n = 3\nwhile n > 0:\n    print(n)\n    n -= 1\nprint(\"Kalkış\")",
+      "expectedOutput": "3\n2\n1\nKalkış",
+      "hints": ["Sayaç döngüden önce oluşturulur.", "Önce yazdır, sonra azalt; Kalkış döngüden sonra."],
+      "explanation": "n önce tanımlanır; döngü her turda önce yazar sonra azaltır. Azaltma önce yapılsaydı çıktı 2, 1, 0 olurdu."
+    },
+    {
+      "id": "m3-q24",
+      "type": "order",
+      "topic": "döngü-else",
+      "sectionId": "loop-else",
+      "difficulty": 2,
+      "prompt": "1–3 arasında 5'i arayıp bulamayınca \"yok\" yazdıracak sırayı kur.",
+      "lines": ["    print(\"yok\")", "for n in range(1, 4):", "    if n == 5:", "        break", "else:"],
+      "answer": "for n in range(1, 4):\n    if n == 5:\n        break\nelse:\n    print(\"yok\")",
+      "solutionCode": "for n in range(1, 4):\n    if n == 5:\n        break\nelse:\n    print(\"yok\")",
+      "expectedOutput": "yok",
+      "hints": ["else, for ile aynı hizada ve döngünün hemen ardından gelir.", "break, if'in içindedir."],
+      "explanation": "5 hiç bulunmadığı için break çalışmaz; döngü normal biter ve else \"yok\" yazar."
+    },
+    {
+      "id": "m3-q25",
+      "type": "order",
+      "topic": "iç-içe",
+      "sectionId": "nested-loops",
+      "difficulty": 2,
+      "prompt": "İki satır \"***\" yazdıracak iç içe döngüyü kur.",
+      "lines": ["    print(row)", "for i in range(2):", "    row = \"\"", "    for j in range(3):", "        row += \"*\""],
+      "answer": "for i in range(2):\n    row = \"\"\n    for j in range(3):\n        row += \"*\"\n    print(row)",
+      "solutionCode": "for i in range(2):\n    row = \"\"\n    for j in range(3):\n        row += \"*\"\n    print(row)",
+      "expectedOutput": "***\n***",
+      "hints": ["row her dış turun başında boşaltılır.", "print, iç döngü bittikten sonra ama dış döngünün içinde."],
+      "explanation": "Dış döngü her satırı başlatır, iç döngü üç yıldız ekler, print satırı tamamlar."
+    },
+    {
+      "id": "m3-q26",
+      "type": "order",
+      "topic": "koşul",
+      "sectionId": "if-elif-else",
+      "difficulty": 2,
+      "prompt": "18 derece için \"ılık\" yazdıracak koşul zincirini kur.",
+      "lines": ["elif temp < 25:", "    print(\"ılık\")", "temp = 18", "if temp < 10:", "    print(\"soğuk\")", "else:", "    print(\"sıcak\")"],
+      "answer": "temp = 18\nif temp < 10:\n    print(\"soğuk\")\nelif temp < 25:\n    print(\"ılık\")\nelse:\n    print(\"sıcak\")",
+      "solutionCode": "temp = 18\nif temp < 10:\n    print(\"soğuk\")\nelif temp < 25:\n    print(\"ılık\")\nelse:\n    print(\"sıcak\")",
+      "expectedOutput": "ılık",
+      "hints": ["Sıra: değişken, if, elif, else.", "Her koşulun gövdesi hemen altında gelir."],
+      "explanation": "temp < 10 yanlış, temp < 25 doğru olduğu için ılık yazdırılır."
+    },
+    {
+      "id": "m3-q27",
+      "type": "code",
+      "topic": "koşul",
+      "sectionId": "if-elif-else",
+      "difficulty": 2,
+      "prompt": "Bir satırdan tam sayı sıcaklık oku. 10'dan küçükse \"soğuk\", 25'ten küçükse \"ılık\", değilse \"sıcak\" yazdır. Örnek girdi: 18.",
+      "starterCode": "temp = int(input())\n# Koşul zincirini yaz\n",
+      "answer": "temp = int(input())\nif temp < 10:\n    print(\"soğuk\")\nelif temp < 25:\n    print(\"ılık\")\nelse:\n    print(\"sıcak\")",
+      "solutionCode": "temp = int(input())\nif temp < 10:\n    print(\"soğuk\")\nelif temp < 25:\n    print(\"ılık\")\nelse:\n    print(\"sıcak\")",
+      "expectedOutput": "ılık",
+      "hints": ["En dar koşulu (temp < 10) önce yaz.", "if / elif / else ile tek bir zincir kur."],
+      "explanation": "Koşullar sırayla denenir; 10 ve 25 sınırlarında hangi dalın çalıştığına dikkat et.",
+      "tests": [
+        { "label": "Örnek", "stdin": "18", "expectedOutput": "ılık" },
+        { "label": "Soğuk", "stdin": "5", "expectedOutput": "soğuk" },
+        { "label": "Sınır 10", "stdin": "10", "expectedOutput": "ılık" },
+        { "label": "Sınır 25", "stdin": "25", "expectedOutput": "sıcak" }
+      ],
+      "exampleInput": "18"
+    },
+    {
+      "id": "m3-q28",
+      "type": "code",
+      "topic": "match",
+      "sectionId": "match-case",
+      "difficulty": 2,
+      "prompt": "Bir satır komut oku. \"start\" veya \"run\" ise \"Başlıyor\", \"stop\" ise \"Duruyor\", diğer her şey için \"Bilinmeyen\" yazdır. Büyük/küçük harf farkı önemlidir. Örnek girdi: run.",
+      "starterCode": "command = input()\n# match-case ile komutu yorumla\n",
+      "answer": "command = input()\nmatch command:\n    case \"start\" | \"run\":\n        print(\"Başlıyor\")\n    case \"stop\":\n        print(\"Duruyor\")\n    case _:\n        print(\"Bilinmeyen\")",
+      "solutionCode": "command = input()\nmatch command:\n    case \"start\" | \"run\":\n        print(\"Başlıyor\")\n    case \"stop\":\n        print(\"Duruyor\")\n    case _:\n        print(\"Bilinmeyen\")",
+      "expectedOutput": "Başlıyor",
+      "hints": ["case \"start\" | \"run\": iki değeri birlikte yakalar.", "Joker case _: en sonda olmalı."],
+      "explanation": "match komutu sırayla desenlerle karşılaştırır; hiçbiri tutmazsa _ çalışır. if/elif ile yazılmış doğru çözüm de kabul edilir.",
+      "tests": [
+        { "label": "Örnek", "stdin": "run", "expectedOutput": "Başlıyor" },
+        { "label": "start", "stdin": "start", "expectedOutput": "Başlıyor" },
+        { "label": "stop", "stdin": "stop", "expectedOutput": "Duruyor" },
+        { "label": "Büyük harf", "stdin": "STOP", "expectedOutput": "Bilinmeyen" }
+      ],
+      "exampleInput": "run"
+    },
+    {
+      "id": "m3-q29",
+      "type": "code",
+      "topic": "while",
+      "sectionId": "while",
+      "difficulty": 2,
+      "prompt": "Pozitif bir tam sayı oku. Sayı 1'e inene kadar // 2 ile kaç kez yarılandığını yazdır. Örnek: 10 → 5 → 2 → 1, yani 3.",
+      "starterCode": "n = int(input())\nsteps = 0\n# n 1'den büyük oldukça yarıla ve say\n",
+      "answer": "n = int(input())\nsteps = 0\nwhile n > 1:\n    n //= 2\n    steps += 1\nprint(steps)",
+      "solutionCode": "n = int(input())\nsteps = 0\nwhile n > 1:\n    n //= 2\n    steps += 1\nprint(steps)",
+      "expectedOutput": "3",
+      "hints": ["Koşul: while n > 1.", "Her turda n //= 2 ve steps += 1."],
+      "explanation": "Tekrar sayısı önceden bilinmediği için while uygundur. 1 girilirse döngü hiç dönmez ve 0 yazılır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "10", "expectedOutput": "3" },
+        { "label": "Zaten 1", "stdin": "1", "expectedOutput": "0" },
+        { "label": "İkinin kuvveti", "stdin": "8", "expectedOutput": "3" },
+        { "label": "Büyük sayı", "stdin": "1000", "expectedOutput": "9" }
+      ],
+      "exampleInput": "10"
+    },
+    {
+      "id": "m3-q30",
+      "type": "code",
+      "topic": "for-range",
+      "sectionId": "for-range",
+      "difficulty": 2,
+      "prompt": "Negatif olmayan bir tam sayı n oku. 1'den n'e kadar (n dahil) sayıların toplamını for döngüsüyle hesaplayıp yazdır. Örnek girdi: 5.",
+      "starterCode": "n = int(input())\ntotal = 0\n# 1'den n'e kadar topla\n",
+      "answer": "n = int(input())\ntotal = 0\nfor i in range(1, n + 1):\n    total += i\nprint(total)",
+      "solutionCode": "n = int(input())\ntotal = 0\nfor i in range(1, n + 1):\n    total += i\nprint(total)",
+      "expectedOutput": "15",
+      "hints": ["n'i dahil etmek için bitiş n + 1 olmalı.", "total += i ile biriktir."],
+      "explanation": "range(1, n + 1) 1'den n'e kadar sayıları üretir; total biriktirici olarak döngüden önce başlatılır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "5", "expectedOutput": "15" },
+        { "label": "Tek sayı", "stdin": "1", "expectedOutput": "1" },
+        { "label": "Sıfır", "stdin": "0", "expectedOutput": "0" },
+        { "label": "Yüz", "stdin": "100", "expectedOutput": "5050" }
+      ],
+      "exampleInput": "5"
+    },
+    {
+      "id": "m3-q31",
+      "type": "code",
+      "topic": "for-range",
+      "sectionId": "for-range",
+      "difficulty": 2,
+      "prompt": "Bir tam sayı n oku. n'in 1'den 5'e kadar çarpım tablosunu \"n x i = sonuç\" biçiminde, her satıra bir tane yazdır. Örnek girdi: 3 → ilk satır 3 x 1 = 3.",
+      "starterCode": "n = int(input())\n# 1'den 5'e kadar çarpım satırlarını yazdır\n",
+      "answer": "n = int(input())\nfor i in range(1, 6):\n    print(f\"{n} x {i} = {n * i}\")",
+      "solutionCode": "n = int(input())\nfor i in range(1, 6):\n    print(f\"{n} x {i} = {n * i}\")",
+      "expectedOutput": "3 x 1 = 3\n3 x 2 = 6\n3 x 3 = 9\n3 x 4 = 12\n3 x 5 = 15",
+      "hints": ["range(1, 6) 1'den 5'e kadar sayı üretir.", "f-string ile f\"{n} x {i} = {n * i}\" yaz."],
+      "explanation": "Döngü değişkeni i her turda bir artar; satır f-string ile biçimlenir.",
+      "tests": [
+        { "label": "Örnek", "stdin": "3", "expectedOutput": "3 x 1 = 3\n3 x 2 = 6\n3 x 3 = 9\n3 x 4 = 12\n3 x 5 = 15" },
+        { "label": "Sıfır", "stdin": "0", "expectedOutput": "0 x 1 = 0\n0 x 2 = 0\n0 x 3 = 0\n0 x 4 = 0\n0 x 5 = 0" },
+        { "label": "Yedi", "stdin": "7", "expectedOutput": "7 x 1 = 7\n7 x 2 = 14\n7 x 3 = 21\n7 x 4 = 28\n7 x 5 = 35" },
+        { "label": "Negatif", "stdin": "-2", "expectedOutput": "-2 x 1 = -2\n-2 x 2 = -4\n-2 x 3 = -6\n-2 x 4 = -8\n-2 x 5 = -10" }
+      ],
+      "exampleInput": "3"
+    },
+    {
+      "id": "m3-q32",
+      "type": "code",
+      "topic": "break-continue",
+      "sectionId": "break-continue-pass",
+      "difficulty": 2,
+      "prompt": "Küçük harfli bir kelime oku. Ünlü harfleri (aeıioöuü) atlayıp kalan harfleri yan yana yazdır. Örnek girdi: bilgisayar → blgsyr.",
+      "starterCode": "word = input()\nresult = \"\"\n# Ünlüleri continue ile atla, diğerlerini result'a ekle\n",
+      "answer": "word = input()\nresult = \"\"\nfor ch in word:\n    if ch in \"aeıioöuü\":\n        continue\n    result += ch\nprint(result)",
+      "solutionCode": "word = input()\nresult = \"\"\nfor ch in word:\n    if ch in \"aeıioöuü\":\n        continue\n    result += ch\nprint(result)",
+      "expectedOutput": "blgsyr",
+      "hints": ["for ch in word ile harfleri gez.", "Ünlüyse continue, değilse result += ch."],
+      "explanation": "continue ünlü harflerde ekleme satırını atlar. Kelime yalnız ünlülerden oluşuyorsa boş satır yazdırılır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "bilgisayar", "expectedOutput": "blgsyr" },
+        { "label": "Kısa", "stdin": "kod", "expectedOutput": "kd" },
+        { "label": "Yalnız ünlü", "stdin": "aaa", "expectedOutput": "" },
+        { "label": "Türkçe ünlüler", "stdin": "gözlük", "expectedOutput": "gzlk" }
+      ],
+      "exampleInput": "bilgisayar"
+    },
+    {
+      "id": "m3-q33",
+      "type": "code",
+      "topic": "döngü-else",
+      "sectionId": "loop-else",
+      "difficulty": 3,
+      "prompt": "2 veya daha büyük bir tam sayı oku. Asalsa \"asal\", değilse \"asal değil\" yazdır. for-else kalıbını dene. Örnek girdi: 13.",
+      "starterCode": "n = int(input())\n# 2'den n-1'e kadar bölen ara\n",
+      "answer": "n = int(input())\nfor d in range(2, n):\n    if n % d == 0:\n        print(\"asal değil\")\n        break\nelse:\n    print(\"asal\")",
+      "solutionCode": "n = int(input())\nfor d in range(2, n):\n    if n % d == 0:\n        print(\"asal değil\")\n        break\nelse:\n    print(\"asal\")",
+      "expectedOutput": "asal",
+      "hints": ["Bölen bulunca yazdır ve break.", "for ile aynı hizada else: break olmadıysa asaldır."],
+      "explanation": "Bölen bulununca break else'i atlar. 2 girildiğinde range(2, 2) boştur; döngü hiç dönmez ama break da olmadığı için else çalışır ve \"asal\" yazılır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "13", "expectedOutput": "asal" },
+        { "label": "Bileşik", "stdin": "15", "expectedOutput": "asal değil" },
+        { "label": "En küçük asal", "stdin": "2", "expectedOutput": "asal" },
+        { "label": "Kare sayı", "stdin": "9", "expectedOutput": "asal değil" }
+      ],
+      "exampleInput": "13"
+    },
+    {
+      "id": "m3-q34",
+      "type": "code",
+      "topic": "enumerate-zip",
+      "sectionId": "enumerate-zip",
+      "difficulty": 2,
+      "prompt": "Bir cümle oku. Kelimeleri split() ile ayır ve her birini \"1. kelime\" biçiminde 1'den numaralayarak ayrı satırlara yazdır. Örnek girdi: merhaba dünya.",
+      "starterCode": "sentence = input()\n# enumerate ile kelimeleri numaralandır\n",
+      "answer": "sentence = input()\nfor i, word in enumerate(sentence.split(), start=1):\n    print(f\"{i}. {word}\")",
+      "solutionCode": "sentence = input()\nfor i, word in enumerate(sentence.split(), start=1):\n    print(f\"{i}. {word}\")",
+      "expectedOutput": "1. merhaba\n2. dünya",
+      "hints": ["split() boşluklardan böler ve fazla boşlukları yok sayar.", "enumerate(..., start=1)."],
+      "explanation": "enumerate numarayı kendisi tutar; elle sayaç değişkeni gerekmez.",
+      "tests": [
+        { "label": "Örnek", "stdin": "merhaba dünya", "expectedOutput": "1. merhaba\n2. dünya" },
+        { "label": "Tek kelime", "stdin": "tek", "expectedOutput": "1. tek" },
+        { "label": "Fazla boşluk", "stdin": "  a   b  ", "expectedOutput": "1. a\n2. b" },
+        { "label": "Üç kelime", "stdin": "x y z", "expectedOutput": "1. x\n2. y\n3. z" }
+      ],
+      "exampleInput": "merhaba dünya"
+    },
+    {
+      "id": "m3-q35",
+      "type": "code",
+      "topic": "enumerate-zip",
+      "sectionId": "enumerate-zip",
+      "difficulty": 2,
+      "prompt": "İlk satırda boşlukla ayrılmış isimler, ikinci satırda puanlar var. Her ismi kendi puanıyla \"isim: puan\" biçiminde yazdır. Sayılar eşit değilse fazlası atlanır. Örnek: \"Ada Can\" ve \"90 75\".",
+      "starterCode": "names = input().split()\nscores = input().split()\n# zip ile eşleştir\n",
+      "answer": "names = input().split()\nscores = input().split()\nfor name, score in zip(names, scores):\n    print(f\"{name}: {score}\")",
+      "solutionCode": "names = input().split()\nscores = input().split()\nfor name, score in zip(names, scores):\n    print(f\"{name}: {score}\")",
+      "expectedOutput": "Ada: 90\nCan: 75",
+      "hints": ["for name, score in zip(names, scores).", "zip en kısa dizide durur; ayrıca kontrol gerekmez."],
+      "explanation": "zip iki diziyi sırayla eşleştirir ve kısa olan bitince durur.",
+      "tests": [
+        { "label": "Örnek", "stdin": "Ada Can\n90 75", "expectedOutput": "Ada: 90\nCan: 75" },
+        { "label": "Fazla isim", "stdin": "Ada Can Ece\n1 2", "expectedOutput": "Ada: 1\nCan: 2" },
+        { "label": "Fazla puan", "stdin": "Tek\n100 50", "expectedOutput": "Tek: 100" },
+        { "label": "Üçlü", "stdin": "a b c\n1 2 3", "expectedOutput": "a: 1\nb: 2\nc: 3" }
+      ],
+      "exampleInput": "Ada Can\n90 75"
+    },
+    {
+      "id": "m3-q36",
+      "type": "code",
+      "topic": "iç-içe",
+      "sectionId": "nested-loops",
+      "difficulty": 2,
+      "prompt": "Negatif olmayan bir tam sayı n oku. n satırlık üçgen çiz: i. satırda i tane * olsun. Örnek girdi: 3 → *, **, ***.",
+      "starterCode": "n = int(input())\n# Dış döngü satırlar, iç döngü yıldızlar\n",
+      "answer": "n = int(input())\nfor row in range(1, n + 1):\n    line = \"\"\n    for _ in range(row):\n        line += \"*\"\n    print(line)",
+      "solutionCode": "n = int(input())\nfor row in range(1, n + 1):\n    line = \"\"\n    for _ in range(row):\n        line += \"*\"\n    print(line)",
+      "expectedOutput": "*\n**\n***",
+      "hints": ["Dış döngü 1'den n'e kadar satır numarasını verir.", "line her satırda boş başlar; iç döngü row kadar * ekler. \"*\" * row da kabul edilir."],
+      "explanation": "İç döngü her dış turda baştan çalışır ve satır uzunluğu row kadar olur. n = 0 iken hiçbir satır yazılmaz.",
+      "tests": [
+        { "label": "Örnek", "stdin": "3", "expectedOutput": "*\n**\n***" },
+        { "label": "Tek satır", "stdin": "1", "expectedOutput": "*" },
+        { "label": "Sıfır", "stdin": "0", "expectedOutput": "" },
+        { "label": "Dört satır", "stdin": "4", "expectedOutput": "*\n**\n***\n****" }
+      ],
+      "exampleInput": "3"
+    },
+    {
+      "id": "m3-q37",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "for-range",
+      "difficulty": 2,
+      "prompt": "Bu kod hangi hatayı üretir?",
+      "code": "count = \"5\"\nfor i in range(count):\n    print(i)",
+      "options": ["TypeError", "ValueError", "NameError", "IndexError"],
+      "answer": "TypeError",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "ValueError": "\"5\" geçersiz bir sayı değil; range'e sayı yerine str tipi verilmiş.",
+        "NameError": "count tanımlı; sorun değerin tipinde.",
+        "IndexError": "Kodda indeksleme yok."
+      },
+      "hints": ["range tam sayı ister.", "count bir metin; önce int(count) gerekir."],
+      "explanation": "range str kabul etmez ve TypeError verir. input() sonucu da str olduğu için önce int'e dönüştürülmelidir."
+    },
+    {
+      "id": "m3-q38",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "enumerate-zip",
+      "difficulty": 2,
+      "prompt": "Üç harf yazdırıldıktan sonra hangi hata oluşur?",
+      "code": "word = \"abc\"\nfor i in range(4):\n    print(word[i])",
+      "options": ["IndexError", "ValueError", "TypeError", "StopIteration"],
+      "answer": "IndexError",
+      "expectedError": "IndexError",
+      "optionFeedback": {
+        "ValueError": "İndeks tipi doğru (int); değeri metnin sınırı dışında.",
+        "TypeError": "Metinler int ile indekslenebilir; tip sorunu yok.",
+        "StopIteration": "for döngüsü StopIteration'ı kendisi yakalar; burada sorun word[3] erişimi."
+      },
+      "hints": ["word'ün indeksleri 0, 1, 2.", "range(4) 3'ü de üretir."],
+      "explanation": "i = 3 iken word[3] metnin dışındadır ve IndexError oluşur. Harfleri gezmek için for ch in word veya enumerate(word) kullanmak bu hatayı baştan önler."
+    },
+    {
+      "id": "m3-q39",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "while",
+      "difficulty": 2,
+      "prompt": "Bu döngü hangi hatayı üretir?",
+      "code": "count = 0\nwhile count < 3:\n    count += 1\n    total += count\nprint(total)",
+      "options": ["NameError", "TypeError", "ZeroDivisionError", "ValueError"],
+      "answer": "NameError",
+      "expectedError": "NameError",
+      "optionFeedback": {
+        "TypeError": "Tipler uyumsuz değil; total hiç tanımlanmamış.",
+        "ZeroDivisionError": "Kodda bölme yok.",
+        "ValueError": "Geçersiz bir değer dönüşümü yok; sorun eksik isim."
+      },
+      "hints": ["total += count, total'ın önceki değerini okur.", "Biriktirici döngüden önce başlatılmamış."],
+      "explanation": "total += count ifadesi önce total'ı okur; total hiç tanımlanmadığı için ilk turda NameError oluşur. Döngüden önce total = 0 yaz."
+    },
+    {
+      "id": "m3-q40",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "nested-loops",
+      "difficulty": 2,
+      "prompt": "Bu kod hangi hatayı üretir?",
+      "code": "for n in range(3):\n    print(n)\n  print(\"bitti\")",
+      "options": ["IndentationError", "SyntaxError", "TypeError", "NameError"],
+      "answer": "IndentationError",
+      "expectedError": "IndentationError",
+      "optionFeedback": {
+        "SyntaxError": "IndentationError aslında SyntaxError'ın alt sınıfıdır; Python daha özel olan türü bildirir.",
+        "TypeError": "Kod çalışmaya hiç başlamaz; sorun girinti hizasında.",
+        "NameError": "Tüm isimler tanımlı; hata kod çalışmadan önce oluşur."
+      },
+      "hints": ["Son satır iki boşlukla girintili.", "Ne döngü gövdesiyle (4) ne de dış blokla (0) aynı hizada."],
+      "explanation": "Son satırın girintisi hiçbir bloğa uymaz ve IndentationError oluşur. Döngüden sonra çalışacaksa sütun 0'a, döngü içindeyse 4 boşluğa hizala."
+    }
+  ]
+}

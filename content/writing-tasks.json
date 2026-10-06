@@ -232,5 +232,971 @@
         "expectedOutput": "Çağrı · 12.3"
       }
     ]
+  },
+  {
+    "id": "m3-w1",
+    "moduleId": 3,
+    "sectionId": "for-range",
+    "title": "Not ortalamasını tamamla",
+    "level": "Tamamla",
+    "objective": "Tekrar sayısı belli bir girdiyi for ve biriktiriciyle işle.",
+    "prompt": "İlk satırda not sayısı (en az 1), sonraki her satırda bir tam sayı not var. Notların ortalamasını tek ondalık basamakla yazdır. Döngü iskeleti hazır; her turda bir not okuyup total'a ekleyen satırı ve sondaki çıktıyı tamamla.",
+    "starterCode": "count = int(input())\ntotal = 0\nfor _ in range(count):\n    # Bir not oku ve total'a ekle\n    pass\n# Ortalamayı tek ondalıkla yazdır\n",
+    "exampleInput": "3\n80\n90\n70",
+    "exampleOutput": "80.0",
+    "hints": [
+      "Döngünün içinde total += int(input()) yaz; pass satırını silebilirsin.",
+      "Döngüden sonra print(f\"{total / count:.1f}\")."
+    ],
+    "solution": "count = int(input())\ntotal = 0\nfor _ in range(count):\n    total += int(input())\nprint(f\"{total / count:.1f}\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\n80\n90\n70",
+        "expectedOutput": "80.0"
+      },
+      {
+        "label": "Tek not",
+        "stdin": "1\n55",
+        "expectedOutput": "55.0"
+      },
+      {
+        "label": "Kesirli ortalama",
+        "stdin": "2\n7\n8",
+        "expectedOutput": "7.5"
+      },
+      {
+        "label": "Sıfırlı notlar",
+        "stdin": "4\n100\n0\n50\n50",
+        "expectedOutput": "50.0"
+      }
+    ]
+  },
+  {
+    "id": "m3-w2",
+    "moduleId": 3,
+    "sectionId": "loop-else",
+    "title": "Şifre denemesini onar",
+    "level": "Düzelt",
+    "objective": "break ve döngü else ile \"bulundu / bulunamadı\" akışını kur.",
+    "prompt": "Kullanıcının en fazla 3 deneme hakkı var; her satır bir deneme. Doğru şifre python. Doğru şifre girilince \"Giriş başarılı\" yazdır ve başka satır okuma. Üç denemenin hiçbiri doğru değilse yalnızca \"Hesap kilitlendi\" yazdır. Başlangıç kodunda üç hata var: deneme sayısı, durmayan döngü ve her durumda yazılan kilit mesajı.",
+    "starterCode": "for attempt in range(2):\n    password = input()\n    if password == \"python\":\n        print(\"Giriş başarılı\")\nprint(\"Hesap kilitlendi\")\n",
+    "exampleInput": "abc\npython",
+    "exampleOutput": "Giriş başarılı",
+    "hints": [
+      "Üç deneme için range(3); doğru şifreden sonra break.",
+      "Kilit mesajını for ile aynı hizada bir else bloğuna taşı: yalnızca break olmadıysa çalışır."
+    ],
+    "solution": "for attempt in range(3):\n    password = input()\n    if password == \"python\":\n        print(\"Giriş başarılı\")\n        break\nelse:\n    print(\"Hesap kilitlendi\")",
+    "tests": [
+      {
+        "label": "İkinci denemede",
+        "stdin": "abc\npython",
+        "expectedOutput": "Giriş başarılı"
+      },
+      {
+        "label": "İlk denemede",
+        "stdin": "python",
+        "expectedOutput": "Giriş başarılı"
+      },
+      {
+        "label": "Son hakta",
+        "stdin": "a\nb\npython",
+        "expectedOutput": "Giriş başarılı"
+      },
+      {
+        "label": "Üç yanlış",
+        "stdin": "a\nb\nc",
+        "expectedOutput": "Hesap kilitlendi"
+      }
+    ]
+  },
+  {
+    "id": "m3-w3",
+    "moduleId": 3,
+    "sectionId": "while",
+    "title": "Tahmin oyununu sıfırdan yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "Tekrar sayısı bilinmeyen bir süreci while ve break ile modelle.",
+    "prompt": "İlk satırda gizli sayı var. Sonraki her satır bir tahmin. Tahmin küçükse \"daha büyük\", büyükse \"daha küçük\" yazdır. Doğru tahminde ipucu yazma; döngüyü bitir ve \"N denemede bildin\" yazdır (N, doğru tahmin dahil deneme sayısı). Girdinin sonunda mutlaka doğru tahmin vardır. Önce hangi değişkenleri tutman gerektiğini düşün.",
+    "starterCode": "",
+    "exampleInput": "7\n3\n9\n7",
+    "exampleOutput": "daha büyük\ndaha küçük\n3 denemede bildin",
+    "hints": [
+      "Gizli sayıyı ve bir deneme sayacını döngüden önce hazırla; while True ile sonsuz döngü kur.",
+      "Her turda tahmini oku, sayacı artır; eşitse break, değilse karşılaştırıp ipucunu yazdır."
+    ],
+    "solution": "target = int(input())\nattempts = 0\nwhile True:\n    guess = int(input())\n    attempts += 1\n    if guess == target:\n        break\n    if guess < target:\n        print(\"daha büyük\")\n    else:\n        print(\"daha küçük\")\nprint(f\"{attempts} denemede bildin\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "7\n3\n9\n7",
+        "expectedOutput": "daha büyük\ndaha küçük\n3 denemede bildin"
+      },
+      {
+        "label": "İlk tahminde",
+        "stdin": "5\n5",
+        "expectedOutput": "1 denemede bildin"
+      },
+      {
+        "label": "Hep küçük",
+        "stdin": "10\n1\n2\n10",
+        "expectedOutput": "daha büyük\ndaha büyük\n3 denemede bildin"
+      },
+      {
+        "label": "Negatif sayılar",
+        "stdin": "0\n-5\n0",
+        "expectedOutput": "daha büyük\n2 denemede bildin"
+      }
+    ]
+  },
+  {
+    "id": "m4-w1",
+    "moduleId": 4,
+    "sectionId": "dict-iteration",
+    "title": "Kelime sayacını tamamla",
+    "level": "Tamamla",
+    "objective": "Sözlükle frekans say ve items() ile raporla.",
+    "prompt": "Bir satırda boşlukla ayrılmış kelimeler var. Her kelimenin kaç kez geçtiğini, kelimenin ilk görülme sırasıyla \"kelime: sayı\" biçiminde ayrı satırlara yazdır. İki döngü hazır; sayacı güncelleyen satırı ve yazdırma satırını tamamla.",
+    "starterCode": "words = input().split()\ncounts = {}\nfor word in words:\n    # Sayacı güncelle\n    pass\nfor word, count in counts.items():\n    # Satırı yazdır\n    pass\n",
+    "exampleInput": "elma armut elma",
+    "exampleOutput": "elma: 2\narmut: 1",
+    "hints": [
+      "İlk döngüde counts[word] = counts.get(word, 0) + 1.",
+      "İkinci döngüde print(f\"{word}: {count}\")."
+    ],
+    "solution": "words = input().split()\ncounts = {}\nfor word in words:\n    counts[word] = counts.get(word, 0) + 1\nfor word, count in counts.items():\n    print(f\"{word}: {count}\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "elma armut elma",
+        "expectedOutput": "elma: 2\narmut: 1"
+      },
+      {
+        "label": "Tek kelime",
+        "stdin": "tek",
+        "expectedOutput": "tek: 1"
+      },
+      {
+        "label": "Hep aynı",
+        "stdin": "a a a",
+        "expectedOutput": "a: 3"
+      },
+      {
+        "label": "İlk görülme sırası",
+        "stdin": "b a b c",
+        "expectedOutput": "b: 2\na: 1\nc: 1"
+      }
+    ]
+  },
+  {
+    "id": "m4-w2",
+    "moduleId": 4,
+    "sectionId": "sorting-key",
+    "title": "Fiyat sıralamasını onar",
+    "level": "Düzelt",
+    "objective": "Sözlük listesini doğru tipte veriyle ve doğru yönde sırala.",
+    "prompt": "İlk satırda ürün sayısı, sonraki her satırda \"ad fiyat\" var (fiyat tam sayı). Ürünleri pahalıdan ucuza \"ad fiyat\" biçiminde yazdır; eşit fiyatlılar giriş sıralarını korusun. Başlangıç kodu bazı girdilerde doğru görünür ama iki hata var: biri sıralama yönünde, biri fiyatın tipinde (\"100\" metni \"25\" metninden önce gelir).",
+    "starterCode": "count = int(input())\nproducts = []\nfor _ in range(count):\n    name, price = input().split()\n    products.append({\"name\": name, \"price\": price})\nproducts.sort(key=lambda p: p[\"price\"])\nfor p in products:\n    print(p[\"name\"], p[\"price\"])\n",
+    "exampleInput": "3\nkalem 25\nçanta 450\ndefter 100",
+    "exampleOutput": "çanta 450\ndefter 100\nkalem 25",
+    "hints": [
+      "Metinler karakter karakter karşılaştırılır; fiyatı sözlüğe koyarken int(price) yap.",
+      "Pahalıdan ucuza için sort'a reverse=True ekle; Python'un sıralaması kararlıdır, eşitler yerini korur."
+    ],
+    "solution": "count = int(input())\nproducts = []\nfor _ in range(count):\n    name, price = input().split()\n    products.append({\"name\": name, \"price\": int(price)})\nproducts.sort(key=lambda p: p[\"price\"], reverse=True)\nfor p in products:\n    print(p[\"name\"], p[\"price\"])",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\nkalem 25\nçanta 450\ndefter 100",
+        "expectedOutput": "çanta 450\ndefter 100\nkalem 25"
+      },
+      {
+        "label": "Tek ürün",
+        "stdin": "1\nx 5",
+        "expectedOutput": "x 5"
+      },
+      {
+        "label": "Basamak sayısı farkı",
+        "stdin": "2\na 9\nb 10",
+        "expectedOutput": "b 10\na 9"
+      },
+      {
+        "label": "Eşit fiyatlar",
+        "stdin": "3\na 5\nb 5\nc 7",
+        "expectedOutput": "c 7\na 5\nb 5"
+      }
+    ]
+  },
+  {
+    "id": "m4-w3",
+    "moduleId": 4,
+    "sectionId": "sets",
+    "title": "Etiket karşılaştırmasını sıfırdan yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "Küme işlemleriyle iki koleksiyonu karşılaştır ve sırasız sonucu kararlı biçimde raporla.",
+    "prompt": "İki satırda boşlukla ayrılmış etiketler var. Üç satır yazdır: \"ortak: ...\", \"yalnız ilk: ...\", \"yalnız ikinci: ...\". Her satırdaki etiketler alfabetik sırada ve aralarında tek boşlukla olsun; grup boşsa etiket yerine \"-\" yaz. Aynı etiket bir satırda birden çok kez geçebilir.",
+    "starterCode": "",
+    "exampleInput": "python sql docker\njs docker css",
+    "exampleOutput": "ortak: docker\nyalnız ilk: python sql\nyalnız ikinci: css js",
+    "hints": [
+      "Her satırı set(input().split()) ile kümeye çevir; &, - işlemlerini kullan.",
+      "Kümeyi sorted ile sırala, \" \".join ile birleştir; boş metin falsy olduğu için \"-\" seçimi bir if ile yapılabilir."
+    ],
+    "solution": "first = set(input().split())\nsecond = set(input().split())\ngroups = [(\"ortak\", first & second), (\"yalnız ilk\", first - second), (\"yalnız ikinci\", second - first)]\nfor label, group in groups:\n    text = \" \".join(sorted(group))\n    if not text:\n        text = \"-\"\n    print(f\"{label}: {text}\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "python sql docker\njs docker css",
+        "expectedOutput": "ortak: docker\nyalnız ilk: python sql\nyalnız ikinci: css js"
+      },
+      {
+        "label": "Aynı etiketler",
+        "stdin": "a b\nb a",
+        "expectedOutput": "ortak: a b\nyalnız ilk: -\nyalnız ikinci: -"
+      },
+      {
+        "label": "Ortak yok",
+        "stdin": "x\ny",
+        "expectedOutput": "ortak: -\nyalnız ilk: x\nyalnız ikinci: y"
+      },
+      {
+        "label": "Tekrarlı etiket",
+        "stdin": "a a b\nb b",
+        "expectedOutput": "ortak: b\nyalnız ilk: a\nyalnız ikinci: -"
+      }
+    ]
+  },
+  {
+    "id": "m5-w1",
+    "moduleId": 5,
+    "sectionId": "list-comprehension",
+    "title": "Temiz sayı listesini tamamla",
+    "level": "Tamamla",
+    "objective": "Filtre ve dönüşümü tek bir list comprehension'da birleştir.",
+    "prompt": "Bir satırda virgülle ayrılmış değerler var; bazıları boş, bazıları sayı değil. Uç boşlukları temizlenmiş parçalar hazır. Yalnızca rakamlardan oluşan parçaları int'e çevirip liste olarak yazdır. Negatif sayılar bu görevde geçersiz sayılır. numbers satırını bir comprehension ile değiştir.",
+    "starterCode": "raw = input()\nparts = [p.strip() for p in raw.split(\",\")]\nnumbers = []  # Bu satırı comprehension ile değiştir\nprint(numbers)\n",
+    "exampleInput": "3, x, 5",
+    "exampleOutput": "[3, 5]",
+    "hints": [
+      "Filtre için str.isdigit() kullan; boş metin için de False döner.",
+      "numbers = [int(p) for p in parts if p.isdigit()]."
+    ],
+    "solution": "raw = input()\nparts = [p.strip() for p in raw.split(\",\")]\nnumbers = [int(p) for p in parts if p.isdigit()]\nprint(numbers)",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3, x, 5",
+        "expectedOutput": "[3, 5]"
+      },
+      {
+        "label": "Tek sayı",
+        "stdin": "10",
+        "expectedOutput": "[10]"
+      },
+      {
+        "label": "Baştaki sıfır ve negatif",
+        "stdin": " 7 ,08, -2",
+        "expectedOutput": "[7, 8]"
+      },
+      {
+        "label": "Hepsi geçersiz",
+        "stdin": ",, a",
+        "expectedOutput": "[]"
+      }
+    ]
+  },
+  {
+    "id": "m5-w2",
+    "moduleId": 5,
+    "sectionId": "deep-copy",
+    "title": "Haftalık plan şablonunu onar",
+    "level": "Düzelt",
+    "objective": "Paylaşılan listeyi fark et ve her öğe için bağımsız bir kopya oluştur.",
+    "prompt": "Satırlar: gün sayısı, görev eklenecek günün indeksi (0'dan) ve görev adı. Her gün şablondaki [\"kahvaltı\"] ile başlar; görev yalnızca seçilen güne eklenmeli. Başlangıç kodu tek günlük planda doğru görünür ama birden çok günde görev her güne eklenir. Neden olduğunu bul ve düzelt.",
+    "starterCode": "template = [\"kahvaltı\"]\ncount = int(input())\nday_index = int(input())\ntask = input()\ndays = [template] * count\ndays[day_index].append(task)\nfor i, day in enumerate(days, start=1):\n    print(f\"gün {i}: {', '.join(day)}\")\n",
+    "exampleInput": "3\n1\nspor",
+    "exampleOutput": "gün 1: kahvaltı\ngün 2: kahvaltı, spor\ngün 3: kahvaltı",
+    "hints": [
+      "[template] * count aynı listeyi count kez koyar; days[0] is days[1] True'dur.",
+      "days = [template.copy() for _ in range(count)] her güne ayrı bir liste verir."
+    ],
+    "solution": "template = [\"kahvaltı\"]\ncount = int(input())\nday_index = int(input())\ntask = input()\ndays = [template.copy() for _ in range(count)]\ndays[day_index].append(task)\nfor i, day in enumerate(days, start=1):\n    print(f\"gün {i}: {', '.join(day)}\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\n1\nspor",
+        "expectedOutput": "gün 1: kahvaltı\ngün 2: kahvaltı, spor\ngün 3: kahvaltı"
+      },
+      {
+        "label": "Tek gün",
+        "stdin": "1\n0\nders",
+        "expectedOutput": "gün 1: kahvaltı, ders"
+      },
+      {
+        "label": "İlk gün",
+        "stdin": "2\n0\nx",
+        "expectedOutput": "gün 1: kahvaltı, x\ngün 2: kahvaltı"
+      },
+      {
+        "label": "Son gün",
+        "stdin": "4\n3\nkod",
+        "expectedOutput": "gün 1: kahvaltı\ngün 2: kahvaltı\ngün 3: kahvaltı\ngün 4: kahvaltı, kod"
+      }
+    ]
+  },
+  {
+    "id": "m5-w3",
+    "moduleId": 5,
+    "sectionId": "dict-set-comprehension",
+    "title": "Not raporunu sıfırdan yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "Kayıtları açıp comprehension'larla filtrelenmiş sözlük ve liste üret.",
+    "prompt": "İlk satırda öğrenci sayısı n, sonraki n satırda \"isim puan\" var (isimler benzersiz). İki satır yazdır: \"geçenler: \" ardından 50 ve üstü alanların {isim: puan} sözlüğü (giriş sırasıyla), \"kalanlar: \" ardından 50 altındakilerin alfabetik isim listesi. Puanlar sözlükte int olmalı.",
+    "starterCode": "",
+    "exampleInput": "3\nAda 90\nCan 40\nEce 70",
+    "exampleOutput": "geçenler: {'Ada': 90, 'Ece': 70}\nkalanlar: ['Can']",
+    "hints": [
+      "Önce kayıtları [input().split() for _ in range(n)] ile listele.",
+      "Sözlük için {name: int(score) for name, score in records if int(score) >= 50}; liste için sorted(...) ile benzer bir filtre."
+    ],
+    "solution": "count = int(input())\nrecords = [input().split() for _ in range(count)]\npassed = {name: int(score) for name, score in records if int(score) >= 50}\nfailed = sorted(name for name, score in records if int(score) < 50)\nprint(f\"geçenler: {passed}\")\nprint(f\"kalanlar: {failed}\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\nAda 90\nCan 40\nEce 70",
+        "expectedOutput": "geçenler: {'Ada': 90, 'Ece': 70}\nkalanlar: ['Can']"
+      },
+      {
+        "label": "Sınır 50",
+        "stdin": "1\nX 50",
+        "expectedOutput": "geçenler: {'X': 50}\nkalanlar: []"
+      },
+      {
+        "label": "Kimse geçemedi",
+        "stdin": "2\nB 10\nA 0",
+        "expectedOutput": "geçenler: {}\nkalanlar: ['A', 'B']"
+      },
+      {
+        "label": "Sınırın altı",
+        "stdin": "3\nZed 100\nAmy 50\nBob 49",
+        "expectedOutput": "geçenler: {'Zed': 100, 'Amy': 50}\nkalanlar: ['Bob']"
+      }
+    ]
+  },
+  {
+    "id": "m6-w1",
+    "moduleId": 6,
+    "sectionId": "def-return",
+    "title": "Sıcaklık dönüştürücüyü tamamla",
+    "level": "Tamamla",
+    "objective": "Değer döndüren küçük fonksiyonlar yaz ve ana programın onları kullanmasını sağla.",
+    "prompt": "Girdi \"değer birim\" biçiminde: 100 C veya 32 F. Ana program hazır; c_to_f ve f_to_c fonksiyonlarının gövdelerini yaz. Fonksiyonlar sonucu döndürmeli, yazdırmamalı. Formüller: F = C × 9 / 5 + 32 ve C = (F − 32) × 5 / 9.",
+    "starterCode": "def c_to_f(celsius):\n    # F = C × 9 / 5 + 32\n    pass\n\ndef f_to_c(fahrenheit):\n    # C = (F − 32) × 5 / 9\n    pass\n\nvalue, unit = input().split()\nvalue = float(value)\nif unit == \"C\":\n    print(f\"{c_to_f(value):.1f} F\")\nelse:\n    print(f\"{f_to_c(value):.1f} C\")\n",
+    "exampleInput": "100 C",
+    "exampleOutput": "212.0 F",
+    "hints": [
+      "pass yerine return celsius * 9 / 5 + 32 yaz.",
+      "İkinci fonksiyon: return (fahrenheit - 32) * 5 / 9. Fonksiyon None döndürürse biçimlendirme TypeError verir."
+    ],
+    "solution": "def c_to_f(celsius):\n    return celsius * 9 / 5 + 32\n\ndef f_to_c(fahrenheit):\n    return (fahrenheit - 32) * 5 / 9\n\nvalue, unit = input().split()\nvalue = float(value)\nif unit == \"C\":\n    print(f\"{c_to_f(value):.1f} F\")\nelse:\n    print(f\"{f_to_c(value):.1f} C\")",
+    "tests": [
+      {
+        "label": "Kaynama",
+        "stdin": "100 C",
+        "expectedOutput": "212.0 F"
+      },
+      {
+        "label": "Donma",
+        "stdin": "32 F",
+        "expectedOutput": "0.0 C"
+      },
+      {
+        "label": "Eşit nokta",
+        "stdin": "-40 C",
+        "expectedOutput": "-40.0 F"
+      },
+      {
+        "label": "Vücut ısısı",
+        "stdin": "98.6 F",
+        "expectedOutput": "37.0 C"
+      }
+    ]
+  },
+  {
+    "id": "m6-w2",
+    "moduleId": 6,
+    "sectionId": "mutable-default",
+    "title": "Sepet fonksiyonunu onar",
+    "level": "Düzelt",
+    "objective": "Mutable varsayılanı ve kapsam hatasını bul; durumu fonksiyon dışında, açıkça yönet.",
+    "prompt": "İlk satırda müşteri sayısı, sonraki her satırda \"müşteri ürün1 ürün2 ...\" var (en az bir ürün). Her müşteri için \"müşteri: ürünler\" yaz, sonunda \"toplam ürün: N\". Başlangıç kodunda iki hata var: biri program çalışır çalışmaz UnboundLocalError verir, diğeri ilk hata düzelince ortaya çıkar ve müşterilerin sepetlerini birbirine karıştırır.",
+    "starterCode": "total_items = 0\n\ndef build_cart(products, cart=[]):\n    for product in products:\n        cart.append(product)\n    total_items = total_items + len(products)\n    return cart\n\ncount = int(input())\nfor _ in range(count):\n    customer, *products = input().split()\n    cart = build_cart(products)\n    print(f\"{customer}: {', '.join(cart)}\")\nprint(f\"toplam ürün: {total_items}\")\n",
+    "exampleInput": "2\nAda elma armut\nCan süt",
+    "exampleOutput": "Ada: elma, armut\nCan: süt\ntoplam ürün: 3",
+    "hints": [
+      "Fonksiyon içinde total_items'a atama yapıldığı için Python onu yerel sayar. Toplamı fonksiyonun dışında, döngüde güncelle.",
+      "cart=[] bir kez oluşturulur ve bütün müşteriler aynı listeyi paylaşır; cart=None ve if cart is None: cart = [] kullan."
+    ],
+    "solution": "total_items = 0\n\ndef build_cart(products, cart=None):\n    if cart is None:\n        cart = []\n    for product in products:\n        cart.append(product)\n    return cart\n\ncount = int(input())\nfor _ in range(count):\n    customer, *products = input().split()\n    cart = build_cart(products)\n    total_items += len(cart)\n    print(f\"{customer}: {', '.join(cart)}\")\nprint(f\"toplam ürün: {total_items}\")",
+    "tests": [
+      {
+        "label": "İki müşteri",
+        "stdin": "2\nAda elma armut\nCan süt",
+        "expectedOutput": "Ada: elma, armut\nCan: süt\ntoplam ürün: 3"
+      },
+      {
+        "label": "Tek müşteri",
+        "stdin": "1\nEce kalem",
+        "expectedOutput": "Ece: kalem\ntoplam ürün: 1"
+      },
+      {
+        "label": "Üç müşteri",
+        "stdin": "3\nA x\nB y\nC z",
+        "expectedOutput": "A: x\nB: y\nC: z\ntoplam ürün: 3"
+      },
+      {
+        "label": "Müşteri yok",
+        "stdin": "0",
+        "expectedOutput": "toplam ürün: 0"
+      }
+    ]
+  },
+  {
+    "id": "m6-w3",
+    "moduleId": 6,
+    "sectionId": "recursion",
+    "title": "Izgara yollarını sıfırdan yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "Bir problemi temel durum ve küçülen alt problemlerle özyinelemeli olarak modelle.",
+    "prompt": "Bir ızgarada sol üst köşeden sağ alt köşeye yalnızca sağa veya aşağı adım atarak gidiliyor. Girdi \"satır sütun\" (1–8 arası). Kaç farklı yol olduğunu yazdır. Bir satır veya bir sütun varsa tek yol vardır; diğer durumda yol sayısı, bir satır eksik ızgaranın yolları ile bir sütun eksik ızgaranın yollarının toplamıdır. paths(rows, cols) adında özyinelemeli bir fonksiyon yaz.",
+    "starterCode": "",
+    "exampleInput": "3 3",
+    "exampleOutput": "6",
+    "hints": [
+      "Temel durum: rows == 1 veya cols == 1 ise 1 döndür.",
+      "Diğer durum: return paths(rows - 1, cols) + paths(rows, cols - 1). Girdiyi okuyup sonucu yazdırmayı unutma."
+    ],
+    "solution": "def paths(rows, cols):\n    if rows == 1 or cols == 1:\n        return 1\n    return paths(rows - 1, cols) + paths(rows, cols - 1)\n\nrows, cols = [int(p) for p in input().split()]\nprint(paths(rows, cols))",
+    "tests": [
+      {
+        "label": "Kare 3",
+        "stdin": "3 3",
+        "expectedOutput": "6"
+      },
+      {
+        "label": "Kare 2",
+        "stdin": "2 2",
+        "expectedOutput": "2"
+      },
+      {
+        "label": "Tek satır",
+        "stdin": "1 5",
+        "expectedOutput": "1"
+      },
+      {
+        "label": "Dikdörtgen",
+        "stdin": "4 5",
+        "expectedOutput": "35"
+      },
+      {
+        "label": "En büyük",
+        "stdin": "8 8",
+        "expectedOutput": "3432"
+      }
+    ]
+  },
+  {
+    "id": "m7-w1",
+    "moduleId": 7,
+    "sectionId": "try-except",
+    "title": "Güvenli bölmeyi tamamla",
+    "level": "Tamamla",
+    "objective": "Bir döngüde farklı hata türlerini ayrı ayrı yakala; hatalı satır programı durdurmasın.",
+    "prompt": "İlk satırda satır sayısı, sonraki her satırda \"a b\" biçiminde iki tam sayı var. Her satır için a / b sonucunu 2 basamağa yuvarlayıp yazdır. Bölen 0 ise \"sıfıra bölme\", satır iki tam sayıdan oluşmuyorsa \"geçersiz satır\" yazdır ve sonraki satıra geç. try bloğu hazır; except bloklarını ekle.",
+    "starterCode": "count = int(input())\nfor _ in range(count):\n    line = input()\n    try:\n        left, right = line.split()\n        print(round(int(left) / int(right), 2))\n    # ZeroDivisionError ve ValueError için except blokları ekle\n",
+    "exampleInput": "3\n10 4\n5 0\nx 2",
+    "exampleOutput": "2.5\nsıfıra bölme\ngeçersiz satır",
+    "hints": [
+      "try bloğu en az bir except veya finally olmadan sözdizimi hatasıdır.",
+      "Fazla veya eksik parça da ValueError verir (too many values to unpack); int(\"x\") ile aynı except yakalar."
+    ],
+    "solution": "count = int(input())\nfor _ in range(count):\n    line = input()\n    try:\n        left, right = line.split()\n        print(round(int(left) / int(right), 2))\n    except ZeroDivisionError:\n        print(\"sıfıra bölme\")\n    except ValueError:\n        print(\"geçersiz satır\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\n10 4\n5 0\nx 2",
+        "expectedOutput": "2.5\nsıfıra bölme\ngeçersiz satır"
+      },
+      {
+        "label": "Tam bölünen",
+        "stdin": "1\n9 3",
+        "expectedOutput": "3.0"
+      },
+      {
+        "label": "Fazla parça",
+        "stdin": "2\n1 2 3\n-6 4",
+        "expectedOutput": "geçersiz satır\n-1.5"
+      },
+      {
+        "label": "Sıfır bölünen",
+        "stdin": "1\n0 5",
+        "expectedOutput": "0.0"
+      }
+    ]
+  },
+  {
+    "id": "m7-w2",
+    "moduleId": 7,
+    "sectionId": "raising",
+    "title": "Kayıt doğrulayıcıyı onar",
+    "level": "Düzelt",
+    "objective": "Sessiz ve genel hata yönetimini, nedeni söyleyen özel mesajlarla değiştir.",
+    "prompt": "İlk satırda kayıt sayısı, sonra her satırda \"isim,yaş\" var. Geçerli kayıt için \"geçerli: isim (yaş)\", hatalı kayıt için \"hatalı satır N: neden\" yaz (N 1'den başlar). Nedenler: virgül yoksa \"virgül eksik\", yaş yalnızca rakam değilse \"yaş sayı değil\", 130'dan büyükse \"yaş gerçekçi değil\". İsim ve yaştaki uç boşluklar temizlenir. Başlangıç kodu bazı satırları doğru işliyor ama üç sorun var: geçersiz yaş yazdırılıp kabul ediliyor, hata nedeni gizleniyor ve satır numaraları kayık.",
+    "starterCode": "def validate(line):\n    name, age_text = line.split(\",\")\n    age = int(age_text)\n    if age > 130:\n        print(\"yaş gerçekçi değil\")\n    return name.strip(), age\n\ncount = int(input())\nfor number in range(count):\n    line = input()\n    try:\n        name, age = validate(line)\n        print(f\"geçerli: {name} ({age})\")\n    except Exception:\n        print(f\"hatalı satır {number}: hata\")\n",
+    "exampleInput": "3\nAda, 36\nCan 20\nEce, yirmi",
+    "exampleOutput": "geçerli: Ada (36)\nhatalı satır 2: virgül eksik\nhatalı satır 3: yaş sayı değil",
+    "hints": [
+      "validate her geçersiz durumda print yerine raise ValueError(\"neden\") yapsın; çağıran except ValueError as error ile mesajı yazdırsın.",
+      "Satır numarası için range(1, count + 1); yaş kontrolü için age_text.strip().isdigit()."
+    ],
+    "solution": "def validate(line):\n    if \",\" not in line:\n        raise ValueError(\"virgül eksik\")\n    name, age_text = line.split(\",\", 1)\n    age_text = age_text.strip()\n    if not age_text.isdigit():\n        raise ValueError(\"yaş sayı değil\")\n    age = int(age_text)\n    if age > 130:\n        raise ValueError(\"yaş gerçekçi değil\")\n    return name.strip(), age\n\ncount = int(input())\nfor number in range(1, count + 1):\n    line = input()\n    try:\n        name, age = validate(line)\n        print(f\"geçerli: {name} ({age})\")\n    except ValueError as error:\n        print(f\"hatalı satır {number}: {error}\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\nAda, 36\nCan 20\nEce, yirmi",
+        "expectedOutput": "geçerli: Ada (36)\nhatalı satır 2: virgül eksik\nhatalı satır 3: yaş sayı değil"
+      },
+      {
+        "label": "Gerçekçi olmayan yaş",
+        "stdin": "1\nBo,200",
+        "expectedOutput": "hatalı satır 1: yaş gerçekçi değil"
+      },
+      {
+        "label": "Boşluklu kayıt",
+        "stdin": "1\n Zed ,0",
+        "expectedOutput": "geçerli: Zed (0)"
+      },
+      {
+        "label": "İkinci satır hatalı",
+        "stdin": "2\nA,1\nB,x",
+        "expectedOutput": "geçerli: A (1)\nhatalı satır 2: yaş sayı değil"
+      }
+    ]
+  },
+  {
+    "id": "m7-w3",
+    "moduleId": 7,
+    "sectionId": "custom-exceptions",
+    "title": "Para transferini sıfırdan yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "Bir hata ailesi tasarla, alt seviye hatayı from ile çevir ve geçersiz işlemlerin durumu bozmamasını sağla.",
+    "prompt": "İlk satırda hesaplar \"ad=bakiye\" biçiminde boşlukla ayrılmış. İkinci satırda transfer sayısı, sonraki her satırda \"kaynak hedef tutar\". Her transfer için başarılıysa \"tamam\" yaz. Önce hesapların varlığı kontrol edilir (önce kaynak, sonra hedef): yoksa \"bilinmeyen hesap: ad\". Sonra bakiye: tutar kaynağın bakiyesinden fazlaysa \"yetersiz bakiye: kaynak\". Başarısız transfer hiçbir bakiyeyi değiştirmemeli. En sonda hesapları ada göre sıralı \"ad=bakiye\" biçiminde tek satırda yaz. Ortak bir TransferError üst sınıfından türeyen iki özel hata kullan; eksik hesabı bulan KeyError'u from ile çevir.",
+    "starterCode": "",
+    "exampleInput": "ada=100 can=50\n3\nada can 30\ncan ada 500\nada zed 10",
+    "exampleOutput": "tamam\nyetersiz bakiye: can\nbilinmeyen hesap: zed\nada=70 can=80",
+    "hints": [
+      "class TransferError(Exception), class InsufficientFunds(TransferError), class UnknownAccount(TransferError). Ana döngüde yalnızca except TransferError as error ile mesajı yazdır.",
+      "transfer fonksiyonunda önce accounts[source] ve accounts[target] okumasını try içine al; except KeyError as error: raise UnknownAccount(f\"bilinmeyen hesap: {error.args[0]}\") from error. Bakiyeleri ancak bütün kontroller geçtikten sonra değiştir."
+    ],
+    "solution": "class TransferError(Exception):\n    pass\n\nclass InsufficientFunds(TransferError):\n    pass\n\nclass UnknownAccount(TransferError):\n    pass\n\ndef transfer(accounts, source, target, amount):\n    try:\n        source_balance = accounts[source]\n        accounts[target]\n    except KeyError as error:\n        raise UnknownAccount(f\"bilinmeyen hesap: {error.args[0]}\") from error\n    if amount > source_balance:\n        raise InsufficientFunds(f\"yetersiz bakiye: {source}\")\n    accounts[source] -= amount\n    accounts[target] += amount\n\naccounts = {}\nfor pair in input().split():\n    name, balance = pair.split(\"=\")\n    accounts[name] = int(balance)\n\ncount = int(input())\nfor _ in range(count):\n    source, target, amount = input().split()\n    try:\n        transfer(accounts, source, target, int(amount))\n        print(\"tamam\")\n    except TransferError as error:\n        print(error)\n\nprint(\" \".join(f\"{name}={balance}\" for name, balance in sorted(accounts.items())))",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "ada=100 can=50\n3\nada can 30\ncan ada 500\nada zed 10",
+        "expectedOutput": "tamam\nyetersiz bakiye: can\nbilinmeyen hesap: zed\nada=70 can=80"
+      },
+      {
+        "label": "Kendine transfer",
+        "stdin": "a=10\n1\na a 5",
+        "expectedOutput": "tamam\na=10"
+      },
+      {
+        "label": "Sıfır bakiye",
+        "stdin": "x=0 y=0\n1\nx y 1",
+        "expectedOutput": "yetersiz bakiye: x\nx=0 y=0"
+      },
+      {
+        "label": "Bilinmeyen kaynak ve sıralama",
+        "stdin": "b=5 a=5\n2\nq a 1\nb a 5",
+        "expectedOutput": "bilinmeyen hesap: q\ntamam\na=10 b=0"
+      }
+    ]
+  },
+  {
+    "id": "m8-w1",
+    "moduleId": 8,
+    "sectionId": "reading-lines",
+    "title": "Yapılacaklar listesini oku",
+    "level": "Tamamla",
+    "objective": "Bir dosyayı satır satır okuyup satırları biçimlerine göre ayır.",
+    "prompt": "Başlangıç kodu girdideki satırları yapilacak.txt dosyasına yazar. Her satır \"[x] iş\" (tamamlanmış) ya da \"[ ] iş\" (bekleyen) biçimindedir; boş satırlar atlanır. read_tasks(path) fonksiyonunu tamamla: dosyayı with ile açıp (tamamlanan, bekleyen) listelerini döndürsün. Program \"tamamlanan: X/Y\" ve bekleyenleri virgülle ayırarak \"bekleyen: ...\" yazdırır; bekleyen yoksa \"bekleyen: yok\".",
+    "starterCode": "count = int(input())\nwith open(\"yapilacak.txt\", \"w\", encoding=\"utf-8\") as f:\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\ndef read_tasks(path):\n    done, pending = [], []\n    # dosyayı satır satır oku; \"[x] \" ile başlayanı done'a, \"[ ] \" ile başlayanı pending'e ekle\n    return done, pending\n\ndone, pending = read_tasks(\"yapilacak.txt\")\ntotal = len(done) + len(pending)\nprint(f\"tamamlanan: {len(done)}/{total}\")\nprint(\"bekleyen:\", \", \".join(pending) if pending else \"yok\")",
+    "exampleInput": "3\n[x] süt al\n[ ] fatura öde\n[ ] spor",
+    "exampleOutput": "tamamlanan: 1/3\nbekleyen: fatura öde, spor",
+    "hints": [
+      "Her satırı önce strip() ile temizle; boş kaldıysa atla.",
+      "line.startswith(\"[x] \") ve line[4:] ile işin adını al."
+    ],
+    "solution": "count = int(input())\nwith open(\"yapilacak.txt\", \"w\", encoding=\"utf-8\") as f:\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\ndef read_tasks(path):\n    done, pending = [], []\n    with open(path, encoding=\"utf-8\") as f:\n        for line in f:\n            line = line.strip()\n            if not line:\n                continue\n            if line.startswith(\"[x] \"):\n                done.append(line[4:])\n            elif line.startswith(\"[ ] \"):\n                pending.append(line[4:])\n    return done, pending\n\ndone, pending = read_tasks(\"yapilacak.txt\")\ntotal = len(done) + len(pending)\nprint(f\"tamamlanan: {len(done)}/{total}\")\nprint(\"bekleyen:\", \", \".join(pending) if pending else \"yok\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\n[x] süt al\n[ ] fatura öde\n[ ] spor",
+        "expectedOutput": "tamamlanan: 1/3\nbekleyen: fatura öde, spor"
+      },
+      {
+        "label": "Hepsi bitti",
+        "stdin": "2\n[x] a\n[x] b",
+        "expectedOutput": "tamamlanan: 2/2\nbekleyen: yok"
+      },
+      {
+        "label": "Boş satırlar",
+        "stdin": "4\n\n[ ] kitap oku\n   \n[x] yürü",
+        "expectedOutput": "tamamlanan: 1/2\nbekleyen: kitap oku"
+      },
+      {
+        "label": "Boş liste",
+        "stdin": "0",
+        "expectedOutput": "tamamlanan: 0/0\nbekleyen: yok"
+      }
+    ]
+  },
+  {
+    "id": "m8-w2",
+    "moduleId": 8,
+    "sectionId": "open-modes",
+    "title": "Not defterini onar",
+    "level": "Düzelt",
+    "objective": "Dosya modu, satır sonu ve eksik dosya hatalarını bulup düzelt.",
+    "prompt": "İlk satırda not sayısı, sonra her satırda bir not var. Her not notlar.txt dosyasına ayrı satır olarak eklenmeli; sonra dosya okunup \"N not\" ve numaralı notlar yazdırılmalı. Hiç not eklenmemişse dosya da yoktur; program yine \"0 not\" yazmalı. Başlangıç kodunda üç sorun var: notlar birbirini siliyor, satırlar birleşiyor ve not yokken program çöküyor. Dosyaların with ile kapatıldığından da emin ol.",
+    "starterCode": "def add_note(path, note):\n    f = open(path, \"w\", encoding=\"utf-8\")\n    f.write(note)\n    f.close()\n\ndef read_notes(path):\n    with open(path, encoding=\"utf-8\") as f:\n        return f.read().splitlines()\n\ncount = int(input())\nfor _ in range(count):\n    add_note(\"notlar.txt\", input().strip())\n\nnotes = read_notes(\"notlar.txt\")\nprint(len(notes), \"not\")\nfor number, note in enumerate(notes, start=1):\n    print(f\"{number}. {note}\")",
+    "exampleInput": "2\nekmek al\nfaturayı öde",
+    "exampleOutput": "2 not\n1. ekmek al\n2. faturayı öde",
+    "hints": [
+      "\"w\" her açılışta dosyayı boşaltır; ekleme modu \"a\"dır. write satır sonu eklemez.",
+      "read_notes içinde FileNotFoundError'u yakalayıp boş liste döndür."
+    ],
+    "solution": "def add_note(path, note):\n    with open(path, \"a\", encoding=\"utf-8\") as f:\n        f.write(note + \"\\n\")\n\ndef read_notes(path):\n    try:\n        with open(path, encoding=\"utf-8\") as f:\n            return f.read().splitlines()\n    except FileNotFoundError:\n        return []\n\ncount = int(input())\nfor _ in range(count):\n    add_note(\"notlar.txt\", input().strip())\n\nnotes = read_notes(\"notlar.txt\")\nprint(len(notes), \"not\")\nfor number, note in enumerate(notes, start=1):\n    print(f\"{number}. {note}\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "2\nekmek al\nfaturayı öde",
+        "expectedOutput": "2 not\n1. ekmek al\n2. faturayı öde"
+      },
+      {
+        "label": "Hiç not yok",
+        "stdin": "0",
+        "expectedOutput": "0 not"
+      },
+      {
+        "label": "Tek not",
+        "stdin": "1\n  boşluklu not  ",
+        "expectedOutput": "1 not\n1. boşluklu not"
+      },
+      {
+        "label": "Üç not",
+        "stdin": "3\na\nb\nc",
+        "expectedOutput": "3 not\n1. a\n2. b\n3. c"
+      }
+    ]
+  },
+  {
+    "id": "m8-w3",
+    "moduleId": 8,
+    "sectionId": "json",
+    "title": "CSV'den JSON rapor",
+    "level": "Sıfırdan yaz",
+    "objective": "CSV verisini dosyadan okuyup doğrula, özetle ve JSON rapor dosyası üret.",
+    "prompt": "İlk satırda kayıt sayısı n, sonra n CSV satırı var: ad,departman,maaş. Ad tırnaklı olup virgül içerebilir. Programın şu adımları izlemeli: (1) satırları \"ad,departman,maas\" başlığıyla personel.csv dosyasına yaz; (2) dosyayı csv.DictReader ile oku; (3) departmanı boş ya da maaşı yalnızca rakamlardan oluşmayan kayıtları hatalı say ve atla; (4) {\"departmanlar\": {departman: {\"kişi\": k, \"toplam\": t}}, \"hatalı\": h} raporunu rapor.json'a json.dump ile ensure_ascii=False ve sort_keys=True kullanarak yaz; (5) rapor.json'u metin olarak okuyup yazdır. Departman ve maaştaki uç boşluklar temizlenir.",
+    "starterCode": "import csv\nimport json\n\ncount = int(input())\nlines = [input() for _ in range(count)]\n\n# 1) personel.csv'ye başlıkla birlikte yaz\n# 2) DictReader ile oku, hatalı kayıtları say\n# 3) raporu rapor.json'a yaz, sonra dosyayı okuyup yazdır",
+    "exampleInput": "3\nAda,Satış,100\n\"Lin, Can\",Satış,200\nEce,,150",
+    "exampleOutput": "{\"departmanlar\": {\"Satış\": {\"kişi\": 2, \"toplam\": 300}}, \"hatalı\": 1}",
+    "hints": [
+      "CSV dosyasını yazarken ve okurken newline=\"\" ve encoding=\"utf-8\" kullan; satırlar zaten CSV biçiminde olduğundan olduğu gibi yazılabilir.",
+      "report[\"departmanlar\"].setdefault(dept, {\"kişi\": 0, \"toplam\": 0}) ile departmanı ilk görüşte oluştur; maaş için salary.isdigit()."
+    ],
+    "solution": "import csv\nimport json\n\ncount = int(input())\nlines = [input() for _ in range(count)]\n\nwith open(\"personel.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"ad,departman,maas\\n\")\n    for line in lines:\n        f.write(line + \"\\n\")\n\nreport = {\"departmanlar\": {}, \"hatalı\": 0}\nwith open(\"personel.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    for row in csv.DictReader(f):\n        dept = (row[\"departman\"] or \"\").strip()\n        salary = (row[\"maas\"] or \"\").strip()\n        if not dept or not salary.isdigit():\n            report[\"hatalı\"] += 1\n            continue\n        summary = report[\"departmanlar\"].setdefault(dept, {\"kişi\": 0, \"toplam\": 0})\n        summary[\"kişi\"] += 1\n        summary[\"toplam\"] += int(salary)\n\nwith open(\"rapor.json\", \"w\", encoding=\"utf-8\") as f:\n    json.dump(report, f, ensure_ascii=False, sort_keys=True)\nwith open(\"rapor.json\", encoding=\"utf-8\") as f:\n    print(f.read())",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\nAda,Satış,100\n\"Lin, Can\",Satış,200\nEce,,150",
+        "expectedOutput": "{\"departmanlar\": {\"Satış\": {\"kişi\": 2, \"toplam\": 300}}, \"hatalı\": 1}"
+      },
+      {
+        "label": "İki departman",
+        "stdin": "3\nBo,İK,50\nAl,Ar-Ge,70\nCe,İK,30",
+        "expectedOutput": "{\"departmanlar\": {\"Ar-Ge\": {\"kişi\": 1, \"toplam\": 70}, \"İK\": {\"kişi\": 2, \"toplam\": 80}}, \"hatalı\": 0}"
+      },
+      {
+        "label": "Geçersiz maaş",
+        "stdin": "3\nDa,Satış,abc\nEl,Satış,-5\nFe, Satış , 40 ",
+        "expectedOutput": "{\"departmanlar\": {\"Satış\": {\"kişi\": 1, \"toplam\": 40}}, \"hatalı\": 2}"
+      },
+      {
+        "label": "Kayıt yok",
+        "stdin": "0",
+        "expectedOutput": "{\"departmanlar\": {}, \"hatalı\": 0}"
+      },
+      {
+        "label": "Eksik alan",
+        "stdin": "2\nGe,Satış\nHa,Satış,10",
+        "expectedOutput": "{\"departmanlar\": {\"Satış\": {\"kişi\": 1, \"toplam\": 10}}, \"hatalı\": 1}"
+      }
+    ]
+  },
+  {
+    "id": "m9-w1",
+    "moduleId": 9,
+    "sectionId": "env-vars",
+    "title": "Ayarları ortamdan oku",
+    "level": "Tamamla",
+    "objective": "Ortam değişkenlerini varsayılan değerlerle okuyup doğru türe çevir ve geçersiz değeri açıkça bildir.",
+    "prompt": "Başlangıç kodu girdideki AD=değer satırlarını os.environ'a yazar. get_int(name, default) ve get_bool(name, default) fonksiyonlarını tamamla. Değişken tanımlı değilse varsayılan döner. get_int: değer (uç boşluklar atılarak) tam sayı değilse ValueError(f\"{name} geçersiz: {value}\"). get_bool: büyük/küçük harf ve uç boşluk fark etmeksizin 1, true, yes, evet, on → True; 0, false, no, hayır, off → False; başka her şey ValueError(f\"{name} geçersiz: {value}\"). Program PORT (8000), WORKERS (2) ve DEBUG (False) ayarlarını yazdırır ya da \"ayar hatası: ...\" der.",
+    "starterCode": "import os\n\ncount = int(input())\nfor _ in range(count):\n    key, value = input().split(\"=\", 1)\n    os.environ[key] = value\n\nTRUE_WORDS = {\"1\", \"true\", \"yes\", \"evet\", \"on\"}\nFALSE_WORDS = {\"0\", \"false\", \"no\", \"hayır\", \"off\"}\n\ndef get_int(name, default):\n    # tanımlı değilse default; tam sayı değilse ValueError\n    return default\n\ndef get_bool(name, default):\n    # tanımlı değilse default; TRUE_WORDS/FALSE_WORDS dışında ValueError\n    return default\n\ntry:\n    port = get_int(\"PORT\", 8000)\n    workers = get_int(\"WORKERS\", 2)\n    debug = get_bool(\"DEBUG\", False)\n    print(f\"PORT={port} WORKERS={workers} DEBUG={debug}\")\nexcept ValueError as error:\n    print(\"ayar hatası:\", error)",
+    "exampleInput": "2\nPORT=9000\nDEBUG=Evet",
+    "exampleOutput": "PORT=9000 WORKERS=2 DEBUG=True",
+    "hints": [
+      "value = os.getenv(name) ile oku; None ise default döndür.",
+      "Karşılaştırmadan önce value.strip().lower() kullan; int için int(value.strip()) dönüşümünü try/except ValueError içinde dene ve kendi mesajınla yeniden fırlat."
+    ],
+    "solution": "import os\n\ncount = int(input())\nfor _ in range(count):\n    key, value = input().split(\"=\", 1)\n    os.environ[key] = value\n\nTRUE_WORDS = {\"1\", \"true\", \"yes\", \"evet\", \"on\"}\nFALSE_WORDS = {\"0\", \"false\", \"no\", \"hayır\", \"off\"}\n\ndef get_int(name, default):\n    value = os.getenv(name)\n    if value is None:\n        return default\n    try:\n        return int(value.strip())\n    except ValueError:\n        raise ValueError(f\"{name} geçersiz: {value}\") from None\n\ndef get_bool(name, default):\n    value = os.getenv(name)\n    if value is None:\n        return default\n    word = value.strip().lower()\n    if word in TRUE_WORDS:\n        return True\n    if word in FALSE_WORDS:\n        return False\n    raise ValueError(f\"{name} geçersiz: {value}\")\n\ntry:\n    port = get_int(\"PORT\", 8000)\n    workers = get_int(\"WORKERS\", 2)\n    debug = get_bool(\"DEBUG\", False)\n    print(f\"PORT={port} WORKERS={workers} DEBUG={debug}\")\nexcept ValueError as error:\n    print(\"ayar hatası:\", error)",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "2\nPORT=9000\nDEBUG=Evet",
+        "expectedOutput": "PORT=9000 WORKERS=2 DEBUG=True"
+      },
+      {
+        "label": "Hiç ayar yok",
+        "stdin": "0",
+        "expectedOutput": "PORT=8000 WORKERS=2 DEBUG=False"
+      },
+      {
+        "label": "false metni",
+        "stdin": "2\nDEBUG=false\nWORKERS= 4 ",
+        "expectedOutput": "PORT=8000 WORKERS=4 DEBUG=False"
+      },
+      {
+        "label": "Geçersiz sayı",
+        "stdin": "1\nPORT=sekiz",
+        "expectedOutput": "ayar hatası: PORT geçersiz: sekiz"
+      },
+      {
+        "label": "Geçersiz bool",
+        "stdin": "1\nDEBUG=belki",
+        "expectedOutput": "ayar hatası: DEBUG geçersiz: belki"
+      }
+    ]
+  },
+  {
+    "id": "m9-w2",
+    "moduleId": 9,
+    "sectionId": "dependency-files",
+    "title": "Bağımlılık denetleyicisini onar",
+    "level": "Düzelt",
+    "objective": "requirements.txt satırlarını sağlam biçimde ayrıştır ve paket adlarını pip gibi karşılaştır.",
+    "prompt": "İlk satırda requirements satır sayısı, ardından requirements.txt satırları (her paket ad==sürüm biçiminde sabitlenmiş); sonra kurulu paket sayısı ve \"ad sürüm\" satırları (pip list gibi) geliyor. Her gereksinim için \"ad: tamam\", \"ad: farklı (kurulu X)\" ya da \"ad: eksik\" yazdır. Adlar pip'in yaptığı gibi karşılaştırılır: büyük/küçük harf ve _ ile - farkı önemsizdir; çıktıda ad küçük harfle ve _ yerine - ile yazılır. Başlangıç kodunda üç sorun var: yorum ve boş satırlar programı çökertiyor, ad karşılaştırması pip'ten farklı ve == çevresindeki boşluklar sürümü bozuyor.",
+    "starterCode": "def parse_requirements(lines):\n    pins = {}\n    for line in lines:\n        name, version = line.split(\"==\")\n        pins[name] = version\n    return pins\n\ndef parse_installed(lines):\n    installed = {}\n    for line in lines:\n        name, version = line.split()\n        installed[name] = version\n    return installed\n\nreq_count = int(input())\nrequirements = parse_requirements([input() for _ in range(req_count)])\ninst_count = int(input())\ninstalled = parse_installed([input() for _ in range(inst_count)])\n\nfor name, version in requirements.items():\n    if name not in installed:\n        print(f\"{name}: eksik\")\n    elif installed[name] != version:\n        print(f\"{name}: farklı (kurulu {installed[name]})\")\n    else:\n        print(f\"{name}: tamam\")",
+    "exampleInput": "4\n# web\nFlask==3.0.3\nrequests == 2.32.3\npython_dotenv==1.0.1\n2\nflask 3.0.3\nrequests 2.31.0",
+    "exampleOutput": "flask: tamam\nrequests: farklı (kurulu 2.31.0)\npython-dotenv: eksik",
+    "hints": [
+      "Adı normalleştiren küçük bir fonksiyon yaz: name.strip().lower().replace(\"_\", \"-\"); iki sözlükte de kullan.",
+      "Her requirements satırında önce line.split(\"#\", 1)[0].strip(); boş kalırsa atla. Sürümü de strip ile temizle."
+    ],
+    "solution": "def normalize(name):\n    return name.strip().lower().replace(\"_\", \"-\")\n\ndef parse_requirements(lines):\n    pins = {}\n    for line in lines:\n        line = line.split(\"#\", 1)[0].strip()\n        if not line:\n            continue\n        name, version = line.split(\"==\")\n        pins[normalize(name)] = version.strip()\n    return pins\n\ndef parse_installed(lines):\n    installed = {}\n    for line in lines:\n        name, version = line.split()\n        installed[normalize(name)] = version\n    return installed\n\nreq_count = int(input())\nrequirements = parse_requirements([input() for _ in range(req_count)])\ninst_count = int(input())\ninstalled = parse_installed([input() for _ in range(inst_count)])\n\nfor name, version in requirements.items():\n    if name not in installed:\n        print(f\"{name}: eksik\")\n    elif installed[name] != version:\n        print(f\"{name}: farklı (kurulu {installed[name]})\")\n    else:\n        print(f\"{name}: tamam\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "4\n# web\nFlask==3.0.3\nrequests == 2.32.3\npython_dotenv==1.0.1\n2\nflask 3.0.3\nrequests 2.31.0",
+        "expectedOutput": "flask: tamam\nrequests: farklı (kurulu 2.31.0)\npython-dotenv: eksik"
+      },
+      {
+        "label": "Satır sonu yorumu ve boş satır",
+        "stdin": "3\nrich==13.7.1  # renkli çıktı\n\nPyYAML==6.0.1\n2\nrich 13.7.1\npyyaml 6.0.1",
+        "expectedOutput": "rich: tamam\npyyaml: tamam"
+      },
+      {
+        "label": "Kurulu adda alt çizgi",
+        "stdin": "1\ntyping-extensions==4.12.2\n1\ntyping_extensions 4.12.2",
+        "expectedOutput": "typing-extensions: tamam"
+      },
+      {
+        "label": "Hiç kurulu yok",
+        "stdin": "1\nnumpy==2.1.0\n0",
+        "expectedOutput": "numpy: eksik"
+      },
+      {
+        "label": "Boşluklu sabitleme",
+        "stdin": "1\nrequests == 2.32.3\n1\nrequests 2.32.3",
+        "expectedOutput": "requests: tamam"
+      }
+    ]
+  },
+  {
+    "id": "m9-w3",
+    "moduleId": 9,
+    "sectionId": "packages-relative",
+    "title": "Kendi paketini kur",
+    "level": "Sıfırdan yaz",
+    "objective": "Birden çok modülden oluşan bir paket tasarla; modülleri relative import ile bağla ve paketin dışa açık adlarını __init__.py'de topla.",
+    "prompt": "Program önce metin adlı bir paket oluşturmalı (Path.write_text ile): metin/temizle.py içinde normalize(text) — metnin boşluklarını tek boşluğa indirip uçlarını atar; metin/say.py içinde word_counts(text) — normalize'ı from .temizle import normalize ile kullanır, her kelimenin uçlarındaki .,!?;: işaretlerini atar, boş kalanı saymaz ve {kelime: sayı} sözlüğü döndürür; metin/__init__.py ise normalize ve word_counts'u dışa açar. Ardından import metin ile paketi kullanarak girdideki n satırı (ilk satır n) boşlukla birleştirip en sık 3 kelimeyi \"kelime: sayı\" olarak yazdırır (çoktan aza; eşitlikte alfabetik; büyük/küçük harf ayrı sayılır). Son satır paketin yapısını gösterir: print(sorted(n for n in dir(metin) if not n.startswith(\"_\"))).",
+    "starterCode": "from pathlib import Path\n\n# 1) metin paketini oluştur: __init__.py, temizle.py, say.py\n# 2) import metin\n# 3) girdiyi oku, en sık 3 kelimeyi yazdır\n\n# Son satır (değiştirme):\n# print(sorted(n for n in dir(metin) if not n.startswith(\"_\")))",
+    "exampleInput": "2\nelma armut elma\nArmut,  elma!",
+    "exampleOutput": "elma: 3\nArmut: 1\narmut: 1\n['normalize', 'say', 'temizle', 'word_counts']",
+    "hints": [
+      "Önce Path(\"metin\").mkdir(), sonra üç dosyayı write_text ile yaz; ancak hepsi yazıldıktan sonra import metin.",
+      "__init__.py: from .temizle import normalize ve from .say import word_counts. Sıralama için key=lambda item: (-item[1], item[0])."
+    ],
+    "solution": "from pathlib import Path\n\nPath(\"metin\").mkdir()\nPath(\"metin/temizle.py\").write_text(\"\"\"def normalize(text):\n    return \" \".join(text.split())\n\"\"\", encoding=\"utf-8\")\nPath(\"metin/say.py\").write_text(\"\"\"from .temizle import normalize\n\ndef word_counts(text):\n    counts = {}\n    for word in normalize(text).split(\" \"):\n        word = word.strip(\".,!?;:\")\n        if word:\n            counts[word] = counts.get(word, 0) + 1\n    return counts\n\"\"\", encoding=\"utf-8\")\nPath(\"metin/__init__.py\").write_text(\"\"\"from .temizle import normalize\nfrom .say import word_counts\n\"\"\", encoding=\"utf-8\")\n\nimport metin\n\ncount = int(input())\ntext = \" \".join(input() for _ in range(count))\nranked = sorted(metin.word_counts(text).items(), key=lambda item: (-item[1], item[0]))\nfor word, number in ranked[:3]:\n    print(f\"{word}: {number}\")\nprint(sorted(n for n in dir(metin) if not n.startswith(\"_\")))",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "2\nelma armut elma\nArmut,  elma!",
+        "expectedOutput": "elma: 3\nArmut: 1\narmut: 1\n['normalize', 'say', 'temizle', 'word_counts']"
+      },
+      {
+        "label": "Üçten az kelime",
+        "stdin": "1\nmerhaba merhaba",
+        "expectedOutput": "merhaba: 2\n['normalize', 'say', 'temizle', 'word_counts']"
+      },
+      {
+        "label": "Yalnız noktalama",
+        "stdin": "2\n... !!!\nbir, iki; bir: iki? üç",
+        "expectedOutput": "bir: 2\niki: 2\nüç: 1\n['normalize', 'say', 'temizle', 'word_counts']"
+      },
+      {
+        "label": "Boş girdi",
+        "stdin": "0",
+        "expectedOutput": "['normalize', 'say', 'temizle', 'word_counts']"
+      }
+    ]
+  },
+  {
+    "id": "m10-w1",
+    "moduleId": 10,
+    "sectionId": "collections",
+    "title": "Kelime sıklığı raporu",
+    "level": "Tamamla",
+    "objective": "Counter ile sayıp eşitliklerde belirli bir sıralama uygula.",
+    "prompt": "Tek satırdaki sözcükleri boşluklardan ayır. Büyük/küçük harf ayrımı korunur. Her sözcüğü ve sayısını bir boşlukla yazdır; önce sayı azalan, eşit sayılarda sözcük artan sırada. Boş/yalnız boşluk içeren girdi için BOS yazdır. Başlangıç kodunun raporlama kısmını tamamla.",
+    "starterCode": "from collections import Counter\n\ncounts = Counter(input().split())\n# Sayım sonucunu istenen sırayla raporla\n",
+    "exampleInput": "elma armut elma",
+    "exampleOutput": "elma 2\narmut 1",
+    "hints": [
+      "Counter.items() sözcük ve adet çiftleri verir.",
+      "sorted(..., key=lambda item: (-item[1], item[0])) kullan; boş sayımı ayrıca ele al."
+    ],
+    "solution": "from collections import Counter\n\ncounts = Counter(input().split())\nif not counts:\n    print('BOS')\nfor word, count in sorted(counts.items(), key=lambda item: (-item[1], item[0])):\n    print(word, count)",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "elma armut elma",
+        "expectedOutput": "elma 2\narmut 1"
+      },
+      {
+        "label": "Eşit adet",
+        "stdin": "z a z a b",
+        "expectedOutput": "a 2\nz 2\nb 1"
+      },
+      {
+        "label": "Boş",
+        "stdin": " ",
+        "expectedOutput": "BOS"
+      },
+      {
+        "label": "Harf ayrımı",
+        "stdin": "ada Ada ada",
+        "expectedOutput": "ada 2\nAda 1"
+      }
+    ]
+  },
+  {
+    "id": "m10-w2",
+    "moduleId": 10,
+    "sectionId": "datetime",
+    "title": "Saat dilimleri arasında süreyi düzelt",
+    "level": "Düzelt",
+    "objective": "Saat dilimi dönüşümü ile süre bileşeni/toplam süre farkını uygula.",
+    "prompt": "İki satırda ISO biçiminde saat dilimi içeren başlangıç ve bitiş zamanı verilir. Bitiş eksi başlangıç farkını tam saniye olarak yazdır; negatif süreler de geçerlidir. Girdiler geçerlidir ve kesirli saniye içermez. Kodda iki hata var: UTC'ye dönüştürmek yerine saat dilimini yeniden etiketliyor; toplam saniye yerine gün içindeki saniye bileşenini alıyor. İkisini de düzelt.",
+    "starterCode": "from datetime import datetime, timezone\n\nstart = datetime.fromisoformat(input()).replace(tzinfo=timezone.utc)\nend = datetime.fromisoformat(input()).replace(tzinfo=timezone.utc)\nprint((end - start).seconds)",
+    "exampleInput": "2026-10-06T10:00:00+03:00\n2026-10-06T08:00:00+00:00",
+    "exampleOutput": "3600",
+    "hints": [
+      "replace(tzinfo=...) aynı duvar saatine başka etiket yapıştırır; astimezone aynı anı korur.",
+      "Her iki replace çağrısını astimezone ile değiştir; int((end - start).total_seconds()) kullan."
+    ],
+    "solution": "from datetime import datetime, timezone\n\nstart = datetime.fromisoformat(input()).astimezone(timezone.utc)\nend = datetime.fromisoformat(input()).astimezone(timezone.utc)\nprint(int((end - start).total_seconds()))",
+    "tests": [
+      {
+        "label": "Farklı dilimler",
+        "stdin": "2026-10-06T10:00:00+03:00\n2026-10-06T08:00:00+00:00",
+        "expectedOutput": "3600"
+      },
+      {
+        "label": "Bir günden uzun",
+        "stdin": "2026-10-06T10:00:00+03:00\n2026-10-08T11:00:00+03:00",
+        "expectedOutput": "176400"
+      },
+      {
+        "label": "Negatif",
+        "stdin": "2026-10-06T10:00:00+00:00\n2026-10-06T09:00:00+00:00",
+        "expectedOutput": "-3600"
+      },
+      {
+        "label": "Aynı an",
+        "stdin": "2026-10-06T10:00:00+03:00\n2026-10-06T07:00:00+00:00",
+        "expectedOutput": "0"
+      }
+    ]
+  },
+  {
+    "id": "m10-w3",
+    "moduleId": 10,
+    "sectionId": "sys-subprocess-argparse",
+    "title": "Günlük analiz aracını sıfırdan yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "argparse, re ve Counter kullanarak filtrelenmiş bir rapor üret.",
+    "prompt": "İlk satır komut seçenekleridir: --level INFO veya ERROR (yoksa iki düzey de), --top negatif olmayan tam sayı (varsayılan 2). Seçenekler geçerlidir ve tırnaklı değer içermez; boş satır seçenek yok demektir. İkinci satır N, ardından N günlük satırı gelir. Geçerli satır tam olarak INFO veya ERROR, bir boşluk ve yalnız a-z harflerinden oluşan, en az bir harfli servis adıdır. Önce GECERSIZ <adet> yazdır. Geçerli ve düzey filtresine uyan satırlardaki servisleri say; sayı azalan, eşitlikte servis adı artan sırayla en fazla top adet '<servis> <sayı>' yazdır. top=0 veya eşleşme yoksa yalnız GECERSIZ satırı çıkar. Tarayıcıda seçenek satırını split() ile parse_args'e ver; subprocess kullanma.",
+    "starterCode": "# Seçenekleri oku, günlükleri doğrula ve raporu üret.\n",
+    "exampleInput": "--level ERROR --top 2\n5\nERROR api\nINFO web\nERROR api\nERROR web\nbozuk",
+    "exampleOutput": "GECERSIZ 1\napi 2\nweb 1",
+    "hints": [
+      "ArgumentParser ile --level choices ve --top type=int tanımla; re.fullmatch ile bütün satırı doğrula.",
+      "Geçersizleri filtreden bağımsız say. Geçerli eşleşmelerin servis grubunu Counter'a ekle, sorted ile (-adet, ad) sıralaması uygula."
+    ],
+    "solution": "import argparse\nimport re\nfrom collections import Counter\n\nparser = argparse.ArgumentParser(prog='gunluk')\nparser.add_argument('--level', choices=['INFO', 'ERROR'])\nparser.add_argument('--top', type=int, default=2)\nargs = parser.parse_args(input().split())\ncounts = Counter()\ninvalid = 0\nfor _ in range(int(input())):\n    match = re.fullmatch(r'(INFO|ERROR) ([a-z]+)', input())\n    if match is None:\n        invalid += 1\n    elif args.level is None or match.group(1) == args.level:\n        counts[match.group(2)] += 1\nprint('GECERSIZ', invalid)\nfor name, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:args.top]:\n    print(name, count)",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "--level ERROR --top 2\n5\nERROR api\nINFO web\nERROR api\nERROR web\nbozuk",
+        "expectedOutput": "GECERSIZ 1\napi 2\nweb 1"
+      },
+      {
+        "label": "Varsayılan ve eşitlik",
+        "stdin": " \n4\nINFO z\nERROR a\nINFO b\nERROR z",
+        "expectedOutput": "GECERSIZ 0\nz 2\na 1"
+      },
+      {
+        "label": "Tam satır doğrulama",
+        "stdin": "--level INFO\n5\nINFO api extra\nINFO  api\nINFO API\nERROR api\nINFO web",
+        "expectedOutput": "GECERSIZ 3\nweb 1"
+      },
+      {
+        "label": "Sıfır sınır",
+        "stdin": "--top 0\n2\nINFO api\nx",
+        "expectedOutput": "GECERSIZ 1"
+      },
+      {
+        "label": "Boş günlük",
+        "stdin": " \n0",
+        "expectedOutput": "GECERSIZ 0"
+      },
+      {
+        "label": "Filtrede eşleşme yok",
+        "stdin": "--level ERROR\n1\nINFO api",
+        "expectedOutput": "GECERSIZ 0"
+      }
+    ]
   }
 ]

@@ -6,6 +6,7 @@ globalThis.pythonRuntime = {
     try {
       const result = await pyodide.runPythonAsync(`
 import io as _io, contextlib as _contextlib, traceback as _traceback, builtins as _builtins
+import os as _os, shutil as _shutil, tempfile as _tempfile, sys as _sys, importlib as _importlib
 class _LimitedOutput(_io.StringIO):
     def write(self, value):
         if self.tell() + len(value) > 20000:
@@ -23,12 +24,34 @@ _custom_builtins = dict(vars(_builtins))
 _custom_builtins["input"] = _input
 _namespace = {"__name__": "__main__", "__builtins__": _custom_builtins}
 _ok = True
+# Each run starts in its own empty folder so file examples give the same result every time.
+_home = _os.getcwd()
+_workdir = _tempfile.mkdtemp(prefix="iz-")
+_os.chdir(_workdir)
+# Modules the run writes and imports, sys.path edits and environment variables are undone afterwards too.
+_saved_path = list(_sys.path)
+_saved_env = dict(_os.environ)
+_importlib.invalidate_caches()
+def _from_workdir(module):
+    try:
+        locations = [getattr(module, "__file__", None), *(getattr(module, "__path__", None) or [])]
+        return any(isinstance(location, str) and location and (not _os.path.isabs(location) or location.startswith(_workdir + _os.sep)) for location in locations)
+    except Exception:
+        return False
 with _contextlib.redirect_stdout(_output), _contextlib.redirect_stderr(_output):
     try:
         exec(compile(source_code, "cozum.py", "exec"), _namespace)
     except BaseException:
         _ok = False
         _error = _traceback.format_exc()
+    finally:
+        for _name in [name for name, module in list(_sys.modules.items()) if _from_workdir(module)]:
+            del _sys.modules[_name]
+        _sys.path[:] = _saved_path
+        _os.environ.clear()
+        _os.environ.update(_saved_env)
+        _os.chdir(_home)
+        _shutil.rmtree(_workdir, ignore_errors=True)
 _text = _output.getvalue().rstrip("\\n")
 if not _ok:
     _text = (_text + "\\n" + _error).strip("\\n")

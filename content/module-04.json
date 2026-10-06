@@ -1,0 +1,1015 @@
+{
+  "id": 4,
+  "slug": "veri-yapilari",
+  "title": "Veri yapıları",
+  "description": "Liste, tuple, küme ve sözlükle veriyi tut, iç içe yapıları oku ve istediğin ölçüte göre sırala.",
+  "contentVersion": 1,
+  "estimatedMinutes": 120,
+  "practiceIds": [
+    "m4-q01",
+    "m4-q02",
+    "m4-q03",
+    "m4-q05",
+    "m4-q07",
+    "m4-q09",
+    "m4-q10",
+    "m4-q11",
+    "m4-q12",
+    "m4-q13",
+    "m4-q16",
+    "m4-q19",
+    "m4-q23",
+    "m4-q28",
+    "m4-q37"
+  ],
+  "sections": [
+    {
+      "id": "lists",
+      "title": "Listeler",
+      "eyebrow": "Sıralı ve değiştirilebilir koleksiyon",
+      "objectives": [
+        "Liste indeksleme ve dilimlemesinin sonucunu tahmin eder.",
+        "Listenin yerinde değiştirilebildiğini (mutable) str ile karşılaştırarak açıklar."
+      ],
+      "prerequisites": [
+        "m2:slicing",
+        "m3:for-range"
+      ],
+      "summary": "Liste köşeli parantezle yazılan, sıralı ve değiştirilebilir bir koleksiyondur. İndeksleme ve dilimleme metinlerdekiyle aynı kurallarla çalışır.",
+      "explanation": "[3, \"elma\", True] gibi farklı tipleri bir arada tutabilir ama çoğu zaman aynı türden öğeler saklanır. str'den farklı olarak liste mutable'dır: items[0] = 10 listeyi yerinde değiştirir. len() öğe sayısını verir, in üyeliği sınar. Dilim yeni bir liste üretir; atama ise yeni liste üretmez: b = a yazınca iki isim aynı listeyi gösterir. Bu takma ad (alias) davranışını M5'te ayrıntılı izleyeceğiz.",
+      "code": "scores = [70, 85, 90]\nscores[0] = 75\nprint(scores)\nprint(scores[-1], len(scores))\nprint(scores[1:])",
+      "expectedOutput": "[75, 85, 90]\n90 3\n[85, 90]",
+      "why": "scores[0] = 75 listenin ilk öğesini yerinde değiştirir; aynı işlem bir str üzerinde TypeError verirdi. -1 son öğeyi, len öğe sayısını verir. [1:] dilimi ilk öğe hariç yeni bir liste üretir.",
+      "alternatives": [
+        "Öğeler yalnızca okunacak ve değişmemesi gerekiyorsa tuple kullanılabilir.",
+        "Liste kopyası gerektiğinde b = a yerine b = a.copy() veya b = a[:] yaz."
+      ],
+      "traps": [
+        "b = a ile listenin kopyalandığını sanmak; iki isim aynı listeyi gösterir.",
+        "Boş listede items[0] kullanıp IndexError almak.",
+        "len(items) değerini son indeks sanmak; son indeks len(items) - 1'dir."
+      ],
+      "realCode": "def latest(events, count):\n    if count <= 0:\n        return []\n    return events[-count:]\n\nprint(latest([\"giriş\", \"arama\", \"sepet\", \"ödeme\"], 2))",
+      "realOutput": "['sepet', 'ödeme']",
+      "lineByLine": [
+        "Fonksiyon olay listesini ve istenen öğe sayısını alır.",
+        "count 0 iken events[-0:] bütün listeyi verirdi; bu yüzden ayrıca ele alınır.",
+        "Negatif başlangıçlı dilim son count öğeyi alır.",
+        "Orijinal liste değişmez; dilim yeni bir liste üretir."
+      ]
+    },
+    {
+      "id": "list-methods",
+      "title": "Liste metotları",
+      "eyebrow": "Yerinde değiştiren metotlar None döndürür",
+      "objectives": [
+        "append, extend, insert, pop, remove ve sort'un listeyi nasıl değiştirdiğini izler.",
+        "Yerinde değiştiren bir metodun dönüş değerinin None olduğunu fark eder."
+      ],
+      "prerequisites": [
+        "lists"
+      ],
+      "summary": "append sona bir öğe, extend birden çok öğe ekler. pop öğeyi çıkarıp döndürür, remove değere göre siler. sort listeyi yerinde sıralar ve None döndürür.",
+      "explanation": "String metotları yeni bir değer döndürürken çoğu liste metodu listeyi yerinde değiştirir ve None döndürür. Bu yüzden items = items.sort() yazmak listeyi kaybettirir. append([4, 5]) listeyi tek bir öğe olarak ekler; extend([4, 5]) iki ayrı öğe ekler. pop() son öğeyi, pop(0) ilk öğeyi çıkarıp verir. insert(i, x) x'i i konumuna yerleştirir. remove(x) yalnızca ilk eşleşmeyi siler; bulamazsa ValueError üretir.",
+      "code": "items = [3, 1, 2]\nitems.append(5)\nitems.extend([4, 0])\nlast = items.pop()\nitems.sort()\nprint(items)\nprint(last)\nprint(items.sort())",
+      "expectedOutput": "[1, 2, 3, 4, 5]\n0\nNone",
+      "why": "pop() son öğe olan 0'ı çıkarır ve döndürür. sort listeyi yerinde sıralar. Son satır sort'un dönüş değerini yazdırır: None. Sıralanmış liste items'ın kendisidir.",
+      "alternatives": [
+        "Orijinali korumak istiyorsan items.sort() yerine yeni liste döndüren sorted(items) kullan.",
+        "Sık sık baştan öğe çıkarılıyorsa pop(0) yerine collections.deque daha hızlıdır (M10)."
+      ],
+      "traps": [
+        "items = items.sort() yazıp listeyi None'a bağlamak.",
+        "append ile extend'i karıştırıp istemeden iç içe liste oluşturmak.",
+        "remove'un bütün eşleşmeleri sildiğini sanmak; yalnızca ilkini siler."
+      ],
+      "realCode": "def parse_numbers(line):\n    numbers = []\n    for part in line.split():\n        numbers.append(int(part))\n    return numbers\n\nprint(parse_numbers(\"4 15 8\"))",
+      "realOutput": "[4, 15, 8]",
+      "lineByLine": [
+        "Boş bir liste biriktirici olarak başlatılır.",
+        "split metni boşluklardan parçalara ayırır.",
+        "Her parça int'e çevrilip append ile sona eklenir.",
+        "Bu kalıbın kısa yazımı list comprehension'dır; M5'te göreceksin."
+      ]
+    },
+    {
+      "id": "tuples",
+      "title": "Tuple (demet)",
+      "eyebrow": "Değişmeyen sıralı kayıt",
+      "objectives": [
+        "Tuple'ın değiştirilemez olduğunu ve tek elemanlı tuple yazımını bilir.",
+        "Fonksiyonların birden çok değeri tuple olarak döndürdüğünü okur."
+      ],
+      "prerequisites": [
+        "lists"
+      ],
+      "summary": "Tuple parantezle (veya yalnızca virgülle) yazılan, sıralı ama değiştirilemez bir koleksiyondur. Tuple'ı tuple yapan virgüldür.",
+      "explanation": "point = (3, 4) iki elemanlı bir tuple'dır; point[0] = 5 TypeError üretir. Tek elemanlı tuple için virgül şarttır: (5,) bir tuple, (5) ise yalnızca parantez içindeki 5 sayısıdır. return a, b yazan bir fonksiyon aslında tek bir tuple döndürür; x, y = point ile parçalar isimlere açılır (unpacking; ayrıntısı M5'te). Değişmediği için tuple sözlük anahtarı veya küme öğesi olabilir; liste olamaz.",
+      "code": "point = (3, 4)\nx, y = point\nprint(x + y)\nsingle = (5,)\nnot_tuple = (5)\nprint(type(single).__name__, type(not_tuple).__name__)",
+      "expectedOutput": "7\ntuple int",
+      "why": "x, y = point tuple'ın iki elemanını sırayla x ve y'ye bağlar. (5,) içindeki virgül tuple oluşturur; (5) yalnızca gruplama parantezidir ve int kalır.",
+      "alternatives": [
+        "Alanlara isimle erişmek gerekiyorsa namedtuple (M10) veya dataclass (M12) daha okunur olur.",
+        "Öğeler eklenip çıkarılacaksa tuple yerine liste kullan."
+      ],
+      "traps": [
+        "Tek elemanlı tuple'da virgülü unutmak.",
+        "Tuple'ın değişmezliğini içindeki listeye de genellemek; (1, [2]) içindeki liste yine değiştirilebilir.",
+        "Açma sırasında isim sayısını eleman sayısından farklı yazıp ValueError almak."
+      ],
+      "realCode": "def min_max(values):\n    low = values[0]\n    high = values[0]\n    for value in values:\n        if value < low:\n            low = value\n        if value > high:\n            high = value\n    return low, high\n\nsmallest, largest = min_max([7, 2, 9, 4])\nprint(smallest, largest)",
+      "realOutput": "2 9",
+      "lineByLine": [
+        "İlk eleman hem en küçük hem en büyük aday olarak alınır.",
+        "Her değer iki adayla ayrı ayrı karşılaştırılır.",
+        "return low, high iki değeri tek bir tuple olarak döndürür.",
+        "Çağıran taraf tuple'ı iki isme açar."
+      ]
+    },
+    {
+      "id": "sets",
+      "title": "Küme (set)",
+      "eyebrow": "Tekrarsız ve sırasız",
+      "objectives": [
+        "Kümenin tekrarları attığını ve sırası olmadığını açıklar.",
+        "Birleşim, kesişim ve fark işlemlerinin sonucunu bulur."
+      ],
+      "prerequisites": [
+        "lists"
+      ],
+      "summary": "set tekrarsız öğeler tutar ve sırası yoktur. Üyelik kontrolü (in) büyük listelere göre çok hızlıdır; |, & ve - küme işlemlerini yapar.",
+      "explanation": "set([3, 1, 3]) yalnızca 1 ve 3'ü tutar. Kümenin indeksi yoktur (s[0] TypeError verir) ve yazdırma sırası garanti değildir; bu yüzden örneklerde sorted() ile sıralı liste yazdırıyoruz. Boş küme set() ile oluşturulur; {} boş bir sözlüktür. a | b birleşim, a & b kesişim, a - b fark verir. Kümeye yalnızca değişmez (hashable) öğeler girer: sayı, str ve tuple olur; liste olmaz.",
+      "code": "backend = {\"python\", \"sql\", \"docker\"}\nfrontend = {\"js\", \"css\", \"docker\"}\nprint(sorted(backend & frontend))\nprint(sorted(backend - frontend))\nprint(len(backend | frontend))\nprint(\"sql\" in backend)",
+      "expectedOutput": "['docker']\n['python', 'sql']\n5\nTrue",
+      "why": "& iki kümede de olan docker'ı, - yalnızca backend'de olanları verir. Birleşimde docker iki kez sayılmaz; toplam 5 farklı öğe vardır. sorted() sırasız kümeyi tutarlı bir sırayla yazdırmak için kullanılır.",
+      "alternatives": [
+        "Tekrarları atıp ilk görülme sırasını korumak gerekiyorsa list(dict.fromkeys(items)) kullanılabilir.",
+        "Sık üyelik kontrolü yapılan büyük bir koleksiyonu bir kez sete çevirmek aramayı hızlandırır (M17)."
+      ],
+      "traps": [
+        "{} yazıp boş küme oluşturduğunu sanmak; o boş bir sözlüktür.",
+        "Kümenin yazdırma sırasına güvenmek.",
+        "set(\"hello\") çağrısının kelimeyi değil harfleri kümelediğini unutmak."
+      ],
+      "realCode": "def unique_visitors(log_lines):\n    seen = set()\n    for line in log_lines:\n        user = line.split()[0]\n        seen.add(user)\n    return len(seen)\n\nprint(unique_visitors([\"ada /home\", \"can /cart\", \"ada /pay\"]))",
+      "realOutput": "2",
+      "lineByLine": [
+        "Boş küme set() ile oluşturulur.",
+        "Her log satırının ilk kelimesi kullanıcı adıdır.",
+        "add, aynı kullanıcı ikinci kez geldiğinde hiçbir şey eklemez.",
+        "Kümenin boyu farklı ziyaretçi sayısını verir."
+      ]
+    },
+    {
+      "id": "dicts",
+      "title": "Sözlük (dict)",
+      "eyebrow": "Anahtardan değere eşleme",
+      "objectives": [
+        "Sözlükte okuma, ekleme ve güncellemenin sonucunu izler.",
+        "d[key] ile d.get(key) farkını ve KeyError'u açıklar."
+      ],
+      "prerequisites": [
+        "tuples",
+        "sets"
+      ],
+      "summary": "dict anahtarları değerlere eşler. d[key] değeri okur; anahtar yoksa KeyError verir. d.get(key, varsayılan) güvenli okuma sağlar.",
+      "explanation": "{\"ad\": \"Ada\", \"yaş\": 36} iki anahtar–değer çifti içerir. d[key] = value, anahtar varsa değeri günceller, yoksa yeni çift ekler. Anahtarlar benzersiz ve değişmez (hashable) olmalıdır; değerler her şey olabilir. in anahtarlar arasında arar, değerler arasında değil. Python 3.7'den beri sözlükler ekleme sırasını korur. pop(key) anahtarı silip değerini döndürür.",
+      "code": "user = {\"name\": \"Ada\", \"role\": \"editor\"}\nuser[\"role\"] = \"admin\"\nuser[\"active\"] = True\nprint(user)\nprint(user.get(\"email\", \"yok\"))\nprint(\"Ada\" in user)",
+      "expectedOutput": "{'name': 'Ada', 'role': 'admin', 'active': True}\nyok\nFalse",
+      "why": "role zaten var olduğu için güncellenir; active yeni bir anahtar olduğu için sona eklenir. email anahtarı olmadığından get varsayılan \"yok\" değerini verir. in değerlere değil anahtarlara bakar; \"Ada\" bir değerdir, anahtar değildir.",
+      "alternatives": [
+        "Anahtarın mutlaka bulunması gerekiyorsa d[key] kullan; sessiz bir varsayılan yerine hata almak eksik veriyi erken gösterir.",
+        "Sayma ve gruplamada collections.Counter ve defaultdict (M10) daha kısadır."
+      ],
+      "traps": [
+        "Olmayan bir anahtarı d[key] ile okuyup KeyError almak.",
+        "in operatörünün değerlerde aradığını sanmak.",
+        "Liste gibi değiştirilebilir bir değeri anahtar yapmaya çalışmak; TypeError verir."
+      ],
+      "realCode": "DEFAULTS = {\"theme\": \"light\", \"page_size\": 20}\n\ndef load_settings(user_settings):\n    settings = DEFAULTS.copy()\n    settings.update(user_settings)\n    return settings\n\nprint(load_settings({\"theme\": \"dark\"}))",
+      "realOutput": "{'theme': 'dark', 'page_size': 20}",
+      "lineByLine": [
+        "Varsayılan ayarlar büyük harfli sabit bir sözlükte tutulur.",
+        "copy() varsayılanlar değişmesin diye ayrı bir sözlük üretir.",
+        "update, kullanıcının verdiği anahtarları üzerine yazar.",
+        "Kullanıcının vermediği page_size varsayılan değerinde kalır."
+      ]
+    },
+    {
+      "id": "dict-iteration",
+      "title": "Sözlükte gezinme ve sayma",
+      "eyebrow": "keys, values, items",
+      "objectives": [
+        "items() ile anahtar–değer çiftlerini gezer.",
+        "get ile sayma (frekans) kalıbını okur ve yazar."
+      ],
+      "prerequisites": [
+        "dicts",
+        "m3:enumerate-zip"
+      ],
+      "summary": "for key in d anahtarları gezer. d.values() değerleri, d.items() (anahtar, değer) çiftlerini verir. Sayma kalıbı: counts[x] = counts.get(x, 0) + 1.",
+      "explanation": "items() her turda bir ikili verir ve for name, score in d.items() ile açılır; tıpkı zip'teki gibi. Gezme sırası ekleme sırasıdır. Bir sözlüğü gezerken anahtar eklemek veya silmek RuntimeError üretir; değişiklik yapılacaksa önce list(d) ile anahtarların kopyası üzerinde dön. Frekans saymanın en yaygın yolu get'in varsayılan değeridir: ilk kez görülen anahtar için sayım 0'dan başlar.",
+      "code": "text = \"elma armut elma kiraz elma\"\ncounts = {}\nfor word in text.split():\n    counts[word] = counts.get(word, 0) + 1\n\nfor word, count in counts.items():\n    print(word, count)",
+      "expectedOutput": "elma 3\narmut 1\nkiraz 1",
+      "why": "İlk elma'da get 0 döndürür ve değer 1 olur; sonraki elma'larda mevcut değer artar. items() çiftleri ekleme sırasıyla verir: elma, armut, kiraz.",
+      "alternatives": [
+        "collections.Counter(text.split()) aynı sayımı tek satırda yapar (M10).",
+        "Yalnızca değerlerin toplamı gerekiyorsa sum(counts.values()) yeterlidir."
+      ],
+      "traps": [
+        "for x in d yazıp değerleri gezdiğini sanmak; anahtarları gezer.",
+        "Gezme sırasında sözlüğe anahtar eklemek veya silmek.",
+        "counts[word] += 1 yazıp ilk görülen kelimede KeyError almak."
+      ],
+      "realCode": "def group_by_status(orders):\n    groups = {}\n    for order_id, status in orders.items():\n        groups.setdefault(status, []).append(order_id)\n    return groups\n\nprint(group_by_status({\"A1\": \"kargoda\", \"A2\": \"hazır\", \"A3\": \"kargoda\"}))",
+      "realOutput": "{'kargoda': ['A1', 'A3'], 'hazır': ['A2']}",
+      "lineByLine": [
+        "Sipariş kimliğinden duruma giden bir sözlük gelir.",
+        "items() her siparişin kimliğini ve durumunu birlikte verir.",
+        "setdefault, durum ilk kez görülüyorsa boş liste ekler ve o listeyi döndürür; append kimliği ekler.",
+        "Sonuç, durumdan sipariş listesine bir gruplamadır."
+      ]
+    },
+    {
+      "id": "nested-data",
+      "title": "İç içe veri yapıları",
+      "eyebrow": "Yolu dışarıdan içeri oku",
+      "objectives": [
+        "İç içe bir yapıdaki değere ulaşan erişim zincirini yazar.",
+        "Sözlüklerden oluşan bir listeyi döngüyle işler."
+      ],
+      "prerequisites": [
+        "dict-iteration",
+        "m3:nested-loops"
+      ],
+      "summary": "Gerçek veriler çoğunlukla iç içedir: sözlüklerden oluşan bir liste veya listeler içeren bir sözlük. Erişimi soldan sağa, her adımda elindeki değerin tipini düşünerek oku.",
+      "explanation": "data[\"users\"][0][\"name\"] ifadesini adım adım çöz: data bir sözlük, data[\"users\"] bir liste, [0] ilk kullanıcı sözlüğü, [\"name\"] onun adı. JSON ve API yanıtları bu biçimdedir. Bir adımda tip yanlışsa hata türü ipucu verir: listeye str anahtar vermek TypeError, eksik anahtar KeyError, eksik indeks IndexError üretir. İsteğe bağlı iç alanlar için get zincirleri kullanılır.",
+      "code": "order = {\n    \"id\": 42,\n    \"items\": [\n        {\"name\": \"kalem\", \"qty\": 3, \"price\": 10},\n        {\"name\": \"defter\", \"qty\": 2, \"price\": 25},\n    ],\n}\n\ntotal = 0\nfor item in order[\"items\"]:\n    total += item[\"qty\"] * item[\"price\"]\n\nprint(order[\"items\"][1][\"name\"])\nprint(total)",
+      "expectedOutput": "defter\n80",
+      "why": "order[\"items\"] iki sözlükten oluşan bir listedir; [1] ikinci ürünü, [\"name\"] onun adını verir. Döngü her ürün sözlüğünde adet × fiyatı toplar: 3 × 10 + 2 × 25 = 80.",
+      "alternatives": [
+        "Derin ve tekrar eden yapılarda alanları adlandırmak için ileride dataclass (M12) veya TypedDict (M14) kullanılır.",
+        "Çok uzun erişim zincirlerini ara değişkenlere bölmek hata ayıklamayı kolaylaştırır."
+      ],
+      "traps": [
+        "Listeye anahtarla erişmeye çalışmak: order[\"items\"][\"name\"].",
+        "İsteğe bağlı bir iç alanı doğrudan [] ile okuyup KeyError almak.",
+        "İç içe listeyi [[0] * 3] * 3 ile oluşturmak; üç satır aynı listeyi paylaşır (M5)."
+      ],
+      "realCode": "response = {\"data\": {\"user\": {\"name\": \"Ada\", \"tags\": [\"admin\", \"beta\"]}}}\n\nuser = response.get(\"data\", {}).get(\"user\", {})\nprint(user.get(\"name\", \"anonim\"))\nprint(\"beta\" in user.get(\"tags\", []))",
+      "realOutput": "Ada\nTrue",
+      "lineByLine": [
+        "API yanıtı üç seviye iç içe sözlüktür.",
+        "get zinciri, ara anahtar eksikse boş sözlükle devam eder; KeyError oluşmaz.",
+        "Ad yoksa \"anonim\" varsayılanı kullanılır.",
+        "tags eksikse boş liste üzerinden in güvenle False verir."
+      ]
+    },
+    {
+      "id": "sorting-key",
+      "title": "sorted, min, max ve key",
+      "eyebrow": "Neye göre sıralanacağını sen söyle",
+      "objectives": [
+        "sorted ile list.sort arasındaki farkı açıklar.",
+        "key ve reverse parametrelerinin sıralamayı nasıl değiştirdiğini okur."
+      ],
+      "prerequisites": [
+        "list-methods",
+        "nested-data"
+      ],
+      "summary": "sorted her diziden yeni ve sıralı bir liste döndürür. key, her öğe için karşılaştırılacak değeri üreten fonksiyondur; reverse=True ters sıralar. min ve max da key alır.",
+      "explanation": "sorted(words, key=len) kelimeleri uzunluklarına göre sıralar; eşit uzunluktakiler orijinal sıralarını korur (kararlı sıralama). key'e fonksiyonun kendisi verilir, çağrısı değil: key=len doğru, key=len() yanlış. Sözlük alanına göre sıralamak için küçük bir isimsiz fonksiyon kullanılır: key=lambda item: item[\"price\"] (lambda ayrıntısı M6'da). Varsayılan sıralamada büyük harfler küçüklerden önce gelir; harf duyarsız sıralama için key=str.lower kullan.",
+      "code": "words = [\"kiwi\", \"Elma\", \"muz\", \"armut\"]\nprint(sorted(words))\nprint(sorted(words, key=str.lower))\nprint(sorted(words, key=len, reverse=True))\nprint(max(words, key=len))",
+      "expectedOutput": "['Elma', 'armut', 'kiwi', 'muz']\n['armut', 'Elma', 'kiwi', 'muz']\n['armut', 'kiwi', 'Elma', 'muz']\narmut",
+      "why": "Varsayılan sıralamada büyük harfler küçüklerden önce gelir, bu yüzden Elma başa geçer. key=str.lower karşılaştırmayı küçük harfle yapar ama orijinal yazımı korur. Uzunluğa göre ters sıralamada kiwi ile Elma eşit uzunluktadır ve aralarındaki orijinal sırayı korurlar.",
+      "alternatives": [
+        "Listeyi yerinde sıralamak için items.sort(key=...) aynı parametreleri alır.",
+        "Birden çok ölçüte göre sıralamak için key bir tuple döndürebilir: key=lambda p: (p[\"city\"], p[\"age\"])."
+      ],
+      "traps": [
+        "key=len() yazıp fonksiyonu çağırmak.",
+        "sorted'ın orijinal listeyi değiştirdiğini sanmak.",
+        "Sayı ve metin karışık bir listeyi sıralamaya çalışmak; TypeError verir."
+      ],
+      "realCode": "products = [\n    {\"name\": \"kalem\", \"price\": 10},\n    {\"name\": \"çanta\", \"price\": 450},\n    {\"name\": \"defter\", \"price\": 25},\n]\n\ncheapest = min(products, key=lambda p: p[\"price\"])\nby_price = sorted(products, key=lambda p: p[\"price\"], reverse=True)\nprint(cheapest[\"name\"])\nfor p in by_price:\n    print(p[\"name\"], p[\"price\"])",
+      "realOutput": "kalem\nçanta 450\ndefter 25\nkalem 10",
+      "lineByLine": [
+        "Her ürün bir sözlüktür; listenin bir API'den geldiğini düşün.",
+        "min, key'in döndürdüğü fiyatları karşılaştırır ama sözlüğün kendisini döndürür.",
+        "sorted aynı key ile pahalıdan ucuza yeni bir liste üretir; products değişmez.",
+        "Döngü sıralı listedeki her ürünün adını ve fiyatını yazar."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "m4-q01",
+      "type": "output",
+      "topic": "liste",
+      "sectionId": "lists",
+      "difficulty": 1,
+      "prompt": "Dilim hangi öğeleri verir?",
+      "code": "nums = [10, 20, 30, 40]\nprint(nums[1:3])",
+      "options": ["[20, 30]", "[10, 20, 30]", "[20, 30, 40]", "[30, 40]"],
+      "answer": "[20, 30]",
+      "expectedOutput": "[20, 30]",
+      "hints": ["İndeks 1 ve 2 alınır.", "Bitiş indeksi (3) dahil değildir."],
+      "explanation": "Listelerde dilimleme metinlerdekiyle aynıdır: 1'den başlar, 3'ten önce durur."
+    },
+    {
+      "id": "m4-q02",
+      "type": "output",
+      "topic": "liste",
+      "sectionId": "lists",
+      "difficulty": 3,
+      "prompt": "b'ye ekleme yapılınca a ne olur?",
+      "code": "a = [1, 2]\nb = a\nb.append(3)\nprint(a)",
+      "options": ["[1, 2]", "[1, 2, 3]", "[3]", "Hata"],
+      "answer": "[1, 2, 3]",
+      "expectedOutput": "[1, 2, 3]",
+      "hints": ["b = a kopya üretmez.", "a ve b aynı listeye bağlı iki isimdir."],
+      "explanation": "b = a yeni liste oluşturmaz; iki isim aynı listeyi gösterir. b üzerinden yapılan ekleme a'dan da görünür. Bu takma ad davranışı M5'in konusudur."
+    },
+    {
+      "id": "m4-q03",
+      "type": "output",
+      "topic": "liste-metot",
+      "sectionId": "list-methods",
+      "difficulty": 2,
+      "prompt": "append sonrası listenin uzunluğu kaç?",
+      "code": "items = [1, 2]\nitems.append([3, 4])\nprint(len(items))",
+      "options": ["3", "4", "2", "Hata"],
+      "answer": "3",
+      "expectedOutput": "3",
+      "hints": ["append tek bir öğe ekler.", "[3, 4] listesinin tamamı tek öğedir."],
+      "explanation": "append([3, 4]) iç içe bir liste ekler: [1, 2, [3, 4]]. Öğe sayısı 3'tür. İki ayrı öğe için extend gerekirdi."
+    },
+    {
+      "id": "m4-q04",
+      "type": "output",
+      "topic": "liste-metot",
+      "sectionId": "list-methods",
+      "difficulty": 2,
+      "prompt": "pop(0) sonrası çıktı ne?",
+      "code": "letters = [\"a\", \"b\", \"c\"]\nx = letters.pop(0)\nprint(x, letters)",
+      "options": ["a ['b', 'c']", "c ['a', 'b']", "a ['a', 'b', 'c']", "['b', 'c'] a"],
+      "answer": "a ['b', 'c']",
+      "expectedOutput": "a ['b', 'c']",
+      "hints": ["pop(0) ilk öğeyi çıkarır.", "Çıkarılan öğe döndürülür ve listeden silinir."],
+      "explanation": "pop(0) \"a\" değerini döndürür ve listeden kaldırır; listede b ve c kalır."
+    },
+    {
+      "id": "m4-q05",
+      "type": "output",
+      "topic": "tuple",
+      "sectionId": "tuples",
+      "difficulty": 1,
+      "prompt": "Tuple dilimlemesi ne üretir?",
+      "code": "t = (1, 2, 3)\nprint(t[::-1])",
+      "options": ["(3, 2, 1)", "[3, 2, 1]", "(1, 2, 3)", "Hata"],
+      "answer": "(3, 2, 1)",
+      "expectedOutput": "(3, 2, 1)",
+      "hints": ["Tuple da dilimlenebilir.", "Tuple'ın dilimi yine tuple'dır."],
+      "explanation": "[::-1] ters sırayla yeni bir tuple üretir. Orijinal tuple değişmez."
+    },
+    {
+      "id": "m4-q06",
+      "type": "output",
+      "topic": "tuple",
+      "sectionId": "tuples",
+      "difficulty": 2,
+      "prompt": "Parantez ve virgül farkı neyi değiştirir?",
+      "code": "x = (7)\ny = (7,)\nprint(type(x).__name__, len(y))",
+      "options": ["int 1", "tuple 1", "int 7", "tuple 7"],
+      "answer": "int 1",
+      "expectedOutput": "int 1",
+      "hints": ["Tuple'ı virgül oluşturur.", "(7) yalnızca gruplama parantezidir."],
+      "explanation": "x düz bir int'tir; y ise tek elemanlı bir tuple'dır ve uzunluğu 1'dir."
+    },
+    {
+      "id": "m4-q07",
+      "type": "output",
+      "topic": "set",
+      "sectionId": "sets",
+      "difficulty": 1,
+      "prompt": "Kümede kaç öğe kalır?",
+      "code": "s = set([3, 1, 3, 2, 1])\nprint(len(s))",
+      "options": ["3", "5", "2", "Hata"],
+      "answer": "3",
+      "expectedOutput": "3",
+      "hints": ["Küme tekrarları atar.", "Farklı değerler: 1, 2, 3."],
+      "explanation": "Beş öğeden yalnızca üç farklı değer vardır; küme her değeri bir kez tutar."
+    },
+    {
+      "id": "m4-q08",
+      "type": "output",
+      "topic": "set",
+      "sectionId": "sets",
+      "difficulty": 2,
+      "prompt": "Birleşim ve kesişim ne verir?",
+      "code": "a = {1, 2, 3}\nb = {2, 3, 4}\nprint(sorted(a | b), sorted(a & b))",
+      "options": ["[1, 2, 3, 4] [2, 3]", "[2, 3] [1, 2, 3, 4]", "[1, 2, 3, 2, 3, 4] [2, 3]", "[1, 4] [2, 3]"],
+      "answer": "[1, 2, 3, 4] [2, 3]",
+      "expectedOutput": "[1, 2, 3, 4] [2, 3]",
+      "hints": ["| birleşimdir, & kesişimdir.", "Birleşimde ortak öğeler bir kez yer alır."],
+      "explanation": "a | b iki kümedeki bütün farklı öğeleri, a & b yalnızca ortak olanları verir. sorted sonucu sıralı liste yapar."
+    },
+    {
+      "id": "m4-q09",
+      "type": "output",
+      "topic": "dict",
+      "sectionId": "dicts",
+      "difficulty": 1,
+      "prompt": "Güncelleme ve eklemeden sonra sözlük nasıl görünür?",
+      "code": "d = {\"a\": 1, \"b\": 2}\nd[\"a\"] = 5\nd[\"c\"] = 3\nprint(d)",
+      "options": ["{'a': 5, 'b': 2, 'c': 3}", "{'a': 1, 'b': 2, 'c': 3, 'a': 5}", "{'b': 2, 'c': 3, 'a': 5}", "{'a': 5, 'c': 3}"],
+      "answer": "{'a': 5, 'b': 2, 'c': 3}",
+      "expectedOutput": "{'a': 5, 'b': 2, 'c': 3}",
+      "hints": ["Var olan anahtara atama değeri günceller; konumu değişmez.", "Yeni anahtar sona eklenir."],
+      "explanation": "a anahtarı yerinde güncellenir; anahtarlar benzersiz olduğu için ikinci bir a oluşmaz. c sona eklenir."
+    },
+    {
+      "id": "m4-q10",
+      "type": "output",
+      "topic": "dict",
+      "sectionId": "dicts",
+      "difficulty": 1,
+      "prompt": "get varsayılanları ile sonuç ne?",
+      "code": "stock = {\"elma\": 4}\nprint(stock.get(\"armut\", 0) + stock.get(\"elma\", 0))",
+      "options": ["4", "0", "Hata", "None"],
+      "answer": "4",
+      "expectedOutput": "4",
+      "hints": ["armut yok; get varsayılanı 0 döner.", "elma var; değeri 4."],
+      "explanation": "Eksik anahtar için get hata vermek yerine 0 döndürür: 0 + 4 = 4."
+    },
+    {
+      "id": "m4-q11",
+      "type": "output",
+      "topic": "dict-gezinme",
+      "sectionId": "dict-iteration",
+      "difficulty": 2,
+      "prompt": "Sözlük üzerinde for ne gezer?",
+      "code": "prices = {\"çay\": 15, \"kahve\": 40}\nfor key in prices:\n    print(key)",
+      "options": ["çay ve kahve (iki satır)", "15 ve 40 (iki satır)", "('çay', 15) ve ('kahve', 40)", "Hata"],
+      "answer": "çay ve kahve (iki satır)",
+      "expectedOutput": "çay\nkahve",
+      "hints": ["Sözlüğü doğrudan gezmek anahtarları verir.", "Değerler için values(), çiftler için items() gerekir."],
+      "explanation": "for key in prices anahtarları ekleme sırasıyla verir."
+    },
+    {
+      "id": "m4-q12",
+      "type": "output",
+      "topic": "sıralama",
+      "sectionId": "sorting-key",
+      "difficulty": 1,
+      "prompt": "Uzunluğa göre ters sıralama ne verir?",
+      "code": "print(sorted([\"bb\", \"a\", \"ccc\"], key=len, reverse=True))",
+      "options": ["['ccc', 'bb', 'a']", "['a', 'bb', 'ccc']", "['bb', 'a', 'ccc']", "[3, 2, 1]"],
+      "answer": "['ccc', 'bb', 'a']",
+      "expectedOutput": "['ccc', 'bb', 'a']",
+      "hints": ["key=len uzunlukları karşılaştırır.", "reverse=True en uzunu başa alır."],
+      "explanation": "Karşılaştırma uzunluklarla yapılır ama sonuç listesinde metinlerin kendisi yer alır."
+    },
+    {
+      "id": "m4-q13",
+      "type": "bug",
+      "topic": "liste-metot",
+      "sectionId": "list-methods",
+      "difficulty": 2,
+      "prompt": "Yazar 1 bekliyordu. Sorun nedir?",
+      "code": "nums = [3, 1, 2]\nnums = nums.sort()\nprint(nums[0])",
+      "options": [
+        "sort listeyi yerinde sıralar ve None döndürür; nums None'a bağlanıyor",
+        "sort sayıları sıralayamaz",
+        "nums[0] yerine nums[1] yazılmalı",
+        "Liste en az dört elemanlı olmalı"
+      ],
+      "answer": "sort listeyi yerinde sıralar ve None döndürür; nums None'a bağlanıyor",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "sort sayıları sıralayamaz": "sort sayıları sıralar; sorun dönüş değerinin kullanılması.",
+        "nums[0] yerine nums[1] yazılmalı": "nums artık None olduğu için hangi indeks yazılırsa yazılsın TypeError oluşur.",
+        "Liste en az dört elemanlı olmalı": "Liste uzunluğunun bir önemi yok; nums'un değeri None oldu."
+      },
+      "hints": ["nums.sort() ne döndürür?", "Yalnızca nums.sort() yaz veya nums = sorted(nums) kullan."],
+      "explanation": "sort listeyi yerinde değiştirir ve None döndürür; atama listeyi kaybettirir. None indekslenemediği için TypeError oluşur."
+    },
+    {
+      "id": "m4-q14",
+      "type": "bug",
+      "topic": "liste-metot",
+      "sectionId": "list-methods",
+      "difficulty": 2,
+      "prompt": "3 bekleniyordu ama 2 yazdırılıyor. Neden?",
+      "code": "basket = [\"elma\"]\nbasket.append([\"armut\", \"kiraz\"])\nprint(len(basket))",
+      "options": [
+        "append listeyi tek öğe olarak ekler; extend kullanılmalı",
+        "append yalnızca metin ekler",
+        "len iç içe listeleri saymaz",
+        "basket bir tuple olmalı"
+      ],
+      "answer": "append listeyi tek öğe olarak ekler; extend kullanılmalı",
+      "optionFeedback": {
+        "append yalnızca metin ekler": "append her türden tek bir öğe ekler; burada eklenen öğe bir liste.",
+        "len iç içe listeleri saymaz": "len iç listeyi tek öğe olarak sayar; asıl sorun listenin tek öğe olarak eklenmesi.",
+        "basket bir tuple olmalı": "Tuple'a öğe eklenemez; değiştirilebilir liste doğru seçim."
+      },
+      "hints": ["basket şu an [\"elma\", [\"armut\", \"kiraz\"]].", "Birden çok öğeyi tek tek eklemek için extend."],
+      "explanation": "append bütün listeyi tek bir öğe olarak ekler. basket.extend([\"armut\", \"kiraz\"]) iki ayrı öğe ekler ve uzunluk 3 olur."
+    },
+    {
+      "id": "m4-q15",
+      "type": "bug",
+      "topic": "tuple",
+      "sectionId": "tuples",
+      "difficulty": 1,
+      "prompt": "Bu atama neden hata verir?",
+      "code": "point = (1, 2)\npoint[0] = 10",
+      "options": [
+        "Tuple değiştirilemez; yeni bir tuple oluşturulmalı",
+        "0 geçersiz bir indeks",
+        "Tuple'a yalnızca str atanabilir",
+        "Tuple köşeli parantezle yazılmalı"
+      ],
+      "answer": "Tuple değiştirilemez; yeni bir tuple oluşturulmalı",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "0 geçersiz bir indeks": "point[0] okumak geçerlidir; yasak olan atamadır.",
+        "Tuple'a yalnızca str atanabilir": "Tuple hangi tipte olursa olsun öğe atamasını desteklemez.",
+        "Tuple köşeli parantezle yazılmalı": "Köşeli parantez liste oluşturur; liste değiştirilebilir ama artık tuple olmaz."
+      },
+      "hints": ["Tuple immutable'dır.", "point = (10, point[1]) yeni bir tuple üretir."],
+      "explanation": "Tuple öğe atamasını desteklemez ve TypeError verir. Değişiklik gerekiyorsa yeni bir tuple oluşturulur veya liste kullanılır."
+    },
+    {
+      "id": "m4-q16",
+      "type": "bug",
+      "topic": "set",
+      "sectionId": "sets",
+      "difficulty": 2,
+      "prompt": "Boş bir etiket kümesine ekleme yapılmak isteniyor. Sorun ne?",
+      "code": "tags = {}\ntags.add(\"python\")",
+      "options": [
+        "{} boş bir sözlüktür; boş küme set() ile oluşturulur",
+        "add yerine append kullanılmalı",
+        "Kümeye metin eklenemez",
+        "python tırnaksız yazılmalı"
+      ],
+      "answer": "{} boş bir sözlüktür; boş küme set() ile oluşturulur",
+      "expectedError": "AttributeError",
+      "optionFeedback": {
+        "add yerine append kullanılmalı": "Kümelerin append metodu yoktur; doğru metot add. Sorun, nesnenin küme değil sözlük olması.",
+        "Kümeye metin eklenemez": "Metinler hashable'dır ve kümeye eklenebilir.",
+        "python tırnaksız yazılmalı": "Tırnaksız python tanımsız bir isim olurdu."
+      },
+      "hints": ["type({}) nedir?", "Boş küme için tags = set()."],
+      "explanation": "{} boş bir sözlük oluşturur ve sözlüklerin add metodu yoktur; AttributeError oluşur. Boş küme yalnızca set() ile yazılır."
+    },
+    {
+      "id": "m4-q17",
+      "type": "bug",
+      "topic": "dict-gezinme",
+      "sectionId": "dict-iteration",
+      "difficulty": 2,
+      "prompt": "Harfler sayılmak isteniyor. Neden hata var?",
+      "code": "counts = {}\nfor ch in \"aba\":\n    counts[ch] += 1",
+      "options": [
+        "İlk görülen harfin anahtarı yok; counts.get(ch, 0) + 1 kullanılmalı",
+        "Metinler gezilemez",
+        "+= sözlük değerlerinde kullanılamaz",
+        "counts bir liste olmalı"
+      ],
+      "answer": "İlk görülen harfin anahtarı yok; counts.get(ch, 0) + 1 kullanılmalı",
+      "expectedError": "KeyError",
+      "optionFeedback": {
+        "Metinler gezilemez": "for ch in \"aba\" her karakteri sırayla verir; sorun sayma satırında.",
+        "+= sözlük değerlerinde kullanılamaz": "Anahtar varsa counts[ch] += 1 çalışır; ilk turda anahtar henüz yok.",
+        "counts bir liste olmalı": "Harften sayıya eşleme için sözlük doğru yapı."
+      },
+      "hints": ["counts[ch] += 1, önce counts[ch]'yi okur.", "İlk turda 'a' anahtarı yok."],
+      "explanation": "+= önce mevcut değeri okumaya çalışır; ilk görülen harfte anahtar olmadığı için KeyError oluşur. counts[ch] = counts.get(ch, 0) + 1 bu durumu 0'dan başlatır."
+    },
+    {
+      "id": "m4-q18",
+      "type": "bug",
+      "topic": "sıralama",
+      "sectionId": "sorting-key",
+      "difficulty": 2,
+      "prompt": "Uzunluğa göre sıralama neden çalışmıyor?",
+      "code": "words = [\"ccc\", \"a\"]\nprint(sorted(words, key=len()))",
+      "options": [
+        "key'e fonksiyonun kendisi verilmeli: key=len",
+        "sorted metinleri sıralayamaz",
+        "reverse=True eksik",
+        "len yalnızca listelerle çalışır"
+      ],
+      "answer": "key'e fonksiyonun kendisi verilmeli: key=len",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "sorted metinleri sıralayamaz": "sorted metinleri alfabetik olarak sıralar; sorun key değerinde.",
+        "reverse=True eksik": "reverse yalnızca yönü belirler; zorunlu değildir.",
+        "len yalnızca listelerle çalışır": "len metinlerle de çalışır; sorun onu argümansız çağırmak."
+      },
+      "hints": ["len() argümansız çağrılıyor.", "sorted, key fonksiyonunu her öğe için kendisi çağırır."],
+      "explanation": "len() hemen, argümansız çağrıldığı için TypeError oluşur. key=len yazınca sorted her kelime için len(kelime) çağrısını kendisi yapar."
+    },
+    {
+      "id": "m4-q19",
+      "type": "fill",
+      "topic": "liste-metot",
+      "sectionId": "list-methods",
+      "difficulty": 1,
+      "prompt": "Listenin sonuna 3 ekleyecek metodu yaz.",
+      "code": "nums = [1, 2]\nnums.___(3)\nprint(nums)",
+      "answer": "append",
+      "solutionCode": "nums = [1, 2]\nnums.append(3)\nprint(nums)",
+      "expectedOutput": "[1, 2, 3]",
+      "hints": ["İngilizcede \"sona eklemek\".", "Metot append."],
+      "explanation": "append tek bir öğeyi listenin sonuna ekler ve listeyi yerinde değiştirir."
+    },
+    {
+      "id": "m4-q20",
+      "type": "fill",
+      "topic": "dict",
+      "sectionId": "dicts",
+      "difficulty": 1,
+      "prompt": "Eksik anahtarda hata yerine \"-\" döndürecek metodu yaz.",
+      "code": "user = {\"name\": \"Ada\"}\nprint(user.___(\"email\", \"-\"))",
+      "answer": "get",
+      "solutionCode": "user = {\"name\": \"Ada\"}\nprint(user.get(\"email\", \"-\"))",
+      "expectedOutput": "-",
+      "hints": ["Güvenli okuma metodu.", "Metot get."],
+      "explanation": "get anahtar yoksa ikinci argümanı döndürür ve sözlüğü değiştirmez."
+    },
+    {
+      "id": "m4-q21",
+      "type": "fill",
+      "topic": "dict-gezinme",
+      "sectionId": "dict-iteration",
+      "difficulty": 1,
+      "prompt": "Anahtar ve değeri birlikte verecek metodu yaz.",
+      "code": "scores = {\"Ada\": 90, \"Can\": 75}\nfor name, score in scores.___():\n    print(name, score)",
+      "answer": "items",
+      "solutionCode": "scores = {\"Ada\": 90, \"Can\": 75}\nfor name, score in scores.items():\n    print(name, score)",
+      "expectedOutput": "Ada 90\nCan 75",
+      "hints": ["(anahtar, değer) çiftleri verir.", "Metot items."],
+      "explanation": "items() her turda bir (anahtar, değer) ikilisi verir; for name, score bu ikiliyi açar."
+    },
+    {
+      "id": "m4-q22",
+      "type": "fill",
+      "topic": "set",
+      "sectionId": "sets",
+      "difficulty": 1,
+      "prompt": "Tekrarları atacak yerleşik tipi yaz.",
+      "code": "unique = ___([1, 1, 2])\nprint(len(unique))",
+      "answer": "set",
+      "solutionCode": "unique = set([1, 1, 2])\nprint(len(unique))",
+      "expectedOutput": "2",
+      "hints": ["Tekrarsız koleksiyon.", "Tip adı set."],
+      "explanation": "set() listeyi tekrarsız bir kümeye çevirir; iki farklı değer kalır."
+    },
+    {
+      "id": "m4-q23",
+      "type": "order",
+      "topic": "iç-içe",
+      "sectionId": "nested-data",
+      "difficulty": 2,
+      "prompt": "Ürün fiyatlarını toplayıp 12 yazdıracak sırayı kur.",
+      "lines": ["    total += item[\"price\"]", "total = 0", "print(total)", "items = [{\"price\": 5}, {\"price\": 7}]", "for item in items:"],
+      "answer": "items = [{\"price\": 5}, {\"price\": 7}]\ntotal = 0\nfor item in items:\n    total += item[\"price\"]\nprint(total)",
+      "solutionCode": "items = [{\"price\": 5}, {\"price\": 7}]\ntotal = 0\nfor item in items:\n    total += item[\"price\"]\nprint(total)",
+      "expectedOutput": "12",
+      "hints": ["Veri ve biriktirici döngüden önce hazırlanır.", "Her item bir sözlüktür; fiyatı item[\"price\"]."],
+      "explanation": "Liste her turda bir ürün sözlüğü verir; fiyatlar total'da birikir. items ve total satırlarının kendi aralarındaki sırası sonucu değiştirmez."
+    },
+    {
+      "id": "m4-q24",
+      "type": "order",
+      "topic": "dict-gezinme",
+      "sectionId": "dict-iteration",
+      "difficulty": 2,
+      "prompt": "Kelimeleri sayıp {'a': 2, 'b': 1} yazdıracak sırayı kur.",
+      "lines": ["for word in [\"a\", \"b\", \"a\"]:", "print(counts)", "counts = {}", "    counts[word] = counts.get(word, 0) + 1"],
+      "answer": "counts = {}\nfor word in [\"a\", \"b\", \"a\"]:\n    counts[word] = counts.get(word, 0) + 1\nprint(counts)",
+      "solutionCode": "counts = {}\nfor word in [\"a\", \"b\", \"a\"]:\n    counts[word] = counts.get(word, 0) + 1\nprint(counts)",
+      "expectedOutput": "{'a': 2, 'b': 1}",
+      "hints": ["Boş sözlük döngüden önce gelir.", "Sayma satırı döngünün içinde, print döngüden sonra."],
+      "explanation": "get(word, 0) ilk görülen kelimeyi 0'dan başlatır; sonuç döngü bitince yazdırılır."
+    },
+    {
+      "id": "m4-q25",
+      "type": "order",
+      "topic": "liste-metot",
+      "sectionId": "list-methods",
+      "difficulty": 2,
+      "prompt": "Yığına önce a sonra b ekleyip son ekleneni çıkaracak sırayı kur. Çıktı: b ['a'].",
+      "lines": ["stack.append(\"b\")", "print(stack.pop(), stack)", "stack = []", "stack.append(\"a\")"],
+      "answer": "stack = []\nstack.append(\"a\")\nstack.append(\"b\")\nprint(stack.pop(), stack)",
+      "solutionCode": "stack = []\nstack.append(\"a\")\nstack.append(\"b\")\nprint(stack.pop(), stack)",
+      "expectedOutput": "b ['a']",
+      "hints": ["Yığında son giren ilk çıkar.", "pop() en son eklenen b'yi çıkarır."],
+      "explanation": "append ve pop() birlikte bir yığın (stack) gibi çalışır: son eklenen ilk çıkar. print argümanları soldan sağa değerlendirildiği için liste pop sonrası hâliyle yazılır."
+    },
+    {
+      "id": "m4-q26",
+      "type": "order",
+      "topic": "sıralama",
+      "sectionId": "sorting-key",
+      "difficulty": 1,
+      "prompt": "İsimleri harf duyarsız sıralayıp yazdıracak sırayı kur.",
+      "lines": ["print(names)", "names = [\"can\", \"Ada\", \"ece\"]", "names.sort(key=str.lower)"],
+      "answer": "names = [\"can\", \"Ada\", \"ece\"]\nnames.sort(key=str.lower)\nprint(names)",
+      "solutionCode": "names = [\"can\", \"Ada\", \"ece\"]\nnames.sort(key=str.lower)\nprint(names)",
+      "expectedOutput": "['Ada', 'can', 'ece']",
+      "hints": ["Liste önce oluşturulur.", "sort yerinde sıralar; ardından yazdır."],
+      "explanation": "sort(key=str.lower) listeyi yerinde ve harf duyarsız sıralar; yazımlar korunur."
+    },
+    {
+      "id": "m4-q27",
+      "type": "code",
+      "topic": "liste",
+      "sectionId": "lists",
+      "difficulty": 1,
+      "prompt": "Boşlukla ayrılmış kelimelerden oluşan bir satır oku. İlk kelimeyi, son kelimeyi ve kelime sayısını aralarında boşlukla yazdır. Örnek: elma armut kiraz → elma kiraz 3.",
+      "starterCode": "words = input().split()\n# İlk, son ve sayı\n",
+      "answer": "words = input().split()\nprint(words[0], words[-1], len(words))",
+      "solutionCode": "words = input().split()\nprint(words[0], words[-1], len(words))",
+      "expectedOutput": "elma kiraz 3",
+      "hints": ["split() bir liste döndürür.", "words[0], words[-1] ve len(words)."],
+      "explanation": "split listesinde ilk öğe 0, son öğe -1 indeksindedir. Tek kelimede ilk ve son aynı öğedir.",
+      "tests": [
+        { "label": "Örnek", "stdin": "elma armut kiraz", "expectedOutput": "elma kiraz 3" },
+        { "label": "Tek kelime", "stdin": "tek", "expectedOutput": "tek tek 1" },
+        { "label": "İki kelime", "stdin": "x y", "expectedOutput": "x y 2" },
+        { "label": "Fazla boşluk", "stdin": "  a  b  c  d ", "expectedOutput": "a d 4" }
+      ],
+      "exampleInput": "elma armut kiraz"
+    },
+    {
+      "id": "m4-q28",
+      "type": "code",
+      "topic": "liste-metot",
+      "sectionId": "list-methods",
+      "difficulty": 2,
+      "prompt": "Boşlukla ayrılmış tam sayılardan oluşan bir satır oku. Yalnızca çift sayıları, geliş sırasıyla bir liste olarak yazdır. Örnek: 4 7 10 3 → [4, 10].",
+      "starterCode": "evens = []\nfor part in input().split():\n    # Çiftse listeye ekle\n    pass\nprint(evens)\n",
+      "answer": "evens = []\nfor part in input().split():\n    number = int(part)\n    if number % 2 == 0:\n        evens.append(number)\nprint(evens)",
+      "solutionCode": "evens = []\nfor part in input().split():\n    number = int(part)\n    if number % 2 == 0:\n        evens.append(number)\nprint(evens)",
+      "expectedOutput": "[4, 10]",
+      "hints": ["Her parçayı önce int'e çevir.", "Çiftse evens.append(number)."],
+      "explanation": "Boş liste biriktirici olarak başlar; append koşulu sağlayan sayıları sırayla ekler.",
+      "tests": [
+        { "label": "Örnek", "stdin": "4 7 10 3", "expectedOutput": "[4, 10]" },
+        { "label": "Hiç çift yok", "stdin": "1 3", "expectedOutput": "[]" },
+        { "label": "Sıfır", "stdin": "0", "expectedOutput": "[0]" },
+        { "label": "Negatifler", "stdin": "-2 -3 8", "expectedOutput": "[-2, 8]" }
+      ],
+      "exampleInput": "4 7 10 3"
+    },
+    {
+      "id": "m4-q29",
+      "type": "code",
+      "topic": "tuple",
+      "sectionId": "tuples",
+      "difficulty": 1,
+      "prompt": "Bir satırda boşlukla ayrılmış iki tam sayı (x ve y) var. Bunları (x, y) tuple'ına çevir, sonra yerleri değişmiş (y, x) tuple'ını yazdır. Örnek: 3 4 → (4, 3).",
+      "starterCode": "parts = input().split()\npoint = (int(parts[0]), int(parts[1]))\n# Yerleri değişmiş tuple'ı yazdır\n",
+      "answer": "parts = input().split()\npoint = (int(parts[0]), int(parts[1]))\nswapped = (point[1], point[0])\nprint(swapped)",
+      "solutionCode": "parts = input().split()\npoint = (int(parts[0]), int(parts[1]))\nswapped = (point[1], point[0])\nprint(swapped)",
+      "expectedOutput": "(4, 3)",
+      "hints": ["Tuple değiştirilemez; yeni bir tuple kur.", "(point[1], point[0])."],
+      "explanation": "Tuple'ın öğeleri değiştirilemediği için istenen düzende yeni bir tuple oluşturulur. print tuple'ı parantezli yazar.",
+      "tests": [
+        { "label": "Örnek", "stdin": "3 4", "expectedOutput": "(4, 3)" },
+        { "label": "Sıfırlar", "stdin": "0 0", "expectedOutput": "(0, 0)" },
+        { "label": "Negatif", "stdin": "-1 5", "expectedOutput": "(5, -1)" },
+        { "label": "Büyük", "stdin": "10 20", "expectedOutput": "(20, 10)" }
+      ],
+      "exampleInput": "3 4"
+    },
+    {
+      "id": "m4-q30",
+      "type": "code",
+      "topic": "set",
+      "sectionId": "sets",
+      "difficulty": 2,
+      "prompt": "İki satırda boşlukla ayrılmış kelimeler var. Her iki satırda da geçen kelimeleri alfabetik sırayla, aralarında boşlukla yazdır. Ortak kelime yoksa \"ortak yok\" yazdır. Örnek: \"elma armut\" ve \"armut kiraz\" → armut.",
+      "starterCode": "first = set(input().split())\nsecond = set(input().split())\n# Ortak kelimeleri sıralı yazdır\n",
+      "answer": "first = set(input().split())\nsecond = set(input().split())\ncommon = sorted(first & second)\nif common:\n    print(\" \".join(common))\nelse:\n    print(\"ortak yok\")",
+      "solutionCode": "first = set(input().split())\nsecond = set(input().split())\ncommon = sorted(first & second)\nif common:\n    print(\" \".join(common))\nelse:\n    print(\"ortak yok\")",
+      "expectedOutput": "armut",
+      "hints": ["Kesişim için first & second.", "sorted sonucu bir listedir; \" \".join ile birleştir. Boş liste falsy'dir."],
+      "explanation": "Küme kesişimi ortak kelimeleri verir; küme sırasız olduğu için sorted ile sabit bir sıra kurulur.",
+      "tests": [
+        { "label": "Örnek", "stdin": "elma armut\narmut kiraz", "expectedOutput": "armut" },
+        { "label": "İki ortak", "stdin": "a b c\nc b d", "expectedOutput": "b c" },
+        { "label": "Ortak yok", "stdin": "x\ny", "expectedOutput": "ortak yok" },
+        { "label": "Tekrarlı kelime", "stdin": "a a b\na", "expectedOutput": "a" }
+      ],
+      "exampleInput": "elma armut\narmut kiraz"
+    },
+    {
+      "id": "m4-q31",
+      "type": "code",
+      "topic": "dict",
+      "sectionId": "dicts",
+      "difficulty": 3,
+      "prompt": "İlk satırda ürün sayısı n, sonraki n satırda \"ad fiyat\" var; son satırda aranan ürün adı. Aranan ürünün fiyatını, yoksa \"bulunamadı\" yazdır. Aynı ürün tekrar gelirse son fiyat geçerlidir. Örnek: 2 / çay 15 / kahve 40 / kahve → 40.",
+      "starterCode": "count = int(input())\nprices = {}\n# n satırı oku ve sözlüğe ekle, sonra aranan ürünü bul\n",
+      "answer": "count = int(input())\nprices = {}\nfor _ in range(count):\n    name, price = input().split()\n    prices[name] = int(price)\nquery = input()\nprint(prices.get(query, \"bulunamadı\"))",
+      "solutionCode": "count = int(input())\nprices = {}\nfor _ in range(count):\n    name, price = input().split()\n    prices[name] = int(price)\nquery = input()\nprint(prices.get(query, \"bulunamadı\"))",
+      "expectedOutput": "40",
+      "hints": ["name, price = input().split() satırı iki parçayı açar.", "Aramada prices.get(query, \"bulunamadı\")."],
+      "explanation": "Sözlüğe aynı anahtarla yapılan ikinci atama değeri günceller. get eksik ürün için varsayılan metni döndürür.",
+      "tests": [
+        { "label": "Örnek", "stdin": "2\nçay 15\nkahve 40\nkahve", "expectedOutput": "40" },
+        { "label": "Bulunamadı", "stdin": "2\nçay 15\nkahve 40\nsu", "expectedOutput": "bulunamadı" },
+        { "label": "Tek ürün", "stdin": "1\nsu 5\nsu", "expectedOutput": "5" },
+        { "label": "Tekrar eden ürün", "stdin": "3\na 1\nb 2\na 9\na", "expectedOutput": "9" }
+      ],
+      "exampleInput": "2\nçay 15\nkahve 40\nkahve"
+    },
+    {
+      "id": "m4-q32",
+      "type": "code",
+      "topic": "dict-gezinme",
+      "sectionId": "dict-iteration",
+      "difficulty": 2,
+      "prompt": "Bir kelime oku. Her harfin kaç kez geçtiğini, harfin ilk görülme sırasıyla \"harf sayı\" biçiminde ayrı satırlara yazdır. Örnek: kayak → k 2, a 2, y 1.",
+      "starterCode": "word = input()\ncounts = {}\n# Harfleri say, sonra yazdır\n",
+      "answer": "word = input()\ncounts = {}\nfor ch in word:\n    counts[ch] = counts.get(ch, 0) + 1\nfor ch, count in counts.items():\n    print(ch, count)",
+      "solutionCode": "word = input()\ncounts = {}\nfor ch in word:\n    counts[ch] = counts.get(ch, 0) + 1\nfor ch, count in counts.items():\n    print(ch, count)",
+      "expectedOutput": "k 2\na 2\ny 1",
+      "hints": ["counts[ch] = counts.get(ch, 0) + 1.", "Sözlük ekleme sırasını korur; items() ile yazdır."],
+      "explanation": "Sayma kalıbı her harfi ilk görüldüğünde 0'dan başlatır. Sözlük ekleme sırasını koruduğu için çıktı ilk görülme sırasındadır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "kayak", "expectedOutput": "k 2\na 2\ny 1" },
+        { "label": "Tek harf", "stdin": "a", "expectedOutput": "a 1" },
+        { "label": "Hepsi farklı", "stdin": "abc", "expectedOutput": "a 1\nb 1\nc 1" },
+        { "label": "Hepsi aynı", "stdin": "zzz", "expectedOutput": "z 3" }
+      ],
+      "exampleInput": "kayak"
+    },
+    {
+      "id": "m4-q33",
+      "type": "code",
+      "topic": "sıralama",
+      "sectionId": "sorting-key",
+      "difficulty": 3,
+      "prompt": "Boşlukla ayrılmış kelimeler oku ve en sık geçen kelimeyi yazdır. Eşitlikte ilk görülen kelime kazanır. Örnek: elma armut elma → elma.",
+      "starterCode": "words = input().split()\ncounts = {}\n# Say, sonra en sık geçeni bul\n",
+      "answer": "words = input().split()\ncounts = {}\nfor word in words:\n    counts[word] = counts.get(word, 0) + 1\nprint(max(counts, key=counts.get))",
+      "solutionCode": "words = input().split()\ncounts = {}\nfor word in words:\n    counts[word] = counts.get(word, 0) + 1\nprint(max(counts, key=counts.get))",
+      "expectedOutput": "elma",
+      "hints": ["Önce sayma kalıbıyla counts sözlüğünü kur.", "max(counts, key=counts.get) en büyük sayıya sahip anahtarı verir; eşitlikte ilk geleni seçer."],
+      "explanation": "max anahtarları gezer ve her biri için counts.get(anahtar) değerini karşılaştırır. Eşit en büyükler arasında ilk karşılaşılanı döndürdüğü için ilk görülen kelime kazanır. Döngüyle yazılmış doğru çözüm de kabul edilir.",
+      "tests": [
+        { "label": "Örnek", "stdin": "elma armut elma", "expectedOutput": "elma" },
+        { "label": "Hepsi bir kez", "stdin": "a b", "expectedOutput": "a" },
+        { "label": "Sonda baskın", "stdin": "x y y", "expectedOutput": "y" },
+        { "label": "Eşitlik", "stdin": "b a a b", "expectedOutput": "b" }
+      ],
+      "exampleInput": "elma armut elma"
+    },
+    {
+      "id": "m4-q34",
+      "type": "code",
+      "topic": "iç-içe",
+      "sectionId": "nested-data",
+      "difficulty": 3,
+      "prompt": "İlk satırda kişi sayısı n, sonraki n satırda \"ad şehir\" var; son satırda bir şehir. Her kişiyi {\"name\": ..., \"city\": ...} sözlüğü olarak bir listede tut. O şehirdeki kişilerin adlarını giriş sırasıyla ayrı satırlara yazdır; kimse yoksa \"kimse yok\" yazdır.",
+      "starterCode": "count = int(input())\npeople = []\n# Kişileri sözlük olarak listeye ekle\n\ntarget = input()\n# Şehre göre filtrele\n",
+      "answer": "count = int(input())\npeople = []\nfor _ in range(count):\n    name, city = input().split()\n    people.append({\"name\": name, \"city\": city})\ntarget = input()\nfound = False\nfor person in people:\n    if person[\"city\"] == target:\n        print(person[\"name\"])\n        found = True\nif not found:\n    print(\"kimse yok\")",
+      "solutionCode": "count = int(input())\npeople = []\nfor _ in range(count):\n    name, city = input().split()\n    people.append({\"name\": name, \"city\": city})\ntarget = input()\nfound = False\nfor person in people:\n    if person[\"city\"] == target:\n        print(person[\"name\"])\n        found = True\nif not found:\n    print(\"kimse yok\")",
+      "expectedOutput": "Ada\nEce",
+      "hints": ["people.append({\"name\": name, \"city\": city}).", "Bir bayrak (found) ile en az bir kişi bulunup bulunmadığını takip et."],
+      "explanation": "Liste sözlükleri giriş sırasıyla saklar; filtreleme döngüsü person[\"city\"] alanına bakar. Karşılaştırma harf duyarlıdır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "3\nAda İzmir\nCan Ankara\nEce İzmir\nİzmir", "expectedOutput": "Ada\nEce" },
+        { "label": "Kimse yok", "stdin": "1\nAda İzmir\nBursa", "expectedOutput": "kimse yok" },
+        { "label": "Hepsi aynı şehir", "stdin": "2\nA X\nB X\nX", "expectedOutput": "A\nB" },
+        { "label": "Harf duyarlılığı", "stdin": "2\nA x\nB X\nX", "expectedOutput": "B" }
+      ],
+      "exampleInput": "3\nAda İzmir\nCan Ankara\nEce İzmir\nİzmir"
+    },
+    {
+      "id": "m4-q35",
+      "type": "code",
+      "topic": "iç-içe",
+      "sectionId": "nested-data",
+      "difficulty": 2,
+      "prompt": "İlk satırda ürün sayısı n, sonraki n satırda \"ad adet fiyat\" var. Ürünleri sözlük listesinde tut ve toplam tutarı (adet × fiyat toplamı) yazdır. Örnek: 2 / kalem 3 10 / defter 2 25 → 80.",
+      "starterCode": "count = int(input())\nitems = []\n# Ürünleri sözlük olarak ekle, sonra toplamı hesapla\n",
+      "answer": "count = int(input())\nitems = []\nfor _ in range(count):\n    name, qty, price = input().split()\n    items.append({\"name\": name, \"qty\": int(qty), \"price\": int(price)})\ntotal = 0\nfor item in items:\n    total += item[\"qty\"] * item[\"price\"]\nprint(total)",
+      "solutionCode": "count = int(input())\nitems = []\nfor _ in range(count):\n    name, qty, price = input().split()\n    items.append({\"name\": name, \"qty\": int(qty), \"price\": int(price)})\ntotal = 0\nfor item in items:\n    total += item[\"qty\"] * item[\"price\"]\nprint(total)",
+      "expectedOutput": "80",
+      "hints": ["name, qty, price = input().split() üç parçayı açar; sayıları int'e çevir.", "İkinci döngüde item[\"qty\"] * item[\"price\"] topla."],
+      "explanation": "Önce veri yapısı kurulur, sonra işlenir; bu ayrım gerçek uygulamalarda okuma ve hesaplamayı ayrı test etmeyi sağlar. Ürün yoksa toplam 0'dır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "2\nkalem 3 10\ndefter 2 25", "expectedOutput": "80" },
+        { "label": "Sıfır adet", "stdin": "1\nx 0 99", "expectedOutput": "0" },
+        { "label": "Üç ürün", "stdin": "3\na 1 1\nb 2 2\nc 3 3", "expectedOutput": "14" },
+        { "label": "Boş sepet", "stdin": "0", "expectedOutput": "0" }
+      ],
+      "exampleInput": "2\nkalem 3 10\ndefter 2 25"
+    },
+    {
+      "id": "m4-q36",
+      "type": "code",
+      "topic": "sıralama",
+      "sectionId": "sorting-key",
+      "difficulty": 2,
+      "prompt": "Boşlukla ayrılmış kelimeler oku. Büyük/küçük harf farkını gözetmeden alfabetik sıraya diz ve yazımlarını koruyarak aralarında boşlukla yazdır. Örnek: kiwi Elma muz → Elma kiwi muz.",
+      "starterCode": "words = input().split()\n# Harf duyarsız sırala ve yazdır\n",
+      "answer": "words = input().split()\nprint(\" \".join(sorted(words, key=str.lower)))",
+      "solutionCode": "words = input().split()\nprint(\" \".join(sorted(words, key=str.lower)))",
+      "expectedOutput": "Elma kiwi muz",
+      "hints": ["sorted(words, key=str.lower).", "\" \".join(...) listeyi tek satıra çevirir."],
+      "explanation": "key=str.lower karşılaştırmayı küçük harfle yapar ama listede orijinal yazımlar kalır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "kiwi Elma muz", "expectedOutput": "Elma kiwi muz" },
+        { "label": "Karışık harf", "stdin": "b A c", "expectedOutput": "A b c" },
+        { "label": "Tek kelime", "stdin": "tek", "expectedOutput": "tek" },
+        { "label": "Büyük harfle başlayanlar", "stdin": "Zeytin armut Muz", "expectedOutput": "armut Muz Zeytin" }
+      ],
+      "exampleInput": "kiwi Elma muz"
+    },
+    {
+      "id": "m4-q37",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "lists",
+      "difficulty": 1,
+      "prompt": "Boş listenin ilk öğesi okunursa hangi hata oluşur?",
+      "code": "items = []\nprint(items[0])",
+      "options": ["IndexError", "KeyError", "ValueError", "TypeError"],
+      "answer": "IndexError",
+      "expectedError": "IndexError",
+      "optionFeedback": {
+        "KeyError": "KeyError sözlüklerde eksik anahtar içindir; listelerde indeks hatası IndexError'dır.",
+        "ValueError": "İndeks tipi ve değeri geçerli bir int; sorun listenin boş olması.",
+        "TypeError": "Listeler int ile indekslenebilir; tip uyumlu."
+      },
+      "hints": ["Boş listede hiç indeks yok.", "Sınır dışı indeks hatası."],
+      "explanation": "Boş listede 0 indeksi de yoktur. Okumadan önce if items: ile boşluğu kontrol et."
+    },
+    {
+      "id": "m4-q38",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "list-methods",
+      "difficulty": 2,
+      "prompt": "Listede olmayan değer remove ile silinirse hangi hata oluşur?",
+      "code": "colors = [\"red\", \"blue\"]\ncolors.remove(\"green\")",
+      "options": ["ValueError", "KeyError", "IndexError", "NameError"],
+      "answer": "ValueError",
+      "expectedError": "ValueError",
+      "optionFeedback": {
+        "KeyError": "Listelerde anahtar yoktur; remove değere göre arar.",
+        "IndexError": "remove indeksle değil değerle çalışır; değer bulunamayınca ValueError verir.",
+        "NameError": "\"green\" bir metin değeri; tanımsız isim yok."
+      },
+      "hints": ["remove değeri arar.", "Bulunamayan değer için str.index ile aynı hata türü."],
+      "explanation": "remove listede aranan değeri bulamazsa ValueError üretir. Önce if \"green\" in colors: ile kontrol edilebilir."
+    },
+    {
+      "id": "m4-q39",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "dicts",
+      "difficulty": 2,
+      "prompt": "Bu satır hangi hatayı üretir?",
+      "code": "user = {\"name\": \"Ada\"}\nprint(user[\"Name\"])",
+      "options": ["KeyError", "NameError", "IndexError", "AttributeError"],
+      "answer": "KeyError",
+      "expectedError": "KeyError",
+      "optionFeedback": {
+        "NameError": "user tanımlı; \"Name\" bir isim değil, anahtar olarak kullanılan metin.",
+        "IndexError": "IndexError listeler içindir; sözlükte eksik anahtar KeyError verir.",
+        "AttributeError": "Bir metot veya nitelik çağrılmıyor; köşeli parantezle anahtar okunuyor."
+      },
+      "hints": ["Anahtarlar harfe duyarlıdır.", "\"Name\" ile \"name\" farklı anahtarlardır."],
+      "explanation": "Sözlükte yalnızca \"name\" anahtarı var; büyük N ile yazılan anahtar bulunamaz ve KeyError oluşur."
+    },
+    {
+      "id": "m4-q40",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "nested-data",
+      "difficulty": 3,
+      "prompt": "İç içe erişim hangi hatayı üretir?",
+      "code": "data = {\"users\": [{\"name\": \"Ada\"}]}\nprint(data[\"users\"][\"name\"])",
+      "options": ["TypeError", "KeyError", "IndexError", "ValueError"],
+      "answer": "TypeError",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "KeyError": "KeyError, sözlükte olmayan anahtar için oluşur; burada sözlük yerine listeye anahtar verilmiş.",
+        "IndexError": "İndeks sınırı aşılmadı; listeye int yerine str verildi.",
+        "ValueError": "Değer dönüşümü yok; sorun indeksin tipi."
+      },
+      "hints": ["data[\"users\"] bir liste.", "Listeye int indeks gerekir: [0]."],
+      "explanation": "data[\"users\"] bir listedir ve listeler str ile indekslenemez; TypeError oluşur. Doğrusu data[\"users\"][0][\"name\"]."
+    }
+  ]
+}

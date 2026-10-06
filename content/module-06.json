@@ -1,0 +1,1016 @@
+{
+  "id": 6,
+  "slug": "fonksiyonlar",
+  "title": "Fonksiyonlar",
+  "description": "İşi fonksiyonlara böl, parametreleri doğru kur, kapsamı izle ve fonksiyonları değer olarak kullan.",
+  "contentVersion": 1,
+  "estimatedMinutes": 130,
+  "practiceIds": [
+    "m6-q01",
+    "m6-q02",
+    "m6-q03",
+    "m6-q05",
+    "m6-q07",
+    "m6-q08",
+    "m6-q09",
+    "m6-q11",
+    "m6-q12",
+    "m6-q13",
+    "m6-q14",
+    "m6-q19",
+    "m6-q23",
+    "m6-q27",
+    "m6-q37"
+  ],
+  "sections": [
+    {
+      "id": "def-return",
+      "title": "def, return ve docstring",
+      "eyebrow": "Bir işi isimlendir, sonucu geri ver",
+      "objectives": [
+        "Fonksiyon tanımıyla çağrısını ayırır ve return'ün değeri çağırana verdiğini açıklar.",
+        "return olmayan fonksiyonun None döndürdüğünü ve print ile return farkını bilir."
+      ],
+      "prerequisites": [
+        "m3:if-elif-else",
+        "m4:tuples"
+      ],
+      "summary": "def bir fonksiyon tanımlar; gövde ancak çağrıldığında çalışır. return değeri çağırana verir ve fonksiyonu hemen bitirir. return yoksa sonuç None'dır.",
+      "explanation": "print ekrana yazar, return değeri programa geri verir; birini diğerinin yerine kullanmak en yaygın başlangıç hatasıdır. Bir fonksiyonda birden çok return olabilir; ilk çalışan return fonksiyonu bitirir. return a, b bir tuple döndürür. Fonksiyonun ilk satırındaki üç tırnaklı metin docstring'dir: ne yaptığını, parametrelerini ve dönüş değerini anlatır. help() ve editörler bunu gösterir; func.__doc__ ile de okunabilir.",
+      "code": "def describe(n):\n    \"\"\"Sayının işaretini metin olarak döndürür.\"\"\"\n    if n > 0:\n        return \"pozitif\"\n    if n < 0:\n        return \"negatif\"\n    return \"sıfır\"\n\ndef greet(name):\n    print(f\"Merhaba {name}\")\n\nresult = greet(\"Ada\")\nprint(describe(-4))\nprint(result)\nprint(describe.__doc__)",
+      "expectedOutput": "Merhaba Ada\nnegatif\nNone\nSayının işaretini metin olarak döndürür.",
+      "why": "greet yazdırır ama bir şey döndürmez; result bu yüzden None olur. describe(-4) ikinci return'e ulaşır ve fonksiyon orada biter. __doc__ docstring metnini verir.",
+      "alternatives": [
+        "Sonucu hem kullanmak hem göstermek gerekiyorsa fonksiyon return etsin, çağıran taraf print etsin; böylece fonksiyon test edilebilir kalır.",
+        "Çok sayıda değer döndürmek için tuple yerine sözlük veya dataclass (M12) alanları adlandırır."
+      ],
+      "traps": [
+        "Fonksiyon içinde print edip sonucu return ettiğini sanmak.",
+        "Fonksiyonu tanımlayıp çağırmayı unutmak ya da parantezsiz yazmak: describe(4) yerine describe.",
+        "return'den sonraki satırların çalışacağını sanmak."
+      ],
+      "realCode": "def parse_price(text):\n    \"\"\"'12,50 TL' gibi bir metni kuruşa çevirir; geçersizse None döndürür.\"\"\"\n    cleaned = text.replace(\"TL\", \"\").strip().replace(\",\", \".\")\n    try:\n        return round(float(cleaned) * 100)\n    except ValueError:\n        return None\n\nprint(parse_price(\"12,50 TL\"))\nprint(parse_price(\"bedava\"))",
+      "realOutput": "1250\nNone",
+      "lineByLine": [
+        "Docstring girdinin biçimini ve başarısızlık durumunu belgeler.",
+        "Para birimi ve boşluklar temizlenir, ondalık virgül noktaya çevrilir.",
+        "Dönüşüm başarılıysa kuruş değeri döner; try/except ayrıntısı M7'de.",
+        "Geçersiz metinde None dönmesi, çağıranın bu durumu kontrol etmesini gerektirir."
+      ]
+    },
+    {
+      "id": "parameters",
+      "title": "Parametreler ve argümanlar",
+      "eyebrow": "Konumla, isimle, varsayılanla",
+      "objectives": [
+        "Konumsal ve isimli argümanların hangi parametreye bağlandığını belirler.",
+        "/ ve * işaretlerinin parametre listesindeki anlamını okur."
+      ],
+      "prerequisites": [
+        "def-return"
+      ],
+      "summary": "Argümanlar sırayla (konumsal) veya isimle (keyword) verilebilir. Varsayılan değerli parametreler çağrıda atlanabilir. / öncesindekiler yalnızca konumla, * sonrasındakiler yalnızca isimle verilir.",
+      "explanation": "Parametre fonksiyon tanımındaki isim, argüman çağrıda verilen değerdir. connect(\"db\", port=6543) çağrısında ilk değer sırayla host'a, ikincisi ismiyle port'a gider. İsimli argümanlar konumsallardan sonra gelmelidir. Tanımda varsayılanlı parametreler varsayılansızlardan sonra yazılır. def f(a, /, b, *, c) imzasında a yalnızca konumla, c yalnızca isimle verilebilir; b ikisiyle de. Yalnızca-isim parametreleri, anlamı karışabilecek ayarları (retry=True gibi) çağrıda açıkça yazdırmak için kullanılır.",
+      "code": "def connect(host, port=5432, *, timeout=10):\n    return f\"{host}:{port} ({timeout} sn)\"\n\nprint(connect(\"db\"))\nprint(connect(\"db\", 6543))\nprint(connect(port=1, host=\"x\", timeout=3))",
+      "expectedOutput": "db:5432 (10 sn)\ndb:6543 (10 sn)\nx:1 (3 sn)",
+      "why": "İlk çağrı iki varsayılanı da kullanır. İkincisinde 6543 sırayla port'a gider. Üçüncüde bütün argümanlar isimle verildiği için sıra önemsizdir. timeout * işaretinden sonra geldiği için yalnızca isimle verilebilir: connect(\"db\", 1, 3) TypeError verir.",
+      "alternatives": [
+        "Çok sayıda ayar alan fonksiyonlarda isimli argüman kullanmak çağrıyı kendini açıklar hâle getirir.",
+        "Birbiriyle karışabilecek aynı tipte parametreler (genişlik, yükseklik) için yalnızca-isim parametreleri hatayı önler."
+      ],
+      "traps": [
+        "İsimli argümandan sonra konumsal argüman yazmak: f(a=1, 2) SyntaxError verir.",
+        "Aynı parametreye hem konumla hem isimle değer vermek: TypeError.",
+        "Varsayılansız bir parametreyi varsayılanlıdan sonra tanımlamak: SyntaxError."
+      ],
+      "realCode": "def paginate(items, page=1, *, per_page=2):\n    start = (page - 1) * per_page\n    return items[start:start + per_page]\n\nletters = [\"a\", \"b\", \"c\", \"d\", \"e\"]\nprint(paginate(letters))\nprint(paginate(letters, 3))\nprint(paginate(letters, 2, per_page=3))",
+      "realOutput": "['a', 'b']\n['e']\n['d', 'e']",
+      "lineByLine": [
+        "page varsayılan olarak 1'dir; per_page yalnızca isimle verilebilen bir ayardır.",
+        "Başlangıç indeksi sayfa numarasından hesaplanır.",
+        "Dilim liste sınırını aşsa da hata vermez; son sayfa eksik dolar.",
+        "per_page=3 çağrıda açıkça okunur; konumla verilemez."
+      ]
+    },
+    {
+      "id": "args-kwargs",
+      "title": "*args ve **kwargs",
+      "eyebrow": "Belirsiz sayıda argüman topla",
+      "objectives": [
+        "*args'ın tuple, **kwargs'ın sözlük olarak toplandığını izler.",
+        "Çağrıda * ve ** ile bir diziyi veya sözlüğü argümanlara açar."
+      ],
+      "prerequisites": [
+        "parameters",
+        "m5:unpacking"
+      ],
+      "summary": "def f(*args) fazladan konumsal argümanları bir tuple'da, def f(**kwargs) fazladan isimli argümanları bir sözlükte toplar. Çağrıda f(*liste) ve f(**sözlük) bunun tersini yapar.",
+      "explanation": "İsimler gelenekseldir; asıl işi * ve ** işaretleri yapar. Sıra şöyledir: normal parametreler, *args, yalnızca-isim parametreleri, **kwargs. Sarmalayıcı (wrapper) fonksiyonlar çoğu zaman *args ve **kwargs alıp aynen başka bir fonksiyona iletir; decorator'larda (M13) bu kalıbı çok göreceksin. Çağrı tarafında print(*items) bir listeyi ayrı argümanlara, create(**options) bir sözlüğü isimli argümanlara açar.",
+      "code": "def total(*numbers, discount=0):\n    return sum(numbers) - discount\n\ndef tag(name, **attrs):\n    parts = [f'{k}=\"{v}\"' for k, v in attrs.items()]\n    return f\"<{name} {' '.join(parts)}>\"\n\nprint(total(10, 20, 5))\nprint(total(10, 20, discount=5))\nprint(tag(\"a\", href=\"/\", title=\"Ana\"))\nprices = [3, 4]\nprint(total(*prices))",
+      "expectedOutput": "35\n25\n<a href=\"/\" title=\"Ana\">\n7",
+      "why": "numbers bütün konumsal sayıları tuple olarak alır. discount, *numbers'tan sonra geldiği için isimle verilmelidir; konumla verilen 5 numbers'a katılır. attrs isimli argümanları bir sözlükte toplar. *prices listeyi iki ayrı argümana açar.",
+      "alternatives": [
+        "Argüman sayısı belliyse açık parametreler yazmak, imzayı okuyana daha çok bilgi verir.",
+        "Birçok seçeneği tek seferde iletmek için bir sözlüğü **options ile açmak, her anahtarı tek tek yazmaktan kısadır."
+      ],
+      "traps": [
+        "args'ın liste olduğunu sanmak; tuple'dır.",
+        "*args'tan sonra gelen parametreye konumla değer vermeye çalışmak.",
+        "Aynı anahtarı hem açık parametre hem **kwargs ile vermek: TypeError."
+      ],
+      "realCode": "def log_call(func, *args, **kwargs):\n    print(f\"çağrı: {func.__name__} {args} {kwargs}\")\n    return func(*args, **kwargs)\n\nresult = log_call(round, 3.14159, ndigits=2)\nprint(result)",
+      "realOutput": "çağrı: round (3.14159,) {'ndigits': 2}\n3.14",
+      "lineByLine": [
+        "log_call çağrılacak fonksiyonu ve onun argümanlarını alır.",
+        "args tuple, kwargs sözlük olarak kaydedilir.",
+        "func(*args, **kwargs) argümanları olduğu gibi asıl fonksiyona iletir.",
+        "round(3.14159, ndigits=2) çalışır ve sonucu döner; decorator'ların temeli bu kalıptır."
+      ]
+    },
+    {
+      "id": "mutable-default",
+      "title": "Mutable varsayılan argüman tuzağı",
+      "eyebrow": "Varsayılan değer bir kez oluşturulur",
+      "objectives": [
+        "Varsayılan değerin tanım anında bir kez hesaplandığını açıklar.",
+        "None varsayılanıyla güvenli kalıbı uygular."
+      ],
+      "prerequisites": [
+        "parameters",
+        "m5:mutable-immutable"
+      ],
+      "summary": "def f(items=[]) yazıldığında boş liste fonksiyon tanımlanırken bir kez oluşturulur ve bütün çağrılarda aynı liste kullanılır. Güvenli kalıp: items=None ve gövdede yeni liste.",
+      "explanation": "Varsayılan ifadeler her çağrıda değil, def satırı çalıştığında bir kez değerlendirilir. Değer immutable ise (0, \"\", None) sorun yoktur. Liste, sözlük veya küme ise önceki çağrının değişiklikleri sonraki çağrılara taşınır; hata ilk çağrıda görünmez, ikincide ortaya çıkar. Çözüm, varsayılanı None yapıp gövdede if items is None: items = [] yazmaktır. Aynı mantık varsayılandaki hesaplamalar için de geçerlidir: def log(at=time.time()) her çağrıda aynı zamanı kullanır.",
+      "code": "def add_bad(item, bucket=[]):\n    bucket.append(item)\n    return bucket\n\ndef add_good(item, bucket=None):\n    if bucket is None:\n        bucket = []\n    bucket.append(item)\n    return bucket\n\nprint(add_bad(\"a\"))\nprint(add_bad(\"b\"))\nprint(add_good(\"a\"))\nprint(add_good(\"b\"))",
+      "expectedOutput": "['a']\n['a', 'b']\n['a']\n['b']",
+      "why": "add_bad'in bucket listesi bir kez oluşturuldu; ikinci çağrı ilk çağrının \"a\" öğesini görür. add_good her çağrıda None alır ve yeni bir liste oluşturur.",
+      "alternatives": [
+        "Fonksiyon girdiyi değiştirmiyorsa varsayılan olarak boş tuple () kullanılabilir; immutable olduğu için güvenlidir.",
+        "Dataclass alanlarında aynı sorun field(default_factory=list) ile çözülür (M12)."
+      ],
+      "traps": [
+        "def f(x=[]) veya def f(x={}) yazmak.",
+        "Hata ilk çağrıda görünmediği için kodun doğru olduğunu sanmak.",
+        "if not bucket: bucket = [] yazmak; çağıranın bilerek verdiği boş listeyi de değiştirir. Doğrusu is None kontrolüdür."
+      ],
+      "realCode": "def register(event, handlers=None):\n    handlers = [] if handlers is None else handlers\n    handlers.append(event)\n    return handlers\n\nfirst = register(\"giriş\")\nsecond = register(\"çıkış\")\nshared = [\"kayıt\"]\nregister(\"ödeme\", shared)\nprint(first, second, shared)",
+      "realOutput": "['giriş'] ['çıkış'] ['kayıt', 'ödeme']",
+      "lineByLine": [
+        "Varsayılan None'dır; liste her çağrıda yeniden oluşturulur.",
+        "Ternary ifadesi None ise yeni liste, değilse verilen listeyi seçer.",
+        "Ayrı çağrılar birbirinin listesini görmez.",
+        "Çağıran kendi listesini verirse ona eklenir; bu bilinçli bir yan etkidir."
+      ]
+    },
+    {
+      "id": "scope-legb",
+      "title": "Kapsam: LEGB, global ve nonlocal",
+      "eyebrow": "Python bir ismi hangi sırayla arar?",
+      "objectives": [
+        "Bir ismin Local, Enclosing, Global, Built-in sırasıyla arandığını izler.",
+        "Fonksiyon içindeki atamanın yerel isim oluşturduğunu ve UnboundLocalError'u açıklar."
+      ],
+      "prerequisites": [
+        "def-return"
+      ],
+      "summary": "Fonksiyon içinde okunan bir isim önce yerelde, sonra kapsayan fonksiyonda, sonra modül düzeyinde (global), en son yerleşiklerde (len, print) aranır. Fonksiyon içinde atanan her isim yereldir.",
+      "explanation": "Okumak ile atamak farklıdır: fonksiyon global bir ismi okuyabilir, ama aynı isme fonksiyonun herhangi bir yerinde atama varsa Python onu baştan yerel sayar ve atamadan önce okumak UnboundLocalError üretir. global name bildirimi atamanın modül düzeyindeki isme yapılmasını sağlar; nonlocal ise kapsayan fonksiyonun ismine. İkisi de durumu gizlice paylaştırdığı için idareli kullanılır; çoğu zaman değeri parametreyle alıp return etmek daha temizdir. Yerleşik isimleri gölgelemek (list = [1, 2]) sonraki list() çağrılarını bozar.",
+      "code": "count = 0\n\ndef read_only():\n    return count + 1\n\ndef increment():\n    global count\n    count += 1\n\ndef shadow():\n    count = 100\n    return count\n\nprint(read_only())\nincrement()\nprint(shadow(), count)",
+      "expectedOutput": "1\n100 1",
+      "why": "read_only global count'u yalnızca okur. increment, global bildirimiyle modül düzeyindeki count'u 1 yapar. shadow içindeki atama yeni bir yerel count oluşturur; global count 1 olarak kalır.",
+      "alternatives": [
+        "Global durum yerine değeri parametre olarak al ve yeni değeri return et: count = increment(count).",
+        "Birden çok fonksiyonun paylaştığı durum için ileride sınıf (M11) daha düzenli bir yerdir."
+      ],
+      "traps": [
+        "Fonksiyonda global ismi okuyup sonra aynı isme atama yapmak: UnboundLocalError.",
+        "list, dict, sum gibi yerleşik isimleri değişken adı olarak kullanmak.",
+        "global'i fonksiyonlar arası veri taşımanın olağan yolu sanmak."
+      ],
+      "realCode": "TAX_RATE = 0.2\n\ndef price_with_tax(price, rate=None):\n    rate = TAX_RATE if rate is None else rate\n    return round(price * (1 + rate), 2)\n\nprint(price_with_tax(100))\nprint(price_with_tax(100, rate=0.1))",
+      "realOutput": "120.0\n110.0",
+      "lineByLine": [
+        "Modül düzeyinde büyük harfli bir sabit tanımlanır; değiştirilmeyeceği varsayılır.",
+        "Fonksiyon sabiti yalnızca okur, bu yüzden global bildirimi gerekmez.",
+        "rate verilmezse sabit, verilirse argüman kullanılır.",
+        "Oran dışarıdan verilebildiği için fonksiyon farklı oranlarla kolayca test edilir."
+      ]
+    },
+    {
+      "id": "lambda-higher-order",
+      "title": "lambda, map, filter ve reduce",
+      "eyebrow": "Fonksiyonlar da değerdir",
+      "objectives": [
+        "Bir lambda ifadesini eşdeğer def fonksiyonuna çevirir.",
+        "map, filter ve functools.reduce sonuçlarını izler."
+      ],
+      "prerequisites": [
+        "def-return",
+        "m5:list-comprehension",
+        "m4:sorting-key"
+      ],
+      "summary": "Python'da fonksiyon bir değerdir: bir isme bağlanabilir, başka bir fonksiyona argüman olarak verilebilir. lambda tek ifadelik isimsiz fonksiyondur. map dönüştürür, filter eler, reduce tek değere indirger.",
+      "explanation": "lambda x: x * 2, def f(x): return x * 2 ile aynıdır ama yalnızca tek bir ifade içerebilir. En yaygın kullanımı key= gibi kısa bir fonksiyon bekleyen yerlerdir. map(f, items) ve filter(f, items) liste değil, tembel çalışan bir iterator döndürür; görmek için list() gerekir ve yalnızca bir kez gezilebilir. functools.reduce(f, items, başlangıç) öğeleri soldan sağa birleştirir. Python'da map/filter yerine comprehension, reduce yerine sum, max veya \"\".join gibi hazır fonksiyonlar çoğu zaman daha okunurdur. lambda'yı bir isme atamak (square = lambda x: ...) yerine def yazmak önerilir.",
+      "code": "from functools import reduce\n\nnums = [1, 2, 3, 4]\nsquares = map(lambda n: n * n, nums)\nprint(list(squares))\nprint(list(filter(lambda n: n % 2 == 0, nums)))\nprint(reduce(lambda acc, n: acc * n, nums, 1))\n\noperations = {\"topla\": lambda a, b: a + b, \"çarp\": lambda a, b: a * b}\nprint(operations[\"çarp\"](6, 7))",
+      "expectedOutput": "[1, 4, 9, 16]\n[2, 4]\n24\n42",
+      "why": "map her sayıya kare alma fonksiyonunu uygular; list() iterator'ı listeye çevirir. filter yalnızca True dönen öğeleri tutar. reduce 1 ile başlar ve sırayla çarpar: 1 · 1 · 2 · 3 · 4 = 24. Sözlükteki değerler fonksiyondur: operations[\"çarp\"] bir fonksiyon verir, (6, 7) onu çağırır.",
+      "alternatives": [
+        "[n * n for n in nums] ve [n for n in nums if n % 2 == 0] aynı işi çoğu Python geliştiricisinin daha kolay okuduğu biçimde yapar.",
+        "Çarpım için math.prod(nums), toplam için sum(nums) reduce'tan daha açıktır."
+      ],
+      "traps": [
+        "map/filter sonucunu liste sanıp ikinci kez gezmek; ikinci gezinti boş gelir.",
+        "lambda içinde birden çok satır veya atama yazmaya çalışmak.",
+        "reduce'u from functools import reduce yapmadan kullanmak; Python 3'te yerleşik değildir."
+      ],
+      "realCode": "orders = [\n    {\"id\": 1, \"total\": 120, \"paid\": True},\n    {\"id\": 2, \"total\": 80, \"paid\": False},\n    {\"id\": 3, \"total\": 200, \"paid\": True},\n]\n\npaid = filter(lambda o: o[\"paid\"], orders)\ntotals = map(lambda o: o[\"total\"], paid)\nprint(sum(totals))\nprint(sum(o[\"total\"] for o in orders if o[\"paid\"]))",
+      "realOutput": "320\n320",
+      "lineByLine": [
+        "Siparişler bir sözlük listesidir.",
+        "filter yalnızca ödenmiş siparişleri bırakan tembel bir iterator üretir.",
+        "map her siparişi tutarına dönüştürür; sum bu zinciri tüketerek 320'yi hesaplar.",
+        "Son satır aynı işi bir generator ifadesiyle yapar; çoğu ekip bu biçimi tercih eder."
+      ]
+    },
+    {
+      "id": "recursion",
+      "title": "Recursion (özyineleme)",
+      "eyebrow": "Fonksiyon kendini daha küçük bir problemle çağırır",
+      "objectives": [
+        "Özyinelemeli bir fonksiyonun temel durumunu ve küçülen adımını bulur.",
+        "Çağrı yığınını izleyerek sonucu adım adım hesaplar."
+      ],
+      "prerequisites": [
+        "def-return",
+        "m4:nested-data"
+      ],
+      "summary": "Özyinelemeli bir fonksiyon problemi kendisinin daha küçük bir kopyasına indirger. Her özyinelemede bir temel durum (base case) olmalıdır; yoksa çağrılar RecursionError ile biter.",
+      "explanation": "factorial(3) çağrısı 3 * factorial(2) sonucunu bekler, o da 2 * factorial(1) sonucunu; temel durum 1'i döndürünce bekleyen çağrılar sondan başa tamamlanır: 1, 2, 6. Her çağrının kendi yerel değişkenleri vardır ve çağrı yığınında (call stack) bekler. Python varsayılan olarak yaklaşık 1000 derinliğe izin verir; çok uzun listelerde döngü daha güvenlidir. Özyineleme en doğal hâlini iç içe yapılarda bulur: klasör ağaçları, iç içe listeler, JSON. Aynı alt problemi tekrar tekrar çözen özyineleme (saf Fibonacci gibi) çok yavaşlar; bunu önbellekle (functools.lru_cache, M10) çözeceğiz.",
+      "code": "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)\n\ndef countdown(n):\n    if n == 0:\n        print(\"bitti\")\n        return\n    print(n)\n    countdown(n - 1)\n\nprint(factorial(5))\ncountdown(3)",
+      "expectedOutput": "120\n3\n2\n1\nbitti",
+      "why": "factorial(5) = 5 · 4 · 3 · 2 · 1 = 120; n <= 1 temel durumdur. countdown her çağrıda önce sayıyı yazar, sonra bir küçüğüyle kendini çağırır; 0'a gelince durur.",
+      "alternatives": [
+        "Düz bir sayma veya liste gezme işi için döngü daha basittir ve derinlik sınırına takılmaz.",
+        "Ağaç ve iç içe yapılarda özyineleme, kendi yığınını yöneten bir döngüden genellikle daha kısa ve okunurdur."
+      ],
+      "traps": [
+        "Temel durumu unutmak veya hiç ulaşılamayacak bir temel durum yazmak.",
+        "Özyinelemeli çağrının sonucunu return etmeyi unutmak; sonuç None olur.",
+        "Problemi küçültmemek: factorial(n) içinde yine factorial(n) çağırmak."
+      ],
+      "realCode": "def flatten(items):\n    result = []\n    for item in items:\n        if isinstance(item, list):\n            result.extend(flatten(item))\n        else:\n            result.append(item)\n    return result\n\nprint(flatten([1, [2, [3, 4]], 5]))",
+      "realOutput": "[1, 2, 3, 4, 5]",
+      "lineByLine": [
+        "Sonuç listesi her çağrıda yeniden oluşturulur.",
+        "Öğe bir listeyse aynı fonksiyon onu düzleştirir; sonuç extend ile eklenir.",
+        "Liste değilse doğrudan eklenir; bu temel durumdur.",
+        "Derinlik ne olursa olsun yapı tek seviyeye iner."
+      ]
+    },
+    {
+      "id": "closure",
+      "title": "İç fonksiyonlar ve closure",
+      "eyebrow": "Fonksiyon doğduğu ortamı hatırlar",
+      "objectives": [
+        "İç fonksiyonun kapsayan fonksiyonun değişkenlerine erişimini açıklar.",
+        "nonlocal ile closure içindeki durumu günceller ve döngüdeki geç bağlama tuzağını tanır."
+      ],
+      "prerequisites": [
+        "scope-legb",
+        "lambda-higher-order"
+      ],
+      "summary": "Bir fonksiyonun içinde tanımlanan fonksiyon, dıştaki fonksiyonun değişkenlerini kullanabilir. Dış fonksiyon bittikten sonra bile bu değişkenleri hatırlıyorsa buna closure denir.",
+      "explanation": "make_multiplier(3) bir iç fonksiyon döndürür; iç fonksiyon factor = 3 değerini hatırlar. Böylece aynı kalıptan farklı davranan fonksiyonlar üretilir. İç fonksiyon dıştaki değişkene atama yapmak isterse nonlocal bildirimi gerekir; yoksa yeni bir yerel değişken oluşur. Closure değişkenin o anki değerini değil değişkenin kendisini yakalar: bir döngüde oluşturulan lambda'lar, döngü bittikten sonra çağrıldıklarında hepsi son değeri görür (geç bağlama). Çözüm, değeri varsayılan argümanla sabitlemektir: lambda i=i: i. Decorator'lar (M13) closure üzerine kuruludur.",
+      "code": "def make_multiplier(factor):\n    def multiply(x):\n        return x * factor\n    return multiply\n\ndef make_counter():\n    count = 0\n    def increment():\n        nonlocal count\n        count += 1\n        return count\n    return increment\n\ntriple = make_multiplier(3)\nprint(triple(5))\ncounter = make_counter()\ncounter()\nprint(counter())",
+      "expectedOutput": "15\n2",
+      "why": "triple, factor = 3 değerini hatırlayan iç fonksiyondur: 5 * 3 = 15. counter her çağrıda aynı count değişkenini nonlocal ile günceller; ikinci çağrı 2 döndürür. Her make_counter() çağrısı kendi bağımsız count'unu oluşturur.",
+      "alternatives": [
+        "Durum birkaç alandan oluşuyorsa veya birden çok işlem gerekiyorsa sınıf (M11) daha okunurdur.",
+        "Argümanları önceden sabitlemek için functools.partial(pow, exp=2) gibi hazır bir araç da kullanılabilir."
+      ],
+      "traps": [
+        "nonlocal yazmadan dıştaki değişkene atama yapmak: UnboundLocalError.",
+        "Döngüde oluşturulan lambda'ların döngü değişkeninin o anki değerini sakladığını sanmak.",
+        "make_multiplier(3) ile make_multiplier'ı karıştırmak; ilki üretilmiş fonksiyondur, ikincisi üreticinin kendisi."
+      ],
+      "realCode": "def make_validator(min_len, max_len):\n    def validate(text):\n        if len(text) < min_len:\n            return f\"en az {min_len} karakter\"\n        if len(text) > max_len:\n            return f\"en fazla {max_len} karakter\"\n        return \"geçerli\"\n    return validate\n\nusername_check = make_validator(3, 8)\nprint(username_check(\"ab\"))\nprint(username_check(\"ada_lovelace\"))\nprint(username_check(\"ada\"))",
+      "realOutput": "en az 3 karakter\nen fazla 8 karakter\ngeçerli",
+      "lineByLine": [
+        "Dış fonksiyon kuralları (sınırları) parametre olarak alır.",
+        "İç fonksiyon bu sınırları closure olarak hatırlar.",
+        "make_validator(3, 8) kullanıcı adına özel bir doğrulayıcı üretir.",
+        "Aynı üreticiyle farklı sınırlarda başka doğrulayıcılar da oluşturulabilir."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "m6-q01",
+      "type": "output",
+      "topic": "def-return",
+      "sectionId": "def-return",
+      "difficulty": 2,
+      "prompt": "return içermeyen fonksiyonun sonucu ne olur?",
+      "code": "def f():\n    print(\"a\")\n\nx = f()\nprint(x)",
+      "options": ["a ve None (iki satır)", "a", "None", "a ve a (iki satır)"],
+      "answer": "a ve None (iki satır)",
+      "expectedOutput": "a\nNone",
+      "hints": ["f çağrılınca \"a\" yazdırılır.", "return olmadığı için x None'a bağlanır."],
+      "explanation": "print ekrana yazar ama değer döndürmez. return olmayan fonksiyon None döndürür; ikinci print onu yazar."
+    },
+    {
+      "id": "m6-q02",
+      "type": "output",
+      "topic": "def-return",
+      "sectionId": "def-return",
+      "difficulty": 1,
+      "prompt": "return'den sonraki satır çalışır mı?",
+      "code": "def check(n):\n    if n > 0:\n        return \"+\"\n    return \"-\"\n    print(\"bitti\")\n\nprint(check(5))",
+      "options": ["+", "+ ve bitti", "-", "None"],
+      "answer": "+",
+      "expectedOutput": "+",
+      "hints": ["İlk çalışan return fonksiyonu bitirir.", "print(\"bitti\") hiçbir zaman çalışmaz."],
+      "explanation": "5 > 0 olduğu için ilk return \"+\" döndürür ve fonksiyon biter. Son satır her durumda ulaşılamaz koddur."
+    },
+    {
+      "id": "m6-q03",
+      "type": "output",
+      "topic": "parametre",
+      "sectionId": "parameters",
+      "difficulty": 1,
+      "prompt": "Üç çağrının sonucu ne?",
+      "code": "def power(base, exp=2):\n    return base ** exp\n\nprint(power(3), power(2, 5), power(exp=0, base=9))",
+      "options": ["9 32 1", "9 10 0", "6 32 1", "Hata"],
+      "answer": "9 32 1",
+      "expectedOutput": "9 32 1",
+      "hints": ["exp verilmezse 2'dir.", "İsimli argümanlarda sıra önemsizdir."],
+      "explanation": "3 ** 2 = 9, 2 ** 5 = 32, 9 ** 0 = 1. Son çağrıda argümanlar isimle verildiği için ters sıra sorun değildir."
+    },
+    {
+      "id": "m6-q04",
+      "type": "output",
+      "topic": "parametre",
+      "sectionId": "parameters",
+      "difficulty": 1,
+      "prompt": "Yalnızca-isim parametresiyle sonuç ne?",
+      "code": "def label(text, *, upper=False):\n    return text.upper() if upper else text\n\nprint(label(\"py\", upper=True))",
+      "options": ["PY", "py", "Hata", "True"],
+      "answer": "PY",
+      "expectedOutput": "PY",
+      "hints": ["upper isimle verildi.", "upper True olduğu için text.upper() seçilir."],
+      "explanation": "* işaretinden sonraki upper yalnızca isimle verilebilir; burada doğru biçimde verilmiş ve metin büyük harfe çevrilir."
+    },
+    {
+      "id": "m6-q05",
+      "type": "output",
+      "topic": "args-kwargs",
+      "sectionId": "args-kwargs",
+      "difficulty": 2,
+      "prompt": "*args hangi tipte ve kaç öğe içerir?",
+      "code": "def show(*args):\n    print(type(args).__name__, len(args))\n\nshow(1, \"a\", None)",
+      "options": ["tuple 3", "list 3", "tuple 1", "dict 3"],
+      "answer": "tuple 3",
+      "expectedOutput": "tuple 3",
+      "hints": ["*args konumsal argümanları toplar.", "Toplanan yapı değiştirilemez bir dizidir."],
+      "explanation": "Üç konumsal argüman args adında bir tuple'da toplanır. None da bir argümandır ve sayılır."
+    },
+    {
+      "id": "m6-q06",
+      "type": "output",
+      "topic": "args-kwargs",
+      "sectionId": "args-kwargs",
+      "difficulty": 2,
+      "prompt": "**kwargs'ın sıralanmış hâli ne verir?",
+      "code": "def info(**kwargs):\n    return sorted(kwargs)\n\nprint(info(b=2, a=1))",
+      "options": ["['a', 'b']", "[1, 2]", "{'a': 1, 'b': 2}", "Hata"],
+      "answer": "['a', 'b']",
+      "expectedOutput": "['a', 'b']",
+      "hints": ["kwargs bir sözlüktür.", "Bir sözlüğü sıralamak anahtarlarını sıralar."],
+      "explanation": "İsimli argümanlar {'b': 2, 'a': 1} sözlüğünde toplanır. sorted sözlüğü gezerken anahtarları kullanır ve ['a', 'b'] döndürür."
+    },
+    {
+      "id": "m6-q07",
+      "type": "output",
+      "topic": "mutable-default",
+      "sectionId": "mutable-default",
+      "difficulty": 3,
+      "prompt": "Üçüncü çağrı ne döndürür?",
+      "code": "def collect(x, seen=[]):\n    seen.append(x)\n    return len(seen)\n\ncollect(\"a\")\ncollect(\"b\")\nprint(collect(\"c\"))",
+      "options": ["3", "1", "2", "Hata"],
+      "answer": "3",
+      "expectedOutput": "3",
+      "hints": ["seen listesi def satırında bir kez oluşturuldu.", "Her çağrı aynı listeye ekliyor."],
+      "explanation": "Varsayılan liste çağrılar arasında paylaşılır: üçüncü çağrıda içinde a, b ve c vardır."
+    },
+    {
+      "id": "m6-q08",
+      "type": "output",
+      "topic": "kapsam",
+      "sectionId": "scope-legb",
+      "difficulty": 1,
+      "prompt": "Yerel ve global x ne yazdırır?",
+      "code": "x = \"global\"\n\ndef f():\n    x = \"yerel\"\n    return x\n\nprint(f(), x)",
+      "options": ["yerel global", "yerel yerel", "global global", "Hata"],
+      "answer": "yerel global",
+      "expectedOutput": "yerel global",
+      "hints": ["Fonksiyon içindeki atama yerel bir x oluşturur.", "Global x hiç değişmez."],
+      "explanation": "f içindeki x yalnızca fonksiyonun yerel kapsamında yaşar. Dışarıdaki x hâlâ \"global\" değerindedir."
+    },
+    {
+      "id": "m6-q09",
+      "type": "output",
+      "topic": "lambda",
+      "sectionId": "lambda-higher-order",
+      "difficulty": 1,
+      "prompt": "map sonucu ne?",
+      "code": "nums = [3, 1, 2]\nprint(list(map(lambda n: n * 10, nums)))",
+      "options": ["[30, 10, 20]", "[10, 20, 30]", "[3, 1, 2]", "<map object>"],
+      "answer": "[30, 10, 20]",
+      "expectedOutput": "[30, 10, 20]",
+      "hints": ["map sırayı korur.", "Her öğe 10 ile çarpılır."],
+      "explanation": "map fonksiyonu her öğeye sırayla uygular; list() sonucu görünür bir listeye çevirir."
+    },
+    {
+      "id": "m6-q10",
+      "type": "output",
+      "topic": "lambda",
+      "sectionId": "lambda-higher-order",
+      "difficulty": 3,
+      "prompt": "filter sonucu iki kez listeye çevrilirse ne olur?",
+      "code": "evens = filter(lambda n: n % 2 == 0, [1, 2, 3, 4])\nprint(list(evens))\nprint(list(evens))",
+      "options": ["[2, 4] ve [] (iki satır)", "[2, 4] ve [2, 4] (iki satır)", "[2, 4]", "[1, 3] ve [] (iki satır)"],
+      "answer": "[2, 4] ve [] (iki satır)",
+      "expectedOutput": "[2, 4]\n[]",
+      "hints": ["filter bir iterator döndürür.", "Iterator bir kez tüketilince boşalır."],
+      "explanation": "İlk list() iterator'daki bütün öğeleri tüketir. İkinci list() aynı tükenmiş iterator'dan hiçbir şey alamaz. Tekrar kullanmak için sonucu bir listede sakla."
+    },
+    {
+      "id": "m6-q11",
+      "type": "output",
+      "topic": "recursion",
+      "sectionId": "recursion",
+      "difficulty": 2,
+      "prompt": "Özyinelemeli toplam ne döndürür?",
+      "code": "def total(n):\n    if n == 0:\n        return 0\n    return n + total(n - 1)\n\nprint(total(4))",
+      "options": ["10", "4", "24", "0"],
+      "answer": "10",
+      "expectedOutput": "10",
+      "hints": ["total(4) = 4 + total(3).", "4 + 3 + 2 + 1 + 0."],
+      "explanation": "Çağrılar 0'a kadar iner, sonra sondan başa toplanır: 0, 1, 3, 6, 10."
+    },
+    {
+      "id": "m6-q12",
+      "type": "output",
+      "topic": "closure",
+      "sectionId": "closure",
+      "difficulty": 2,
+      "prompt": "İki üretilmiş fonksiyon ne döndürür?",
+      "code": "def make_adder(n):\n    def add(x):\n        return x + n\n    return add\n\nadd5 = make_adder(5)\nadd10 = make_adder(10)\nprint(add5(1), add10(1))",
+      "options": ["6 11", "11 11", "6 6", "Hata"],
+      "answer": "6 11",
+      "expectedOutput": "6 11",
+      "hints": ["Her make_adder çağrısı kendi n değerini yakalar.", "add5 için n = 5, add10 için n = 10."],
+      "explanation": "Her closure kendi kapsamını hatırlar; iki fonksiyon birbirinin n değerini etkilemez."
+    },
+    {
+      "id": "m6-q13",
+      "type": "bug",
+      "topic": "def-return",
+      "sectionId": "def-return",
+      "difficulty": 2,
+      "prompt": "Yazar sonucun 9 olmasını bekliyordu. Neden hata oluşuyor?",
+      "code": "def double(n):\n    print(n * 2)\n\nresult = double(4) + 1",
+      "options": [
+        "double değeri yazdırıyor ama döndürmüyor; sonuç None",
+        "print yalnızca metin yazdırabilir",
+        "Fonksiyon adı bir İngilizce kelime olamaz",
+        "+ 1 işlemi fonksiyonun içinde yapılmalı"
+      ],
+      "answer": "double değeri yazdırıyor ama döndürmüyor; sonuç None",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "print yalnızca metin yazdırabilir": "print her değeri yazdırır; ekranda 8 görünür. Sorun print'in değer döndürmemesi.",
+        "Fonksiyon adı bir İngilizce kelime olamaz": "double geçerli bir isimdir; Python'da yerleşik bir double da yoktur.",
+        "+ 1 işlemi fonksiyonun içinde yapılmalı": "İşlem dışarıda da yapılabilir; yeter ki fonksiyon bir değer döndürsün."
+      },
+      "hints": ["double(4) ne döndürür?", "print yerine return n * 2 yaz."],
+      "explanation": "Fonksiyon 8'i ekrana yazar ama None döndürür; None + 1 TypeError verir. Değeri kullanmak için return gerekir."
+    },
+    {
+      "id": "m6-q14",
+      "type": "bug",
+      "topic": "mutable-default",
+      "sectionId": "mutable-default",
+      "difficulty": 3,
+      "prompt": "İkinci satırda ['b'] beklenirken ['a', 'b'] çıkıyor. Neden?",
+      "code": "def add_tag(tag, tags=[]):\n    tags.append(tag)\n    return tags\n\nprint(add_tag(\"a\"))\nprint(add_tag(\"b\"))",
+      "options": [
+        "Varsayılan liste bir kez oluşturulur ve çağrılar arasında paylaşılır",
+        "append listeyi kopyalar",
+        "print iki listeyi birleştirir",
+        "tags parametresi global'dir"
+      ],
+      "answer": "Varsayılan liste bir kez oluşturulur ve çağrılar arasında paylaşılır",
+      "optionFeedback": {
+        "append listeyi kopyalar": "append listeyi yerinde değiştirir; kopya üretmez. Sorun hep aynı listenin kullanılması.",
+        "print iki listeyi birleştirir": "Her print tek bir listeyi yazar; liste zaten iki öğe içeriyor.",
+        "tags parametresi global'dir": "tags yerel bir parametredir; ama varsayılan değeri olan liste nesnesi fonksiyona bağlı ve kalıcıdır."
+      },
+      "hints": ["[] ifadesi ne zaman değerlendirilir?", "tags=None ve gövdede if tags is None: tags = []."],
+      "explanation": "Varsayılan değer def satırında bir kez oluşturulur. İlk çağrının eklediği \"a\" ikinci çağrıda da oradadır. None varsayılanı her çağrıda yeni liste kurmayı sağlar."
+    },
+    {
+      "id": "m6-q15",
+      "type": "bug",
+      "topic": "kapsam",
+      "sectionId": "scope-legb",
+      "difficulty": 3,
+      "prompt": "Fonksiyon global total'a ekleme yapmak istiyor. Neden hata var?",
+      "code": "total = 0\n\ndef add(n):\n    total = total + n\n    return total\n\nadd(5)",
+      "options": [
+        "İçeride atama olduğu için total yerel sayılıyor ve atanmadan önce okunuyor",
+        "Global değişkenler fonksiyon içinde hiç okunamaz",
+        "n tanımlı değil",
+        "return satırı eksik"
+      ],
+      "answer": "İçeride atama olduğu için total yerel sayılıyor ve atanmadan önce okunuyor",
+      "expectedError": "UnboundLocalError",
+      "optionFeedback": {
+        "Global değişkenler fonksiyon içinde hiç okunamaz": "Okunabilir; fonksiyonda total'a atama olmasaydı sorun çıkmazdı.",
+        "n tanımlı değil": "n parametredir ve add(5) çağrısıyla 5 değerini alır.",
+        "return satırı eksik": "return var; hata ondan önceki satırda oluşuyor."
+      },
+      "hints": ["Python bir ismin yerel olup olmadığına fonksiyonun tamamına bakarak karar verir.", "Ya global total yaz ya da değeri parametreyle alıp döndür."],
+      "explanation": "Fonksiyonda total'a atama olduğu için Python onu yerel sayar; sağ taraftaki total henüz atanmamış bir yerel isimdir ve UnboundLocalError oluşur. Daha temiz çözüm: def add(total, n): return total + n."
+    },
+    {
+      "id": "m6-q16",
+      "type": "bug",
+      "topic": "parametre",
+      "sectionId": "parameters",
+      "difficulty": 2,
+      "prompt": "Bu çağrı neden çalışmaz?",
+      "code": "def area(width, height):\n    return width * height\n\nprint(area(width=2, 3))",
+      "options": [
+        "Konumsal argüman isimli argümandan sonra gelemez",
+        "Fonksiyon iki parametre alamaz",
+        "width isimle verilemez",
+        "return yerine print gerekir"
+      ],
+      "answer": "Konumsal argüman isimli argümandan sonra gelemez",
+      "expectedError": "SyntaxError",
+      "optionFeedback": {
+        "Fonksiyon iki parametre alamaz": "Parametre sayısında sınır yok; sorun çağrıdaki sıralama.",
+        "width isimle verilemez": "width isimle verilebilir; ama ondan sonra gelen 3 konumsal olduğu için kural bozuluyor.",
+        "return yerine print gerekir": "return doğru; kod bu satıra hiç gelmeden SyntaxError verir."
+      },
+      "hints": ["İsimli argümanlar en sonda olmalı.", "area(2, height=3) veya area(width=2, height=3)."],
+      "explanation": "Python önce konumsal, sonra isimli argümanları kabul eder; tersi sözdizimi hatasıdır (positional argument follows keyword argument)."
+    },
+    {
+      "id": "m6-q17",
+      "type": "bug",
+      "topic": "recursion",
+      "sectionId": "recursion",
+      "difficulty": 2,
+      "prompt": "Çıktı 6 yerine None. Neden?",
+      "code": "def fact(n):\n    if n <= 1:\n        return 1\n    n * fact(n - 1)\n\nprint(fact(3))",
+      "options": [
+        "Özyinelemeli satırın sonucu return edilmiyor",
+        "Temel durum yanlış",
+        "Bir fonksiyon kendini çağıramaz",
+        "n * fact(n - 1) çok büyük bir sayı üretir"
+      ],
+      "answer": "Özyinelemeli satırın sonucu return edilmiyor",
+      "optionFeedback": {
+        "Temel durum yanlış": "n <= 1 için 1 döndürmek doğru temel durumdur.",
+        "Bir fonksiyon kendini çağıramaz": "Fonksiyonlar kendini çağırabilir; özyinelemenin tanımı budur.",
+        "n * fact(n - 1) çok büyük bir sayı üretir": "fact(3) yalnızca 6'dır; sorun hesaplanan değerin atılması."
+      },
+      "hints": ["n * fact(n - 1) hesaplanıyor ama nereye gidiyor?", "Satırın başına return ekle."],
+      "explanation": "Çarpım hesaplanır ama döndürülmez; fonksiyon sonuna ulaşıp None döner. Her özyinelemeli adım sonucunu return etmelidir."
+    },
+    {
+      "id": "m6-q18",
+      "type": "bug",
+      "topic": "closure",
+      "sectionId": "closure",
+      "difficulty": 3,
+      "prompt": "[0, 1, 2] beklenirken [2, 2, 2] çıkıyor. Neden?",
+      "code": "funcs = []\nfor i in range(3):\n    funcs.append(lambda: i)\n\nprint([f() for f in funcs])",
+      "options": [
+        "lambda'lar i'nin değerini değil değişkenin kendisini hatırlar; çağrıldıklarında i 2'dir",
+        "range(3) yalnızca 2 üretir",
+        "append aynı lambda'yı üç kez ekler",
+        "Comprehension f()'yi yanlış çağırır"
+      ],
+      "answer": "lambda'lar i'nin değerini değil değişkenin kendisini hatırlar; çağrıldıklarında i 2'dir",
+      "optionFeedback": {
+        "range(3) yalnızca 2 üretir": "range(3) 0, 1, 2 üretir; döngü üç tur döner.",
+        "append aynı lambda'yı üç kez ekler": "Her turda yeni bir lambda oluşur; ama üçü de aynı i değişkenine bakar.",
+        "Comprehension f()'yi yanlış çağırır": "f() doğru çağrılıyor; sorun lambda'ların okuduğu i'nin son değeri."
+      },
+      "hints": ["Lambda'lar döngü bittikten sonra çağrılıyor.", "lambda i=i: i değeri tanım anında sabitler."],
+      "explanation": "Closure değişkeni yakalar, değeri değil. Döngü bittiğinde i = 2'dir ve üç lambda da onu okur. Varsayılan argüman (lambda i=i: i) her lambda'ya o anki değeri kopyalar."
+    },
+    {
+      "id": "m6-q19",
+      "type": "fill",
+      "topic": "def-return",
+      "sectionId": "def-return",
+      "difficulty": 1,
+      "prompt": "Fonksiyonun sonucu çağırana vermesi için gereken sözcüğü yaz.",
+      "code": "def square(n):\n    ___ n * n\n\nprint(square(4))",
+      "answer": "return",
+      "solutionCode": "def square(n):\n    return n * n\n\nprint(square(4))",
+      "expectedOutput": "16",
+      "hints": ["print değil.", "Sözcük return."],
+      "explanation": "return değeri çağırana verir; print(square(4)) bu değeri yazar."
+    },
+    {
+      "id": "m6-q20",
+      "type": "fill",
+      "topic": "args-kwargs",
+      "sectionId": "args-kwargs",
+      "difficulty": 1,
+      "prompt": "İstenen sayıda konumsal argümanı toplayacak işareti yaz.",
+      "code": "def total(___numbers):\n    return sum(numbers)\n\nprint(total(1, 2, 3))",
+      "answer": "*",
+      "solutionCode": "def total(*numbers):\n    return sum(numbers)\n\nprint(total(1, 2, 3))",
+      "expectedOutput": "6",
+      "hints": ["Tek bir karakter.", "Yıldız."],
+      "explanation": "*numbers bütün konumsal argümanları bir tuple'da toplar; sum onları toplar."
+    },
+    {
+      "id": "m6-q21",
+      "type": "fill",
+      "topic": "kapsam",
+      "sectionId": "scope-legb",
+      "difficulty": 2,
+      "prompt": "Modül düzeyindeki count'u değiştirmek için gereken bildirimi yaz.",
+      "code": "count = 0\n\ndef bump():\n    ___ count\n    count += 1\n\nbump()\nprint(count)",
+      "answer": "global",
+      "solutionCode": "count = 0\n\ndef bump():\n    global count\n    count += 1\n\nbump()\nprint(count)",
+      "expectedOutput": "1",
+      "hints": ["Modül düzeyi = global kapsam.", "Sözcük global."],
+      "explanation": "global bildirimi count += 1 atamasının modül düzeyindeki isme yapılmasını sağlar. Bildirim olmasaydı UnboundLocalError oluşurdu."
+    },
+    {
+      "id": "m6-q22",
+      "type": "fill",
+      "topic": "lambda",
+      "sectionId": "lambda-higher-order",
+      "difficulty": 1,
+      "prompt": "İsimsiz kısa fonksiyonu başlatan sözcüğü yaz.",
+      "code": "words = [\"ccc\", \"a\", \"bb\"]\nprint(sorted(words, key=___ w: len(w)))",
+      "answer": "lambda",
+      "solutionCode": "words = [\"ccc\", \"a\", \"bb\"]\nprint(sorted(words, key=lambda w: len(w)))",
+      "expectedOutput": "['a', 'bb', 'ccc']",
+      "hints": ["Yunan harfi adında bir sözcük.", "lambda."],
+      "explanation": "lambda w: len(w) her kelimenin uzunluğunu döndürür; burada key=len yazmak da aynı sonucu verir."
+    },
+    {
+      "id": "m6-q23",
+      "type": "order",
+      "topic": "def-return",
+      "sectionId": "def-return",
+      "difficulty": 1,
+      "prompt": "7 için \"tek\" yazdıracak fonksiyonu ve çağrıyı sırala.",
+      "lines": ["    return result", "def describe(n):", "print(describe(7))", "    result = \"tek\" if n % 2 else \"çift\""],
+      "answer": "def describe(n):\n    result = \"tek\" if n % 2 else \"çift\"\n    return result\nprint(describe(7))",
+      "solutionCode": "def describe(n):\n    result = \"tek\" if n % 2 else \"çift\"\n    return result\nprint(describe(7))",
+      "expectedOutput": "tek",
+      "hints": ["Fonksiyon çağrılmadan önce tanımlanmalı.", "return gövdenin son satırı."],
+      "explanation": "Tanım önce gelir; gövde hesaplar ve döndürür; çağrı en sonda sonucu yazdırır."
+    },
+    {
+      "id": "m6-q24",
+      "type": "order",
+      "topic": "recursion",
+      "sectionId": "recursion",
+      "difficulty": 2,
+      "prompt": "fact(4) için 24 yazdıracak özyinelemeli fonksiyonu kur.",
+      "lines": ["    return n * fact(n - 1)", "def fact(n):", "print(fact(4))", "    if n <= 1:", "        return 1"],
+      "answer": "def fact(n):\n    if n <= 1:\n        return 1\n    return n * fact(n - 1)\nprint(fact(4))",
+      "solutionCode": "def fact(n):\n    if n <= 1:\n        return 1\n    return n * fact(n - 1)\nprint(fact(4))",
+      "expectedOutput": "24",
+      "hints": ["Temel durum özyinelemeli adımdan önce kontrol edilmeli.", "Aksi hâlde fonksiyon hiç durmaz."],
+      "explanation": "Temel durum önce gelir; aksi hâlde return n * fact(n - 1) her zaman ilk çalışır ve özyineleme hiç bitmez."
+    },
+    {
+      "id": "m6-q25",
+      "type": "order",
+      "topic": "closure",
+      "sectionId": "closure",
+      "difficulty": 2,
+      "prompt": "İç fonksiyonu döndürüp \"SELAM\" yazdıracak sırayı kur.",
+      "lines": ["    return inner", "def outer(msg):", "    def inner():", "        return msg.upper()", "print(outer(\"selam\")())"],
+      "answer": "def outer(msg):\n    def inner():\n        return msg.upper()\n    return inner\nprint(outer(\"selam\")())",
+      "solutionCode": "def outer(msg):\n    def inner():\n        return msg.upper()\n    return inner\nprint(outer(\"selam\")())",
+      "expectedOutput": "SELAM",
+      "hints": ["inner, outer'ın içinde tanımlanır.", "outer(\"selam\") fonksiyon döndürür; sondaki () onu çağırır."],
+      "explanation": "inner, msg değerini closure olarak hatırlar. outer(\"selam\")() önce iç fonksiyonu üretir, sonra çağırır."
+    },
+    {
+      "id": "m6-q26",
+      "type": "order",
+      "topic": "mutable-default",
+      "sectionId": "mutable-default",
+      "difficulty": 2,
+      "prompt": "Her çağrıda yeni liste kullanıp [1] [2] yazdıracak sırayı kur.",
+      "lines": ["        items = []", "def add(x, items=None):", "    if items is None:", "    items.append(x)", "    return items", "print(add(1), add(2))"],
+      "answer": "def add(x, items=None):\n    if items is None:\n        items = []\n    items.append(x)\n    return items\nprint(add(1), add(2))",
+      "solutionCode": "def add(x, items=None):\n    if items is None:\n        items = []\n    items.append(x)\n    return items\nprint(add(1), add(2))",
+      "expectedOutput": "[1] [2]",
+      "hints": ["Önce None kontrolü, sonra ekleme.", "items = [] if bloğunun içindedir."],
+      "explanation": "None varsayılanı ve is None kontrolü her çağrıya yeni bir liste verir; çağrılar birbirini etkilemez."
+    },
+    {
+      "id": "m6-q27",
+      "type": "code",
+      "topic": "def-return",
+      "sectionId": "def-return",
+      "difficulty": 2,
+      "prompt": "grade(score) fonksiyonunu yaz: 90 ve üstü \"A\", 75 ve üstü \"B\", 50 ve üstü \"C\", altı \"F\" döndürsün. Okuma ve yazdırma hazır; fonksiyon değeri döndürmeli, kendisi yazdırmamalı.",
+      "starterCode": "def grade(score):\n    # Harf notunu döndür\n    pass\n\nprint(grade(int(input())))\n",
+      "answer": "def grade(score):\n    if score >= 90:\n        return \"A\"\n    if score >= 75:\n        return \"B\"\n    if score >= 50:\n        return \"C\"\n    return \"F\"\n\nprint(grade(int(input())))",
+      "solutionCode": "def grade(score):\n    if score >= 90:\n        return \"A\"\n    if score >= 75:\n        return \"B\"\n    if score >= 50:\n        return \"C\"\n    return \"F\"\n\nprint(grade(int(input())))",
+      "expectedOutput": "A",
+      "hints": ["Erken return kullanınca elif gerekmez.", "Fonksiyon içinde print kullanırsan çıktıya fazladan None eklenir."],
+      "explanation": "Her return fonksiyonu bitirdiği için koşullar sırayla dar olandan geniş olana denenir. Çağıran taraf sonucu yazdırır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "95", "expectedOutput": "A" },
+        { "label": "Sınır 90", "stdin": "90", "expectedOutput": "A" },
+        { "label": "Sınır 75", "stdin": "75", "expectedOutput": "B" },
+        { "label": "C aralığı", "stdin": "74", "expectedOutput": "C" },
+        { "label": "Kalan", "stdin": "49", "expectedOutput": "F" }
+      ],
+      "exampleInput": "95"
+    },
+    {
+      "id": "m6-q28",
+      "type": "code",
+      "topic": "parametre",
+      "sectionId": "parameters",
+      "difficulty": 2,
+      "prompt": "format_price(amount, currency=\"TL\") fonksiyonunu yaz; \"12.50 TL\" biçiminde, iki ondalıklı bir metin döndürsün. Girdide para birimi yoksa varsayılan kullanılır. Çağrılar hazır. Örnek: 12.5 → 12.50 TL.",
+      "starterCode": "def format_price(amount, currency=\"TL\"):\n    # \"12.50 TL\" biçiminde metin döndür\n    pass\n\nparts = input().split()\nif len(parts) == 1:\n    print(format_price(float(parts[0])))\nelse:\n    print(format_price(float(parts[0]), parts[1]))\n",
+      "answer": "def format_price(amount, currency=\"TL\"):\n    return f\"{amount:.2f} {currency}\"\n\nparts = input().split()\nif len(parts) == 1:\n    print(format_price(float(parts[0])))\nelse:\n    print(format_price(float(parts[0]), parts[1]))",
+      "solutionCode": "def format_price(amount, currency=\"TL\"):\n    return f\"{amount:.2f} {currency}\"\n\nparts = input().split()\nif len(parts) == 1:\n    print(format_price(float(parts[0])))\nelse:\n    print(format_price(float(parts[0]), parts[1]))",
+      "expectedOutput": "12.50 TL",
+      "hints": ["f\"{amount:.2f} {currency}\".", "Varsayılan değer imzada zaten tanımlı."],
+      "explanation": "Varsayılan parametre, çağrıda verilmediğinde \"TL\" olur. Biçimlendirme yalnızca gösterimi değiştirir.",
+      "tests": [
+        { "label": "Örnek", "stdin": "12.5", "expectedOutput": "12.50 TL" },
+        { "label": "Başka birim", "stdin": "3 USD", "expectedOutput": "3.00 USD" },
+        { "label": "Sıfır", "stdin": "0", "expectedOutput": "0.00 TL" },
+        { "label": "Yuvarlama", "stdin": "1234.567 EUR", "expectedOutput": "1234.57 EUR" }
+      ],
+      "exampleInput": "12.5"
+    },
+    {
+      "id": "m6-q29",
+      "type": "code",
+      "topic": "args-kwargs",
+      "sectionId": "args-kwargs",
+      "difficulty": 2,
+      "prompt": "average(*numbers) fonksiyonunu yaz: sayıların ortalamasını 2 basamağa yuvarlayıp döndürsün; hiç sayı yoksa 0 döndürsün. Çağrı hazır. Örnek: 1 2 3 → 2.0.",
+      "starterCode": "def average(*numbers):\n    # Ortalama; sayı yoksa 0\n    pass\n\nnums = [int(p) for p in input().split()]\nprint(average(*nums))\n",
+      "answer": "def average(*numbers):\n    if not numbers:\n        return 0\n    return round(sum(numbers) / len(numbers), 2)\n\nnums = [int(p) for p in input().split()]\nprint(average(*nums))",
+      "solutionCode": "def average(*numbers):\n    if not numbers:\n        return 0\n    return round(sum(numbers) / len(numbers), 2)\n\nnums = [int(p) for p in input().split()]\nprint(average(*nums))",
+      "expectedOutput": "2.0",
+      "hints": ["numbers bir tuple'dır; boş tuple falsy'dir.", "round(sum(numbers) / len(numbers), 2)."],
+      "explanation": "*nums listeyi ayrı argümanlara açar, *numbers onları yeniden bir tuple'da toplar. Boş girdide sıfıra bölmemek için önce kontrol edilir.",
+      "tests": [
+        { "label": "Örnek", "stdin": "1 2 3", "expectedOutput": "2.0" },
+        { "label": "Tek sayı", "stdin": "5", "expectedOutput": "5.0" },
+        { "label": "Boş girdi", "stdin": " ", "expectedOutput": "0" },
+        { "label": "Kesirli", "stdin": "1 2", "expectedOutput": "1.5" }
+      ],
+      "exampleInput": "1 2 3"
+    },
+    {
+      "id": "m6-q30",
+      "type": "code",
+      "topic": "mutable-default",
+      "sectionId": "mutable-default",
+      "difficulty": 3,
+      "prompt": "add_unique(item, items=None) fonksiyonunu yaz: items verilmezse yeni bir liste kullansın, item listede yoksa eklesin ve listeyi döndürsün. Çağrılar hazır: önce ortak bir listeye girdiler eklenir, sonra iki ayrı çağrı varsayılanı dener.",
+      "starterCode": "def add_unique(item, items=None):\n    # items yoksa yeni liste; item yoksa ekle; listeyi döndür\n    pass\n\ncount = int(input())\nshared = []\nfor _ in range(count):\n    add_unique(input(), shared)\nprint(shared)\nprint(add_unique(\"tek\"))\nprint(add_unique(\"yine\"))\n",
+      "answer": "def add_unique(item, items=None):\n    if items is None:\n        items = []\n    if item not in items:\n        items.append(item)\n    return items\n\ncount = int(input())\nshared = []\nfor _ in range(count):\n    add_unique(input(), shared)\nprint(shared)\nprint(add_unique(\"tek\"))\nprint(add_unique(\"yine\"))",
+      "solutionCode": "def add_unique(item, items=None):\n    if items is None:\n        items = []\n    if item not in items:\n        items.append(item)\n    return items\n\ncount = int(input())\nshared = []\nfor _ in range(count):\n    add_unique(input(), shared)\nprint(shared)\nprint(add_unique(\"tek\"))\nprint(add_unique(\"yine\"))",
+      "expectedOutput": "['a', 'b']\n['tek']\n['yine']",
+      "hints": ["items=[] yazarsan son iki çağrı aynı listeyi paylaşır.", "if items is None: items = [] — not items kontrolü boş ortak listeyi de değiştirirdi."],
+      "explanation": "Verilen liste yerinde güncellenir; verilmezse her çağrı kendi listesini oluşturur. Son iki satır varsayılanın paylaşılmadığını kanıtlar.",
+      "tests": [
+        { "label": "Örnek", "stdin": "3\na\nb\na", "expectedOutput": "['a', 'b']\n['tek']\n['yine']" },
+        { "label": "Boş ortak liste", "stdin": "0", "expectedOutput": "[]\n['tek']\n['yine']" },
+        { "label": "Hep aynı", "stdin": "2\nx\nx", "expectedOutput": "['x']\n['tek']\n['yine']" },
+        { "label": "Aynı kelime ayrı listede", "stdin": "2\ntek\nb", "expectedOutput": "['tek', 'b']\n['tek']\n['yine']" }
+      ],
+      "exampleInput": "3\na\nb\na"
+    },
+    {
+      "id": "m6-q31",
+      "type": "code",
+      "topic": "kapsam",
+      "sectionId": "scope-legb",
+      "difficulty": 1,
+      "prompt": "can_add(current, amount) fonksiyonunu yaz: current + amount değeri global LIMIT sabitini aşmıyorsa True, aşıyorsa False döndürsün. Sabiti yalnızca oku; global bildirimi gerekmez. Girdi: iki tam sayı.",
+      "starterCode": "LIMIT = 100\n\ndef can_add(current, amount):\n    # LIMIT'i okuyarak karar ver\n    pass\n\ncurrent, amount = [int(p) for p in input().split()]\nprint(can_add(current, amount))\n",
+      "answer": "LIMIT = 100\n\ndef can_add(current, amount):\n    return current + amount <= LIMIT\n\ncurrent, amount = [int(p) for p in input().split()]\nprint(can_add(current, amount))",
+      "solutionCode": "LIMIT = 100\n\ndef can_add(current, amount):\n    return current + amount <= LIMIT\n\ncurrent, amount = [int(p) for p in input().split()]\nprint(can_add(current, amount))",
+      "expectedOutput": "True",
+      "hints": ["Karşılaştırma zaten bool üretir.", "return current + amount <= LIMIT."],
+      "explanation": "Fonksiyon global sabiti yalnızca okuduğu için LEGB kuralıyla bulur; atama olmadığı için global bildirimi gerekmez.",
+      "tests": [
+        { "label": "Örnek", "stdin": "40 60", "expectedOutput": "True" },
+        { "label": "Bir fazla", "stdin": "40 61", "expectedOutput": "False" },
+        { "label": "Sıfırlar", "stdin": "0 0", "expectedOutput": "True" },
+        { "label": "Sınır aşıldı", "stdin": "100 1", "expectedOutput": "False" }
+      ],
+      "exampleInput": "40 60"
+    },
+    {
+      "id": "m6-q32",
+      "type": "code",
+      "topic": "lambda",
+      "sectionId": "lambda-higher-order",
+      "difficulty": 3,
+      "prompt": "Boşlukla ayrılmış kelimeler oku. Önce son harflerine, son harf aynıysa kelimenin kendisine göre sırala ve aralarında boşlukla yazdır. key için tuple döndüren bir lambda kullan. Örnek: ab ba ca → ba ca ab.",
+      "starterCode": "words = input().split()\n# key=lambda w: (...)\n",
+      "answer": "words = input().split()\nprint(\" \".join(sorted(words, key=lambda w: (w[-1], w))))",
+      "solutionCode": "words = input().split()\nprint(\" \".join(sorted(words, key=lambda w: (w[-1], w))))",
+      "expectedOutput": "ba ca ab",
+      "hints": ["Tuple'lar soldan sağa karşılaştırılır.", "key=lambda w: (w[-1], w)."],
+      "explanation": "Önce son harfler karşılaştırılır; eşitlikte tuple'ın ikinci öğesi, yani kelimenin kendisi devreye girer.",
+      "tests": [
+        { "label": "Örnek", "stdin": "ab ba ca", "expectedOutput": "ba ca ab" },
+        { "label": "Farklı son harfler", "stdin": "elma kivi muz", "expectedOutput": "elma kivi muz" },
+        { "label": "Tek kelime", "stdin": "x", "expectedOutput": "x" },
+        { "label": "Hepsi aynı son harf", "stdin": "dc ac bc", "expectedOutput": "ac bc dc" }
+      ],
+      "exampleInput": "ab ba ca"
+    },
+    {
+      "id": "m6-q33",
+      "type": "code",
+      "topic": "lambda",
+      "sectionId": "lambda-higher-order",
+      "difficulty": 2,
+      "prompt": "Boşlukla ayrılmış tam sayılar oku. Tek sayıların karelerinin toplamını yazdır. filter ve map ile veya bir generator ifadesiyle çözebilirsin. Örnek: 1 2 3 → 10.",
+      "starterCode": "nums = [int(p) for p in input().split()]\n# Tek sayıların karelerinin toplamı\n",
+      "answer": "nums = [int(p) for p in input().split()]\nodds = filter(lambda n: n % 2 == 1, nums)\nprint(sum(map(lambda n: n * n, odds)))",
+      "solutionCode": "nums = [int(p) for p in input().split()]\nodds = filter(lambda n: n % 2 == 1, nums)\nprint(sum(map(lambda n: n * n, odds)))",
+      "expectedOutput": "10",
+      "hints": ["n % 2 == 1 negatif tek sayılarda da True verir (-3 % 2 == 1).", "sum(n * n for n in nums if n % 2 == 1) de olur."],
+      "explanation": "filter tek sayıları seçer, map karelerini alır, sum zinciri tüketir. Generator ifadesi aynı işi tek satırda yapar.",
+      "tests": [
+        { "label": "Örnek", "stdin": "1 2 3", "expectedOutput": "10" },
+        { "label": "Tek sayı yok", "stdin": "2 4", "expectedOutput": "0" },
+        { "label": "Negatif tek", "stdin": "-3", "expectedOutput": "9" },
+        { "label": "Tekrarlı", "stdin": "5 5", "expectedOutput": "50" }
+      ],
+      "exampleInput": "1 2 3"
+    },
+    {
+      "id": "m6-q34",
+      "type": "code",
+      "topic": "recursion",
+      "sectionId": "recursion",
+      "difficulty": 2,
+      "prompt": "digit_sum(n) fonksiyonunu özyinelemeli yaz: negatif olmayan bir tam sayının basamaklarının toplamını döndürsün. İpucu: son basamak n % 10, kalan kısım n // 10. Örnek: 1234 → 10.",
+      "starterCode": "def digit_sum(n):\n    # Temel durum + son basamak ile kalanın toplamı\n    pass\n\nprint(digit_sum(int(input())))\n",
+      "answer": "def digit_sum(n):\n    if n < 10:\n        return n\n    return n % 10 + digit_sum(n // 10)\n\nprint(digit_sum(int(input())))",
+      "solutionCode": "def digit_sum(n):\n    if n < 10:\n        return n\n    return n % 10 + digit_sum(n // 10)\n\nprint(digit_sum(int(input())))",
+      "expectedOutput": "10",
+      "hints": ["Tek basamaklı sayı temel durumdur: kendisini döndür.", "return n % 10 + digit_sum(n // 10)."],
+      "explanation": "Her çağrı bir basamağı ayırır ve problemi bir basamak küçültür; tek basamağa gelince durur. Döngüyle yazılmış doğru çözüm de testleri geçer.",
+      "tests": [
+        { "label": "Örnek", "stdin": "1234", "expectedOutput": "10" },
+        { "label": "Sıfır", "stdin": "0", "expectedOutput": "0" },
+        { "label": "Tek basamak", "stdin": "9", "expectedOutput": "9" },
+        { "label": "Sıfırlı sayı", "stdin": "1000005", "expectedOutput": "6" }
+      ],
+      "exampleInput": "1234"
+    },
+    {
+      "id": "m6-q35",
+      "type": "code",
+      "topic": "recursion",
+      "sectionId": "recursion",
+      "difficulty": 2,
+      "prompt": "power(base, exp) fonksiyonunu özyinelemeli yaz: exp negatif olmayan bir tam sayı; ** operatörünü kullanmadan base üssü exp değerini döndürsün. Girdi: \"base exp\". Örnek: 2 10 → 1024.",
+      "starterCode": "def power(base, exp):\n    # exp == 0 temel durum\n    pass\n\nbase, exp = [int(p) for p in input().split()]\nprint(power(base, exp))\n",
+      "answer": "def power(base, exp):\n    if exp == 0:\n        return 1\n    return base * power(base, exp - 1)\n\nbase, exp = [int(p) for p in input().split()]\nprint(power(base, exp))",
+      "solutionCode": "def power(base, exp):\n    if exp == 0:\n        return 1\n    return base * power(base, exp - 1)\n\nbase, exp = [int(p) for p in input().split()]\nprint(power(base, exp))",
+      "expectedOutput": "1024",
+      "hints": ["Herhangi bir sayının 0. kuvveti 1'dir.", "base ** exp = base * base ** (exp - 1)."],
+      "explanation": "Her çağrı üssü bir azaltır ve sonucu base ile çarpar; exp 0 olunca 1 döner.",
+      "tests": [
+        { "label": "Örnek", "stdin": "2 10", "expectedOutput": "1024" },
+        { "label": "Sıfırıncı kuvvet", "stdin": "5 0", "expectedOutput": "1" },
+        { "label": "Küp", "stdin": "3 3", "expectedOutput": "27" },
+        { "label": "Negatif taban", "stdin": "-2 3", "expectedOutput": "-8" }
+      ],
+      "exampleInput": "2 10"
+    },
+    {
+      "id": "m6-q36",
+      "type": "code",
+      "topic": "closure",
+      "sectionId": "closure",
+      "difficulty": 3,
+      "prompt": "make_counter(start) fonksiyonunu yaz: bir iç fonksiyon döndürsün; iç fonksiyon her çağrıda start'tan başlayarak sıradaki sayıyı döndürsün. Girdi: başlangıç ve kaç kez çağrılacağı. Örnek: 5 ve 3 → 5, 6, 7.",
+      "starterCode": "def make_counter(start):\n    # nonlocal ile güncellenen bir closure döndür\n    pass\n\nstart = int(input())\ntimes = int(input())\nnext_number = make_counter(start)\nfor _ in range(times):\n    print(next_number())\n",
+      "answer": "def make_counter(start):\n    current = start - 1\n    def next_value():\n        nonlocal current\n        current += 1\n        return current\n    return next_value\n\nstart = int(input())\ntimes = int(input())\nnext_number = make_counter(start)\nfor _ in range(times):\n    print(next_number())",
+      "solutionCode": "def make_counter(start):\n    current = start - 1\n    def next_value():\n        nonlocal current\n        current += 1\n        return current\n    return next_value\n\nstart = int(input())\ntimes = int(input())\nnext_number = make_counter(start)\nfor _ in range(times):\n    print(next_number())",
+      "expectedOutput": "5\n6\n7",
+      "hints": ["İç fonksiyon dıştaki sayacı değiştireceği için nonlocal gerekir.", "Sayacı start - 1'den başlatıp her çağrıda önce artırabilirsin."],
+      "explanation": "Closure sayaç değişkenini çağrılar arasında saklar; nonlocal onu güncellemeye izin verir. times 0 ise hiçbir şey yazılmaz.",
+      "tests": [
+        { "label": "Örnek", "stdin": "5\n3", "expectedOutput": "5\n6\n7" },
+        { "label": "Tek çağrı", "stdin": "0\n1", "expectedOutput": "0" },
+        { "label": "Negatif başlangıç", "stdin": "-2\n4", "expectedOutput": "-2\n-1\n0\n1" },
+        { "label": "Hiç çağrı yok", "stdin": "10\n0", "expectedOutput": "" }
+      ],
+      "exampleInput": "5\n3"
+    },
+    {
+      "id": "m6-q37",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "parameters",
+      "difficulty": 1,
+      "prompt": "Eksik argümanla çağrı hangi hatayı üretir?",
+      "code": "def greet(name, greeting):\n    return f\"{greeting}, {name}\"\n\nprint(greet(\"Ada\"))",
+      "options": ["TypeError", "NameError", "ValueError", "SyntaxError"],
+      "answer": "TypeError",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "NameError": "Bütün isimler tanımlı; sorun çağrıdaki argüman sayısı.",
+        "ValueError": "Değer geçersiz değil; fonksiyon beklenen sayıda argüman almıyor.",
+        "SyntaxError": "Çağrı sözdizimi geçerli; hata çalışma sırasında oluşur."
+      },
+      "hints": ["greeting için değer verilmedi.", "Hata mesajı: missing 1 required positional argument."],
+      "explanation": "Varsayılanı olmayan her parametre çağrıda verilmelidir; eksik argüman TypeError üretir."
+    },
+    {
+      "id": "m6-q38",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "args-kwargs",
+      "difficulty": 2,
+      "prompt": "Bu çağrı hangi hatayı üretir?",
+      "code": "def show(**options):\n    return options\n\nprint(show(1, 2))",
+      "options": ["TypeError", "ValueError", "KeyError", "SyntaxError"],
+      "answer": "TypeError",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "ValueError": "Değerler geçerli; fonksiyon konumsal argüman kabul etmiyor.",
+        "KeyError": "Sözlükten okuma yapılmıyor; hata çağrı sırasında oluşuyor.",
+        "SyntaxError": "Çağrı sözdizimi geçerli; uyumsuzluk çalışma zamanında fark edilir."
+      },
+      "hints": ["**options yalnızca isimli argümanları toplar.", "show(a=1, b=2) çalışırdı."],
+      "explanation": "**kwargs konumsal argümanları toplamaz; fonksiyon 0 konumsal argüman beklerken 2 aldığı için TypeError oluşur."
+    },
+    {
+      "id": "m6-q39",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "scope-legb",
+      "difficulty": 2,
+      "prompt": "Fonksiyonda oluşturulan değişken dışarıda okunursa hangi hata oluşur?",
+      "code": "def setup():\n    config = {\"debug\": True}\n\nsetup()\nprint(config)",
+      "options": ["NameError", "UnboundLocalError", "KeyError", "AttributeError"],
+      "answer": "NameError",
+      "expectedError": "NameError",
+      "optionFeedback": {
+        "UnboundLocalError": "UnboundLocalError bir fonksiyonun içinde, atanmadan okunan yerel isim içindir; burada isim fonksiyon dışında hiç yok.",
+        "KeyError": "Sözlükten anahtar okunmuyor; config isminin kendisi bulunamıyor.",
+        "AttributeError": "Nitelik erişimi yok; sorun ismin kapsamı."
+      },
+      "hints": ["config, setup'ın yerel değişkeniydi.", "Fonksiyon bitince yerel isimler kaybolur."],
+      "explanation": "Yerel değişkenler fonksiyonun dışından görünmez; modül düzeyinde config adı yoktur ve NameError oluşur. Çözüm: setup config'i return etsin, çağıran sonucu bir isme bağlasın."
+    },
+    {
+      "id": "m6-q40",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "lambda-higher-order",
+      "difficulty": 3,
+      "prompt": "Boş listede reduce hangi hatayı üretir?",
+      "code": "from functools import reduce\nprint(reduce(lambda a, b: a + b, []))",
+      "options": ["TypeError", "ValueError", "IndexError", "StopIteration"],
+      "answer": "TypeError",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "ValueError": "Python bu durumda TypeError seçer: reduce() of empty iterable with no initial value.",
+        "IndexError": "reduce indeksle çalışmaz; öğeleri sırayla tüketir.",
+        "StopIteration": "Dışarıya StopIteration sızmaz; reduce boş girdiyi açıklayıcı bir TypeError mesajıyla bildirir."
+      },
+      "hints": ["Birleştirilecek hiç öğe yok ve başlangıç değeri verilmemiş.", "reduce(..., [], 0) 0 döndürürdü."],
+      "explanation": "Başlangıç değeri olmadan reduce'un döndürebileceği bir şey yoktur ve TypeError verir. Üçüncü argüman olarak başlangıç değeri vermek boş girdiyi güvenli yapar; toplama için sum([]) zaten 0 döndürür."
+    }
+  ]
+}

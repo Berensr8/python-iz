@@ -1,0 +1,151 @@
+{
+  "statuses": ["planlandı", "yazıldı", "doğrulandı", "yayınlandı"],
+  "depths": { "temel": "Okuyup yazabilmeli", "okuma": "Kodda görünce açıklayabilmeli", "tanıma": "Adını ve amacını tanımalı" },
+  "modules": [
+    { "id": 1, "title": "Temeller", "subtopics": [
+      { "id": "kurulum-repl", "title": "Kurulum, REPL ve .py dosyası", "depth": "temel", "status": "doğrulandı", "sections": ["m1:repl-syntax"] },
+      { "id": "girinti-yorum", "title": "Girinti, yorumlar ve PEP 8", "depth": "temel", "status": "doğrulandı", "sections": ["m1:repl-syntax"] },
+      { "id": "degiskenler-tipler", "title": "Değişkenler ve temel tipler (int, float, str, bool, None)", "depth": "temel", "status": "doğrulandı", "sections": ["m1:variables-types"] },
+      { "id": "donusum-input", "title": "Tip dönüşümleri ve input()", "depth": "temel", "status": "doğrulandı", "sections": ["m1:conversion-input"] },
+      { "id": "aritmetik-atama", "title": "Aritmetik ve atama operatörleri", "depth": "temel", "status": "doğrulandı", "sections": ["m1:arithmetic"] },
+      { "id": "karsilastirma-mantik", "title": "Karşılaştırma, mantık, in ve is", "depth": "temel", "status": "doğrulandı", "sections": ["m1:comparison-logic"] },
+      { "id": "bitwise", "title": "Bit düzeyi operatörler", "depth": "okuma", "status": "doğrulandı", "sections": ["m1:bitwise"] },
+      { "id": "float-hassasiyet", "title": "Float hassasiyeti, isclose ve Decimal", "depth": "temel", "status": "doğrulandı", "sections": ["m1:float-precision"] },
+      { "id": "truthy-ternary-walrus", "title": "Truthy/falsy, ternary ve walrus", "depth": "okuma", "status": "doğrulandı", "sections": ["m1:truthy-ternary-walrus"] }
+    ] },
+    { "id": 2, "title": "String'ler", "subtopics": [
+      { "id": "indeksleme", "title": "İndeksleme", "depth": "temel", "status": "doğrulandı", "sections": ["m2:indexing"] },
+      { "id": "slicing", "title": "Dilimleme", "depth": "temel", "status": "doğrulandı", "sections": ["m2:slicing"] },
+      { "id": "metotlar", "title": "String metotları", "depth": "temel", "status": "doğrulandı", "sections": ["m2:methods"] },
+      { "id": "formatlama", "title": "f-string ve formatlama", "depth": "temel", "status": "doğrulandı", "sections": ["m2:formatting"] },
+      { "id": "escape-raw", "title": "Escape ve raw string", "depth": "okuma", "status": "doğrulandı", "sections": ["m2:escape-raw"] },
+      { "id": "immutability", "title": "String değiştirilemezliği", "depth": "temel", "status": "doğrulandı", "sections": ["m2:immutability"] },
+      { "id": "unicode-encoding", "title": "Unicode ve encoding", "depth": "okuma", "status": "doğrulandı", "sections": ["m2:unicode-encoding"] },
+      { "id": "bytes-str", "title": "bytes ve str ayrımı", "depth": "okuma", "status": "doğrulandı", "sections": ["m2:bytes-vs-str"] }
+    ] },
+    { "id": 3, "title": "Akış kontrolü", "subtopics": [
+      { "id": "if-elif-else", "title": "if / elif / else", "depth": "temel", "status": "doğrulandı", "sections": ["m3:if-elif-else"] },
+      { "id": "match-case", "title": "match-case ve basit eşitlik kontrolünden farkı", "depth": "okuma", "status": "doğrulandı", "sections": ["m3:match-case"] },
+      { "id": "for-while", "title": "for ve while döngüleri", "depth": "temel", "status": "doğrulandı", "sections": ["m3:while", "m3:for-range", "m3:nested-loops"] },
+      { "id": "break-continue-pass", "title": "break, continue, pass", "depth": "temel", "status": "doğrulandı", "sections": ["m3:break-continue-pass"] },
+      { "id": "dongu-else", "title": "Döngü else bloğu", "depth": "okuma", "status": "doğrulandı", "sections": ["m3:loop-else"] },
+      { "id": "range-enumerate-zip", "title": "range, enumerate, zip", "depth": "temel", "status": "doğrulandı", "sections": ["m3:for-range", "m3:enumerate-zip"] }
+    ] },
+    { "id": 4, "title": "Veri yapıları", "subtopics": [
+      { "id": "list", "title": "list ve metotları", "depth": "temel", "status": "doğrulandı", "sections": ["m4:lists", "m4:list-methods"] },
+      { "id": "tuple", "title": "tuple", "depth": "temel", "status": "doğrulandı", "sections": ["m4:tuples"] },
+      { "id": "set", "title": "set ve küme işlemleri", "depth": "temel", "status": "doğrulandı", "sections": ["m4:sets"] },
+      { "id": "dict", "title": "dict ve metotları", "depth": "temel", "status": "doğrulandı", "sections": ["m4:dicts", "m4:dict-iteration"] },
+      { "id": "ic-ice-veri", "title": "İç içe veri yapıları", "depth": "temel", "status": "doğrulandı", "sections": ["m4:nested-data"] },
+      { "id": "sorted-min-max-key", "title": "sorted, min, max ve key", "depth": "temel", "status": "doğrulandı", "sections": ["m4:sorting-key"] }
+    ] },
+    { "id": 5, "title": "Referans ve kopyalama", "subtopics": [
+      { "id": "referans-id", "title": "Referanslar ve id()", "depth": "temel", "status": "doğrulandı", "sections": ["m5:names-references"] },
+      { "id": "is-esittir", "title": "is ve == farkı", "depth": "temel", "status": "doğrulandı", "sections": ["m5:identity-equality"] },
+      { "id": "mutable-immutable", "title": "Mutable ve immutable nesneler", "depth": "temel", "status": "doğrulandı", "sections": ["m5:mutable-immutable"] },
+      { "id": "shallow-deep-copy", "title": "Shallow ve deep copy", "depth": "temel", "status": "doğrulandı", "sections": ["m5:shallow-copy", "m5:deep-copy"] },
+      { "id": "unpacking", "title": "Unpacking", "depth": "temel", "status": "doğrulandı", "sections": ["m5:unpacking"] },
+      { "id": "comprehension", "title": "List/dict/set comprehension", "depth": "temel", "status": "doğrulandı", "sections": ["m5:list-comprehension", "m5:dict-set-comprehension"] }
+    ] },
+    { "id": 6, "title": "Fonksiyonlar", "subtopics": [
+      { "id": "return", "title": "def ve return", "depth": "temel", "status": "doğrulandı", "sections": ["m6:def-return"] },
+      { "id": "parametreler", "title": "Parametre türleri, positional-only ve keyword-only", "depth": "temel", "status": "doğrulandı", "sections": ["m6:parameters"] },
+      { "id": "args-kwargs", "title": "*args ve **kwargs", "depth": "temel", "status": "doğrulandı", "sections": ["m6:args-kwargs"] },
+      { "id": "mutable-default", "title": "Mutable varsayılan argüman tuzağı", "depth": "temel", "status": "doğrulandı", "sections": ["m6:mutable-default"] },
+      { "id": "legb", "title": "LEGB, global ve nonlocal", "depth": "okuma", "status": "doğrulandı", "sections": ["m6:scope-legb", "m6:closure"] },
+      { "id": "lambda-map-filter-reduce", "title": "lambda, map, filter, reduce", "depth": "okuma", "status": "doğrulandı", "sections": ["m6:lambda-higher-order"] },
+      { "id": "recursion", "title": "Recursion", "depth": "okuma", "status": "doğrulandı", "sections": ["m6:recursion"] },
+      { "id": "closure", "title": "Closure", "depth": "okuma", "status": "doğrulandı", "sections": ["m6:closure"] },
+      { "id": "docstring", "title": "Docstring", "depth": "temel", "status": "doğrulandı", "sections": ["m6:def-return"] }
+    ] },
+    { "id": 7, "title": "Hata yönetimi", "subtopics": [
+      { "id": "traceback", "title": "Ayrıntılı traceback okuma", "depth": "temel", "status": "doğrulandı", "sections": ["m7:reading-traceback"] },
+      { "id": "yaygin-hatalar", "title": "Yaygın hata türleri", "depth": "temel", "status": "doğrulandı", "sections": ["m7:common-errors"] },
+      { "id": "try-except", "title": "try / except / else / finally", "depth": "temel", "status": "doğrulandı", "sections": ["m7:try-except", "m7:else-finally"] },
+      { "id": "raise", "title": "raise ve raise from", "depth": "temel", "status": "doğrulandı", "sections": ["m7:raising", "m7:raise-from"] },
+      { "id": "ozel-exception", "title": "Özel exception sınıfları", "depth": "okuma", "status": "doğrulandı", "sections": ["m7:custom-exceptions"] },
+      { "id": "assert", "title": "assert ve girdi doğrulamasından farkı", "depth": "okuma", "status": "doğrulandı", "sections": ["m7:assert-validation"] }
+    ] },
+    { "id": 8, "title": "Dosyalar", "subtopics": [
+      { "id": "open-modlar", "title": "open ve dosya modları", "depth": "temel", "status": "doğrulandı", "sections": ["m8:open-modes", "m8:reading-lines"] },
+      { "id": "with", "title": "with ve dosya yaşam döngüsü", "depth": "temel", "status": "doğrulandı", "sections": ["m8:with-lifecycle"] },
+      { "id": "pathlib-os-shutil", "title": "pathlib, os, shutil", "depth": "okuma", "status": "doğrulandı", "sections": ["m8:pathlib", "m8:os-shutil"] },
+      { "id": "csv-json", "title": "CSV ve JSON", "depth": "temel", "status": "doğrulandı", "sections": ["m8:csv", "m8:json"] },
+      { "id": "encoding", "title": "Dosya encoding'i", "depth": "temel", "status": "doğrulandı", "sections": ["m8:encoding"] }
+    ] },
+    { "id": 9, "title": "Modüller ve ekosistem", "subtopics": [
+      { "id": "import", "title": "import ve kendi modülün", "depth": "temel", "status": "doğrulandı", "sections": ["m9:import-forms", "m9:own-module"] },
+      { "id": "main", "title": "__name__ == \"__main__\"", "depth": "temel", "status": "doğrulandı", "sections": ["m9:main-guard"] },
+      { "id": "relative-import", "title": "Relative import ve paketler", "depth": "okuma", "status": "doğrulandı", "sections": ["m9:packages-relative"] },
+      { "id": "pip-venv", "title": "pip ve venv", "depth": "temel", "status": "doğrulandı", "sections": ["m9:pip-venv"] },
+      { "id": "bagimlilik-dosyalari", "title": "requirements.txt ve pyproject.toml", "depth": "okuma", "status": "doğrulandı", "sections": ["m9:dependency-files"] },
+      { "id": "uv-poetry", "title": "uv ve poetry", "depth": "tanıma", "status": "doğrulandı", "sections": ["m9:uv-poetry"] },
+      { "id": "env", "title": "Ortam değişkenleri ve .env", "depth": "okuma", "status": "doğrulandı", "sections": ["m9:env-vars"] }
+    ] },
+    { "id": 10, "title": "Standart kütüphane", "subtopics": [
+      { "id": "math-random", "title": "math ve random", "depth": "temel", "status": "doğrulandı", "sections": ["m10:math-random"] },
+      { "id": "datetime", "title": "datetime, time ve timezone", "depth": "okuma", "status": "doğrulandı", "sections": ["m10:datetime"] },
+      { "id": "collections", "title": "collections (Counter, defaultdict, deque, namedtuple)", "depth": "okuma", "status": "doğrulandı", "sections": ["m10:collections"] },
+      { "id": "itertools-functools", "title": "itertools ve functools", "depth": "okuma", "status": "doğrulandı", "sections": ["m10:itertools-functools"] },
+      { "id": "enum", "title": "enum", "depth": "okuma", "status": "doğrulandı", "sections": ["m10:enum"] },
+      { "id": "heapq-bisect", "title": "heapq ve bisect", "depth": "tanıma", "status": "doğrulandı", "sections": ["m10:heapq-bisect"] },
+      { "id": "re", "title": "re (düzenli ifadeler)", "depth": "okuma", "status": "doğrulandı", "sections": ["m10:re"] },
+      { "id": "sys-subprocess-argparse", "title": "sys, subprocess ve argparse", "depth": "okuma", "status": "doğrulandı", "sections": ["m10:sys-subprocess-argparse"] }
+    ] },
+    { "id": 11, "title": "OOP 1", "subtopics": [
+      { "id": "class-object", "title": "class, object, __init__ ve self", "depth": "temel", "status": "planlandı", "sections": [] },
+      { "id": "instance-class-degisken", "title": "Instance ve class değişkenleri", "depth": "temel", "status": "planlandı", "sections": [] },
+      { "id": "inheritance-super", "title": "Inheritance ve super()", "depth": "temel", "status": "planlandı", "sections": [] },
+      { "id": "kapsulleme", "title": "Kapsülleme", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "property-static-class", "title": "property, staticmethod, classmethod", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "composition", "title": "Composition alternatifi", "depth": "okuma", "status": "planlandı", "sections": [] }
+    ] },
+    { "id": 12, "title": "OOP 2", "subtopics": [
+      { "id": "polimorfizm-abc", "title": "Polimorfizm ve abc", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "dunder", "title": "Dunder metotlar ve operator overloading", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "mro", "title": "Multiple inheritance ve MRO", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "dataclass-slots", "title": "dataclass ve slots", "depth": "temel", "status": "planlandı", "sections": [] },
+      { "id": "descriptor-metaclass", "title": "Descriptor ve metaclass", "depth": "tanıma", "status": "planlandı", "sections": [] }
+    ] },
+    { "id": 13, "title": "İleri yapılar", "subtopics": [
+      { "id": "iterator", "title": "Iterator protokolü", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "generator", "title": "Generator ve yield", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "decorator", "title": "Decorator ve parametreli decorator", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "context-manager", "title": "Context manager (sınıf ve contextlib)", "depth": "okuma", "status": "planlandı", "sections": [] }
+    ] },
+    { "id": 14, "title": "Type hints", "subtopics": [
+      { "id": "temel-hints", "title": "Temel type hints ve koleksiyon tipleri", "depth": "temel", "status": "planlandı", "sections": [] },
+      { "id": "optional-union", "title": "Optional, Union ve |", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "typeddict-protocol", "title": "TypedDict ve Protocol", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "generics-callable", "title": "Generics ve Callable", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "mypy", "title": "mypy mantığı; annotation ile çalışma zamanı doğrulaması farkı", "depth": "okuma", "status": "planlandı", "sections": [] }
+    ] },
+    { "id": 15, "title": "Eşzamanlılık", "subtopics": [
+      { "id": "threading-multiprocessing", "title": "threading ve multiprocessing", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "gil", "title": "GIL (sürüm/derleme bağlamında)", "depth": "tanıma", "status": "planlandı", "sections": [] },
+      { "id": "asyncio", "title": "asyncio, async/await ve event loop", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "io-cpu", "title": "I/O ve CPU bağımlı iş ayrımı", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "cancellation-timeout", "title": "Cancellation, timeout ve paylaşılan veri hataları", "depth": "okuma", "status": "planlandı", "sections": [] }
+    ] },
+    { "id": 16, "title": "Kod kalitesi", "subtopics": [
+      { "id": "pdb", "title": "breakpoint ve pdb", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "logging", "title": "logging", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "unittest-pytest", "title": "unittest ve pytest; fixture, parametrik test, mock", "depth": "temel", "status": "planlandı", "sections": [] },
+      { "id": "araclar", "title": "ruff, black, mypy", "depth": "tanıma", "status": "planlandı", "sections": [] },
+      { "id": "proje-yapisi", "title": "Proje yapısı", "depth": "okuma", "status": "planlandı", "sections": [] }
+    ] },
+    { "id": 17, "title": "Algoritmik düşünme", "subtopics": [
+      { "id": "big-o", "title": "Big-O ve iç içe döngü maliyeti", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "arama-siralama", "title": "Temel arama ve sıralama", "depth": "okuma", "status": "planlandı", "sections": [] },
+      { "id": "veri-yapisi-secimi", "title": "Uygun veri yapısı seçimi", "depth": "temel", "status": "planlandı", "sections": [] },
+      { "id": "olcum", "title": "Ölçümle darboğaz bulma", "depth": "okuma", "status": "planlandı", "sections": [] }
+    ] },
+    { "id": 18, "title": "Ekosisteme bakış", "subtopics": [
+      { "id": "requests", "title": "requests; HTTP status, timeout, retry", "depth": "tanıma", "status": "planlandı", "sections": [] },
+      { "id": "fastapi", "title": "FastAPI ve veri doğrulama modelleri", "depth": "tanıma", "status": "planlandı", "sections": [] },
+      { "id": "sqlite-sqlalchemy", "title": "SQLite/SQLAlchemy ve SQL parametreleri", "depth": "tanıma", "status": "planlandı", "sections": [] },
+      { "id": "numpy-pandas", "title": "NumPy ve Pandas", "depth": "tanıma", "status": "planlandı", "sections": [] },
+      { "id": "llm-api", "title": "LLM API çağrısı ve API anahtarını ortamdan okuma", "depth": "tanıma", "status": "planlandı", "sections": [] }
+    ] }
+  ]
+}

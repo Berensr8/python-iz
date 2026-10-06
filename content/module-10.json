@@ -1,0 +1,1475 @@
+{
+  "id": 10,
+  "slug": "standart-kutuphane",
+  "title": "Standart kütüphane",
+  "description": "Hazır Python araçlarını seç, davranışlarını oku ve kendi raporlama programlarını yaz.",
+  "contentVersion": 1,
+  "estimatedMinutes": 150,
+  "practiceIds": [
+    "m10-q01",
+    "m10-q03",
+    "m10-q05",
+    "m10-q07",
+    "m10-q09",
+    "m10-q10",
+    "m10-q11",
+    "m10-q12",
+    "m10-q14",
+    "m10-q16",
+    "m10-q20",
+    "m10-q27",
+    "m10-q29",
+    "m10-q34",
+    "m10-q36"
+  ],
+  "sections": [
+    {
+      "id": "math-random",
+      "title": "math ve random",
+      "eyebrow": "Sayısal hesapta ve rastgele seçimde doğru aracı seçer.",
+      "objectives": [
+        "Sayısal hesapta ve rastgele seçimde doğru aracı seçer.",
+        "Örneği farklı girdilerle çalıştırıp kullandığı standart kütüphane aracını gerekçelendirir."
+      ],
+      "prerequisites": [
+        "m9:import-forms",
+        "m1:float-precision"
+      ],
+      "summary": "math hazır hesap araçları, random ise tekrarlanabilir denemeler sunar. Önce gereksinimi belirle: yaklaşık eşitlik mi, tam sayı kökü mü, rastgele örnek mi?",
+      "explanation": "sqrt karekökü float verir; isqrt negatif olmayan tam sayının karekökünün tabanını verir. floor aşağıya, ceil yukarıya yuvarlar; negatif sayılarda int ile aynı değillerdir. gcd ortak böleni, factorial faktöriyeli hesaplar. Ondalıklı sonuçları karşılaştırırken isclose toleransları önemlidir; sıfıra yakın değerlerde abs_tol gerekir. Random(42) bağımsız, sabit tohumlu bir üreteç oluşturur. randint(a,b) iki sınırı da kapsar; randrange(b) üst sınırı kapsamaz. choice tek öğe, sample yerine koymadan seçim, choices yerine koyarak seçim yapar. shuffle listeyi yerinde değiştirir ve None döndürür. Aynı tohum denemeyi tekrarlamaya yardım eder; her random metodunun dizisi tüm Python sürümleri için garanti değildir. Parola ve güvenlik anahtarı üretiminde random kullanma; bunun için secrets vardır.",
+      "code": "import math\nfrom random import Random\n\nprint(math.floor(-2.3), math.ceil(-2.3), math.isqrt(20))\nprint(math.gcd(18, 24), math.factorial(4))\nprint(math.isclose(0.1 + 0.2, 0.3))\na, b = Random(42), Random(42)\nprint([a.random() for _ in range(3)] == [b.random() for _ in range(3)])",
+      "expectedOutput": "-3 -2 4\n6 24\nTrue\nTrue",
+      "why": "Burada rastgele dizinin kendisi yerine aynı başlangıç durumundaki iki üretecin eşitliği sınanır. floor negatif sonsuza, ceil pozitif sonsuza doğru gider.",
+      "alternatives": [
+        "Az sayıda tam sayı için // ve % ile kutu hesabı da yapılabilir.",
+        "Tekrarlanabilir simülasyonda global seed yerine ayrı Random nesnesi kullan."
+      ],
+      "traps": [
+        "int(-2.3) ile floor(-2.3) aynı değildir.",
+        "sample, girdide yinelenen değerler varsa aynı değeri birden fazla seçebilir; seçilen konumlar tekrarlanmaz.",
+        "shuffle sonucunu liste sanarak bir değişkene atamak."
+      ],
+      "realCode": "from math import ceil, isclose\n\ndef boxes(weight, capacity):\n    if weight < 0 or capacity <= 0:\n        raise ValueError('geçersiz ölçü')\n    return ceil(weight / capacity)\n\nprint(boxes(21, 10), boxes(0, 10))\nprint(isclose(1e-10, 0, abs_tol=1e-9))",
+      "realOutput": "3 0\nTrue",
+      "lineByLine": [
+        "Girdi sözleşmesi negatif ağırlığı ve sıfır kapasiteyi reddeder.",
+        "ceil eksik dolan son kutuyu da hesaba katar.",
+        "Mutlak tolerans, sıfır çevresindeki karşılaştırmanın ölçeğini belirler."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · math",
+          "url": "https://docs.python.org/3.12/library/math.html"
+        },
+        {
+          "title": "Python 3.12 · random",
+          "url": "https://docs.python.org/3.12/library/random.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "datetime",
+      "title": "Tarih, süre ve saat dilimi",
+      "eyebrow": "Bir anı, takvim tarihini ve geçen süreyi birbirinden ayırır.",
+      "objectives": [
+        "Bir anı, takvim tarihini ve geçen süreyi birbirinden ayırır.",
+        "Örneği farklı girdilerle çalıştırıp kullandığı standart kütüphane aracını gerekçelendirir."
+      ],
+      "prerequisites": [
+        "m9:import-forms",
+        "m7:try-except"
+      ],
+      "summary": "date takvim günüdür; datetime saat bilgisini de içerir; timedelta süredir. Saat dilimi olmayan bir değer tek başına dünyadaki bir anı belirlemez.",
+      "explanation": "fromisoformat ISO biçimli bir metni çözer, isoformat makineden bağımsız gösterim üretir. strptime biçime göre okur, strftime biçimlendirir; ay/gün adları işletim sistemi diline bağlı olabilir. tzinfo içeren aware datetime ile naive datetime farkını koru. astimezone aynı anın başka dilimdeki gösterimini verir; replace(tzinfo=...) saati dönüştürmez, yalnızca etiketler. timezone(timedelta(hours=3)) sabit UTC+03:00 ofsetidir; bir şehrin tarihsel/yaz saati kurallarını temsil etmez. Bölgesel kurallar için zoneinfo ve uygun saat dilimi verisi gerekir. time.time duvar saati, perf_counter süre ölçümü içindir. time.sleep bekletir; tarayıcı işçisini meşgul edeceği için bu derste bekleme yapılmaz. timedelta.seconds toplam süre değildir: günler hariç kalan saniyedir; total_seconds toplamı verir.",
+      "code": "from datetime import datetime, timedelta, timezone\n\nutc = datetime(2026, 10, 6, 22, 30, tzinfo=timezone.utc)\nlocal = utc.astimezone(timezone(timedelta(hours=3)))\nprint(local.isoformat())\nduration = timedelta(days=1, hours=2)\nprint(duration.seconds, int(duration.total_seconds()))",
+      "expectedOutput": "2026-10-07T01:30:00+03:00\n7200 93600",
+      "why": "Ofset eklenince takvim günü de değişti fakat an aynı kaldı. seconds yalnız iki saati, total_seconds yirmi altı saati saydı.",
+      "alternatives": [
+        "Tarih karşılaştırırken uygun türdeki nesneleri kullan; rastgele biçimdeki metinleri karşılaştırma.",
+        "Yerel makinede perf_counter farkını ölç; donanıma bağlı değeri sabit test çıktısı yapma."
+      ],
+      "traps": [
+        "Naive ve aware datetime değerlerini çıkarmaya çalışmak.",
+        "replace(tzinfo=...) ile saat dilimi dönüşümü yaptığını sanmak.",
+        "perf_counter değerini takvim saati diye kaydetmek."
+      ],
+      "realCode": "from datetime import date, timedelta\nimport time\n\nstart = date.fromisoformat('2026-12-30')\ndue = start + timedelta(days=5)\nprint(due.isoformat())\n# Gerçekte işten önce/sonra time.perf_counter() okunur.\n# Sabit ölçüm kaydı, her çalıştırmada aynı çıktıyı verir.\nstart_tick, end_tick = 10.25, 10.75\nprint(f'{end_tick - start_tick:.2f} saniye')",
+      "realOutput": "2027-01-04\n0.50 saniye",
+      "lineByLine": [
+        "ISO tarih metni date nesnesine dönüşür.",
+        "timedelta ay ve yıl geçişlerini doğru ele alır.",
+        "Süre ölçümünü sınamak için sabit kaydedilmiş değerler kullanılır; gerçek saat çıktısı beklenmez."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · datetime",
+          "url": "https://docs.python.org/3.12/library/datetime.html"
+        },
+        {
+          "title": "Python 3.12 · time",
+          "url": "https://docs.python.org/3.12/library/time.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "collections",
+      "title": "Counter, defaultdict, deque ve namedtuple",
+      "eyebrow": "Verinin davranışına uygun koleksiyon seçer.",
+      "objectives": [
+        "Verinin davranışına uygun koleksiyon seçer.",
+        "Örneği farklı girdilerle çalıştırıp kullandığı standart kütüphane aracını gerekçelendirir."
+      ],
+      "prerequisites": [
+        "m4:dicts",
+        "m4:tuples"
+      ],
+      "summary": "Sözlük ve liste yeterli olmadığında yeni yapı icat etmek yerine hazır araçları tanı: say, grupla, kuyruk işle veya alanları isimlendir.",
+      "explanation": "Counter tekrarları sayar; olmayan anahtarın sayısı 0'dır. most_common sıklığa göre sıralar; eşitlikte ilk görülme sırası geçerlidir, alfabetik düzen istiyorsan ayrıca sırala. defaultdict(list) eksik anahtara [] üretir; list() değil list fonksiyonunu ver. get çağrısı bu üretimi tetiklemez. deque iki uçtan ekleme/çıkarma içindir: append/popleft ile FIFO kuyruk, append/pop ile yığın kurulur; maxlen dolunca karşı uçtan öğe düşer. namedtuple isimli alanları olan değiştirilemez tuple türü üretir. Henüz kendi sınıflarını yazman gerekmiyor: Point = namedtuple(...) yeni kayıt türünün fabrikasıdır. İçindeki liste gibi nesneler yine değişebilir.",
+      "code": "from collections import Counter, defaultdict, deque, namedtuple\n\ncounts = Counter('aba')\nprint(counts['a'], counts['z'])\ngroups = defaultdict(list)\ngroups['meyve'].append('elma')\nprint(dict(groups))\nqueue = deque(['Ada', 'Ece'])\nprint(queue.popleft(), list(queue))\nPoint = namedtuple('Point', ['x', 'y'])\np = Point(2, 3)\nprint(p.x, p[1])",
+      "expectedOutput": "2 0\n{'meyve': ['elma']}\nAda ['Ece']\n2 3",
+      "why": "Sayaç, grup sözlüğü, kuyruk ve kayıt aynı ihtiyacı çözmez. Bu seçimler kodun niyetini görünür yapar.",
+      "alternatives": [
+        "Küçük işte dict.get ile sayaç da yazılabilir; Counter niyeti daha kısa anlatır.",
+        "Daha fazla davranış gerektiğinde M11'de sınıflar, M12'de dataclass devreye girer."
+      ],
+      "traps": [
+        "defaultdict(list()) yazmak: ilk argüman çağrılabilir fabrika olmalı.",
+        "Counter eşitliklerini otomatik alfabetik sanmak.",
+        "deque'de popleft yerine pop kullanıp hizmet sırasını tersine çevirmek."
+      ],
+      "realCode": "from collections import Counter, defaultdict\n\norders = [('Ada', 'kalem'), ('Ece', 'defter'), ('Ada', 'kalem')]\nby_user = defaultdict(list)\nfor name, item in orders:\n    by_user[name].append(item)\nfor name in sorted(by_user):\n    print(name, sorted(Counter(by_user[name]).items()))",
+      "realOutput": "Ada [('kalem', 2)]\nEce [('defter', 1)]",
+      "lineByLine": [
+        "Siparişler kullanıcının listesine eklenir.",
+        "Counter her kullanıcının ürünlerini sayar.",
+        "İki sorted çağrısı isim ve ürün sırasını açıkça sabitler."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · collections",
+          "url": "https://docs.python.org/3.12/library/collections.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "itertools-functools",
+      "title": "Akış araçları ve fonksiyon yardımcıları",
+      "eyebrow": "Yinelenebilir veriyi gereksiz ara listeler üretmeden işler.",
+      "objectives": [
+        "Yinelenebilir veriyi gereksiz ara listeler üretmeden işler.",
+        "Örneği farklı girdilerle çalıştırıp kullandığı standart kütüphane aracını gerekçelendirir."
+      ],
+      "prerequisites": [
+        "m6:def-return",
+        "m6:lambda-higher-order"
+      ],
+      "summary": "itertools veriyi adım adım işler; functools fonksiyonları tekrar kullanmayı kolaylaştırır. Bir iterator'ı tükettikten sonra aynı yerden yeniden başlayamazsın.",
+      "explanation": "chain akışları art arda bağlar, islice sınırlı bir bölüm alır, product kombinasyonların Kartezyen çarpımını kurar. count, cycle ve repeat sınırsız olabilir; list(count()) yazma, islice ile sınırla. groupby ardışık eşit anahtarları gruplar; tüm eşitleri birleştirmek istiyorsan önce aynı anahtarla sırala. partial bazı argümanları önceden bağlar; reduce tek sonuca indirger, boş veri için başlangıç değeri önemlidir. cache/lru_cache tekrarlanan çağrıları saklar; argümanlar hashlenebilir olmalı, dış durum değişirse eski sonuç dönebilir. @cache, tanımın ardından fonksiyonu cache ile sarmanın kısa yazımıdır; dekoratörün ayrıntısı M13'te. wraps ise sarmalanan fonksiyonun ad/docstring bilgisini korumaya yardımcı olur. Burada döngü içinde tüketim yeterli; iterator protokolü M13'te ayrıntılanır.",
+      "code": "from itertools import chain, islice, count, groupby\nfrom functools import partial, reduce\n\nprint(list(chain([1, 2], [3])))\nprint(list(islice(count(10, 2), 3)))\nprint([(key, list(group)) for key, group in groupby('aaba')])\ndef multiply(a, b):\n    return a * b\ntriple = partial(multiply, 3)\nprint(triple(4), reduce(multiply, [2, 3, 4], 1))",
+      "expectedOutput": "[1, 2, 3]\n[10, 12, 14]\n[('a', ['a', 'a']), ('b', ['b']), ('a', ['a'])]\n12 24",
+      "why": "groupby son a'yı önceki a grubuna katmadı; araya b girdi. islice sonsuz sayacı yalnız üç öğeyle sınırladı.",
+      "alternatives": [
+        "Toplam için reduce yerine sum daha açıktır.",
+        "Gruplama sırası önemli değilse defaultdict(list) çoğu zaman daha kolaydır."
+      ],
+      "traps": [
+        "groupby'ı sıralanmamış veride SQL GROUP BY gibi düşünmek.",
+        "Sonsuz iterator'ı list'e çevirmek.",
+        "Cache'i tarih/saat veya değişken dosya içeriği okuyan fonksiyona körlemesine eklemek."
+      ],
+      "realCode": "from functools import lru_cache\nfrom itertools import product\n\n@lru_cache(maxsize=16)\ndef price(code):\n    print('hesap:', code)\n    return len(code) * 10\nprint(price('AB'))\nprint(price('AB'))\nprint(list(product(['S', 'M'], ['siyah'])))",
+      "realOutput": "hesap: AB\n20\n20\n[('S', 'siyah'), ('M', 'siyah')]",
+      "lineByLine": [
+        "Dekoratör price'ın sonuçlarını en çok 16 argüman grubu için saklar.",
+        "İlk çağrı fonksiyon gövdesini çalıştırır; aynı argümanlı ikinci çağrı sonucu önbellekten alır.",
+        "product ürün seçeneklerini eşleştirir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · itertools",
+          "url": "https://docs.python.org/3.12/library/itertools.html"
+        },
+        {
+          "title": "Python 3.12 · functools",
+          "url": "https://docs.python.org/3.12/library/functools.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "enum",
+      "title": "Enum ile anlamlı durumlar",
+      "eyebrow": "Geçerli durumları ve dış veri değerlerini ayırır.",
+      "objectives": [
+        "Geçerli durumları ve dış veri değerlerini ayırır.",
+        "Örneği farklı girdilerle çalıştırıp kullandığı standart kütüphane aracını gerekçelendirir."
+      ],
+      "prerequisites": [
+        "m7:try-except",
+        "m9:import-forms"
+      ],
+      "summary": "Serbest metinler yerine tanımlı durumlarla çalış. Enum üyesinin adı ile dışarı taşınan değeri aynı şey değildir.",
+      "explanation": "class Status(Enum): satırı yeni bir durum türü tanımlar; girintili atamalar üyeleridir. Sınıf sözdizimi M11'de genişletilecek; burada bu küçük kalıbı okuyup uygulamak yeterlidir. Status.READY bir üyedir, .name adı, .value dış değeridir. Status('ready') değerden üyeye, Status['READY'] addan üyeye erişir. Bilinmeyen değer ValueError, bilinmeyen ad KeyError üretir. Normal Enum üyesi ham stringe eşit değildir. auto() otomatik değer üretebilir; dış API veya kalıcı dosya sözleşmesinde açık değerler daha anlaşılırdır. Aynı değeri iki ada verirsen biri alias olur; yanlışlıkla oluşmasını @unique engeller.",
+      "code": "from enum import Enum, unique\n\n@unique\nclass Status(Enum):\n    READY = 'ready'\n    DONE = 'done'\n\nstate = Status('ready')\nprint(state.name, state.value)\nprint(state == Status.READY, state == 'ready')\nprint([item.value for item in Status])",
+      "expectedOutput": "READY ready\nTrue False\n['ready', 'done']",
+      "why": "Enum('değer') dönüşümü dış veriyi sınırlar; iç kod üyelerle karşılaştırır.",
+      "alternatives": [
+        "Yalnız üyelik denetimi gerekiyorsa bir set yeterli olabilir.",
+        "StrEnum string uyumluluğu isterken kullanılabilir; normal Enum davranışıyla karıştırma."
+      ],
+      "traps": [
+        ".name ile .value alanlarını karıştırmak.",
+        "Normal Enum ile ham stringi eşit sanmak.",
+        "Alias üyelerin normal yinelemede ayrı görünmesini beklemek."
+      ],
+      "realCode": "from enum import Enum\n\nclass Status(Enum):\n    READY = 'ready'\n    DONE = 'done'\n\ndef label(raw):\n    try:\n        state = Status(raw)\n    except ValueError:\n        return 'geçersiz'\n    return 'bekliyor' if state is Status.READY else 'tamamlandı'\n\nprint(label('done'))\nprint(label('unknown'))",
+      "realOutput": "tamamlandı\ngeçersiz",
+      "lineByLine": [
+        "String verisi önce üyeye dönüştürülür.",
+        "Geçersiz dış değer kontrollü mesaj üretir.",
+        "İç işlem artık yazım hatasına açık stringler değil üyeler üzerinden yürür."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · enum",
+          "url": "https://docs.python.org/3.12/library/enum.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "heapq-bisect",
+      "title": "Öncelik kuyruğu ve sıralı arama",
+      "eyebrow": "Minimum öğe seçimi ile sıralı konum aramasını ayırt eder.",
+      "objectives": [
+        "Minimum öğe seçimi ile sıralı konum aramasını ayırt eder.",
+        "Örneği farklı girdilerle çalıştırıp kullandığı standart kütüphane aracını gerekçelendirir."
+      ],
+      "prerequisites": [
+        "m4:sorting-key",
+        "m4:tuples"
+      ],
+      "summary": "heapq en küçük öğeyi hızlı alır; bisect önceden sıralı dizide ekleme konumu bulur. İkisi de listenin her durumda tamamen sıralı olduğu anlamına gelmez.",
+      "explanation": "Python 3.12'de heapq temel olarak min-heap sunar: heapify listeyi yerinde düzenler, heappush ekler, heappop en küçüğü çıkarır. Yalnız kökteki minimum garanti edilir; tüm listeyi sıralı sanma. Öncelikli işler için (öncelik, sıra, iş) tuple'ı eşit öncelikte kararlı sıra ve karşılaştırılabilirlik sağlar. nsmallest/nlargest ilk k öğeyi seçer. bisect_left eşitlerden önceki, bisect_right sonraki konumu bulur. Liste zaten artan sıralı olmalı. insort uygun yere ekler; arama logaritmik olsa da liste elemanlarını kaydırmak doğrusal maliyetlidir. Big-O ayrıntısı M17'de işlenecek.",
+      "code": "import heapq\nfrom bisect import bisect_left, bisect_right, insort\n\nheap = [7, 2, 5]\nheapq.heapify(heap)\nheapq.heappush(heap, 1)\nprint(heapq.heappop(heap), heapq.heappop(heap))\nvalues = [1, 3, 3, 8]\nprint(bisect_left(values, 3), bisect_right(values, 3))\ninsort(values, 2)\nprint(values)",
+      "expectedOutput": "1 2\n1 3\n[1, 2, 3, 3, 8]",
+      "why": "Heap'te en küçükler sırayla çıkarılır. Sıralı listede 3'lerin sol ve sağ sınırları farklıdır.",
+      "alternatives": [
+        "Tek seferlik raporda sorted kullanmak daha basit olabilir.",
+        "Büyük ve sık güncellenen veri için Python listesine sürekli insort maliyetini düşün."
+      ],
+      "traps": [
+        "heapify çıktısını atamak; dönen değer None'dır.",
+        "Bisect sonucunu öğenin bulunduğu garantisi saymak.",
+        "Eşit öncelikli tuple'larda karşılaştırılamayan dict'leri yan yana bırakmak."
+      ],
+      "realCode": "import heapq\n\njobs = []\nfor order, (priority, name) in enumerate([(2, 'rapor'), (1, 'yedek'), (1, 'posta')]):\n    heapq.heappush(jobs, (priority, order, name))\nwhile jobs:\n    priority, order, name = heapq.heappop(jobs)\n    print(name)",
+      "realOutput": "yedek\nposta\nrapor",
+      "lineByLine": [
+        "Küçük sayı daha yüksek hizmet önceliği olarak tanımlanır.",
+        "Artan sıra numarası eşit öncelikleri geliş sırasıyla çözer.",
+        "Kuyruk boşalana dek en öndeki iş çıkarılır."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · heapq",
+          "url": "https://docs.python.org/3.12/library/heapq.html"
+        },
+        {
+          "title": "Python 3.12 · bisect",
+          "url": "https://docs.python.org/3.12/library/bisect.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "re",
+      "title": "Düzenli ifadelerle bul, doğrula ve değiştir",
+      "eyebrow": "Bir parçayı bulmak ile tüm girdiyi doğrulamayı ayırır.",
+      "objectives": [
+        "Bir parçayı bulmak ile tüm girdiyi doğrulamayı ayırır.",
+        "Örneği farklı girdilerle çalıştırıp kullandığı standart kütüphane aracını gerekçelendirir."
+      ],
+      "prerequisites": [
+        "m2:escape-raw",
+        "m3:if-elif-else"
+      ],
+      "summary": "re.search bir eşleşme arar; fullmatch bütün metnin kalıba uymasını ister. Basit bir sabit arama için in veya string metotları daha okunaklı olabilir.",
+      "explanation": "Raw string r'...' Python kaçışları ile regex kaçışlarını karıştırmanı önler. [A-Z] bir karakter sınıfı, + bir veya daha fazla, * sıfır veya daha fazla, ? isteğe bağlı, {2} tam iki tekrardır. Parantez grup, | alternatif tanımlar. search ve match Match ya da None döndürür; match yalnız başlangıçta arar, fullmatch sonuna kadar eşleşme ister. findall tüm eşleşmeleri, sub değiştirilmiş metni verir. \\d varsayılan Unicode rakamlarını da kapsar; yalnız ASCII için [0-9] yaz. Kullanıcıdan alınan düz metni regex içine yerleştirirken re.escape kullan. Regex gerçek tarih geçerliliğini veya tüm e-posta standartlarını tek başına çözmez.",
+      "code": "import re\n\npattern = re.compile(r'[A-Z]{2}-[0-9]{3}')\nprint(bool(pattern.fullmatch('AB-123')))\nprint(bool(pattern.fullmatch('xAB-123')))\nprint(re.findall(r'[0-9]+', 'raf 12, kutu 7'))\nprint(re.sub(r'\\s+', '-', 'iki   kelime'))",
+      "expectedOutput": "True\nFalse\n['12', '7']\niki-kelime",
+      "why": "fullmatch başa eklenen x'i reddeder. findall string parçaları döndürür; sayı hesabı için ayrıca int gerekir.",
+      "alternatives": [
+        "Sabit ayraçlı, basit veride split daha açıktır; CSV için csv modülünü kullan.",
+        "Bir kalıp tekrar kullanılacaksa compile ile niyetini görünür yap."
+      ],
+      "traps": [
+        "search başarılı diye tüm girdiyi geçerli saymak.",
+        "None üzerinde group() çağırmak.",
+        "Nokta gibi özel karakterleri düz nokta sanmak; gerekirse re.escape kullan."
+      ],
+      "realCode": "import re\n\npattern = re.compile(r'(?P<name>[A-Za-z]+):(?P<count>[0-9]+)')\nfor raw in ['pen:12', 'book:3', 'pen:12x']:\n    match = pattern.fullmatch(raw)\n    if match is None:\n        print('geçersiz')\n    else:\n        print(match.group('name'), int(match.group('count')) * 2)",
+      "realOutput": "pen 24\nbook 6\ngeçersiz",
+      "lineByLine": [
+        "İsimli gruplar alanları anlaşılır isimlerle almayı sağlar.",
+        "Eşleşmeyen veri için group çağrılmaz.",
+        "Rakam grubu hesaplama öncesinde tam sayıya dönüşür."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · re",
+          "url": "https://docs.python.org/3.12/library/re.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "sys-subprocess-argparse",
+      "title": "Komut satırı ve süreç sınırları",
+      "eyebrow": "Komut satırı argümanını ayrıştırır ve süreç çağrısının sınırını tanır.",
+      "objectives": [
+        "Komut satırı argümanını ayrıştırır ve süreç çağrısının sınırını tanır.",
+        "Örneği farklı girdilerle çalıştırıp kullandığı standart kütüphane aracını gerekçelendirir."
+      ],
+      "prerequisites": [
+        "m9:main-guard",
+        "collections"
+      ],
+      "summary": "argparse kullanıcı girdisini seçeneklere dönüştürür. sys çalışan Python hakkında bilgi verir. subprocess ise işletim sisteminde ayrı program çalıştırır; bu tarayıcıda desteklenmez.",
+      "explanation": "Yerel terminalde sys.argv[0] program adı, sys.argv[1:] kullanıcının argümanlarıdır; sys.executable o yorumlayıcının yoludur. argparse konumsal ve --limit gibi isteğe bağlı argümanlar, type=int dönüşümü, choices ve action='store_true' bayrakları tanımlar. Normal programda parse_args() sys.argv'yi okur; burada parse_args(['--limit','2']) ile sabit girdi kullanılır, terminal varmış gibi davranılmaz. Geçersiz argümanlar normalde yardım/hata metni ve SystemExit(2) üretir. Yerel Python'da subprocess.run([sys.executable, '-c', 'print(1)'], capture_output=True, text=True, check=True, timeout=5) ayrı Python çalıştırır. shell=False varsayılandır; kullanıcı girdisini shell=True metnine yapıştırma. check sıfır olmayan dönüş kodunda CalledProcessError, timeout sürede TimeoutExpired verir. Bu komut yalnız okuma örneğidir; tarayıcı kodu çalıştırmayı taklit etmez.",
+      "code": "import argparse\n\nparser = argparse.ArgumentParser(prog='rapor')\nparser.add_argument('name')\nparser.add_argument('--limit', type=int, default=3)\nparser.add_argument('--verbose', action='store_true')\nargs = parser.parse_args(['Ada', '--limit', '2', '--verbose'])\nprint(args.name, args.limit, args.verbose)",
+      "expectedOutput": "Ada 2 True",
+      "why": "Argüman listesi açıkça verildiği için örnek tarayıcıda ve yerelde aynıdır. Gerçek komut satırında bu listeyi işletim sistemi sağlar.",
+      "alternatives": [
+        "Yerel kullanım: python rapor.py Ada --limit 2 --verbose; bunu tarayıcı editörüne yazma.",
+        "Başka programı çağırmak yerine Python kütüphanesi varsa doğrudan onu kullanmak çoğu zaman daha taşınabilirdir."
+      ],
+      "traps": [
+        "bool('false') kullanarak bayrak çözmek; boş olmayan string True'dur.",
+        "subprocess'in Pyodide'de yerel işletim sistemi süreci açabileceğini sanmak.",
+        "Kullanıcı girdisini kabuk komutuna birleştirmek veya timeout/check denetimini atlamak."
+      ],
+      "realCode": "import argparse\nfrom collections import Counter\n\nparser = argparse.ArgumentParser(prog='kelime')\nparser.add_argument('--limit', type=int, default=2)\nparser.add_argument('--lower', action='store_true')\nargs = parser.parse_args(['--limit', '2', '--lower'])\ntext = 'Ada ada Ece'\nwords = text.lower().split() if args.lower else text.split()\nranked = sorted(Counter(words).items(), key=lambda item: (-item[1], item[0]))\nfor word, count in ranked[:max(0, args.limit)]:\n    print(word, count)",
+      "realOutput": "ada 2\nece 1",
+      "lineByLine": [
+        "Tarayıcı örneğinde komut argümanları doğrudan parse_args'e verilir.",
+        "Bayrak açıksa metin küçültülür.",
+        "Sayı azalan, sözcük artan biçimde deterministik sıralama yapılır.",
+        "Negatif limit burada sıfıra çekilir; başka bir uygulama bunu hata olarak reddedebilir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · sys",
+          "url": "https://docs.python.org/3.12/library/sys.html"
+        },
+        {
+          "title": "Python 3.12 · subprocess",
+          "url": "https://docs.python.org/3.12/library/subprocess.html"
+        },
+        {
+          "title": "Python 3.12 · argparse",
+          "url": "https://docs.python.org/3.12/library/argparse.html"
+        }
+      ],
+      "runtime": "mixed"
+    }
+  ],
+  "questions": [
+    {
+      "id": "m10-q01",
+      "type": "output",
+      "topic": "math-random",
+      "sectionId": "math-random",
+      "difficulty": 2,
+      "prompt": "Negatif sayıda taban ve kesme farkı nedir?",
+      "code": "import math\nprint(math.floor(-1.2), int(-1.2))",
+      "answer": "-2 -1",
+      "expectedOutput": "-2 -1",
+      "options": [
+        "-2 -1",
+        "-1 -1",
+        "-2 -2",
+        "1 2"
+      ],
+      "explanation": "floor negatif sonsuza, int sıfıra doğru gider.",
+      "hints": [
+        "Sayı doğrusunda -1.2 hangi iki tam sayı arasında?",
+        "floor aşağıdaki -2'yi seçer."
+      ]
+    },
+    {
+      "id": "m10-q02",
+      "type": "output",
+      "topic": "math-random",
+      "sectionId": "math-random",
+      "difficulty": 2,
+      "prompt": "Aynı tohum iki ayrı üreteçte neyi sağlar?",
+      "code": "from random import Random\na, b = Random(19), Random(19)\nprint(a.random() == b.random())",
+      "answer": "True",
+      "expectedOutput": "True",
+      "options": [
+        "True",
+        "False",
+        "19",
+        "Hata"
+      ],
+      "explanation": "Aynı başlangıç ve aynı ilk çağrı aynı sonucu verir; iki nesne bağımsızdır.",
+      "hints": [
+        "Üreteçler aynı tohumla başlıyor.",
+        "İkisinden de yalnız ilk değer alınıyor."
+      ]
+    },
+    {
+      "id": "m10-q03",
+      "type": "output",
+      "topic": "datetime",
+      "sectionId": "datetime",
+      "difficulty": 2,
+      "prompt": "Sabit UTC+03:00 ofsetine geçince hangi gün ve saat olur?",
+      "code": "from datetime import datetime, timedelta, timezone\nx = datetime(2026, 12, 31, 22, 0, tzinfo=timezone.utc)\nprint(x.astimezone(timezone(timedelta(hours=3))).isoformat())",
+      "answer": "2027-01-01T01:00:00+03:00",
+      "expectedOutput": "2027-01-01T01:00:00+03:00",
+      "options": [
+        "2027-01-01T01:00:00+03:00",
+        "2026-12-31T22:00:00+03:00",
+        "2026-12-31T19:00:00+03:00",
+        "2027-01-01T01:00:00+00:00"
+      ],
+      "explanation": "Aynı an üç saat ileride gösterilince yıl sınırı da aşılır.",
+      "hints": [
+        "22'ye üç saat ekle.",
+        "Yeni ofset +03:00 olmalı."
+      ]
+    },
+    {
+      "id": "m10-q04",
+      "type": "output",
+      "topic": "datetime",
+      "sectionId": "datetime",
+      "difficulty": 2,
+      "prompt": "İki gün ve bir dakikanın seconds/total_seconds farkı nedir?",
+      "code": "from datetime import timedelta\nd = timedelta(days=2, minutes=1)\nprint(d.seconds, int(d.total_seconds()))",
+      "answer": "60 172860",
+      "expectedOutput": "60 172860",
+      "options": [
+        "60 172860",
+        "172860 172860",
+        "60 60",
+        "120 172800"
+      ],
+      "explanation": "seconds günler çıkarıldıktan sonraki parçadır; total_seconds bütün süreyi kapsar.",
+      "hints": [
+        "İki gün 172800 saniyedir.",
+        "Son bir dakikayı da ekle."
+      ]
+    },
+    {
+      "id": "m10-q05",
+      "type": "output",
+      "topic": "collections",
+      "sectionId": "collections",
+      "difficulty": 2,
+      "prompt": "Olmayan Counter anahtarı ne verir?",
+      "code": "from collections import Counter\nc = Counter(['a', 'b', 'a'])\nprint(c['a'], c['z'])",
+      "answer": "2 0",
+      "expectedOutput": "2 0",
+      "options": [
+        "2 0",
+        "2 None",
+        "2 KeyError",
+        "1 0"
+      ],
+      "explanation": "Counter olmayan sayımı sıfır kabul eder.",
+      "hints": [
+        "a iki kez geçti.",
+        "Eksik sayaç değeri hata değildir."
+      ]
+    },
+    {
+      "id": "m10-q06",
+      "type": "output",
+      "topic": "collections",
+      "sectionId": "collections",
+      "difficulty": 2,
+      "prompt": "Sınırlı deque dolduğunda ne olur?",
+      "code": "from collections import deque\nq = deque([1, 2], maxlen=2)\nq.append(3)\nprint(list(q), q.popleft())",
+      "answer": "[2, 3] 2",
+      "expectedOutput": "[2, 3] 2",
+      "options": [
+        "[2, 3] 2",
+        "[1, 2, 3] 1",
+        "[1, 2] 1",
+        "[2, 3] 3"
+      ],
+      "explanation": "Sağa ekleme soldaki eski öğeyi düşürür. list(q) kopyası popleft'ten önce hazırlanır.",
+      "hints": [
+        "maxlen yalnız iki öğeye izin verir.",
+        "popleft sol uçtan çıkarır."
+      ]
+    },
+    {
+      "id": "m10-q07",
+      "type": "output",
+      "topic": "itertools-functools",
+      "sectionId": "itertools-functools",
+      "difficulty": 2,
+      "prompt": "Iterator ikinci kez listeye çevrilirse ne olur?",
+      "code": "from itertools import chain\nitems = chain([1], [2, 3])\nprint(list(items))\nprint(list(items))",
+      "answer": "[1, 2, 3]\n[]",
+      "expectedOutput": "[1, 2, 3]\n[]",
+      "options": [
+        "[1, 2, 3]\n[]",
+        "[1, 2, 3]\n[1, 2, 3]",
+        "[1]\n[2, 3]",
+        "Hata"
+      ],
+      "explanation": "chain iterator'ı ilk list çağrısı tüketir.",
+      "hints": [
+        "Akış yeniden kuruluyor mu?",
+        "Tükenmiş iterator yeni öğe vermez."
+      ]
+    },
+    {
+      "id": "m10-q08",
+      "type": "output",
+      "topic": "itertools-functools",
+      "sectionId": "itertools-functools",
+      "difficulty": 2,
+      "prompt": "Önbellek hangi çağrıda gövdeyi çalıştırır?",
+      "code": "from functools import lru_cache\n@lru_cache(maxsize=4)\ndef twice(n):\n    print('hesap')\n    return n * 2\nprint(twice(3))\nprint(twice(3))",
+      "answer": "hesap\n6\n6",
+      "expectedOutput": "hesap\n6\n6",
+      "options": [
+        "hesap\n6\n6",
+        "hesap\n6\nhesap\n6",
+        "6\n6",
+        "hesap\n3\n3"
+      ],
+      "explanation": "İkinci aynı argümanlı çağrı önbellekteki 6'yı alır.",
+      "hints": [
+        "@lru_cache sonucu argümanla ilişkilendirir.",
+        "İkinci çağrıda print('hesap') çalışmaz."
+      ]
+    },
+    {
+      "id": "m10-q09",
+      "type": "output",
+      "topic": "enum",
+      "sectionId": "enum",
+      "difficulty": 2,
+      "prompt": "Enum adı, değeri ve string karşılaştırması ne verir?",
+      "code": "from enum import Enum\nclass Mode(Enum):\n    FAST = 'fast'\nm = Mode('fast')\nprint(m.name, m.value, m == 'fast')",
+      "answer": "FAST fast False",
+      "expectedOutput": "FAST fast False",
+      "options": [
+        "FAST fast False",
+        "fast FAST True",
+        "FAST fast True",
+        "FAST FAST False"
+      ],
+      "explanation": "Normal Enum üyesi ham string değildir; name tanımlanan addır.",
+      "hints": [
+        ".name ve .value farklı alanlardır.",
+        "Mode.FAST ile 'fast' aynı tipte değil."
+      ]
+    },
+    {
+      "id": "m10-q10",
+      "type": "output",
+      "topic": "heapq-bisect",
+      "sectionId": "heapq-bisect",
+      "difficulty": 2,
+      "prompt": "Eşitlerin sol/sağ sınırı nerede?",
+      "code": "from bisect import bisect_left, bisect_right\nvalues = [1, 2, 2, 2, 5]\nprint(bisect_left(values, 2), bisect_right(values, 2))",
+      "answer": "1 4",
+      "expectedOutput": "1 4",
+      "options": [
+        "1 4",
+        "1 3",
+        "2 4",
+        "0 5"
+      ],
+      "explanation": "Sol sınır ilk 2'nin konumu, sağ sınır son 2'nin sonrasıdır.",
+      "hints": [
+        "İndeksler sıfırdan başlar.",
+        "Sağ sınır 5'in bulunduğu indekstir."
+      ]
+    },
+    {
+      "id": "m10-q11",
+      "type": "output",
+      "topic": "re",
+      "sectionId": "re",
+      "difficulty": 2,
+      "prompt": "Arama ile tam doğrulama neden farklı?",
+      "code": "import re\nprint(bool(re.search(r'[0-9]+', 'x12')))\nprint(bool(re.fullmatch(r'[0-9]+', 'x12')))",
+      "answer": "True\nFalse",
+      "expectedOutput": "True\nFalse",
+      "options": [
+        "True\nFalse",
+        "True\nTrue",
+        "False\nFalse",
+        "False\nTrue"
+      ],
+      "explanation": "search içerideki 12'yi bulur; fullmatch baştaki x yüzünden başarısızdır.",
+      "hints": [
+        "Metnin tamamı sayı mı?",
+        "search tüm metni tüketmek zorunda değildir."
+      ]
+    },
+    {
+      "id": "m10-q12",
+      "type": "output",
+      "topic": "sys-subprocess-argparse",
+      "sectionId": "sys-subprocess-argparse",
+      "difficulty": 2,
+      "prompt": "Seçenek verilmezse parser hangi değerleri üretir?",
+      "code": "import argparse\np = argparse.ArgumentParser()\np.add_argument('--limit', type=int, default=4)\np.add_argument('--verbose', action='store_true')\na = p.parse_args([])\nprint(a.limit, a.verbose)",
+      "answer": "4 False",
+      "expectedOutput": "4 False",
+      "options": [
+        "4 False",
+        "4 True",
+        "None False",
+        "'4' 'False'"
+      ],
+      "explanation": "Boş argüman listesinde default kullanılır; store_true yokken False'tur.",
+      "hints": [
+        "Hiç seçenek verilmedi.",
+        "type=int ile sayı bekleniyor."
+      ]
+    },
+    {
+      "id": "m10-q13",
+      "type": "bug",
+      "topic": "math-random",
+      "sectionId": "math-random",
+      "difficulty": 2,
+      "prompt": "Bu kod neden karıştırılmış listeyi yazdırmaz?",
+      "code": "from random import Random\nitems = [1, 2, 3]\nresult = Random(4).shuffle(items)\nprint(result)",
+      "answer": "shuffle yerinde değiştirir ve None döndürür",
+      "options": [
+        "shuffle yerinde değiştirir ve None döndürür",
+        "Tohum verilince karıştırma iptal olur",
+        "shuffle yeni bir tuple döndürür",
+        "Liste üç öğeli olamaz"
+      ],
+      "optionFeedback": {
+        "Tohum verilince karıştırma iptal olur": "Tohum işlemi iptal etmez; tekrarlanabilir kılar.",
+        "shuffle yeni bir tuple döndürür": "shuffle bir dönüşüm kopyası üretmez.",
+        "Liste üç öğeli olamaz": "Üç öğeli liste geçerli girdidir."
+      },
+      "explanation": "items değişir; print(items) yazılmalıdır.",
+      "hints": [
+        "Metot yerinde mi çalışıyor?",
+        "Dönen değer ile değişen listeyi ayır."
+      ]
+    },
+    {
+      "id": "m10-q14",
+      "type": "bug",
+      "topic": "datetime",
+      "sectionId": "datetime",
+      "difficulty": 2,
+      "prompt": "26 saatlik süre raporu neden 2 saat gösteriyor?",
+      "code": "from datetime import timedelta\nduration = timedelta(hours=26)\nprint(duration.seconds // 3600)",
+      "answer": "seconds yerine total_seconds kullanılmalı",
+      "options": [
+        "seconds yerine total_seconds kullanılmalı",
+        "timedelta 24 saatten büyük olamaz",
+        "// daima yanlış yuvarlar",
+        "Saatler negatif olmalı"
+      ],
+      "optionFeedback": {
+        "timedelta 24 saatten büyük olamaz": "timedelta günleri ayrı alanında tutar.",
+        "// daima yanlış yuvarlar": "Burada sorun bölme değil, yanlış süre alanıdır.",
+        "Saatler negatif olmalı": "İşaret toplam süreyi geri getirmez."
+      },
+      "explanation": "seconds günleri içermez; int(duration.total_seconds() // 3600) sonucu 26 olur.",
+      "hints": [
+        "timedelta gün ve saniyeyi ayrı saklar.",
+        "Toplamı döndüren metodu düşün."
+      ]
+    },
+    {
+      "id": "m10-q15",
+      "type": "bug",
+      "topic": "collections",
+      "sectionId": "collections",
+      "difficulty": 2,
+      "prompt": "Bu defaultdict kurulumu neden hatalı?",
+      "code": "from collections import defaultdict\ngroups = defaultdict(list())",
+      "answer": "Fabrika olarak list verilmeli, list() değil",
+      "options": [
+        "Fabrika olarak list verilmeli, list() değil",
+        "defaultdict yalnız int kabul eder",
+        "Eksik anahtar önce eklenmeli",
+        "Sözlük yalnız string anahtar alır"
+      ],
+      "optionFeedback": {
+        "defaultdict yalnız int kabul eder": "Her uygun sıfır argümanlı fabrika kullanılabilir.",
+        "Eksik anahtar önce eklenmeli": "Fabrika zaten eksik anahtar için vardır.",
+        "Sözlük yalnız string anahtar alır": "Hashlenebilir başka tipler de geçerlidir."
+      },
+      "explanation": "list() bir liste nesnesi üretir; defaultdict çağrılabilir bir fabrika bekler.",
+      "hints": [
+        "Nesne ile nesne üreten fonksiyonu ayır.",
+        "Parantezler fonksiyonu hemen çağırır."
+      ]
+    },
+    {
+      "id": "m10-q16",
+      "type": "bug",
+      "topic": "itertools-functools",
+      "sectionId": "itertools-functools",
+      "difficulty": 2,
+      "prompt": "Tüm aynı harflerin tek grup olması isteniyor. Neden a iki grup?",
+      "code": "from itertools import groupby\nprint([(k, list(g)) for k, g in groupby('aba')])",
+      "answer": "groupby yalnız ardışık eşitleri gruplar",
+      "options": [
+        "groupby yalnız ardışık eşitleri gruplar",
+        "groupby yalnız sayılarda çalışır",
+        "list(g) grupları böler",
+        "İlk ve son a farklı harflerdir"
+      ],
+      "optionFeedback": {
+        "groupby yalnız sayılarda çalışır": "Harflerle de çalışır.",
+        "list(g) grupları böler": "Grup iterator'ını liste yapmak bu ayrımın sebebi değildir.",
+        "İlk ve son a farklı harflerdir": "Değerler aynıdır, fakat bitişik değildir."
+      },
+      "explanation": "Bu gereksinim için önce sorted ile sırala ya da Counter/defaultdict seç.",
+      "hints": [
+        "Araya hangi öğe giriyor?",
+        "Sıralama aynı anahtarları yan yana getirir."
+      ]
+    },
+    {
+      "id": "m10-q17",
+      "type": "bug",
+      "topic": "re",
+      "sectionId": "re",
+      "difficulty": 2,
+      "prompt": "Yalnız 'AB-123' biçimi kabul edilmeli. 'xAB-123y' neden geçiyor?",
+      "code": "import re\nok = re.search(r'[A-Z]{2}-[0-9]{3}', 'xAB-123y') is not None",
+      "answer": "search yerine fullmatch kullanılmalı",
+      "options": [
+        "search yerine fullmatch kullanılmalı",
+        "Raw string öneki kaldırılmalı",
+        "[0-9] harfleri de kapsar",
+        "{3} en az üç demektir"
+      ],
+      "optionFeedback": {
+        "Raw string öneki kaldırılmalı": "Raw string kalıbın kapsamını değiştirmez.",
+        "[0-9] harfleri de kapsar": "Bu sınıf yalnız ASCII rakamlarıdır.",
+        "{3} en az üç demektir": "{3} tam üç tekrardır; arama dış metni önemsemez."
+      },
+      "explanation": "Tam girdi doğrulaması fullmatch ile yapılır.",
+      "hints": [
+        "İçeride eşleşme bulunması bütün metnin geçerli olduğu anlamına gelmez.",
+        "Başını ve sonunu tüketen işlevi seç."
+      ]
+    },
+    {
+      "id": "m10-q18",
+      "type": "bug",
+      "topic": "sys-subprocess-argparse",
+      "sectionId": "sys-subprocess-argparse",
+      "difficulty": 2,
+      "prompt": "Yalnız yerel Python: kullanıcıdan gelen dosya adını bu çağrıya eklemek neden riskli?",
+      "code": "# OKUMA ÖRNEĞİ — tarayıcıda çalıştırılmaz\nsubprocess.run('rapor ' + filename, shell=True)",
+      "answer": "Girdi kabuk sözdizimi olarak yorumlanabilir",
+      "options": [
+        "Girdi kabuk sözdizimi olarak yorumlanabilir",
+        "shell=True girdiyi otomatik güvenli yapar",
+        "subprocess yalnız sayılar alır",
+        "capture_output her riski engeller"
+      ],
+      "optionFeedback": {
+        "shell=True girdiyi otomatik güvenli yapar": "Tam tersine kabuk yorumlaması ekler.",
+        "subprocess yalnız sayılar alır": "Program ve argümanları string olabilir.",
+        "capture_output her riski engeller": "Çıktı yakalamak girdi yorumlanmasını engellemez."
+      },
+      "explanation": "Program/argüman listesi, shell=False ve uygun girdi doğrulaması tercih edilir; timeout/check gereksinime göre eklenir. Alt programın kendi argüman anlamlarını da kontrol et.",
+      "hints": [
+        "Kabuk ; veya yönlendirme gibi karakterleri nasıl yorumlar?",
+        "Kullanıcı verisini komut metni yerine ayrı argüman yap."
+      ]
+    },
+    {
+      "id": "m10-q19",
+      "type": "fill",
+      "topic": "collections",
+      "sectionId": "collections",
+      "difficulty": 2,
+      "prompt": "Counter'dan en sık iki öğeyi alan metot adı nedir?",
+      "code": "from collections import Counter\nprint(Counter('abb').___(2))",
+      "answer": "most_common",
+      "acceptedAnswers": [
+        "most_common"
+      ],
+      "solutionCode": "from collections import Counter\nprint(Counter('abb').most_common(2))",
+      "expectedOutput": "[('b', 2), ('a', 1)]",
+      "explanation": "most_common(n) en sık n öğeyi sayı ile birlikte verir.",
+      "hints": [
+        "İlgili modülün metot adını düşün.",
+        "most_common bu boşluğa uygun bir yazımdır."
+      ]
+    },
+    {
+      "id": "m10-q20",
+      "type": "fill",
+      "topic": "itertools-functools",
+      "sectionId": "itertools-functools",
+      "difficulty": 2,
+      "prompt": "İki katını alan partial için ilk argümanı tamamla.",
+      "code": "from functools import partial\ndef multiply(a, b):\n    return a * b\ndouble = partial(multiply, ___)\nprint(double(5))",
+      "answer": "2",
+      "acceptedAnswers": [
+        "2",
+        "2 * 1"
+      ],
+      "solutionCode": "from functools import partial\ndef multiply(a, b):\n    return a * b\ndouble = partial(multiply, 2)\nprint(double(5))",
+      "expectedOutput": "10",
+      "explanation": "İlk konumsal argüman 2'ye bağlanır; double(5), multiply(2,5) çağırır.",
+      "hints": [
+        "İlgili modülün metot adını düşün.",
+        "2 bu boşluğa uygun bir yazımdır."
+      ]
+    },
+    {
+      "id": "m10-q21",
+      "type": "fill",
+      "topic": "heapq-bisect",
+      "sectionId": "heapq-bisect",
+      "difficulty": 2,
+      "prompt": "Heap'ten en küçük öğeyi çıkaran metodu yaz.",
+      "code": "import heapq\nh = [1, 3, 2]\nprint(heapq.___(h))",
+      "answer": "heappop",
+      "acceptedAnswers": [
+        "heappop"
+      ],
+      "solutionCode": "import heapq\nh = [1, 3, 2]\nprint(heapq.heappop(h))",
+      "expectedOutput": "1",
+      "explanation": "heappop kökü çıkarıp kalan heap düzenini korur.",
+      "hints": [
+        "İlgili modülün metot adını düşün.",
+        "heappop bu boşluğa uygun bir yazımdır."
+      ]
+    },
+    {
+      "id": "m10-q22",
+      "type": "fill",
+      "topic": "datetime",
+      "sectionId": "datetime",
+      "difficulty": 2,
+      "prompt": "Bir date'i ISO metnine çeviren metodu yaz.",
+      "code": "from datetime import date\nprint(date(2026, 10, 6).___())",
+      "answer": "isoformat",
+      "acceptedAnswers": [
+        "isoformat"
+      ],
+      "solutionCode": "from datetime import date\nprint(date(2026, 10, 6).isoformat())",
+      "expectedOutput": "2026-10-06",
+      "explanation": "isoformat yıl-ay-gün düzenini verir.",
+      "hints": [
+        "İlgili modülün metot adını düşün.",
+        "isoformat bu boşluğa uygun bir yazımdır."
+      ]
+    },
+    {
+      "id": "m10-q23",
+      "type": "order",
+      "topic": "collections",
+      "sectionId": "collections",
+      "difficulty": 2,
+      "prompt": "FIFO kuyruğundan Ada'yı çıkaran sırayı kur.",
+      "lines": [
+        "print(q.popleft())",
+        "q.append('Ada')",
+        "from collections import deque",
+        "q = deque()"
+      ],
+      "answer": "from collections import deque\nq = deque()\nq.append('Ada')\nprint(q.popleft())",
+      "solutionCode": "from collections import deque\nq = deque()\nq.append('Ada')\nprint(q.popleft())",
+      "expectedOutput": "Ada",
+      "explanation": "Kuyruk önce yaratılır, sonra öğe eklenir ve soldan çıkarılır.",
+      "hints": [
+        "Import ve veri hazırlığı kullanımdan önce gelmeli.",
+        "Son adım sonucu yazdırmak."
+      ]
+    },
+    {
+      "id": "m10-q24",
+      "type": "order",
+      "topic": "datetime",
+      "sectionId": "datetime",
+      "difficulty": 2,
+      "prompt": "Bir gün eklenmiş tarihi yazdıracak sırayı kur.",
+      "lines": [
+        "print(end.isoformat())",
+        "end = start + timedelta(days=1)",
+        "start = date(2026, 12, 31)",
+        "from datetime import date, timedelta"
+      ],
+      "answer": "from datetime import date, timedelta\nstart = date(2026, 12, 31)\nend = start + timedelta(days=1)\nprint(end.isoformat())",
+      "solutionCode": "from datetime import date, timedelta\nstart = date(2026, 12, 31)\nend = start + timedelta(days=1)\nprint(end.isoformat())",
+      "expectedOutput": "2027-01-01",
+      "explanation": "Tarih ve süre hazır olduktan sonra toplama yapılır.",
+      "hints": [
+        "Import ve veri hazırlığı kullanımdan önce gelmeli.",
+        "Son adım sonucu yazdırmak."
+      ]
+    },
+    {
+      "id": "m10-q25",
+      "type": "order",
+      "topic": "re",
+      "sectionId": "re",
+      "difficulty": 2,
+      "prompt": "AB-123 kodundan 123 grubunu çıkaran sırayı kur.",
+      "lines": [
+        "print(match.group(1))",
+        "match = pattern.fullmatch('AB-123')",
+        "pattern = re.compile(r'AB-([0-9]+)')",
+        "import re"
+      ],
+      "answer": "import re\npattern = re.compile(r'AB-([0-9]+)')\nmatch = pattern.fullmatch('AB-123')\nprint(match.group(1))",
+      "solutionCode": "import re\npattern = re.compile(r'AB-([0-9]+)')\nmatch = pattern.fullmatch('AB-123')\nprint(match.group(1))",
+      "expectedOutput": "123",
+      "explanation": "Bu sabit geçerli veride fullmatch bir Match döndürür; birinci grup rakamdır.",
+      "hints": [
+        "Import ve veri hazırlığı kullanımdan önce gelmeli.",
+        "Son adım sonucu yazdırmak."
+      ]
+    },
+    {
+      "id": "m10-q26",
+      "type": "order",
+      "topic": "sys-subprocess-argparse",
+      "sectionId": "sys-subprocess-argparse",
+      "difficulty": 2,
+      "prompt": "--count 3 seçeneğini int olarak okuyan sırayı kur.",
+      "lines": [
+        "print(args.count + 1)",
+        "args = parser.parse_args(['--count', '3'])",
+        "parser.add_argument('--count', type=int)",
+        "import argparse",
+        "parser = argparse.ArgumentParser()"
+      ],
+      "answer": "import argparse\nparser = argparse.ArgumentParser()\nparser.add_argument('--count', type=int)\nargs = parser.parse_args(['--count', '3'])\nprint(args.count + 1)",
+      "solutionCode": "import argparse\nparser = argparse.ArgumentParser()\nparser.add_argument('--count', type=int)\nargs = parser.parse_args(['--count', '3'])\nprint(args.count + 1)",
+      "expectedOutput": "4",
+      "explanation": "Argüman tanımı ayrıştırmadan önce yapılır.",
+      "hints": [
+        "Import ve veri hazırlığı kullanımdan önce gelmeli.",
+        "Son adım sonucu yazdırmak."
+      ]
+    },
+    {
+      "id": "m10-q27",
+      "type": "code",
+      "topic": "math-random",
+      "sectionId": "math-random",
+      "difficulty": 2,
+      "prompt": "İki satır tam sayı oku; math.gcd ile negatif olmayan en büyük ortak böleni yazdır. gcd(0,0) için 0 kabul edilir.",
+      "starterCode": "from math import gcd\na = int(input())\nb = int(input())\n# Ortak böleni yazdır\n",
+      "answer": "from math import gcd\na = int(input())\nb = int(input())\nprint(gcd(a, b))",
+      "solutionCode": "from math import gcd\na = int(input())\nb = int(input())\nprint(gcd(a, b))",
+      "exampleInput": "18\n24",
+      "expectedOutput": "6",
+      "tests": [
+        {
+          "label": "Pozitif",
+          "stdin": "18\n24",
+          "expectedOutput": "6"
+        },
+        {
+          "label": "Negatif",
+          "stdin": "-12\n18",
+          "expectedOutput": "6"
+        },
+        {
+          "label": "İki sıfır",
+          "stdin": "0\n0",
+          "expectedOutput": "0"
+        },
+        {
+          "label": "Aralarında asal",
+          "stdin": "7\n9",
+          "expectedOutput": "1"
+        }
+      ],
+      "hints": [
+        "gcd iki tam sayı alır.",
+        "Sonucu print(gcd(a, b)) ile göster."
+      ],
+      "explanation": "gcd işaretlerden bağımsız negatif olmayan ortak böleni verir."
+    },
+    {
+      "id": "m10-q28",
+      "type": "code",
+      "topic": "datetime",
+      "sectionId": "datetime",
+      "difficulty": 2,
+      "prompt": "İlk satır YYYY-MM-DD tarih, ikinci satır eklenecek tam gün sayısı. Yeni tarihi ISO biçiminde yazdır. Girdiler geçerli; sonuç 1–9999 yılları arasında kalır.",
+      "starterCode": "from datetime import date, timedelta\nstart = date.fromisoformat(input())\ndays = int(input())\n# Tarih hesabını tamamla\n",
+      "answer": "from datetime import date, timedelta\nstart = date.fromisoformat(input())\ndays = int(input())\nprint((start + timedelta(days=days)).isoformat())",
+      "solutionCode": "from datetime import date, timedelta\nstart = date.fromisoformat(input())\ndays = int(input())\nprint((start + timedelta(days=days)).isoformat())",
+      "exampleInput": "2026-12-31\n1",
+      "expectedOutput": "2027-01-01",
+      "tests": [
+        {
+          "label": "Yıl geçişi",
+          "stdin": "2026-12-31\n1",
+          "expectedOutput": "2027-01-01"
+        },
+        {
+          "label": "Artık yıl",
+          "stdin": "2024-02-28\n1",
+          "expectedOutput": "2024-02-29"
+        },
+        {
+          "label": "Geri git",
+          "stdin": "2026-01-01\n-1",
+          "expectedOutput": "2025-12-31"
+        },
+        {
+          "label": "Sıfır gün",
+          "stdin": "2026-10-06\n0",
+          "expectedOutput": "2026-10-06"
+        }
+      ],
+      "hints": [
+        "Gün sayısını timedelta içine koy.",
+        "Sonuç date nesnesinin isoformat metodunu çağır."
+      ],
+      "explanation": "Takvim sınırlarını elle hesaplamak yerine tarih aritmetiği kullanılır."
+    },
+    {
+      "id": "m10-q29",
+      "type": "code",
+      "topic": "collections",
+      "sectionId": "collections",
+      "difficulty": 2,
+      "prompt": "Bir satır boşlukla ayrılmış kelime oku; büyük/küçük harfe duyarlı say. Her farklı kelimeyi alfabetik sırayla 'kelime sayı' olarak yazdır. Satır yalnız boşluksa 'BOS' yaz.",
+      "starterCode": "from collections import Counter\nwords = input().split()\n# Say ve alfabetik yazdır\n",
+      "answer": "from collections import Counter\ncounts = Counter(input().split())\nif not counts:\n    print('BOS')\nfor word in sorted(counts):\n    print(word, counts[word])",
+      "solutionCode": "from collections import Counter\ncounts = Counter(input().split())\nif not counts:\n    print('BOS')\nfor word in sorted(counts):\n    print(word, counts[word])",
+      "exampleInput": "b a b",
+      "expectedOutput": "a 1\nb 2",
+      "tests": [
+        {
+          "label": "Tekrar",
+          "stdin": "b a b",
+          "expectedOutput": "a 1\nb 2"
+        },
+        {
+          "label": "Boş",
+          "stdin": "   ",
+          "expectedOutput": "BOS"
+        },
+        {
+          "label": "Harf duyarlı",
+          "stdin": "A a A",
+          "expectedOutput": "A 2\na 1"
+        }
+      ],
+      "hints": [
+        "Counter ile say, sorted ile anahtarları gez.",
+        "Boş Counter falsy'dir."
+      ],
+      "explanation": "Sıralama gereksinimi most_common'dan farklıdır; alfabetik anahtar sırası kullanılır."
+    },
+    {
+      "id": "m10-q30",
+      "type": "code",
+      "topic": "collections",
+      "sectionId": "collections",
+      "difficulty": 2,
+      "prompt": "İlk satır komut sayısı N. Sonraki N satır 'ekle isim' veya 'cagir'. İsim tek kelime. FIFO deque kur; her cagir için sıradaki ismi, boşsa BOS yazdır. Ekleme çıktı üretmesin.",
+      "starterCode": "from collections import deque\nq = deque()\nn = int(input())\n# Komutları sırayla işle\n",
+      "answer": "from collections import deque\nq = deque()\nfor _ in range(int(input())):\n    command = input().split()\n    if command[0] == 'ekle':\n        q.append(command[1])\n    else:\n        print(q.popleft() if q else 'BOS')",
+      "solutionCode": "from collections import deque\nq = deque()\nfor _ in range(int(input())):\n    command = input().split()\n    if command[0] == 'ekle':\n        q.append(command[1])\n    else:\n        print(q.popleft() if q else 'BOS')",
+      "exampleInput": "4\nekle Ada\nekle Ece\ncagir\ncagir",
+      "expectedOutput": "Ada\nEce",
+      "tests": [
+        {
+          "label": "FIFO",
+          "stdin": "4\nekle Ada\nekle Ece\ncagir\ncagir",
+          "expectedOutput": "Ada\nEce"
+        },
+        {
+          "label": "Boş kuyruk",
+          "stdin": "1\ncagir",
+          "expectedOutput": "BOS"
+        },
+        {
+          "label": "Komut yok",
+          "stdin": "0",
+          "expectedOutput": ""
+        },
+        {
+          "label": "Karışık",
+          "stdin": "4\ncagir\nekle Can\ncagir\ncagir",
+          "expectedOutput": "BOS\nCan\nBOS"
+        }
+      ],
+      "hints": [
+        "Soldan çıkarma metodu popleft.",
+        "Boşluğu test etmeden popleft çağırma."
+      ],
+      "explanation": "Kuyrukta ilk giren önce çıkar; boş kuyruk IndexError vermeden ele alınır."
+    },
+    {
+      "id": "m10-q31",
+      "type": "code",
+      "topic": "itertools-functools",
+      "sectionId": "itertools-functools",
+      "difficulty": 2,
+      "prompt": "İki satır oku: başlangıç tam sayısı ve N (0–20). count ile 2'şer artan akışın ilk N elemanını islice ile alıp Python listesi olarak yazdır.",
+      "starterCode": "from itertools import count, islice\nstart = int(input())\nn = int(input())\n# Sınırlı listeyi yazdır\n",
+      "answer": "from itertools import count, islice\nstart = int(input())\nn = int(input())\nprint(list(islice(count(start, 2), n)))",
+      "solutionCode": "from itertools import count, islice\nstart = int(input())\nn = int(input())\nprint(list(islice(count(start, 2), n)))",
+      "exampleInput": "10\n3",
+      "expectedOutput": "[10, 12, 14]",
+      "tests": [
+        {
+          "label": "Üç öğe",
+          "stdin": "10\n3",
+          "expectedOutput": "[10, 12, 14]"
+        },
+        {
+          "label": "Hiç öğe",
+          "stdin": "2\n0",
+          "expectedOutput": "[]"
+        },
+        {
+          "label": "Negatif başlangıç",
+          "stdin": "-3\n4",
+          "expectedOutput": "[-3, -1, 1, 3]"
+        }
+      ],
+      "hints": [
+        "count(start, 2) sonsuzdur; önce sınırla.",
+        "islice akıştan n eleman seçer."
+      ],
+      "explanation": "Sonsuz akış doğrudan listeye dönüştürülmez."
+    },
+    {
+      "id": "m10-q32",
+      "type": "code",
+      "topic": "heapq-bisect",
+      "sectionId": "heapq-bisect",
+      "difficulty": 2,
+      "prompt": "İlk satır artan sıralı, boşlukla ayrılmış tam sayılar (yalnız boşluk olabilir), ikinci satır hedef sayı. Hedefin tekrar sayısını bisect_left/right farkıyla yazdır.",
+      "starterCode": "from bisect import bisect_left, bisect_right\nvalues = list(map(int, input().split()))\ntarget = int(input())\n",
+      "answer": "from bisect import bisect_left, bisect_right\nvalues = list(map(int, input().split()))\ntarget = int(input())\nprint(bisect_right(values, target) - bisect_left(values, target))",
+      "solutionCode": "from bisect import bisect_left, bisect_right\nvalues = list(map(int, input().split()))\ntarget = int(input())\nprint(bisect_right(values, target) - bisect_left(values, target))",
+      "exampleInput": "1 2 2 2 5\n2",
+      "expectedOutput": "3",
+      "tests": [
+        {
+          "label": "Tekrar",
+          "stdin": "1 2 2 2 5\n2",
+          "expectedOutput": "3"
+        },
+        {
+          "label": "Yok",
+          "stdin": "1 3 8\n2",
+          "expectedOutput": "0"
+        },
+        {
+          "label": "Boş",
+          "stdin": " \n9",
+          "expectedOutput": "0"
+        },
+        {
+          "label": "Uçta",
+          "stdin": "1 1 2\n1",
+          "expectedOutput": "2"
+        }
+      ],
+      "hints": [
+        "Sağ sınır son eşitin sonrasıdır.",
+        "Sağdan solu çıkar."
+      ],
+      "explanation": "Yarı açık aralığın uzunluğu tekrar sayısıdır; hedef yokken sınırlar eşittir."
+    },
+    {
+      "id": "m10-q33",
+      "type": "code",
+      "topic": "enum",
+      "sectionId": "enum",
+      "difficulty": 2,
+      "prompt": "Bir satır durum oku: yalnız ready ve done geçerli. Enum dönüşümü kullan; geçerliyse üye adını (READY/DONE), değilse GECERSIZ yazdır.",
+      "starterCode": "from enum import Enum\nclass Status(Enum):\n    READY = 'ready'\n    DONE = 'done'\nraw = input()\n",
+      "answer": "from enum import Enum\nclass Status(Enum):\n    READY = 'ready'\n    DONE = 'done'\ntry:\n    print(Status(input()).name)\nexcept ValueError:\n    print('GECERSIZ')",
+      "solutionCode": "from enum import Enum\nclass Status(Enum):\n    READY = 'ready'\n    DONE = 'done'\ntry:\n    print(Status(input()).name)\nexcept ValueError:\n    print('GECERSIZ')",
+      "exampleInput": "ready",
+      "expectedOutput": "READY",
+      "tests": [
+        {
+          "label": "Hazır",
+          "stdin": "ready",
+          "expectedOutput": "READY"
+        },
+        {
+          "label": "Bitti",
+          "stdin": "done",
+          "expectedOutput": "DONE"
+        },
+        {
+          "label": "Bilinmeyen",
+          "stdin": "waiting",
+          "expectedOutput": "GECERSIZ"
+        },
+        {
+          "label": "Harf farkı",
+          "stdin": "Ready",
+          "expectedOutput": "GECERSIZ"
+        }
+      ],
+      "hints": [
+        "Status(raw) değerden dönüşümdür.",
+        "Bilinmeyen değer ValueError üretir."
+      ],
+      "explanation": "Geçerli durum kümesi Enum'da tanımlıdır; testler çıktı davranışını ölçer, kullanılan yöntemi güvenli biçimde kanıtlamaz."
+    },
+    {
+      "id": "m10-q34",
+      "type": "code",
+      "topic": "heapq-bisect",
+      "sectionId": "heapq-bisect",
+      "difficulty": 2,
+      "prompt": "İlk satır iş sayısı N (0–20). Sonraki satırlar 'öncelik isim'; küçük tam sayı önce, eşitlerde giriş sırası korunur. heapq ile isimleri sırasıyla yazdır. N=0 ise BOS.",
+      "starterCode": "import heapq\njobs = []\nn = int(input())\n# (öncelik, sıra, isim) kayıtlarını ekle\n",
+      "answer": "import heapq\njobs = []\nfor index in range(int(input())):\n    priority, name = input().split()\n    heapq.heappush(jobs, (int(priority), index, name))\nif not jobs:\n    print('BOS')\nwhile jobs:\n    print(heapq.heappop(jobs)[2])",
+      "solutionCode": "import heapq\njobs = []\nfor index in range(int(input())):\n    priority, name = input().split()\n    heapq.heappush(jobs, (int(priority), index, name))\nif not jobs:\n    print('BOS')\nwhile jobs:\n    print(heapq.heappop(jobs)[2])",
+      "exampleInput": "3\n2 rapor\n1 yedek\n3 posta",
+      "expectedOutput": "yedek\nrapor\nposta",
+      "tests": [
+        {
+          "label": "Öncelik",
+          "stdin": "3\n2 rapor\n1 yedek\n3 posta",
+          "expectedOutput": "yedek\nrapor\nposta"
+        },
+        {
+          "label": "Eşitlik alfabetik değil",
+          "stdin": "2\n1 Zeynep\n1 Ada",
+          "expectedOutput": "Zeynep\nAda"
+        },
+        {
+          "label": "Boş",
+          "stdin": "0",
+          "expectedOutput": "BOS"
+        },
+        {
+          "label": "Negatif",
+          "stdin": "2\n0 A\n-2 B",
+          "expectedOutput": "B\nA"
+        }
+      ],
+      "hints": [
+        "Eşitlikte isim değil sıra numarası karşılaştırılmalı.",
+        "Tuple'ın üçüncü öğesi yazdırılacak isimdir."
+      ],
+      "explanation": "Heap minimum önceliği seçer; sıra numarası bağ çözme kuralıdır."
+    },
+    {
+      "id": "m10-q35",
+      "type": "code",
+      "topic": "re",
+      "sectionId": "re",
+      "difficulty": 2,
+      "prompt": "Bir satır kod oku. Tam olarak iki ASCII büyük harf, tire ve üç ASCII rakam içermeli. Uygunsa True, değilse False yazdır. Baş/son boşlukları temizleme.",
+      "starterCode": "import re\nraw = input()\n# Tam eşleşmeyi kontrol et\n",
+      "answer": "import re\nprint(re.fullmatch(r'[A-Z]{2}-[0-9]{3}', input()) is not None)",
+      "solutionCode": "import re\nprint(re.fullmatch(r'[A-Z]{2}-[0-9]{3}', input()) is not None)",
+      "exampleInput": "AB-123",
+      "expectedOutput": "True",
+      "tests": [
+        {
+          "label": "Geçerli",
+          "stdin": "AB-123",
+          "expectedOutput": "True"
+        },
+        {
+          "label": "Fazla karakter",
+          "stdin": "xAB-123",
+          "expectedOutput": "False"
+        },
+        {
+          "label": "Kısa",
+          "stdin": "AB-12",
+          "expectedOutput": "False"
+        },
+        {
+          "label": "Unicode rakam",
+          "stdin": "AB-١٢٣",
+          "expectedOutput": "False"
+        },
+        {
+          "label": "Boşluk",
+          "stdin": " AB-123",
+          "expectedOutput": "False"
+        }
+      ],
+      "hints": [
+        "fullmatch tüm metni kapsar.",
+        "ASCII rakam şartı için [0-9] kullan."
+      ],
+      "explanation": "Arama başarılı olması geçerlilik değildir; kalıp tüm girdiye uygulanır."
+    },
+    {
+      "id": "m10-q36",
+      "type": "code",
+      "topic": "sys-subprocess-argparse",
+      "sectionId": "sys-subprocess-argparse",
+      "difficulty": 2,
+      "prompt": "Bir satır argüman oku (boşlukla ayrılır; tırnaklı değer yok). Sıfır veya daha fazla tam sayı ve isteğe bağlı --double bayrağı var. argparse ile ayrıştır; sayıları topla, bayrak varsa iki katını yazdır. Girdiler geçerli; yalnız boşluk toplamı 0'dır.",
+      "starterCode": "import argparse\nparser = argparse.ArgumentParser()\n# numbers: nargs='*', type=int\n# --double: action='store_true'\n",
+      "answer": "import argparse\nparser = argparse.ArgumentParser()\nparser.add_argument('numbers', nargs='*', type=int)\nparser.add_argument('--double', action='store_true')\nargs = parser.parse_args(input().split())\ntotal = sum(args.numbers)\nprint(total * 2 if args.double else total)",
+      "solutionCode": "import argparse\nparser = argparse.ArgumentParser()\nparser.add_argument('numbers', nargs='*', type=int)\nparser.add_argument('--double', action='store_true')\nargs = parser.parse_args(input().split())\ntotal = sum(args.numbers)\nprint(total * 2 if args.double else total)",
+      "exampleInput": "1 2 3",
+      "expectedOutput": "6",
+      "tests": [
+        {
+          "label": "Toplam",
+          "stdin": "1 2 3",
+          "expectedOutput": "6"
+        },
+        {
+          "label": "Bayrak",
+          "stdin": "--double 2 3",
+          "expectedOutput": "10"
+        },
+        {
+          "label": "Boş",
+          "stdin": " ",
+          "expectedOutput": "0"
+        },
+        {
+          "label": "Negatif",
+          "stdin": "--double -2 1",
+          "expectedOutput": "-2"
+        }
+      ],
+      "hints": [
+        "nargs='*' sıfır veya daha çok sayı kabul eder.",
+        "parse_args'e input().split() listesini ver."
+      ],
+      "explanation": "type=int dönüşümü yapar; store_true yokken False, varken True üretir."
+    },
+    {
+      "id": "m10-q37",
+      "type": "traceback",
+      "topic": "math-random",
+      "sectionId": "math-random",
+      "difficulty": 2,
+      "prompt": "Gerçek sayılarda negatifin sqrt hesabı hangi hatayı verir?",
+      "code": "import math\nprint(math.sqrt(-1))",
+      "answer": "ValueError",
+      "expectedError": "ValueError",
+      "options": [
+        "ValueError",
+        "TypeError",
+        "ZeroDivisionError",
+        "NameError"
+      ],
+      "optionFeedback": {
+        "TypeError": "-1 geçerli sayısal tiptir; değer fonksiyonun gerçek sayı tanım alanı dışındadır.",
+        "ZeroDivisionError": "Bölme işlemi yoktur.",
+        "NameError": "math doğru import edilmiştir."
+      },
+      "explanation": "math.sqrt gerçek değerler için tanımlıdır; negatif girdi ValueError verir.",
+      "hints": [
+        "Son satırdaki hatanın hangi gereksinimin ihlalinden doğduğunu düşün.",
+        "math.sqrt gerçek değerler için tanımlıdır; negatif girdi ValueError verir."
+      ]
+    },
+    {
+      "id": "m10-q38",
+      "type": "traceback",
+      "topic": "enum",
+      "sectionId": "enum",
+      "difficulty": 2,
+      "prompt": "Enum'a bulunmayan adla erişince hata nedir?",
+      "code": "from enum import Enum\nclass Status(Enum):\n    READY = 'ready'\nprint(Status['DONE'])",
+      "answer": "KeyError",
+      "expectedError": "KeyError",
+      "options": [
+        "KeyError",
+        "ValueError",
+        "AttributeError",
+        "IndexError"
+      ],
+      "optionFeedback": {
+        "ValueError": "Status('done') gibi değerden dönüşümde beklenirdi; burada köşeli parantezle ad aranıyor.",
+        "AttributeError": "Köşeli parantezli üye adı araması KeyError verir.",
+        "IndexError": "Sayısal dizi indeksi kullanılmıyor."
+      },
+      "explanation": "Köşeli parantez üye adını arar; olmayan ad KeyError üretir.",
+      "hints": [
+        "Son satırdaki hatanın hangi gereksinimin ihlalinden doğduğunu düşün.",
+        "Köşeli parantez üye adını arar; olmayan ad KeyError üretir."
+      ]
+    },
+    {
+      "id": "m10-q39",
+      "type": "traceback",
+      "topic": "itertools-functools",
+      "sectionId": "itertools-functools",
+      "difficulty": 2,
+      "prompt": "Önbelleğe liste argümanı verilince hata nedir?",
+      "code": "from functools import lru_cache\n@lru_cache(maxsize=8)\ndef total(items):\n    return sum(items)\nprint(total([1, 2]))",
+      "answer": "TypeError",
+      "expectedError": "TypeError",
+      "options": [
+        "TypeError",
+        "ValueError",
+        "KeyError",
+        "RecursionError"
+      ],
+      "optionFeedback": {
+        "ValueError": "Problem sayı değerleri değil, liste türünün hashlenememesidir.",
+        "KeyError": "Eksik sözlük anahtarı aranmaz.",
+        "RecursionError": "Fonksiyon kendini çağırmıyor."
+      },
+      "explanation": "Cache anahtarı için argüman hashlenebilir olmalıdır; list hashlenemez.",
+      "hints": [
+        "Son satırdaki hatanın hangi gereksinimin ihlalinden doğduğunu düşün.",
+        "Cache anahtarı için argüman hashlenebilir olmalıdır; list hashlenemez."
+      ]
+    },
+    {
+      "id": "m10-q40",
+      "type": "traceback",
+      "topic": "datetime",
+      "sectionId": "datetime",
+      "difficulty": 2,
+      "prompt": "Naive ve aware datetime çıkarılırsa ne olur?",
+      "code": "from datetime import datetime, timezone\na = datetime(2026, 10, 6, 10)\nb = datetime(2026, 10, 6, 10, tzinfo=timezone.utc)\nprint(a - b)",
+      "answer": "TypeError",
+      "expectedError": "TypeError",
+      "options": [
+        "TypeError",
+        "ValueError",
+        "OverflowError",
+        "ZeroDivisionError"
+      ],
+      "optionFeedback": {
+        "ValueError": "Takvim değerleri geçerlidir; aware/naive tür sözleşmesi uyuşmaz.",
+        "OverflowError": "Tarih aralığı taşılmıyor.",
+        "ZeroDivisionError": "Bölme işlemi yok."
+      },
+      "explanation": "Naive değerin saat dilimi bilinmediğinden iki anın farkı güvenilir biçimde hesaplanamaz.",
+      "hints": [
+        "Son satırdaki hatanın hangi gereksinimin ihlalinden doğduğunu düşün.",
+        "Naive değerin saat dilimi bilinmediğinden iki anın farkı güvenilir biçimde hesaplanamaz."
+      ]
+    }
+  ]
+}

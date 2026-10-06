@@ -13,6 +13,11 @@ export type LessonSection = {
   id: string;
   title: string;
   eyebrow: string;
+  objectives: string[];
+  /** Section ids (same module) or "m<id>:<sectionId>" for earlier modules. */
+  prerequisites: string[];
+  sources?: { title: string; url: string }[];
+  runtime?: "browser" | "mixed";
   summary: string;
   explanation: string;
   code: string;
@@ -29,12 +34,19 @@ export type Question = {
   id: string;
   type: QuestionType;
   topic: string;
+  /** Lesson section this question assesses; wrong answers link back to it. */
+  sectionId: string;
+  difficulty: 1 | 2 | 3;
   prompt: string;
   code?: string;
   starterCode?: string;
   options?: string[];
   lines?: string[];
   answer: string;
+  /** Fill questions: every accepted spelling, including `answer`. */
+  acceptedAnswers?: string[];
+  /** Why each wrong option is wrong, keyed by option text. */
+  optionFeedback?: Record<string, string>;
   expectedOutput?: string;
   expectedError?: string;
   solutionCode?: string;
@@ -49,6 +61,7 @@ export type LearningModule = {
   slug: string;
   title: string;
   description: string;
+  contentVersion: number;
   estimatedMinutes: number;
   practiceIds: string[];
   sections: LessonSection[];
@@ -56,6 +69,8 @@ export type LearningModule = {
 };
 
 export type TestAttempt = {
+  sessionId?: string;
+  reason?: "submitted" | "timeout";
   moduleId: number;
   score: number;
   date: string;
@@ -63,7 +78,7 @@ export type TestAttempt = {
 };
 
 export type LearningProgress = {
-  version: 2;
+  version: 3;
   xp: number;
   streak: number;
   lastStudyDate: string | null;
@@ -78,5 +93,16 @@ export type LearningProgress = {
   writingDrafts: Record<string, string>;
   writingHelp: Record<string, boolean>;
   writingResults: Record<string, { passed: boolean; independent: boolean; attempts: number }>;
+  activeQuiz: QuizSession | null;
+  creditedQuizIds: string[];
+};
+
+export type QuizDraft = { choice: string; fill: string; ordered: string[]; code: string; hints: number; stdin: string };
+export type QuizSession = {
+  id: string; moduleId: number; mode: "practice" | "test"; weakOnly: boolean;
+  questions: Question[]; startedAt: number; deadline: number | null;
+  index: number; drafts: Record<string, QuizDraft>;
+  answers: Record<string, { correct: boolean; hints: number; submittedAt: number }>;
+  completedAt: number | null; finishReason: "submitted" | "timeout" | null;
 };
 

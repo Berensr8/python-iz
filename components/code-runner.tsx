@@ -54,9 +54,10 @@ export function usePythonRunner() {
   }, [reset]);
 }
 
-export function CodeRunner({ initialCode, expectedOutput, compact = false, onRun, onChange, initialInput = "", readOnly = false }: {
+export function CodeRunner({ initialCode, expectedOutput, compact = false, onRun, onChange, onInputChange, initialInput = "", readOnly = false }: {
   initialCode: string; expectedOutput?: string; compact?: boolean; initialInput?: string; readOnly?: boolean;
   onRun?: (result: RunResult) => void; onChange?: (code: string) => void;
+  onInputChange?: (stdin: string) => void;
 }) {
   const [code, setCode] = useState(initialCode);
   const [stdin, setStdin] = useState(initialInput);
@@ -81,7 +82,7 @@ export function CodeRunner({ initialCode, expectedOutput, compact = false, onRun
     <CodeMirror value={code} onChange={edit} readOnly={readOnly || running} extensions={[python()]} theme="dark" minHeight={compact ? "140px" : "200px"} basicSetup={{ foldGutter: false }} className="text-[15px]" aria-label="Python kod editörü" />
     <div className="border-t border-white/10 bg-[#060a12] p-4">
       <label className="block text-xs text-slate-400">Program girdisi · her input() için bir satır
-        <textarea aria-label="Program girdisi" value={stdin} disabled={running || readOnly} onChange={event => { revision.current++; setStdin(event.target.value); setResult(null); }} rows={2} className="mt-2 block w-full border border-white/20 bg-black/30 p-2 font-mono text-sm text-slate-200" placeholder="Örn. 18" />
+        <textarea aria-label="Program girdisi" value={stdin} disabled={running || readOnly} onChange={event => { revision.current++; setStdin(event.target.value); setResult(null); onInputChange?.(event.target.value); }} rows={2} className="mt-2 block w-full border border-white/20 bg-black/30 p-2 font-mono text-sm text-slate-200" placeholder="Örn. 18" />
       </label>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <Button onClick={execute} disabled={running || readOnly}>{running ? <LoaderCircle className="size-4 animate-spin" /> : <Play className="size-4" />} {running ? "Hazırlanıyor / çalışıyor" : "Çalıştır"}</Button>

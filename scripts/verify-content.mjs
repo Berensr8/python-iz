@@ -28,7 +28,8 @@ async function execute(code, stdin = "") {
     return { output: result.output.trimEnd(), error: null };
   } catch (error) {
     const text = String(error);
-    const name = text.match(/\n([A-Za-z]+(?:Error|Exception)):/)?.[1] ?? text.match(/^([A-Za-z]+(?:Error|Exception)):/)?.[1] ?? "PythonError";
+    // Library errors carry a module prefix in the traceback, e.g. json.decoder.JSONDecodeError.
+    const name = text.match(/\n(?:[a-z_]+\.)*([A-Za-z]+(?:Error|Exception)):/)?.[1] ?? text.match(/^([A-Za-z]+(?:Error|Exception)):/)?.[1] ?? "PythonError";
     return { output: [...stdout, ...stderr].join("\n").trimEnd(), error: name };
   }
 }
@@ -43,6 +44,47 @@ async function verifyCode(label, code, expectedOutput, expectedError, stdin = ""
   if (result.error) failures.push(`${label}: beklenmeyen ${result.error}.`);
   else if (result.output !== expectedOutput) failures.push(`${label}: çıktı ${JSON.stringify(expectedOutput)} olmalı, ${JSON.stringify(result.output)} alındı.`);
 }
+
+modules.sort((a, b) => a.id - b.id);
+modules.forEach((module, index) => { if (module.id !== index + 1) failures.push(`Modül kimlikleri 1'den ardışık olmalı; ${index + 1} yerine ${module.id} bulundu.`); });
+const writingTasks = JSON.parse(await readFile(path.join(root, "content/writing-tasks.json"), "utf8"));
+const sectionKeys = new Set(modules.flatMap(module => module.sections.map(section => `m${module.id}:${section.id}`)));
+
+for (const module of modules) {
+  if (!Number.isInteger(module.contentVersion) || module.contentVersion < 1) failures.push(`Modül ${module.id}: contentVersion eksik.`);
+  const sectionIds = new Set(module.sections.map(section => section.id));
+  for (const section of module.sections) {
+    if (!section.objectives?.length) failures.push(`M${module.id} ${section.id}: kazanım (objectives) eksik.`);
+    for (const prerequisite of section.prerequisites ?? ["?"]) {
+      const key = prerequisite.includes(":") ? prerequisite : `m${module.id}:${prerequisite}`;
+      if (!sectionKeys.has(key)) failures.push(`M${module.id} ${section.id}: bilinmeyen önkoşul ${prerequisite}.`);
+    }
+  }
+  const assessed = new Set(module.questions.map(question => question.sectionId));
+  for (const id of sectionIds) if (!assessed.has(id)) failures.push(`M${module.id} ${id}: bu bölümü ölçen soru yok.`);
+  for (const question of module.questions) {
+    if (!question.id.startsWith(`m${module.id}-`)) failures.push(`${question.id}: kimlik m${module.id}- ile başlamalı.`);
+    if (!sectionIds.has(question.sectionId)) failures.push(`${question.id}: bilinmeyen sectionId ${question.sectionId}.`);
+    if (![1, 2, 3].includes(question.difficulty)) failures.push(`${question.id}: difficulty 1–3 olmalı.`);
+    if (question.options?.length && !question.options.includes(question.answer)) failures.push(`${question.id}: cevap seçeneklerde yok.`);
+    for (const [option, reason] of Object.entries(question.optionFeedback ?? {})) {
+      if (!question.options?.includes(option) || option === question.answer || !reason) failures.push(`${question.id}: geçersiz optionFeedback "${option}".`);
+    }
+    if (["bug", "traceback"].includes(question.type) && question.options?.some(option => option !== question.answer && !question.optionFeedback?.[option])) failures.push(`${question.id}: her yanlış seçenek için gerekçe gerekli.`);
+    if (question.acceptedAnswers && !question.acceptedAnswers.includes(question.answer)) failures.push(`${question.id}: acceptedAnswers asıl cevabı içermeli.`);
+    // Each accepted fill answer, placed into the blank, must produce the same output.
+    if (question.type === "fill" && !question.options?.length) {
+      if ((question.code?.match(/___/g) ?? []).length !== 1) failures.push(`${question.id}: kodda tam bir ___ boşluğu olmalı.`);
+      else for (const answer of question.acceptedAnswers ?? [question.answer]) await verifyCode(`${question.id} kabul "${answer}"`, question.code.replace("___", answer), question.expectedOutput);
+    }
+  }
+}
+for (const task of writingTasks) {
+  if (!sectionKeys.has(`m${task.moduleId}:${task.sectionId}`)) failures.push(`${task.id}: bilinmeyen bölüm ${task.sectionId}.`);
+  if (task.tests.length < 3) failures.push(`${task.id}: en az üç test gerekli.`);
+  for (const test of task.tests) await verifyCode(`${task.id} ${test.label}`, task.solution, test.expectedOutput, undefined, test.stdin);
+}
+for (const module of modules) if (writingTasks.filter(task => task.moduleId === module.id).length < 3) failures.push(`Modül ${module.id}: en az üç yazma görevi gerekli.`);
 
 for (const module of modules) {
   if (module.sections.length < 8) failures.push(`Modül ${module.id}: ders kapsamı eksik (${module.sections.length}).`);

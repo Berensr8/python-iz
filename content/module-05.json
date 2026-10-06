@@ -1,0 +1,1014 @@
+{
+  "id": 5,
+  "slug": "referans-ve-kopyalama",
+  "title": "Referans ve kopyalama",
+  "description": "Bir değişikliğin hangi isimleri etkilediğini izle, doğru kopyayı seç ve veriyi kısa ifadelerle dönüştür.",
+  "contentVersion": 1,
+  "estimatedMinutes": 120,
+  "practiceIds": [
+    "m5-q01",
+    "m5-q02",
+    "m5-q03",
+    "m5-q05",
+    "m5-q07",
+    "m5-q08",
+    "m5-q10",
+    "m5-q11",
+    "m5-q12",
+    "m5-q13",
+    "m5-q14",
+    "m5-q19",
+    "m5-q23",
+    "m5-q28",
+    "m5-q37"
+  ],
+  "sections": [
+    {
+      "id": "names-references",
+      "title": "İsimler ve referanslar",
+      "eyebrow": "Atama kopyalamaz, bağlar",
+      "objectives": [
+        "Atamanın bir nesneye yeni bir isim bağladığını açıklar.",
+        "İki isim aynı nesneyi gösterdiğinde bir değişikliğin nereden görüneceğini izler."
+      ],
+      "prerequisites": [
+        "m1:variables-types",
+        "m4:lists"
+      ],
+      "summary": "Python'da değişken bir kutu değil, bir nesneye bağlı isimdir. b = a yazınca yeni nesne oluşmaz; b de a'nın gösterdiği nesneyi gösterir.",
+      "explanation": "Her nesnenin bir kimliği vardır; id() bu kimliği sayı olarak verir ve iki ismin aynı nesneyi gösterip göstermediğini anlamaya yarar. Sayının kendisi her çalıştırmada farklı çıkar, bu yüzden id değerlerini değil karşılaştırmalarını yazdırıyoruz. Aynı listeye bağlı iki isimden biriyle yapılan yerinde değişiklik (append, öğe ataması) diğerinden de görünür. Ama isimlerden birine yeni bir değer atamak yalnızca o ismin bağını değiştirir; diğer isim eski nesnede kalır.",
+      "code": "a = [1, 2]\nb = a\nb.append(3)\nprint(a)\nprint(id(a) == id(b))\n\nb = [9]\nprint(a, b)",
+      "expectedOutput": "[1, 2, 3]\nTrue\n[1, 2, 3] [9]",
+      "why": "b = a yeni bir liste üretmez; append aynı listeyi değiştirdiği için a da [1, 2, 3] görünür ve kimlikler eşittir. b = [9] ise b'yi yeni bir listeye bağlar; a'nın gösterdiği liste etkilenmez.",
+      "alternatives": [
+        "Bağımsız bir liste gerekiyorsa b = a.copy() veya b = list(a) yaz.",
+        "Kimlik karşılaştırması için id(a) == id(b) yerine a is b daha kısa ve yaygındır."
+      ],
+      "traps": [
+        "b = a ile kopya oluştuğunu sanmak.",
+        "b = [9] gibi yeniden atamanın a'yı da değiştirdiğini sanmak.",
+        "id() değerinin çalıştırmalar arasında sabit kaldığını varsaymak."
+      ],
+      "realCode": "DEFAULT_TAGS = [\"genel\"]\n\nnote = {\"title\": \"Toplantı\", \"tags\": DEFAULT_TAGS}\nnote[\"tags\"].append(\"iş\")\n\nprint(DEFAULT_TAGS)",
+      "realOutput": "['genel', 'iş']",
+      "lineByLine": [
+        "Paylaşılması amaçlanan bir varsayılan etiket listesi tanımlanır.",
+        "Not sözlüğü listenin kopyasını değil kendisini tutar.",
+        "Notun etiketlerine yapılan ekleme aslında ortak listeyi değiştirir.",
+        "Varsayılan liste bozulmuştur; çözüm \"tags\": DEFAULT_TAGS.copy() yazmaktır."
+      ]
+    },
+    {
+      "id": "identity-equality",
+      "title": "is ile == farkı",
+      "eyebrow": "Aynı değer mi, aynı nesne mi?",
+      "objectives": [
+        "== ile değer eşitliğini, is ile nesne kimliğini ayırır.",
+        "is'in hangi durumlarda doğru tercih olduğunu bilir."
+      ],
+      "prerequisites": [
+        "names-references",
+        "m1:comparison-logic"
+      ],
+      "summary": "== iki nesnenin değerinin eşit olup olmadığını, is ikisinin aynı nesne olup olmadığını sorar. Eşit değerli iki ayrı liste == ile True, is ile False verir.",
+      "explanation": "is'i yalnızca tekil (singleton) nesnelerle kullan: None, True, False ve kendi oluşturduğun özel işaretçi nesneler. Sayı ve metinlerde is sonucu CPython'un küçük sayı ve metin önbelleğine bağlıdır; aynı kod farklı yerde farklı sonuç verebilir. Bu yüzden değer karşılaştırmasında her zaman == kullanılır. is not ve != da aynı ayrımla çalışır.",
+      "code": "a = [1, 2, 3]\nb = [1, 2, 3]\nc = a\nprint(a == b, a is b)\nprint(a == c, a is c)\nresult = None\nprint(result is None)",
+      "expectedOutput": "True False\nTrue True\nTrue",
+      "why": "a ile b aynı değerde iki ayrı listedir: == True, is False. c ise a'nın kendisine bağlıdır; iki karşılaştırma da True. None tekil bir nesne olduğu için is None güvenli ve önerilen kontroldür.",
+      "alternatives": [
+        "Bir değişkenin hâlâ aynı nesneyi gösterip göstermediğini test etmek, örneğin önbellek hatası ayıklarken, is'in meşru bir kullanımıdır.",
+        "Boş liste kontrolü için x is [] değil, if not x: yaz."
+      ],
+      "traps": [
+        "Metin veya sayıları is ile karşılaştırmak; bazen tesadüfen True verir.",
+        "x == None yazmak; çalışır ama is None tercih edilir.",
+        "x is [] yazıp boş listeyi yakalayacağını sanmak; [] her seferinde yeni bir nesnedir."
+      ],
+      "realCode": "_MISSING = object()\n\ndef lookup(config, key, default=_MISSING):\n    value = config.get(key, _MISSING)\n    if value is _MISSING:\n        if default is _MISSING:\n            return f\"{key} eksik\"\n        return default\n    return value\n\nprint(lookup({\"debug\": None}, \"debug\"))\nprint(lookup({}, \"port\", 8000))\nprint(lookup({}, \"host\"))",
+      "realOutput": "None\n8000\nhost eksik",
+      "lineByLine": [
+        "object() benzersiz bir işaretçi nesne üretir; None geçerli bir değer olabileceği için ayrı bir işaret gerekir.",
+        "get, anahtar yoksa işaretçinin kendisini döndürür.",
+        "is ile yapılan kontrol değeri değil o tek nesneyi arar; config'te None olsa bile karışmaz.",
+        "debug=None bulunur ve döndürülür; eksik anahtarlar varsayılana veya mesaja düşer."
+      ]
+    },
+    {
+      "id": "mutable-immutable",
+      "title": "Mutable ve immutable",
+      "eyebrow": "Yerinde değişim mi, yeni nesne mi?",
+      "objectives": [
+        "Bir işlemin nesneyi yerinde mi değiştirdiğini yoksa yeni nesne mi ürettiğini ayırır.",
+        "Fonksiyona verilen bir listenin fonksiyon içinde değiştirilebildiğini açıklar."
+      ],
+      "prerequisites": [
+        "identity-equality",
+        "m2:immutability"
+      ],
+      "summary": "list, dict ve set mutable'dır; yerinde değişir. int, float, str, tuple ve frozenset immutable'dır; her \"değişiklik\" yeni bir nesne üretir.",
+      "explanation": "x += 1, bir int için yeni bir nesne üretip x'i ona bağlar. Liste için items += [4] ise listeyi yerinde genişletir; aynı listeye bağlı başka isimler de değişikliği görür. Fonksiyona bir liste verdiğinde fonksiyon aynı nesneyi alır: içeride append yapılırsa çağıran taraf da değişikliği görür, ama parametreye yeni bir liste atanırsa dışarısı etkilenmez. Hangi nesnelerin hashable olduğu, yani sözlük anahtarı olabildiği de buna bağlıdır: immutable olanlar.",
+      "code": "text = \"ab\"\nsame_text = text\ntext += \"c\"\nprint(same_text, text)\n\nitems = [1]\nsame_items = items\nitems += [2]\nprint(same_items, items)",
+      "expectedOutput": "ab abc\n[1, 2] [1, 2]",
+      "why": "str immutable olduğu için text += \"c\" yeni bir metin üretir; same_text eski \"ab\" metninde kalır. Liste mutable'dır; items += [2] listeyi yerinde uzatır ve aynı listeyi gösteren same_items da değişikliği görür.",
+      "alternatives": [
+        "Listeyi değiştirmeden yeni liste istiyorsan items = items + [2] yaz; + yeni liste üretir.",
+        "Değişmemesi gereken koleksiyonlar için tuple veya frozenset kullan."
+      ],
+      "traps": [
+        "+= işleminin her tipte aynı davrandığını sanmak.",
+        "Fonksiyon içinde parametre listesine append yapılınca çağıranın listesinin değişmeyeceğini sanmak.",
+        "Tuple içindeki bir listenin de değiştirilemez olduğunu sanmak."
+      ],
+      "realCode": "def add_tax(prices):\n    for i in range(len(prices)):\n        prices[i] = round(prices[i] * 1.2, 2)\n\ncart = [10.0, 25.0]\nadd_tax(cart)\nprint(cart)",
+      "realOutput": "[12.0, 30.0]",
+      "lineByLine": [
+        "Fonksiyon bir fiyat listesi alır; bu, çağıranın listesinin kendisidir.",
+        "Her indeksteki öğe yerinde güncellenir.",
+        "Fonksiyon bir şey döndürmez ama bir yan etkisi vardır.",
+        "cart değişmiştir; yan etki istenmiyorsa yeni bir liste döndüren sürüm yazılmalıdır."
+      ]
+    },
+    {
+      "id": "shallow-copy",
+      "title": "Sığ kopya (shallow copy)",
+      "eyebrow": "Dış kap yeni, içerik ortak",
+      "objectives": [
+        "copy(), [:], list() ve dict.copy() ile sığ kopya oluşturur.",
+        "Sığ kopyada iç nesnelerin paylaşıldığını açıklar."
+      ],
+      "prerequisites": [
+        "mutable-immutable"
+      ],
+      "summary": "Sığ kopya yeni bir dış koleksiyon oluşturur ama içindeki öğeler aynı nesnelerdir. Düz bir listede bu yeterlidir; iç içe yapıda iç listeler paylaşılır.",
+      "explanation": "a.copy(), a[:], list(a) ve copy.copy(a) aynı işi yapar: yeni bir liste oluşturup aynı öğe referanslarını içine koyar. Öğeler sayı veya metin gibi immutable ise fark görünmez. Öğeler liste veya sözlükse iki kopya aynı iç nesneleri paylaşır: kopyadaki bir iç listeye eklenen öğe orijinalde de görünür. Dış listeye öğe eklemek ise yalnızca o kopyayı etkiler.",
+      "code": "original = [[1, 2], [3]]\nclone = original.copy()\nclone.append([4])\nclone[0].append(99)\nprint(original)\nprint(clone)\nprint(clone is original, clone[0] is original[0])",
+      "expectedOutput": "[[1, 2, 99], [3]]\n[[1, 2, 99], [3], [4]]\nFalse True",
+      "why": "clone yeni bir dış listedir; append([4]) yalnızca onu uzatır. Ama clone[0] ile original[0] aynı iç listedir; 99 ikisinde de görünür. Son satır bunu kimlikle doğrular.",
+      "alternatives": [
+        "İç içe yapıyı tamamen bağımsız kopyalamak için copy.deepcopy kullan.",
+        "Sözlüklerde dict(d) veya {**d} de sığ kopya üretir."
+      ],
+      "traps": [
+        "copy() ile her seviyenin kopyalandığını sanmak.",
+        "Düz listede çalışan kopyanın iç içe veride de güvenli olduğunu varsaymak.",
+        "b = a ile b = a[:] arasındaki farkı unutmak."
+      ],
+      "realCode": "template = {\"title\": \"\", \"tags\": []}\n\npost_a = template.copy()\npost_a[\"title\"] = \"İlk yazı\"\npost_a[\"tags\"].append(\"python\")\n\nprint(template)",
+      "realOutput": "{'title': '', 'tags': ['python']}",
+      "lineByLine": [
+        "Şablon sözlük boş bir başlık ve boş bir etiket listesi içerir.",
+        "copy() yeni bir sözlük üretir; başlık ataması yalnızca kopyayı değiştirir.",
+        "Etiket listesi ise iki sözlükte ortaktır; append şablonu da bozar.",
+        "Şablonun etiketleri artık ['python']; çözüm deepcopy veya her gönderi için yeni liste oluşturmaktır."
+      ]
+    },
+    {
+      "id": "deep-copy",
+      "title": "Derin kopya ve çoğaltma tuzağı",
+      "eyebrow": "Her seviye bağımsız olsun",
+      "objectives": [
+        "copy.deepcopy ile iç içe yapıların bağımsız kopyasını oluşturur.",
+        "[[0] * n] * m tuzağını açıklar ve doğru biçimde ızgara kurar."
+      ],
+      "prerequisites": [
+        "shallow-copy",
+        "m3:nested-loops"
+      ],
+      "summary": "copy.deepcopy iç içe bütün mutable nesneleri yeniden oluşturur. Liste çarpımı ise öğeleri kopyalamaz; aynı iç listeyi tekrar tekrar koyar.",
+      "explanation": "import copy ile gelen deepcopy, iç listeleri ve sözlükleri de kopyalar; kopyada yapılan hiçbir değişiklik orijinale yansımaz. Bedeli hız ve bellektir, bu yüzden her zaman gerekmez. [[0] * 3] * 2 ifadesi iki satırlık bir ızgara gibi görünür ama iki satır aynı listedir; bir hücreyi değiştirmek iki satırda da görünür. Bağımsız satırlar için her satır ayrı oluşturulmalıdır: döngüyle veya [[0] * 3 for _ in range(2)] gibi bir comprehension ile (comprehension bu modülün sonunda).",
+      "code": "import copy\n\ngrid = [[0] * 3] * 2\ngrid[0][0] = 1\nprint(grid)\n\nsafe = [[0] * 3 for _ in range(2)]\nsafe[0][0] = 1\nprint(safe)\n\nbackup = copy.deepcopy(safe)\nbackup[1][2] = 7\nprint(safe[1], backup[1])",
+      "expectedOutput": "[[1, 0, 0], [1, 0, 0]]\n[[1, 0, 0], [0, 0, 0]]\n[0, 0, 0] [0, 0, 7]",
+      "why": "* 2 aynı iç listeyi iki kez koyar; bir hücre değişince iki satır da değişir. Comprehension her turda yeni bir [0, 0, 0] listesi üretir. deepcopy iç listeleri de kopyaladığı için backup'taki değişiklik safe'e yansımaz.",
+      "alternatives": [
+        "Yalnızca bir seviye iç içe veride [row.copy() for row in grid] deepcopy'den hızlıdır ve yeterlidir.",
+        "Değişmeyecek veriyi tuple'larla tutmak kopyalama ihtiyacını tamamen ortadan kaldırabilir."
+      ],
+      "traps": [
+        "[[0] * n] * m ile ızgara oluşturmak.",
+        "deepcopy'yi gerekmeyen yerlerde kullanıp programı yavaşlatmak.",
+        "copy modülünü import etmeyi unutup NameError almak."
+      ],
+      "realCode": "import copy\n\nDEFAULT_STATE = {\"level\": 1, \"inventory\": [\"kılıç\"]}\n\ndef new_game():\n    return copy.deepcopy(DEFAULT_STATE)\n\nplayer1 = new_game()\nplayer2 = new_game()\nplayer1[\"inventory\"].append(\"kalkan\")\nprint(player2[\"inventory\"], DEFAULT_STATE[\"inventory\"])",
+      "realOutput": "['kılıç'] ['kılıç']",
+      "lineByLine": [
+        "Başlangıç durumu iç içe bir sözlükte tutulur.",
+        "Her yeni oyun deepcopy ile bağımsız bir durum alır.",
+        "Birinci oyuncunun envanterine ekleme yalnızca onun listesini değiştirir.",
+        "İkinci oyuncu ve varsayılan durum etkilenmez; copy() kullanılsaydı envanter ortak olurdu."
+      ]
+    },
+    {
+      "id": "unpacking",
+      "title": "Unpacking (açma)",
+      "eyebrow": "Bir diziyi isimlere dağıt",
+      "objectives": [
+        "Tuple ve liste açmanın sonucunu izler; * ile kalan öğeleri toplar.",
+        "Değer takasının (a, b = b, a) nasıl çalıştığını açıklar."
+      ],
+      "prerequisites": [
+        "m4:tuples",
+        "names-references"
+      ],
+      "summary": "a, b = [1, 2] bir dizinin öğelerini sırayla isimlere bağlar. *rest kalan öğeleri bir liste olarak toplar. İsim sayısı tutmazsa ValueError oluşur.",
+      "explanation": "Sağ taraf önce bütünüyle hesaplanır, sonra isimlere dağıtılır; bu yüzden a, b = b, a geçici değişken olmadan takas yapar. first, *rest = items ilk öğeyi first'e, kalanları bir listeye koyar; yıldızlı isim ortada da durabilir. İç içe yapılar iç içe açılabilir: name, (x, y) = (\"A\", (1, 2)). for döngüsünde de aynı kural geçerlidir: for name, score in pairs. Kullanılmayacak öğe için _ adı gelenekseldir. Fonksiyon çağrısında *items bir listeyi ayrı argümanlara açar: print(*items).",
+      "code": "first, *middle, last = [10, 20, 30, 40]\nprint(first, middle, last)\n\na, b = 1, 2\na, b = b, a\nprint(a, b)\n\nname, (x, y) = (\"Ada\", (3, 4))\nprint(name, x + y)\nprint(*[1, 2, 3], sep=\"-\")",
+      "expectedOutput": "10 [20, 30] 40\n2 1\nAda 7\n1-2-3",
+      "why": "*middle ilk ve son dışında kalanları liste olarak toplar. Takas satırında sağdaki (b, a) önce (2, 1) olarak hesaplanır, sonra dağıtılır. İç içe açma ikinci öğeyi de x ve y'ye ayırır. print(*liste) öğeleri ayrı argümanlar olarak verir; sep aralarına tire koyar.",
+      "alternatives": [
+        "Yalnızca ilk öğe gerekiyorsa items[0] daha açıktır; açma birden çok öğe gerektiğinde işe yarar.",
+        "Uzun kayıtlarda konumla açmak yerine sözlük veya isimli alanlar (namedtuple, dataclass) daha güvenlidir."
+      ],
+      "traps": [
+        "İsim sayısını öğe sayısından farklı yazmak: a, b = [1, 2, 3] ValueError verir.",
+        "*rest'in tuple olduğunu sanmak; her zaman listedir.",
+        "Aynı açmada iki yıldızlı isim kullanmak; SyntaxError verir."
+      ],
+      "realCode": "line = \"2026-10-06,ERROR,disk,dolu,uyarı\"\n_, level, *message_parts = line.split(\",\")\nmessage = \" \".join(message_parts)\nprint(level, \"|\", message)",
+      "realOutput": "ERROR | disk dolu uyarı",
+      "lineByLine": [
+        "CSV benzeri bir log satırı virgüllerden bölünür.",
+        "Tarih kullanılmayacağı için _ adına, seviye level'a gider.",
+        "Kalan bütün parçalar message_parts listesine toplanır ve tek metne birleştirilir.",
+        "Mesajın kaç parçadan oluştuğu bilinmese de kod çalışır."
+      ]
+    },
+    {
+      "id": "list-comprehension",
+      "title": "List comprehension",
+      "eyebrow": "Döngüyü tek ifadede kur",
+      "objectives": [
+        "[ifade for öğe in dizi if koşul] yapısını eşdeğer döngüye çevirir.",
+        "Comprehension'ın okunabilirliği bozduğu durumları tanır."
+      ],
+      "prerequisites": [
+        "m4:list-methods",
+        "m3:for-range"
+      ],
+      "summary": "[x * 2 for x in nums] her öğe için ifadeyi hesaplayıp yeni bir liste üretir. Sona eklenen if filtre görevi görür.",
+      "explanation": "Okuma sırası: önce for kısmı (hangi öğeler), sonra if (hangileri kalır), en son baştaki ifade (her biri neye dönüşür). Boş liste ve append döngüsünün kısa yazımıdır; her zaman yeni bir liste üretir, orijinali değiştirmez. Seçim yapmak için ifade kısmında ternary kullanılabilir: [\"çift\" if n % 2 == 0 else \"tek\" for n in nums]; buradaki if/else filtre değil dönüşümdür. İç içe for'lar normal döngüdeki sırayla, soldan sağa yazılır. Yan etki (print, append) için comprehension kullanılmaz; okunurluk düşüyorsa normal döngüye dön.",
+      "code": "nums = [4, 7, 10, 3]\ndoubled = [n * 2 for n in nums]\nevens = [n for n in nums if n % 2 == 0]\nlabels = [\"çift\" if n % 2 == 0 else \"tek\" for n in nums]\nprint(doubled)\nprint(evens)\nprint(labels)",
+      "expectedOutput": "[8, 14, 20, 6]\n[4, 10]\n['çift', 'tek', 'çift', 'tek']",
+      "why": "İlk comprehension her sayıyı ikiyle çarpar. İkincisi sondaki if ile yalnız çiftleri tutar. Üçüncüsünde if/else ifadenin parçasıdır; hiçbir öğe atılmaz, her biri bir etikete dönüşür.",
+      "alternatives": [
+        "Yalnızca toplam veya en büyük gibi tek bir sonuç gerekiyorsa köşeli parantezsiz generator ifadesi yeterlidir: sum(n * 2 for n in nums).",
+        "Mantık birkaç satırı aşıyorsa veya hata yakalama gerekiyorsa normal for döngüsü daha okunur."
+      ],
+      "traps": [
+        "Filtre if'ini ifadenin önüne yazmak: [n if n > 0 for n in nums] SyntaxError verir.",
+        "Comprehension'ı yalnızca yan etki için kullanmak: [print(n) for n in nums].",
+        "İç içe for sırasını ters yazmak."
+      ],
+      "realCode": "rows = [\"ada,90\", \"\", \"can,75\", \"ece,abc\"]\n\nscores = [\n    (name, int(score))\n    for name, score in (row.split(\",\") for row in rows if row)\n    if score.isdigit()\n]\nprint(scores)",
+      "realOutput": "[('ada', 90), ('can', 75)]",
+      "lineByLine": [
+        "Ham satırlar boş ve bozuk kayıtlar da içerir.",
+        "İçteki generator boş satırları atar ve kalanları virgülden böler.",
+        "Dıştaki comprehension her ikiliyi name ve score'a açar; isdigit ile sayı olmayanları eler.",
+        "Sonuç (isim, puan) tuple'larından oluşan temiz bir listedir; bu kadar iç içe yapı okunurluk sınırındadır."
+      ]
+    },
+    {
+      "id": "dict-set-comprehension",
+      "title": "Sözlük ve küme comprehension",
+      "eyebrow": "Aynı kalıp, farklı parantez",
+      "objectives": [
+        "{k: v for ...} ve {x for ...} ifadelerinin ürettiği yapıyı belirler.",
+        "Sözlük comprehension ile filtrelemeyi ve tersine çevirmeyi okur."
+      ],
+      "prerequisites": [
+        "list-comprehension",
+        "m4:dict-iteration"
+      ],
+      "summary": "{k: v for ...} sözlük, {x for ...} küme üretir. Aynı anahtar tekrar gelirse son değer kazanır.",
+      "explanation": "Sözlük comprehension'da iki nokta anahtarla değeri ayırır: {name: len(name) for name in names}. items() ile mevcut bir sözlüğü filtrelemek veya dönüştürmek yaygındır: {k: v for k, v in prices.items() if v < 50}. Küme comprehension tekrarları kendiliğinden atar. Normal parantezle yazılan ise tuple değil generator ifadesidir: değerleri bir kerede değil, istendikçe üretir ve yalnızca bir kez gezilebilir. Boş süslü parantez {} her zaman boş sözlüktür.",
+      "code": "prices = {\"çay\": 15, \"kahve\": 40, \"pasta\": 90}\ncheap = {name: price for name, price in prices.items() if price < 50}\nprint(cheap)\n\nwords = [\"Elma\", \"elma\", \"ARMUT\"]\nunique = {w.lower() for w in words}\nprint(sorted(unique))\n\nlengths = {w: len(w) for w in [\"a\", \"bb\", \"a\"]}\nprint(lengths)",
+      "expectedOutput": "{'çay': 15, 'kahve': 40}\n['armut', 'elma']\n{'a': 1, 'bb': 2}",
+      "why": "İlk comprehension items() üzerinden yalnızca 50'den ucuz ürünleri tutar. Küme comprehension küçültülmüş kelimelerdeki tekrarı atar. Son örnekte \"a\" iki kez gelir ama sözlükte tek anahtar olarak kalır.",
+      "alternatives": [
+        "Anahtar ve değeri ters çevirmek için {v: k for k, v in d.items()} yaz; değerler tekrarlıysa veri kaybolur.",
+        "İki listeden sözlük kurmak için dict(zip(keys, values)) daha kısadır."
+      ],
+      "traps": [
+        "{} ile boş küme oluşturduğunu sanmak.",
+        "Tersine çevirmede tekrarlı değerlerin sessizce ezildiğini fark etmemek.",
+        "Bir generator ifadesini iki kez gezmeye çalışmak; ikinci seferde boştur."
+      ],
+      "realCode": "users = [\n    {\"id\": 7, \"name\": \"Ada\", \"active\": True},\n    {\"id\": 9, \"name\": \"Can\", \"active\": False},\n    {\"id\": 12, \"name\": \"Ece\", \"active\": True},\n]\n\nby_id = {user[\"id\"]: user for user in users if user[\"active\"]}\nprint(sorted(by_id))\nprint(by_id[12][\"name\"])",
+      "realOutput": "[7, 12]\nEce",
+      "lineByLine": [
+        "Kullanıcılar bir API'den gelen sözlük listesidir.",
+        "Sözlük comprehension her aktif kullanıcıyı kimliğiyle eşler.",
+        "Böylece kimlikle arama, listeyi baştan taramak yerine tek adımda yapılır.",
+        "by_id[12] doğrudan Ece'nin kaydını verir."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "m5-q01",
+      "type": "output",
+      "topic": "referans",
+      "sectionId": "names-references",
+      "difficulty": 3,
+      "prompt": "+ ile yapılan atamadan sonra x ve y ne olur?",
+      "code": "x = [1]\ny = x\ny = y + [2]\nprint(x, y)",
+      "options": ["[1] [1, 2]", "[1, 2] [1, 2]", "[1] [1]", "[1, 2] [1]"],
+      "answer": "[1] [1, 2]",
+      "expectedOutput": "[1] [1, 2]",
+      "hints": ["y + [2] yeni bir liste üretir.", "Atama y'yi o yeni listeye bağlar; x eski listede kalır."],
+      "explanation": "+ operatörü yeni bir liste oluşturur ve y artık onu gösterir. x'in gösterdiği liste hiç değişmez. y.append(2) veya y += [2] yazılsaydı ikisi de [1, 2] olurdu."
+    },
+    {
+      "id": "m5-q02",
+      "type": "output",
+      "topic": "referans",
+      "sectionId": "names-references",
+      "difficulty": 2,
+      "prompt": "a yeniden atanınca b ne gösterir?",
+      "code": "a = [0]\nb = a\na = [5]\nprint(b)",
+      "options": ["[0]", "[5]", "[0, 5]", "Hata"],
+      "answer": "[0]",
+      "expectedOutput": "[0]",
+      "hints": ["Yeniden atama nesneyi değiştirmez, ismin bağını değiştirir.", "b hâlâ ilk listeyi gösteriyor."],
+      "explanation": "a = [5] yalnızca a'yı yeni bir listeye bağlar. b ilk listeye bağlı kalır ve [0] yazdırılır."
+    },
+    {
+      "id": "m5-q03",
+      "type": "output",
+      "topic": "kimlik",
+      "sectionId": "identity-equality",
+      "difficulty": 1,
+      "prompt": "Eşit değerli iki ayrı liste için sonuç ne?",
+      "code": "a = [1, 2]\nb = [1, 2]\nprint(a == b, a is b)",
+      "options": ["True False", "True True", "False False", "False True"],
+      "answer": "True False",
+      "expectedOutput": "True False",
+      "hints": ["== değerlere bakar.", "Her [1, 2] yazımı yeni bir liste oluşturur."],
+      "explanation": "İki liste aynı değerdedir ama ayrı nesnelerdir: == True, is False."
+    },
+    {
+      "id": "m5-q04",
+      "type": "output",
+      "topic": "kimlik",
+      "sectionId": "identity-equality",
+      "difficulty": 2,
+      "prompt": "Çıktı ne?",
+      "code": "x = {\"k\": 1}\ny = x\nprint(y is x, y == {\"k\": 1})",
+      "options": ["True True", "True False", "False True", "False False"],
+      "answer": "True True",
+      "expectedOutput": "True True",
+      "hints": ["y, x'in kendisine bağlıdır.", "Yeni yazılan sözlük aynı değere sahip."],
+      "explanation": "y ile x aynı sözlüktür (is True). Yeni yazılan {\"k\": 1} farklı bir nesnedir ama değeri eşittir (== True)."
+    },
+    {
+      "id": "m5-q05",
+      "type": "output",
+      "topic": "mutable",
+      "sectionId": "mutable-immutable",
+      "difficulty": 2,
+      "prompt": "Metin += ile uzatılınca u ne olur?",
+      "code": "t = \"py\"\nu = t\nt += \"thon\"\nprint(u)",
+      "options": ["py", "python", "thon", "Hata"],
+      "answer": "py",
+      "expectedOutput": "py",
+      "hints": ["str immutable'dır.", "+= yeni bir metin üretip yalnızca t'yi ona bağlar."],
+      "explanation": "Metin yerinde değişemez; t yeni \"python\" metnine bağlanır, u eski \"py\" metninde kalır."
+    },
+    {
+      "id": "m5-q06",
+      "type": "output",
+      "topic": "mutable",
+      "sectionId": "mutable-immutable",
+      "difficulty": 3,
+      "prompt": "Liste += ile uzatılınca alias ne olur?",
+      "code": "nums = [1, 2]\nalias = nums\nnums += [3]\nprint(alias)",
+      "options": ["[1, 2]", "[1, 2, 3]", "[3]", "Hata"],
+      "answer": "[1, 2, 3]",
+      "expectedOutput": "[1, 2, 3]",
+      "hints": ["Liste mutable'dır.", "Liste için += yerinde genişletir; yeni liste üretmez."],
+      "explanation": "Listelerde += extend gibi çalışır ve aynı listeyi değiştirir. alias da aynı listeyi gösterdiği için [1, 2, 3] görünür. Önceki sorudaki str ile karşılaştır."
+    },
+    {
+      "id": "m5-q07",
+      "type": "output",
+      "topic": "sığ-kopya",
+      "sectionId": "shallow-copy",
+      "difficulty": 1,
+      "prompt": "Dilim kopyasına ekleme yapılınca sonuç ne?",
+      "code": "a = [1, 2]\nb = a[:]\nb.append(3)\nprint(a, b)",
+      "options": ["[1, 2] [1, 2, 3]", "[1, 2, 3] [1, 2, 3]", "[1, 2] [1, 2]", "Hata"],
+      "answer": "[1, 2] [1, 2, 3]",
+      "expectedOutput": "[1, 2] [1, 2, 3]",
+      "hints": ["[:] yeni bir liste üretir.", "Öğeler sayı olduğu için paylaşım sorun yaratmaz."],
+      "explanation": "a[:] yeni bir dış liste oluşturur; b'ye ekleme a'yı etkilemez."
+    },
+    {
+      "id": "m5-q08",
+      "type": "output",
+      "topic": "sığ-kopya",
+      "sectionId": "shallow-copy",
+      "difficulty": 3,
+      "prompt": "İç listeye ekleme yapılınca orijinal ne olur?",
+      "code": "a = [[1], [2]]\nb = list(a)\nb[0].append(9)\nprint(a)",
+      "options": ["[[1, 9], [2]]", "[[1], [2]]", "[[1], [2], 9]", "[[9], [2]]"],
+      "answer": "[[1, 9], [2]]",
+      "expectedOutput": "[[1, 9], [2]]",
+      "hints": ["list(a) sığ kopyadır.", "b[0] ile a[0] aynı iç listedir."],
+      "explanation": "Dış liste yeni ama iç listeler ortaktır; b[0]'a eklenen 9 a[0]'da da görünür."
+    },
+    {
+      "id": "m5-q09",
+      "type": "output",
+      "topic": "derin-kopya",
+      "sectionId": "deep-copy",
+      "difficulty": 2,
+      "prompt": "deepcopy sonrası orijinal ne olur?",
+      "code": "import copy\na = [[1], [2]]\nb = copy.deepcopy(a)\nb[0].append(9)\nprint(a)",
+      "options": ["[[1], [2]]", "[[1, 9], [2]]", "[[1], [2], 9]", "Hata"],
+      "answer": "[[1], [2]]",
+      "expectedOutput": "[[1], [2]]",
+      "hints": ["deepcopy iç listeleri de kopyalar.", "b[0] artık a[0]'dan bağımsızdır."],
+      "explanation": "Derin kopyada iç listeler de yeniden oluşturulur; b'deki değişiklik a'ya yansımaz."
+    },
+    {
+      "id": "m5-q10",
+      "type": "output",
+      "topic": "unpacking",
+      "sectionId": "unpacking",
+      "difficulty": 2,
+      "prompt": "Yıldızlı açma ne üretir?",
+      "code": "first, *rest = \"abc\"\nprint(first, rest)",
+      "options": ["a ['b', 'c']", "a bc", "a ('b', 'c')", "Hata"],
+      "answer": "a ['b', 'c']",
+      "expectedOutput": "a ['b', 'c']",
+      "hints": ["Metin de bir dizidir; karakterleri açılır.", "Yıldızlı isim her zaman liste olur."],
+      "explanation": "İlk karakter first'e, kalan karakterler bir liste olarak rest'e bağlanır."
+    },
+    {
+      "id": "m5-q11",
+      "type": "output",
+      "topic": "list-comp",
+      "sectionId": "list-comprehension",
+      "difficulty": 1,
+      "prompt": "Comprehension ne üretir?",
+      "code": "print([n * n for n in range(5) if n % 2 == 1])",
+      "options": ["[1, 9]", "[0, 4, 16]", "[1, 9, 25]", "[1, 3]"],
+      "answer": "[1, 9]",
+      "expectedOutput": "[1, 9]",
+      "hints": ["range(5): 0–4. Tek olanlar 1 ve 3.", "Kalanların karesi alınır."],
+      "explanation": "Filtre 1 ve 3'ü bırakır; ifade bunların karesini üretir: [1, 9]. 5 range(5) içinde değildir."
+    },
+    {
+      "id": "m5-q12",
+      "type": "output",
+      "topic": "dict-comp",
+      "sectionId": "dict-set-comprehension",
+      "difficulty": 2,
+      "prompt": "Tekrar eden anahtarla sözlük comprehension ne üretir?",
+      "code": "d = {w: len(w) for w in [\"py\", \"java\", \"py\"]}\nprint(d)",
+      "options": ["{'py': 2, 'java': 4}", "{'py': 2, 'java': 4, 'py': 2}", "[2, 4, 2]", "Hata"],
+      "answer": "{'py': 2, 'java': 4}",
+      "expectedOutput": "{'py': 2, 'java': 4}",
+      "hints": ["Sözlük anahtarları benzersizdir.", "İkinci \"py\" aynı anahtarı günceller."],
+      "explanation": "Süslü parantez ve iki nokta sözlük üretir; tekrar eden anahtar yeni bir çift oluşturmaz, mevcut değeri günceller."
+    },
+    {
+      "id": "m5-q13",
+      "type": "bug",
+      "topic": "derin-kopya",
+      "sectionId": "deep-copy",
+      "difficulty": 3,
+      "prompt": "Yalnızca ortadaki hücre işaretlendi ama ilk satır da ['.', 'X', '.'] çıktı. Neden?",
+      "code": "board = [[\".\"] * 3] * 3\nboard[1][1] = \"X\"\nprint(board[0])",
+      "options": [
+        "* 3 aynı iç listeyi üç kez koyar; satırlar ayrı ayrı oluşturulmalı",
+        "İndeksler 1'den başlar",
+        "Metin içeren listeler değiştirilemez",
+        "print yalnızca ilk satırı doğru gösterir"
+      ],
+      "answer": "* 3 aynı iç listeyi üç kez koyar; satırlar ayrı ayrı oluşturulmalı",
+      "optionFeedback": {
+        "İndeksler 1'den başlar": "İndeksler 0'dan başlar; board[1][1] gerçekten ortadaki hücredir.",
+        "Metin içeren listeler değiştirilemez": "Listeler içeriği ne olursa olsun değiştirilebilir; sorun satırların ortak olması.",
+        "print yalnızca ilk satırı doğru gösterir": "print gerçek durumu gösteriyor: üç satır da aynı liste olduğu için hepsi değişti."
+      },
+      "hints": ["board[0] is board[1] sonucu ne olurdu?", "[[\".\"] * 3 for _ in range(3)] her satırı yeni oluşturur."],
+      "explanation": "Liste çarpımı iç listeyi kopyalamaz, aynı referansı üç kez koyar. Bir hücreye yazmak üç satırda da görünür. Her satırı comprehension veya döngüyle ayrı oluştur."
+    },
+    {
+      "id": "m5-q14",
+      "type": "bug",
+      "topic": "sığ-kopya",
+      "sectionId": "shallow-copy",
+      "difficulty": 2,
+      "prompt": "Kopyaya etiket eklendi ama şablon da değişti. Neden?",
+      "code": "template = {\"tags\": []}\npost = template.copy()\npost[\"tags\"].append(\"yeni\")\nprint(template)",
+      "options": [
+        "copy() sığ kopyadır; iç liste iki sözlükte ortak kaldı",
+        "copy() hiç kopya üretmez",
+        "append sözlüğün kendisini değiştirir",
+        "print şablonu günceller"
+      ],
+      "answer": "copy() sığ kopyadır; iç liste iki sözlükte ortak kaldı",
+      "optionFeedback": {
+        "copy() hiç kopya üretmez": "copy() yeni bir dış sözlük üretir; post is template False olurdu. Sorun iç listenin paylaşılması.",
+        "append sözlüğün kendisini değiştirir": "append yalnızca listeyi değiştirir; o liste iki sözlükte de aynı nesne.",
+        "print şablonu günceller": "print yalnızca okur; değişiklik append satırında oldu."
+      },
+      "hints": ["post[\"tags\"] is template[\"tags\"] ne verir?", "copy.deepcopy(template) veya yeni bir liste ataması gerekir."],
+      "explanation": "Sığ kopya dış sözlüğü kopyalar ama değerlerdeki listeyi paylaşır. Ekleme ortak listeye yapıldığı için şablon da değişir."
+    },
+    {
+      "id": "m5-q15",
+      "type": "bug",
+      "topic": "kimlik",
+      "sectionId": "identity-equality",
+      "difficulty": 2,
+      "prompt": "Kullanıcı admin yazsa bile mesaj çıkmayabilir. Neden?",
+      "code": "name = input()\nif name is \"admin\":\n    print(\"hoş geldin\")",
+      "options": [
+        "is kimlik karşılaştırır; metin içeriği için == gerekir",
+        "input metin döndürmez",
+        "if içinde metin kullanılamaz",
+        "admin büyük harfle yazılmalı"
+      ],
+      "answer": "is kimlik karşılaştırır; metin içeriği için == gerekir",
+      "optionFeedback": {
+        "input metin döndürmez": "input her zaman str döndürür; sorun karşılaştırma operatörü.",
+        "if içinde metin kullanılamaz": "Metin karşılaştırmaları if içinde sıkça kullanılır.",
+        "admin büyük harfle yazılmalı": "Harf durumu eşleşiyor; sorun is'in aynı nesneyi araması."
+      },
+      "hints": ["input() her seferinde yeni bir str nesnesi üretir.", "Python bu satır için SyntaxWarning de verir."],
+      "explanation": "input'tan gelen metin, koddaki \"admin\" sabitiyle aynı değerde ama genellikle farklı bir nesnedir; is False döner. Değer karşılaştırması için name == \"admin\" yaz."
+    },
+    {
+      "id": "m5-q16",
+      "type": "bug",
+      "topic": "unpacking",
+      "sectionId": "unpacking",
+      "difficulty": 2,
+      "prompt": "Bu satır neden hata verir?",
+      "code": "a, b = [1, 2, 3]",
+      "options": [
+        "İsim sayısı öğe sayısıyla eşleşmiyor; a, *b = ... kullanılabilir",
+        "Liste açılamaz, yalnızca tuple açılır",
+        "a ve b önceden tanımlanmalı",
+        "Köşeli parantez yerine süslü parantez gerekir"
+      ],
+      "answer": "İsim sayısı öğe sayısıyla eşleşmiyor; a, *b = ... kullanılabilir",
+      "expectedError": "ValueError",
+      "optionFeedback": {
+        "Liste açılamaz, yalnızca tuple açılır": "Her dizi açılabilir: liste, tuple, str, range.",
+        "a ve b önceden tanımlanmalı": "Açma isimleri ilk kez de oluşturabilir.",
+        "Köşeli parantez yerine süslü parantez gerekir": "Süslü parantez küme oluşturur; sıra garanti olmadığı için açmaya uygun değil."
+      },
+      "hints": ["Solda iki, sağda üç öğe var.", "Fazlayı toplamak için yıldızlı isim."],
+      "explanation": "Açmada isim ve öğe sayısı birebir eşleşmelidir; aksi hâlde ValueError (too many values to unpack) oluşur."
+    },
+    {
+      "id": "m5-q17",
+      "type": "bug",
+      "topic": "list-comp",
+      "sectionId": "list-comprehension",
+      "difficulty": 2,
+      "prompt": "Pozitif sayılar seçilmek isteniyor. Neden hata var?",
+      "code": "nums = [3, -1, 4]\npositives = [n if n > 0 for n in nums]",
+      "options": [
+        "Filtre if'i for'dan sonra gelir: [n for n in nums if n > 0]",
+        "Comprehension içinde if kullanılamaz",
+        "nums bir tuple olmalı",
+        "Döngü değişkeni n olamaz"
+      ],
+      "answer": "Filtre if'i for'dan sonra gelir: [n for n in nums if n > 0]",
+      "expectedError": "SyntaxError",
+      "optionFeedback": {
+        "Comprehension içinde if kullanılamaz": "if kullanılabilir; filtre olarak sonda, dönüşüm olarak (if/else birlikte) başta.",
+        "nums bir tuple olmalı": "Comprehension her diziyle çalışır.",
+        "Döngü değişkeni n olamaz": "Değişken adı serbesttir; sorun if'in konumu."
+      },
+      "hints": ["Baştaki if, yanında else isteyen bir ternary sayılır.", "Filtre için if sona gider."],
+      "explanation": "İfade kısmındaki if, else'siz bir ternary olarak yorumlanır ve SyntaxError verir. Filtreleme için if, for'dan sonra yazılır."
+    },
+    {
+      "id": "m5-q18",
+      "type": "bug",
+      "topic": "mutable",
+      "sectionId": "mutable-immutable",
+      "difficulty": 2,
+      "prompt": "Yazar my_cart'ın değişmeyeceğini düşündü ama ['ekmek', 'süt'] yazdırıldı. Neden?",
+      "code": "def add_item(cart, item):\n    cart.append(item)\n    return cart\n\nmy_cart = [\"ekmek\"]\nnew_cart = add_item(my_cart, \"süt\")\nprint(my_cart)",
+      "options": [
+        "Fonksiyon aynı listeyi alır ve append onu yerinde değiştirir",
+        "return listeyi kopyalar",
+        "print yanlış listeyi gösterir",
+        "Fonksiyonlar listeleri değiştiremez"
+      ],
+      "answer": "Fonksiyon aynı listeyi alır ve append onu yerinde değiştirir",
+      "optionFeedback": {
+        "return listeyi kopyalar": "return kopya üretmez; new_cart ile my_cart aynı listedir.",
+        "print yanlış listeyi gösterir": "print doğru listeyi gösteriyor; liste gerçekten değişti.",
+        "Fonksiyonlar listeleri değiştiremez": "Değiştirebilir; mutable nesneler fonksiyona referans olarak geçer."
+      },
+      "hints": ["cart parametresi my_cart'ın kendisini gösterir.", "Bağımsız sonuç için return cart + [item] yeni liste üretir."],
+      "explanation": "Fonksiyona verilen liste kopyalanmaz. append çağıranın listesini değiştirir; new_cart ve my_cart aynı nesnedir. Yan etkisiz sürüm return cart + [item] yazar."
+    },
+    {
+      "id": "m5-q19",
+      "type": "fill",
+      "topic": "sığ-kopya",
+      "sectionId": "shallow-copy",
+      "difficulty": 1,
+      "prompt": "a'yı etkilemeyecek bir kopya oluşturan metodu yaz.",
+      "code": "a = [1, 2]\nb = a.___()\nb.append(3)\nprint(a)",
+      "answer": "copy",
+      "solutionCode": "a = [1, 2]\nb = a.copy()\nb.append(3)\nprint(a)",
+      "expectedOutput": "[1, 2]",
+      "hints": ["Kopyalamak anlamındaki İngilizce sözcük.", "Metot copy."],
+      "explanation": "copy() yeni bir liste üretir; b'ye ekleme a'yı değiştirmez."
+    },
+    {
+      "id": "m5-q20",
+      "type": "fill",
+      "topic": "derin-kopya",
+      "sectionId": "deep-copy",
+      "difficulty": 1,
+      "prompt": "İç listeleri de kopyalayan fonksiyonu yaz.",
+      "code": "import copy\na = [[1]]\nb = copy.___(a)\nb[0].append(2)\nprint(a)",
+      "answer": "deepcopy",
+      "solutionCode": "import copy\na = [[1]]\nb = copy.deepcopy(a)\nb[0].append(2)\nprint(a)",
+      "expectedOutput": "[[1]]",
+      "hints": ["copy.copy sığ kopyadır.", "Derin kopya: deepcopy."],
+      "explanation": "deepcopy iç listeyi de kopyalar; b[0]'a ekleme a'ya yansımaz."
+    },
+    {
+      "id": "m5-q21",
+      "type": "fill",
+      "topic": "kimlik",
+      "sectionId": "identity-equality",
+      "difficulty": 1,
+      "prompt": "None kontrolü için önerilen operatörü yaz.",
+      "code": "value = None\nprint(value ___ None)",
+      "answer": "is",
+      "solutionCode": "value = None\nprint(value is None)",
+      "expectedOutput": "True",
+      "hints": ["None tekil bir nesnedir.", "Kimlik operatörü."],
+      "explanation": "None tek bir nesne olduğu için kimlik kontrolü yapılır: value is None."
+    },
+    {
+      "id": "m5-q22",
+      "type": "fill",
+      "topic": "unpacking",
+      "sectionId": "unpacking",
+      "difficulty": 1,
+      "prompt": "Kalan öğeleri rest listesine toplayacak işareti yaz.",
+      "code": "first, ___rest = [1, 2, 3]\nprint(rest)",
+      "answer": "*",
+      "solutionCode": "first, *rest = [1, 2, 3]\nprint(rest)",
+      "expectedOutput": "[2, 3]",
+      "hints": ["Tek bir karakter.", "Yıldız."],
+      "explanation": "*rest ilk öğe dışında kalan bütün öğeleri liste olarak toplar."
+    },
+    {
+      "id": "m5-q23",
+      "type": "order",
+      "topic": "list-comp",
+      "sectionId": "list-comprehension",
+      "difficulty": 2,
+      "prompt": "[n * n for n in [1, 2, 3] if n != 2] ifadesinin döngü karşılığını kur.",
+      "lines": ["        result.append(n * n)", "result = []", "print(result)", "for n in [1, 2, 3]:", "    if n != 2:"],
+      "answer": "result = []\nfor n in [1, 2, 3]:\n    if n != 2:\n        result.append(n * n)\nprint(result)",
+      "solutionCode": "result = []\nfor n in [1, 2, 3]:\n    if n != 2:\n        result.append(n * n)\nprint(result)",
+      "expectedOutput": "[1, 9]",
+      "hints": ["Comprehension'ın for kısmı dış döngü, if kısmı içteki koşuldur.", "Baştaki ifade append'in içine gider."],
+      "explanation": "Her comprehension bir boş liste, bir for, isteğe bağlı bir if ve bir append'den oluşan döngüye açılabilir."
+    },
+    {
+      "id": "m5-q24",
+      "type": "order",
+      "topic": "derin-kopya",
+      "sectionId": "deep-copy",
+      "difficulty": 2,
+      "prompt": "Yedeği değiştirip orijinalin korunduğunu gösterecek sırayı kur. Çıktı: [[1, 2]] [[1, 2, 3]].",
+      "lines": ["backup = copy.deepcopy(data)", "import copy", "print(data, backup)", "data = [[1, 2]]", "backup[0].append(3)"],
+      "answer": "import copy\ndata = [[1, 2]]\nbackup = copy.deepcopy(data)\nbackup[0].append(3)\nprint(data, backup)",
+      "solutionCode": "import copy\ndata = [[1, 2]]\nbackup = copy.deepcopy(data)\nbackup[0].append(3)\nprint(data, backup)",
+      "expectedOutput": "[[1, 2]] [[1, 2, 3]]",
+      "hints": ["import en üstte olur.", "Kopya, değişiklikten önce alınmalı."],
+      "explanation": "deepcopy bağımsız bir kopya oluşturur; sonra yedeğe yapılan ekleme orijinali etkilemez."
+    },
+    {
+      "id": "m5-q25",
+      "type": "order",
+      "topic": "unpacking",
+      "sectionId": "unpacking",
+      "difficulty": 1,
+      "prompt": "İki değeri takas edip \"sağ sol\" yazdıracak sırayı kur.",
+      "lines": ["print(a, b)", "a, b = b, a", "a, b = \"sol\", \"sağ\""],
+      "answer": "a, b = \"sol\", \"sağ\"\na, b = b, a\nprint(a, b)",
+      "solutionCode": "a, b = \"sol\", \"sağ\"\na, b = b, a\nprint(a, b)",
+      "expectedOutput": "sağ sol",
+      "hints": ["Önce değerler atanır.", "Takas tek satırdır; sonra yazdır."],
+      "explanation": "Sağ taraf önce (\"sağ\", \"sol\") olarak hesaplanır, sonra a ve b'ye dağıtılır."
+    },
+    {
+      "id": "m5-q26",
+      "type": "order",
+      "topic": "referans",
+      "sectionId": "names-references",
+      "difficulty": 2,
+      "prompt": "members üzerinden ekleme yapıp team'in de değiştiğini gösterecek sırayı kur.",
+      "lines": ["print(team)", "members = team", "team = [\"Ada\"]", "members.append(\"Can\")"],
+      "answer": "team = [\"Ada\"]\nmembers = team\nmembers.append(\"Can\")\nprint(team)",
+      "solutionCode": "team = [\"Ada\"]\nmembers = team\nmembers.append(\"Can\")\nprint(team)",
+      "expectedOutput": "['Ada', 'Can']",
+      "hints": ["Liste önce oluşturulmalı, sonra ikinci isim bağlanmalı.", "Ekleme members üzerinden, yazdırma team üzerinden."],
+      "explanation": "members ve team aynı listeyi gösterir; birinden yapılan ekleme diğerinden de görünür."
+    },
+    {
+      "id": "m5-q27",
+      "type": "code",
+      "topic": "sığ-kopya",
+      "sectionId": "shallow-copy",
+      "difficulty": 2,
+      "prompt": "Boşlukla ayrılmış tam sayılar oku. Önce orijinal listeyi, sonra sıralanmış bir kopyasını yazdır; orijinal değişmemeli. Örnek: 3 1 2 → [3, 1, 2] ve [1, 2, 3].",
+      "starterCode": "original = [int(p) for p in input().split()]\n# Kopyayı sırala, orijinali koru\n",
+      "answer": "original = [int(p) for p in input().split()]\nsorted_copy = original.copy()\nsorted_copy.sort()\nprint(original)\nprint(sorted_copy)",
+      "solutionCode": "original = [int(p) for p in input().split()]\nsorted_copy = original.copy()\nsorted_copy.sort()\nprint(original)\nprint(sorted_copy)",
+      "expectedOutput": "[3, 1, 2]\n[1, 2, 3]",
+      "hints": ["original.sort() orijinali bozar.", "copy() ile kopyala ve kopyayı sırala; sorted(original) de olur."],
+      "explanation": "Yerinde sıralama yapmadan önce kopya alınmalıdır. sorted(original) zaten yeni liste döndürdüğü için o da doğru bir çözümdür.",
+      "tests": [
+        { "label": "Örnek", "stdin": "3 1 2", "expectedOutput": "[3, 1, 2]\n[1, 2, 3]" },
+        { "label": "Tek sayı", "stdin": "5", "expectedOutput": "[5]\n[5]" },
+        { "label": "Tekrarlı", "stdin": "2 2 1", "expectedOutput": "[2, 2, 1]\n[1, 2, 2]" },
+        { "label": "Negatifler", "stdin": "-1 0 -5", "expectedOutput": "[-1, 0, -5]\n[-5, -1, 0]" }
+      ],
+      "exampleInput": "3 1 2"
+    },
+    {
+      "id": "m5-q28",
+      "type": "code",
+      "topic": "list-comp",
+      "sectionId": "list-comprehension",
+      "difficulty": 1,
+      "prompt": "Boşlukla ayrılmış tam sayılar oku ve karelerinden oluşan listeyi bir list comprehension ile yazdır. Örnek: 1 2 3 → [1, 4, 9].",
+      "starterCode": "numbers = [int(p) for p in input().split()]\n# Kareler listesini comprehension ile kur\n",
+      "answer": "numbers = [int(p) for p in input().split()]\nsquares = [n * n for n in numbers]\nprint(squares)",
+      "solutionCode": "numbers = [int(p) for p in input().split()]\nsquares = [n * n for n in numbers]\nprint(squares)",
+      "expectedOutput": "[1, 4, 9]",
+      "hints": ["[ifade for n in numbers].", "İfade n * n veya n ** 2."],
+      "explanation": "Comprehension her sayı için ifadeyi hesaplayıp yeni bir liste üretir. Negatif sayıların karesi pozitiftir.",
+      "tests": [
+        { "label": "Örnek", "stdin": "1 2 3", "expectedOutput": "[1, 4, 9]" },
+        { "label": "Sıfır", "stdin": "0", "expectedOutput": "[0]" },
+        { "label": "Negatif", "stdin": "-2 5", "expectedOutput": "[4, 25]" },
+        { "label": "Tekrarlı", "stdin": "10 10", "expectedOutput": "[100, 100]" }
+      ],
+      "exampleInput": "1 2 3"
+    },
+    {
+      "id": "m5-q29",
+      "type": "code",
+      "topic": "list-comp",
+      "sectionId": "list-comprehension",
+      "difficulty": 2,
+      "prompt": "Boşlukla ayrılmış kelimeler oku. 3 karakterden uzun olanları büyük harfe çevirip liste olarak yazdır. Örnek: py java go rust → ['JAVA', 'RUST'].",
+      "starterCode": "words = input().split()\n# Filtre ve dönüşüm tek comprehension'da\n",
+      "answer": "words = input().split()\nprint([w.upper() for w in words if len(w) > 3])",
+      "solutionCode": "words = input().split()\nprint([w.upper() for w in words if len(w) > 3])",
+      "expectedOutput": "['JAVA', 'RUST']",
+      "hints": ["Filtre: if len(w) > 3, sonda.", "Dönüşüm: w.upper(), başta."],
+      "explanation": "Filtre hangi kelimelerin kalacağını, baştaki ifade nasıl dönüşeceğini belirler. Tam 3 karakterli kelimeler elenir.",
+      "tests": [
+        { "label": "Örnek", "stdin": "py java go rust", "expectedOutput": "['JAVA', 'RUST']" },
+        { "label": "Hiçbiri", "stdin": "a bb", "expectedOutput": "[]" },
+        { "label": "Tek uzun", "stdin": "uzun", "expectedOutput": "['UZUN']" },
+        { "label": "Sınır 3", "stdin": "abcd abc", "expectedOutput": "['ABCD']" }
+      ],
+      "exampleInput": "py java go rust"
+    },
+    {
+      "id": "m5-q30",
+      "type": "code",
+      "topic": "dict-comp",
+      "sectionId": "dict-set-comprehension",
+      "difficulty": 2,
+      "prompt": "Boşlukla ayrılmış kelimeler oku. Her kelimeden uzunluğuna giden bir sözlüğü dict comprehension ile kurup yazdır. Örnek: elma kivi muz → {'elma': 4, 'kivi': 4, 'muz': 3}.",
+      "starterCode": "words = input().split()\n# {kelime: uzunluk} sözlüğü\n",
+      "answer": "words = input().split()\nprint({w: len(w) for w in words})",
+      "solutionCode": "words = input().split()\nprint({w: len(w) for w in words})",
+      "expectedOutput": "{'elma': 4, 'kivi': 4, 'muz': 3}",
+      "hints": ["{anahtar: değer for ...}.", "Anahtar w, değer len(w)."],
+      "explanation": "Tekrar eden kelime aynı anahtarı günceller; sözlük ilk görülme sırasını korur.",
+      "tests": [
+        { "label": "Örnek", "stdin": "elma kivi muz", "expectedOutput": "{'elma': 4, 'kivi': 4, 'muz': 3}" },
+        { "label": "Tekrar", "stdin": "a a", "expectedOutput": "{'a': 1}" },
+        { "label": "Tek kelime", "stdin": "tek", "expectedOutput": "{'tek': 3}" },
+        { "label": "Sıra korunur", "stdin": "xy x", "expectedOutput": "{'xy': 2, 'x': 1}" }
+      ],
+      "exampleInput": "elma kivi muz"
+    },
+    {
+      "id": "m5-q31",
+      "type": "code",
+      "topic": "dict-comp",
+      "sectionId": "dict-set-comprehension",
+      "difficulty": 2,
+      "prompt": "Boşlukla ayrılmış kelimeler oku. Kelimelerin ilk harflerini küçültüp bir set comprehension ile tekrarsız topla; alfabetik sırayla aralarında boşlukla yazdır. Örnek: Elma armut Ekmek → a e.",
+      "starterCode": "words = input().split()\n# İlk harflerin kümesi\n",
+      "answer": "words = input().split()\ninitials = {w[0].lower() for w in words}\nprint(\" \".join(sorted(initials)))",
+      "solutionCode": "words = input().split()\ninitials = {w[0].lower() for w in words}\nprint(\" \".join(sorted(initials)))",
+      "expectedOutput": "a e",
+      "hints": ["{w[0].lower() for w in words}.", "Küme sırasızdır; sorted ile sırala, \" \".join ile birleştir."],
+      "explanation": "Küme comprehension tekrarları kendiliğinden atar; yazdırmadan önce sıralamak sonucu kararlı yapar.",
+      "tests": [
+        { "label": "Örnek", "stdin": "Elma armut Ekmek", "expectedOutput": "a e" },
+        { "label": "Tek kelime", "stdin": "x", "expectedOutput": "x" },
+        { "label": "Hep aynı harf", "stdin": "Bb bA", "expectedOutput": "b" },
+        { "label": "Hepsi farklı", "stdin": "ef cd ab", "expectedOutput": "a c e" }
+      ],
+      "exampleInput": "Elma armut Ekmek"
+    },
+    {
+      "id": "m5-q32",
+      "type": "code",
+      "topic": "unpacking",
+      "sectionId": "unpacking",
+      "difficulty": 2,
+      "prompt": "Bir satırda önce isim, ardından bir veya daha fazla tam sayı puan var. Yıldızlı açmayla ismi ve puanları ayır; ismi ve ortalamayı tek ondalıkla yazdır. Örnek: Ada 80 90 → Ada 85.0.",
+      "starterCode": "name, *scores = input().split()\n# Puanları sayıya çevir ve ortalamayı yazdır\n",
+      "answer": "name, *scores = input().split()\nnumbers = [int(s) for s in scores]\nprint(name, f\"{sum(numbers) / len(numbers):.1f}\")",
+      "solutionCode": "name, *scores = input().split()\nnumbers = [int(s) for s in scores]\nprint(name, f\"{sum(numbers) / len(numbers):.1f}\")",
+      "expectedOutput": "Ada 85.0",
+      "hints": ["scores bir metin listesidir; [int(s) for s in scores].", "Ortalama: sum(numbers) / len(numbers), biçim :.1f."],
+      "explanation": "Yıldızlı isim kaç puan geldiğinden bağımsız olarak kalan bütün öğeleri toplar.",
+      "tests": [
+        { "label": "Örnek", "stdin": "Ada 80 90", "expectedOutput": "Ada 85.0" },
+        { "label": "Tek puan", "stdin": "Can 70", "expectedOutput": "Can 70.0" },
+        { "label": "Dört puan", "stdin": "Ece 1 2 3 4", "expectedOutput": "Ece 2.5" },
+        { "label": "Sıfırlar", "stdin": "Bo 0 0", "expectedOutput": "Bo 0.0" }
+      ],
+      "exampleInput": "Ada 80 90"
+    },
+    {
+      "id": "m5-q33",
+      "type": "code",
+      "topic": "unpacking",
+      "sectionId": "unpacking",
+      "difficulty": 2,
+      "prompt": "İlk satırda n, sonraki n satırda boşlukla ayrılmış iki değer var. Her satırı açıp değerlerin yerini değiştirerek yazdır. Örnek: 1 2 → 2 1.",
+      "starterCode": "count = int(input())\n# Her satırı a, b olarak aç ve ters yazdır\n",
+      "answer": "count = int(input())\nfor _ in range(count):\n    a, b = input().split()\n    print(b, a)",
+      "solutionCode": "count = int(input())\nfor _ in range(count):\n    a, b = input().split()\n    print(b, a)",
+      "expectedOutput": "2 1\n4 3",
+      "hints": ["a, b = input().split().", "print(b, a)."],
+      "explanation": "Açma her satırın iki parçasını isimlere bağlar; takas için ayrıca geçici değişken gerekmez. n = 0 iken hiçbir şey yazılmaz.",
+      "tests": [
+        { "label": "Örnek", "stdin": "2\n1 2\n3 4", "expectedOutput": "2 1\n4 3" },
+        { "label": "Metinler", "stdin": "1\nsol sağ", "expectedOutput": "sağ sol" },
+        { "label": "Boş", "stdin": "0", "expectedOutput": "" },
+        { "label": "Aynı değerler", "stdin": "3\nx y\ny x\nz z", "expectedOutput": "y x\nx y\nz z" }
+      ],
+      "exampleInput": "2\n1 2\n3 4"
+    },
+    {
+      "id": "m5-q34",
+      "type": "code",
+      "topic": "derin-kopya",
+      "sectionId": "deep-copy",
+      "difficulty": 3,
+      "prompt": "İlk satırda satır ve sütun sayısı, ikinci satırda bir hücrenin satır ve sütun indeksi (0'dan) var. Sıfırlardan oluşan bir ızgara kur, yalnızca o hücreyi 1 yap ve her satırı sayılar arasında boşlukla yazdır. Satırlar birbirinden bağımsız olmalı.",
+      "starterCode": "rows, cols = [int(p) for p in input().split()]\nr, c = [int(p) for p in input().split()]\n# Bağımsız satırlarla ızgara kur\n",
+      "answer": "rows, cols = [int(p) for p in input().split()]\nr, c = [int(p) for p in input().split()]\ngrid = [[0] * cols for _ in range(rows)]\ngrid[r][c] = 1\nfor row in grid:\n    print(\" \".join(str(v) for v in row))",
+      "solutionCode": "rows, cols = [int(p) for p in input().split()]\nr, c = [int(p) for p in input().split()]\ngrid = [[0] * cols for _ in range(rows)]\ngrid[r][c] = 1\nfor row in grid:\n    print(\" \".join(str(v) for v in row))",
+      "expectedOutput": "0 1 0\n0 0 0",
+      "hints": ["[[0] * cols] * rows bütün satırları aynı liste yapar.", "[[0] * cols for _ in range(rows)] her satırı yeni oluşturur."],
+      "explanation": "Satır içi [0] * cols güvenlidir çünkü öğeler immutable sayılardır; satırları çoğaltmak ise aynı listeyi paylaştırır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "2 3\n0 1", "expectedOutput": "0 1 0\n0 0 0" },
+        { "label": "Tek hücre", "stdin": "1 1\n0 0", "expectedOutput": "1" },
+        { "label": "Son satır", "stdin": "3 2\n2 1", "expectedOutput": "0 0\n0 0\n0 1" },
+        { "label": "Kare ızgara", "stdin": "2 2\n1 0", "expectedOutput": "0 0\n1 0" }
+      ],
+      "exampleInput": "2 3\n0 1"
+    },
+    {
+      "id": "m5-q35",
+      "type": "code",
+      "topic": "kimlik",
+      "sectionId": "identity-equality",
+      "difficulty": 2,
+      "prompt": "İki satırda boşlukla ayrılmış tam sayılar var. İki liste değer olarak eşitse \"eşit\", değilse \"farklı\" yazdır. Sayıları int olarak karşılaştır: 03 ile 3 aynı sayıdır.",
+      "starterCode": "first = [int(p) for p in input().split()]\nsecond = [int(p) for p in input().split()]\n# Değer eşitliğini kontrol et\n",
+      "answer": "first = [int(p) for p in input().split()]\nsecond = [int(p) for p in input().split()]\nif first == second:\n    print(\"eşit\")\nelse:\n    print(\"farklı\")",
+      "solutionCode": "first = [int(p) for p in input().split()]\nsecond = [int(p) for p in input().split()]\nif first == second:\n    print(\"eşit\")\nelse:\n    print(\"farklı\")",
+      "expectedOutput": "eşit",
+      "hints": ["İki ayrı liste is ile hiçbir zaman aynı nesne değildir.", "Değer karşılaştırması: first == second."],
+      "explanation": "== listeleri öğe öğe ve sırayla karşılaştırır. is burada her zaman False verirdi, çünkü iki ayrı liste oluşturuldu.",
+      "tests": [
+        { "label": "Örnek", "stdin": "1 2\n1 2", "expectedOutput": "eşit" },
+        { "label": "Sıra farkı", "stdin": "1 2\n2 1", "expectedOutput": "farklı" },
+        { "label": "Uzunluk farkı", "stdin": "1\n1 1", "expectedOutput": "farklı" },
+        { "label": "Baştaki sıfır", "stdin": "03 4\n3 4", "expectedOutput": "eşit" }
+      ],
+      "exampleInput": "1 2\n1 2"
+    },
+    {
+      "id": "m5-q36",
+      "type": "code",
+      "topic": "dict-comp",
+      "sectionId": "dict-set-comprehension",
+      "difficulty": 3,
+      "prompt": "İlk satırda n, sonraki n satırda \"ülke başkent\" var. Başkentten ülkeye giden sözlüğü bir dict comprehension ile kurup yazdır. Aynı başkent tekrar gelirse son ülke kazanır.",
+      "starterCode": "count = int(input())\npairs = [input().split() for _ in range(count)]\n# {başkent: ülke} sözlüğü\n",
+      "answer": "count = int(input())\npairs = [input().split() for _ in range(count)]\ncapitals = {city: country for country, city in pairs}\nprint(capitals)",
+      "solutionCode": "count = int(input())\npairs = [input().split() for _ in range(count)]\ncapitals = {city: country for country, city in pairs}\nprint(capitals)",
+      "expectedOutput": "{'Ankara': 'Türkiye', 'Paris': 'Fransa'}",
+      "hints": ["for country, city in pairs her çifti açar.", "Anahtar city, değer country."],
+      "explanation": "Sözlük comprehension'da açma sırası önemlidir: çift (ülke, başkent) olarak açılır, sözlük (başkent: ülke) olarak kurulur. Tekrar eden anahtar önceki değeri ezer.",
+      "tests": [
+        { "label": "Örnek", "stdin": "2\nTürkiye Ankara\nFransa Paris", "expectedOutput": "{'Ankara': 'Türkiye', 'Paris': 'Fransa'}" },
+        { "label": "Tek çift", "stdin": "1\nA B", "expectedOutput": "{'B': 'A'}" },
+        { "label": "Boş", "stdin": "0", "expectedOutput": "{}" },
+        { "label": "Tekrarlı başkent", "stdin": "2\nX Y\nZ Y", "expectedOutput": "{'Y': 'Z'}" }
+      ],
+      "exampleInput": "2\nTürkiye Ankara\nFransa Paris"
+    },
+    {
+      "id": "m5-q37",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "unpacking",
+      "difficulty": 1,
+      "prompt": "Bu açma hangi hatayı üretir?",
+      "code": "x, y, z = (1, 2)",
+      "options": ["ValueError", "TypeError", "IndexError", "NameError"],
+      "answer": "ValueError",
+      "expectedError": "ValueError",
+      "optionFeedback": {
+        "TypeError": "Tuple açılabilir bir tiptir; sorun öğe sayısı.",
+        "IndexError": "Açma indeksleme hatası değil, sayı uyumsuzluğu bildirir: not enough values to unpack.",
+        "NameError": "Açma x, y, z isimlerini oluşturacaktı; tanımsız isim kullanılmıyor."
+      },
+      "hints": ["Solda üç isim, sağda iki öğe var.", "Değer sayısı uyumsuzluğu."],
+      "explanation": "Sağda yeterli değer olmadığı için ValueError: not enough values to unpack oluşur."
+    },
+    {
+      "id": "m5-q38",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "deep-copy",
+      "difficulty": 2,
+      "prompt": "Bu kod hangi hatayı üretir?",
+      "code": "data = [[1]]\nbackup = copy.deepcopy(data)",
+      "options": ["NameError", "ImportError", "AttributeError", "TypeError"],
+      "answer": "NameError",
+      "expectedError": "NameError",
+      "optionFeedback": {
+        "ImportError": "ImportError bir import satırı başarısız olunca oluşur; burada import satırı hiç yok.",
+        "AttributeError": "Hata copy ismine erişirken oluşur; deepcopy niteliğine hiç gelinmez.",
+        "TypeError": "Tipler sorun değil; copy adı tanımlı değil."
+      },
+      "hints": ["copy modülü yerleşik bir isim değildir.", "Önce import copy gerekir."],
+      "explanation": "copy bir modüldür ve import edilmeden kullanılamaz; Python copy ismini bulamayıp NameError verir."
+    },
+    {
+      "id": "m5-q39",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "mutable-immutable",
+      "difficulty": 2,
+      "prompt": "Liste anahtar olarak kullanılırsa hangi hata oluşur?",
+      "code": "settings = {}\nsettings[[\"theme\"]] = \"dark\"",
+      "options": ["TypeError", "KeyError", "ValueError", "SyntaxError"],
+      "answer": "TypeError",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "KeyError": "KeyError okuma sırasında eksik anahtar için oluşur; burada anahtarın tipi kabul edilmiyor.",
+        "ValueError": "Değer değil, tip sorunu: liste hashable değildir.",
+        "SyntaxError": "Sözdizimi geçerli; hata çalışma sırasında oluşur."
+      },
+      "hints": ["Sözlük anahtarları hashable olmalı.", "Mutable bir liste hashable değildir; tuple olurdu."],
+      "explanation": "Liste değişebildiği için hash değeri yoktur ve anahtar olamaz: TypeError: unhashable type: 'list'. (\"theme\",) gibi bir tuple ya da düz \"theme\" metni kullanılabilir."
+    },
+    {
+      "id": "m5-q40",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "list-comprehension",
+      "difficulty": 2,
+      "prompt": "Comprehension içinde hangi hata oluşur?",
+      "code": "values = [\"3\", \"x\", \"5\"]\nnumbers = [int(v) for v in values]",
+      "options": ["ValueError", "TypeError", "NameError", "IndexError"],
+      "answer": "ValueError",
+      "expectedError": "ValueError",
+      "optionFeedback": {
+        "TypeError": "int() metin kabul eder; \"x\" yalnızca geçerli bir sayı biçiminde değil.",
+        "NameError": "Bütün isimler tanımlı.",
+        "IndexError": "Comprehension indeksle değil, doğrudan öğelerle çalışıyor."
+      },
+      "hints": ["İkinci öğe \"x\".", "Doğru tip, geçersiz değer."],
+      "explanation": "int(\"x\") ValueError verir ve comprehension yarıda kalır; numbers hiç oluşmaz. Bozuk veriyi önce if v.isdigit() ile filtrelemek gerekir."
+    }
+  ]
+}

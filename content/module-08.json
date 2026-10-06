@@ -1,0 +1,1301 @@
+{
+  "id": 8,
+  "slug": "dosyalar",
+  "title": "Dosyalar",
+  "description": "Dosyaları doğru modda aç, with ile güvenle kapat, yolları pathlib ile kur; CSV ve JSON verisini doğru encoding ile oku ve yaz.",
+  "contentVersion": 1,
+  "estimatedMinutes": 120,
+  "practiceIds": [
+    "m8-q01",
+    "m8-q02",
+    "m8-q03",
+    "m8-q05",
+    "m8-q06",
+    "m8-q08",
+    "m8-q10",
+    "m8-q11",
+    "m8-q12",
+    "m8-q13",
+    "m8-q15",
+    "m8-q19",
+    "m8-q23",
+    "m8-q27",
+    "m8-q37"
+  ],
+  "sections": [
+    {
+      "id": "open-modes",
+      "title": "open ve dosya modları",
+      "eyebrow": "Okumak, yazmak, eklemek, yalnızca yoksa oluşturmak",
+      "objectives": [
+        "r, w, a ve x modlarının dosyaya ne yaptığını öngörür.",
+        "Eksik dosyada FileNotFoundError, var olan dosyada x modunun FileExistsError verdiğini açıklar."
+      ],
+      "prerequisites": [
+        "m7:try-except",
+        "m2:unicode-encoding"
+      ],
+      "summary": "open(yol, mod, encoding=...) bir dosya nesnesi döndürür. Mod, dosyaya ne yapılacağını söyler: r okur, w boşaltıp yazar, a sona ekler, x yalnızca dosya yoksa oluşturur. İş bitince close() ile kapatılır.",
+      "explanation": "Mod verilmezse \"r\" kullanılır; dosya yoksa FileNotFoundError oluşur. \"w\" dosyayı yoksa oluşturur, varsa açar açmaz içeriğini siler; yazmadan kapatmak bile dosyayı boşaltır. \"a\" mevcut içeriği korur ve her yazmayı sona ekler. \"x\" yalnızca dosya yoksa açılır, varsa FileExistsError verir; yanlışlıkla üzerine yazmayı önler. Moda eklenen \"b\" (\"rb\", \"wb\") str yerine bytes ile çalışır, \"+\" ise aynı dosyada hem okumaya hem yazmaya izin verir. Metin modunda encoding'i her zaman açıkça yaz: verilmezse işletim sisteminin varsayılanı kullanılır, Türkçe Windows'ta bu UTF-8 değildir. write() satır sonu eklemez; \"\\n\" senin sorumluluğundadır. Bu sitede her çalıştırma boş bir klasörde başlar ve sonunda silinir; bu yüzden örnekler okuyacakları dosyayı önce kendileri oluşturur. Hata mesajındaki errno numarası platforma göre değişir; programda mesaj yerine hata türüne ve error.filename'e bak.",
+      "code": "f = open(\"notlar.txt\", \"w\", encoding=\"utf-8\")\nf.write(\"ilk satır\\n\")\nf.close()\n\nf = open(\"notlar.txt\", \"a\", encoding=\"utf-8\")\nf.write(\"eklenen satır\\n\")\nf.close()\n\nf = open(\"notlar.txt\", encoding=\"utf-8\")\nprint(f.read(), end=\"\")\nf.close()\n\nf = open(\"notlar.txt\", \"w\", encoding=\"utf-8\")\nf.close()\nf = open(\"notlar.txt\", encoding=\"utf-8\")\nprint(repr(f.read()))\nf.close()",
+      "expectedOutput": "ilk satır\neklenen satır\n''",
+      "why": "İlk \"w\" dosyayı oluşturup bir satır yazar, \"a\" ikinci satırı sona ekler; okuma ikisini de verir. read() zaten \"\\n\" ile biten metni döndürdüğü için print'e end=\"\" verildi. Son \"w\" hiçbir şey yazmadan kapatıldı ama dosya açıldığı anda boşaltılmıştı; repr boş metni '' olarak gösterir.",
+      "alternatives": [
+        "Dosyayı kapatmayı unutmamak için with kullanmak daha güvenlidir; bir sonraki bölümün konusu.",
+        "Kısa metinler için pathlib.Path(\"notlar.txt\").write_text(...) ve read_text(...) dosyayı tek satırda açıp kapatır."
+      ],
+      "traps": [
+        "Ekleme için \"w\" kullanmak; her açılış önceki içeriği siler.",
+        "write()'ın satır sonu eklediğini sanmak.",
+        "encoding vermemek; kod kendi bilgisayarında çalışıp başka bir makinede Türkçe karakterleri bozabilir."
+      ],
+      "realCode": "def create_once(name, text):\n    try:\n        f = open(name, \"x\", encoding=\"utf-8\")\n    except FileExistsError:\n        return f\"{name} zaten var, dokunulmadı\"\n    f.write(text)\n    f.close()\n    return f\"{name} oluşturuldu\"\n\nprint(create_once(\"rapor.txt\", \"v1\"))\nprint(create_once(\"rapor.txt\", \"v2\"))\nf = open(\"rapor.txt\", encoding=\"utf-8\")\nprint(f.read())\nf.close()\n\ntry:\n    open(\"eksik.txt\", encoding=\"utf-8\")\nexcept FileNotFoundError as error:\n    print(\"bulunamadı:\", error.filename)",
+      "realOutput": "rapor.txt oluşturuldu\nrapor.txt zaten var, dokunulmadı\nv1\nbulunamadı: eksik.txt",
+      "lineByLine": [
+        "\"x\" modu dosya varsa açılmaz; FileExistsError yakalanıp kullanıcıya anlaşılır bir sonuç döndürülür.",
+        "İlk çağrı dosyayı oluşturup v1 yazar; ikinci çağrı mevcut raporu ezmez.",
+        "Okuma dosyada hâlâ v1 olduğunu gösterir.",
+        "Olmayan dosyayı okumak FileNotFoundError verir; error.filename hangi yolun bulunamadığını söyler."
+      ]
+    },
+    {
+      "id": "with-lifecycle",
+      "title": "with ve dosya yaşam döngüsü",
+      "eyebrow": "Aç, kullan, ne olursa olsun kapat",
+      "objectives": [
+        "with bloğu bittiğinde, hata olsa bile dosyanın kapandığını açıklar.",
+        "Kapanmış dosyayı kullanmanın ValueError verdiğini ve kapatılmayan yazmaların kaybolabileceğini öngörür."
+      ],
+      "prerequisites": [
+        "open-modes",
+        "m7:else-finally"
+      ],
+      "summary": "with open(...) as f: bloğu bitince dosya otomatik kapanır; blok bir hata yüzünden yarıda kalsa bile. Elle close() çağırmayı unutma riskini ortadan kaldırır.",
+      "explanation": "with, M7'deki try/finally kalıbının hazır hâlidir: blok nasıl biterse bitsin (normal, return, hata) dosyanın close() metodu çağrılır. f değişkeni bloktan sonra da vardır ama dosya kapalıdır; f.closed True olur ve okuma/yazma ValueError: I/O operation on closed file verir. Yazılanlar önce bellekteki bir tampona gider ve dosyaya close() ya da flush() ile geçer. Bu yüzden kapatılmamış bir dosyaya yazılanlar, aynı dosyayı başka bir open ile okuyunca henüz görünmeyebilir; program çökerse hiç yazılmamış olabilir. with bu sorunların ikisini de çözer. Tek with içinde virgülle iki dosya açılabilir: with open(a) as src, open(b, \"w\") as dst:.",
+      "code": "with open(\"liste.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"elma\\n\")\n    print(\"içeride:\", f.closed)\nprint(\"dışarıda:\", f.closed)\n\ntry:\n    with open(\"liste.txt\", \"a\", encoding=\"utf-8\") as f:\n        f.write(\"armut\\n\")\n        raise ValueError(\"yarıda kaldı\")\nexcept ValueError as error:\n    print(error, f.closed)\n\nwith open(\"liste.txt\", encoding=\"utf-8\") as f:\n    print(f.read().split())",
+      "expectedOutput": "içeride: False\ndışarıda: True\nyarıda kaldı True\n['elma', 'armut']",
+      "why": "Blok içindeyken dosya açıktır, blok bitince kapanır. İkinci with içinde hata fırlatılmasına rağmen dosya kapatıldı ve kapanırken tampondaki \"armut\" satırı dosyaya yazıldı; bu yüzden son okumada iki meyve de var.",
+      "alternatives": [
+        "try/finally içinde f.close() aynı güvenliği verir ama daha uzundur ve close'u yazmayı unutmak kolaydır.",
+        "Uzun süre açık kalan bir dosyada (ör. log) verinin hemen yazılması gerekiyorsa f.flush() çağrılabilir."
+      ],
+      "traps": [
+        "with bloğundan sonra f.read() çağırmak; dosya artık kapalıdır.",
+        "Hata olunca with'in dosyayı açık bıraktığını sanmak.",
+        "Kapatılmamış bir dosyaya yazılanların diskte olduğunu varsaymak."
+      ],
+      "realCode": "def append_log(path, message):\n    with open(path, \"a\", encoding=\"utf-8\") as f:\n        f.write(message + \"\\n\")\n\ndef read_log(path):\n    with open(path, encoding=\"utf-8\") as f:\n        return [line.rstrip(\"\\n\") for line in f]\n\nappend_log(\"uygulama.log\", \"başladı\")\nappend_log(\"uygulama.log\", \"kullanıcı girdi\")\nprint(read_log(\"uygulama.log\"))",
+      "realOutput": "['başladı', 'kullanıcı girdi']",
+      "lineByLine": [
+        "Her log çağrısı dosyayı \"a\" ile açar, bir satır ekler ve with sayesinde hemen kapatır; yazılan veri diske geçmiş olur.",
+        "\"\\n\" elle eklenir; yoksa mesajlar aynı satıra yapışırdı.",
+        "read_log dosyayı satır satır dolaşır ve satır sonlarını atar.",
+        "İki çağrının yazdığı satırlar sırasıyla okunur; dosya hiçbir anda açık unutulmadı."
+      ]
+    },
+    {
+      "id": "reading-lines",
+      "title": "Satır satır okuma",
+      "eyebrow": "read, readline, readlines ve döngü",
+      "objectives": [
+        "read, readline, readlines ve for döngüsünün ne döndürdüğünü ayırır.",
+        "Satır sonundaki \\n karakterini ve dosya konumunun ilerlediğini hesaba katar."
+      ],
+      "prerequisites": [
+        "with-lifecycle",
+        "m3:enumerate-zip"
+      ],
+      "summary": "read() tüm metni, readline() bir satırı, readlines() satır listesini döndürür. Dosyanın üzerinde for ile dönmek satırları tek tek, belleği şişirmeden verir. Her satır sonundaki \"\\n\" ile gelir.",
+      "explanation": "Dosya nesnesi bir okuma konumu tutar: okunan kısım bir daha verilmez. read()'den sonra ikinci read() boş metin döndürür; readline() ile bir satır okuduktan sonra başlayan for döngüsü kalan satırlardan devam eder. Satırlar \"\\n\" ile biter, son satırda bu karakter olmayabilir. Karşılaştırmadan önce line.rstrip(\"\\n\") ya da baştaki/sondaki boşlukları da atmak istiyorsan line.strip() kullan. read().splitlines() satır sonlarını atarak liste verir ama tüm dosyayı belleğe alır; büyük dosyalarda for line in f tercih edilir. Boş satır \"\\n\" olarak gelir, strip() sonrası \"\" olur ve False sayılır. enumerate(f, start=1) satır numarası verir; hata mesajlarında satır numarası göstermek için kullanışlıdır.",
+      "code": "with open(\"siir.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"bir\\niki\\n\\nüç\\n\")\n\nwith open(\"siir.txt\", encoding=\"utf-8\") as f:\n    print(repr(f.readline()))\n    for number, line in enumerate(f, start=2):\n        print(number, repr(line.rstrip(\"\\n\")))",
+      "expectedOutput": "'bir\\n'\n2 'iki'\n3 ''\n4 'üç'",
+      "why": "readline() ilk satırı \"\\n\" ile birlikte döndürdü ve okuma konumu ikinci satıra geçti. for döngüsü oradan devam eder; bu yüzden numaralandırma 2'den başlatıldı. Üçüncü satır boştu: yalnızca \"\\n\" içeriyordu, rstrip sonrası '' kaldı.",
+      "alternatives": [
+        "Küçük dosyada f.read().splitlines() satır sonları olmadan hazır liste verir.",
+        "Satır listesine ihtiyaç yoksa for line in f en az bellekle çalışır."
+      ],
+      "traps": [
+        "line == \"evet\" gibi karşılaştırmalarda satır sonundaki \\n'i unutmak.",
+        "Dosyayı bir kez okuduktan sonra aynı nesneyle tekrar okumaya çalışıp boş sonuç almak.",
+        "print(line) ile satırları yazdırıp çift satır aralığı görmek; satırın kendi \\n'i ve print'in \\n'i üst üste biner."
+      ],
+      "realCode": "sample = \"INFO başladı\\nERROR disk dolu\\nINFO devam\\nERROR bağlantı koptu\\n\"\nwith open(\"sunucu.log\", \"w\", encoding=\"utf-8\") as f:\n    f.write(sample)\n\nerrors = []\nwith open(\"sunucu.log\", encoding=\"utf-8\") as f:\n    for number, line in enumerate(f, start=1):\n        level, _, message = line.rstrip(\"\\n\").partition(\" \")\n        if level == \"ERROR\":\n            errors.append(f\"{number}: {message}\")\n\nprint(len(errors), \"hata\")\nprint(\"\\n\".join(errors))",
+      "realOutput": "2 hata\n2: disk dolu\n4: bağlantı koptu",
+      "lineByLine": [
+        "Örnek log dosyası oluşturulur; gerçekte bu dosya başka bir program tarafından yazılmış olurdu.",
+        "Dosya satır satır dolaşılır, enumerate 1'den başlayan satır numarası verir.",
+        "partition(\" \") satırı ilk boşluktan seviye ve mesaj olarak ikiye ayırır.",
+        "Yalnızca ERROR satırları numaralarıyla birlikte toplanır ve rapor edilir."
+      ]
+    },
+    {
+      "id": "pathlib",
+      "title": "pathlib ile yollar",
+      "eyebrow": "Yolu metin değil nesne olarak kur",
+      "objectives": [
+        "Path nesnesiyle yol birleştirir; name, stem, suffix ve parent parçalarını okur.",
+        "Klasör oluşturur, dosya varlığını sınar ve dosyaları glob ile bulur."
+      ],
+      "prerequisites": [
+        "with-lifecycle"
+      ],
+      "summary": "pathlib.Path yolları nesne olarak temsil eder. / operatörü yol parçalarını işletim sistemine uygun ayırıcıyla birleştirir; name, stem, suffix, parent yolu parçalara ayırır; exists, mkdir, read_text, write_text, glob dosya sistemiyle çalışır.",
+      "explanation": "Path(\"veri\") / \"rapor.csv\" Windows'ta veri\\rapor.csv, Linux ve macOS'ta veri/rapor.csv olur; ayırıcıyı elle yazmak gerekmez. Bu derste yollar as_posix() ile yazdırılıyor ki çıktı her sistemde aynı olsun. Göreli yollar programın çalıştığı klasöre (çalışma dizinine) göredir; dosyanın bulunduğu klasöre göre değil. Path oluşturmak dosya oluşturmaz; exists() ile varlığı sınanır. mkdir(parents=True, exist_ok=True) eksik üst klasörleri de oluşturur ve klasör zaten varsa hata vermez. read_text/write_text dosyayı açıp kapatmayı kendileri yapar; encoding burada da açıkça verilmelidir. iterdir(), glob(\"*.txt\") ve rglob(\"*.txt\") sırası garanti olmayan sonuçlar üretir; tutarlı çıktı için sorted() ile sırala. suffix yalnızca son uzantıdır: \"yedek.tar.gz\" için .gz.",
+      "code": "from pathlib import Path\n\nreport = Path(\"veri\") / \"2026\" / \"rapor.final.csv\"\nprint(report.as_posix())\nprint(report.name, report.stem, report.suffix)\nprint(report.parent.as_posix(), report.exists())\n\nreport.parent.mkdir(parents=True, exist_ok=True)\nreport.write_text(\"ad,not\\n\", encoding=\"utf-8\")\nprint(report.exists(), report.read_text(encoding=\"utf-8\").strip())",
+      "expectedOutput": "veri/2026/rapor.final.csv\nrapor.final.csv rapor.final .csv\nveri/2026 False\nTrue ad,not",
+      "why": "/ üç parçayı tek yolda birleştirdi. name dosya adının tamamı, stem son uzantı hariç kısmı, suffix yalnızca son uzantıdır. Yol nesnesi oluşturmak dosya oluşturmadığı için ilk exists() False döndü; klasörler mkdir ile kurulup dosya yazıldıktan sonra True oldu.",
+      "alternatives": [
+        "Eski kodlarda aynı iş os.path.join, os.path.basename ve os.path.splitext ile yapılır; bir sonraki bölümde okunuyor.",
+        "Uzun dosyalarda read_text yerine path.open(encoding=\"utf-8\") ile satır satır okumak belleği korur."
+      ],
+      "traps": [
+        "Path(...) yazınca dosyanın oluştuğunu sanmak.",
+        "Üst klasör yokken write_text çağırıp FileNotFoundError almak.",
+        "glob/iterdir sonucunun alfabetik geldiğini varsaymak.",
+        "Göreli yolun, kod dosyasının bulunduğu klasöre göre çözüldüğünü sanmak."
+      ],
+      "realCode": "from pathlib import Path\n\nfor name in [\"notlar/ocak.txt\", \"notlar/subat.txt\", \"notlar/foto.png\", \"notlar/eski/aralik.txt\"]:\n    path = Path(name)\n    path.parent.mkdir(parents=True, exist_ok=True)\n    path.write_text(name, encoding=\"utf-8\")\n\nroot = Path(\"notlar\")\nprint(sorted(p.name for p in root.glob(\"*.txt\")))\nprint(sorted(p.relative_to(root).as_posix() for p in root.rglob(\"*.txt\")))\nprint(sorted(p.name for p in root.iterdir() if p.is_dir()))",
+      "realOutput": "['ocak.txt', 'subat.txt']\n['eski/aralik.txt', 'ocak.txt', 'subat.txt']\n['eski']",
+      "lineByLine": [
+        "Örnek klasör yapısı kurulur; her dosyanın üst klasörü gerekirse oluşturulur.",
+        "glob(\"*.txt\") yalnızca notlar klasörünün kendisine bakar; alt klasördeki aralik.txt gelmez.",
+        "rglob tüm alt klasörleri de tarar; relative_to yolu kök klasöre göre kısaltır.",
+        "iterdir doğrudan içerikleri verir; is_dir ile yalnızca klasörler seçilir. Hepsi sorted ile sabit sıraya alınır."
+      ]
+    },
+    {
+      "id": "os-shutil",
+      "title": "os ve shutil ile dosya işlemleri",
+      "eyebrow": "Listele, taşı, kopyala, sil",
+      "objectives": [
+        "os.listdir, os.path.join, os.rename ve os.remove içeren kodun ne yaptığını okur.",
+        "shutil.copy, shutil.move ve shutil.rmtree'nin etkisini ve geri alınamayan silmenin riskini açıklar."
+      ],
+      "prerequisites": [
+        "pathlib"
+      ],
+      "summary": "os modülü dosya ve klasörlerle temel işlemleri (listeleme, yeniden adlandırma, silme), os.path yol metinlerini işler. shutil üst düzey işleri yapar: dosya kopyalama, taşıma ve bütün bir klasör ağacını silme.",
+      "explanation": "Yeni kodda yollar için pathlib tercih edilir ama mevcut projelerin çoğu os ve os.path kullanır; bu bölüm onları okuyabilmek içindir. os.path.join(\"proje\", \"a.txt\") platforma uygun ayırıcıyla birleştirir, os.path.exists varlığı, os.path.splitext uzantıyı ayırır. os.listdir bir klasördeki adları sırasız bir liste olarak verir. os.makedirs(..., exist_ok=True) iç içe klasör kurar. os.rename ve shutil.move taşır/yeniden adlandırır, shutil.copy içeriği kopyalar. os.remove tek dosya siler; klasörü silmez. shutil.rmtree klasörü içindekilerle birlikte siler ve geri dönüşüm kutusuna göndermez: geri alınamaz. Silme ve üzerine yazma yapan kodu çalıştırmadan önce yolun gerçekten hedeflediğin yer olduğundan emin ol.",
+      "code": "import os\nimport shutil\n\nos.makedirs(\"proje/yedek\", exist_ok=True)\nwith open(os.path.join(\"proje\", \"ayar.txt\"), \"w\", encoding=\"utf-8\") as f:\n    f.write(\"mod=test\\n\")\n\nshutil.copy(\"proje/ayar.txt\", \"proje/yedek/ayar.txt\")\nos.rename(\"proje/ayar.txt\", \"proje/ayar.eski\")\nprint(sorted(os.listdir(\"proje\")))\nprint(os.path.exists(\"proje/yedek/ayar.txt\"), os.path.splitext(\"ayar.eski\"))\n\nshutil.rmtree(\"proje\")\nprint(os.path.exists(\"proje\"))",
+      "expectedOutput": "['ayar.eski', 'yedek']\nTrue ('ayar', '.eski')\nFalse",
+      "why": "Kopya yedek klasörüne gitti, asıl dosya yeniden adlandırıldı; bu yüzden proje klasöründe ayar.eski ve yedek kaldı. splitext adı ve uzantıyı bir tuple olarak ayırır. rmtree bütün ağacı tek seferde sildi.",
+      "alternatives": [
+        "pathlib karşılıkları: Path.rename, Path.unlink, Path.iterdir; kopyalama ve ağaç silme için yine shutil kullanılır.",
+        "Silmek yerine bir arşiv klasörüne shutil.move ile taşımak, hata yaptığında geri dönmeyi sağlar."
+      ],
+      "traps": [
+        "os.listdir'in alfabetik sıra verdiğini varsaymak.",
+        "os.remove ile klasör silmeye çalışmak; klasör için os.rmdir (boşsa) ya da shutil.rmtree gerekir.",
+        "rmtree'nin silinenleri geri dönüşüm kutusuna gönderdiğini sanmak."
+      ],
+      "realCode": "import os\nimport shutil\n\ndef safe_write(path, text):\n    if os.path.exists(path):\n        shutil.copy(path, path + \".bak\")\n    with open(path, \"w\", encoding=\"utf-8\") as f:\n        f.write(text)\n\nsafe_write(\"ayar.ini\", \"v1\")\nsafe_write(\"ayar.ini\", \"v2\")\nprint(sorted(os.listdir(\".\")))\nwith open(\"ayar.ini.bak\", encoding=\"utf-8\") as f:\n    print(\"yedek:\", f.read())",
+      "realOutput": "['ayar.ini', 'ayar.ini.bak']\nyedek: v1",
+      "lineByLine": [
+        "Dosya zaten varsa, üzerine yazmadan önce .bak uzantılı bir kopyası alınır.",
+        "İlk çağrıda dosya yoktur; yedek alınmadan v1 yazılır.",
+        "İkinci çağrıda v1 yedeğe kopyalanır, sonra dosyaya v2 yazılır.",
+        "Klasörde asıl dosya ve yedeği vardır; yedek önceki sürümü taşır."
+      ]
+    },
+    {
+      "id": "encoding",
+      "title": "Dosya encoding'i",
+      "eyebrow": "Metin ve bayt arasındaki sözleşme",
+      "objectives": [
+        "Bir metnin karakter sayısıyla UTF-8 bayt sayısının neden farklı olduğunu açıklar.",
+        "Yanlış encoding ile okunan dosyada bozuk karakterleri ve UnicodeDecodeError'u tanır."
+      ],
+      "prerequisites": [
+        "open-modes",
+        "m2:bytes-vs-str"
+      ],
+      "summary": "Dosyalar bayt saklar. Metin modunda Python yazarken metni encoding ile bayta, okurken baytı yine encoding ile metne çevirir. Yazan ve okuyan aynı encoding'i kullanmazsa karakterler bozulur ya da UnicodeDecodeError oluşur.",
+      "explanation": "UTF-8'de ASCII karakterler 1 bayt, ç ş ğ ı ö ü İ gibi karakterler 2 bayttır. cp1254 (Windows Türkçe) her karakteri 1 baytla saklar ama yalnızca sınırlı bir karakter kümesini kapsar. UTF-8 ile yazılmış bir dosya cp1254 ile okunursa her Türkçe harf iki tuhaf karaktere dönüşür (ş → ÅŸ); buna mojibake denir ve hata vermez, sessizce bozuk veri üretir. Tersi, cp1254 dosyasını UTF-8 ile okumak çoğu zaman UnicodeDecodeError verir. encoding verilmezse Python işletim sisteminin varsayılanını kullanır; aynı kod bir makinede çalışıp diğerinde bozulabilir. Kural: her open'a ve read_text/write_text'e encoding=\"utf-8\" yaz; başka bir kaynaktan gelen dosyanın encoding'ini o kaynağa sor. errors=\"replace\" okunamayan baytları � ile değiştirir; veriyi kurtarmaz, yalnızca okumaya devam etmeyi sağlar. \"rb\" ile açılan dosya bytes döndürür ve encoding almaz.",
+      "code": "text = \"Işık\"\nwith open(\"utf8.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(text)\nwith open(\"utf8.txt\", \"rb\") as f:\n    data = f.read()\nprint(len(text), len(data), data)\n\nprint(data.decode(\"cp1254\"))\nwith open(\"utf8.txt\", encoding=\"utf-8\") as f:\n    print(f.read())",
+      "expectedOutput": "4 6 b'I\\xc5\\x9f\\xc4\\xb1k'\nIÅŸÄ±k\nIşık",
+      "why": "Işık 4 karakterdir; ş ve ı UTF-8'de ikişer bayt tuttuğu için dosya 6 bayttır. Aynı baytlar cp1254 ile çözülünce her bayt ayrı bir karakter sayılır ve mojibake oluşur. Yazarken kullanılan encoding ile okununca metin doğru gelir.",
+      "alternatives": [
+        "Encoding'i bilinmeyen dosyada önce birkaç olası encoding'i deneyip sonucu kontrol etmek; tahmin eden kütüphaneler (charset-normalizer) de vardır ama kesin değildir.",
+        "Excel'in açacağı CSV için \"utf-8-sig\" kullanmak dosya başına bir işaret (BOM) ekler ve Türkçe karakterlerin doğru görünmesini sağlar."
+      ],
+      "traps": [
+        "encoding vermeden yazıp okumak; aynı makinede çalışır, başka makinede bozulur.",
+        "Mojibake'nin hata vermemesi yüzünden verinin doğru okunduğunu sanmak.",
+        "errors=\"ignore\" ile hatayı susturup karakterleri sessizce kaybetmek."
+      ],
+      "realCode": "with open(\"eski.csv\", \"w\", encoding=\"cp1254\") as f:\n    f.write(\"şehir,nüfus\\nİzmir,4\\n\")\n\ntry:\n    with open(\"eski.csv\", encoding=\"utf-8\") as f:\n        f.read()\nexcept UnicodeDecodeError as error:\n    print(\"utf-8 değil:\", error.reason)\n\nwith open(\"eski.csv\", encoding=\"cp1254\") as f:\n    print(f.readline().strip())\nwith open(\"eski.csv\", encoding=\"utf-8\", errors=\"replace\") as f:\n    print(f.readline().strip())",
+      "realOutput": "utf-8 değil: invalid start byte\nşehir,nüfus\n�ehir,n�fus",
+      "lineByLine": [
+        "Eski bir sistemin ürettiği cp1254 kodlu CSV dosyası taklit edilir.",
+        "UTF-8 ile okumak, ş harfinin baytı UTF-8'de geçersiz bir başlangıç olduğu için hata verir; reason nedeni kısa söyler.",
+        "Doğru encoding ile okununca başlık satırı düzgün gelir.",
+        "errors=\"replace\" okumayı sürdürür ama ş ve ü kaybolup � olur; bu bir çözüm değil, teşhis aracıdır."
+      ]
+    },
+    {
+      "id": "csv",
+      "title": "CSV okuma ve yazma",
+      "eyebrow": "Virgülle ayrılmış ama split ile değil",
+      "objectives": [
+        "csv.reader, csv.DictReader ve csv.writer ile tablo verisini okur ve yazar.",
+        "Tırnaklı alanlar, başlık satırı ve metin olarak gelen sayılar gibi CSV tuzaklarını ele alır."
+      ],
+      "prerequisites": [
+        "reading-lines",
+        "m4:dicts"
+      ],
+      "summary": "CSV, satırları ve virgülle ayrılmış alanları olan bir tablo biçimidir. csv modülü tırnak ve kaçış kurallarını uygular: alanın içinde virgül olsa bile doğru böler. DictReader her satırı başlık adlarıyla anahtarlanmış bir sözlük olarak verir.",
+      "explanation": "line.split(\",\") \"Lin, Can\" gibi tırnaklı ve virgül içeren alanları böler; csv.reader bölmez. CSV dosyaları newline=\"\" ile açılır: csv modülü satır sonlarını kendisi yönetir, Python'un satır sonu çevirisi araya girerse Windows'ta fazladan boş satırlar oluşur. csv.reader her satırı str listesi olarak verir; ilk satır başlıktır ve next(reader) ile atlanabilir. DictReader başlığı otomatik okur ve satırı {\"ad\": ..., \"not\": ...} sözlüğü yapar. Bütün alanlar str gelir; sayı gerekiyorsa int/float ile çevir, boş alan \"\" olur. csv.writer(f).writerow(liste) gerekli yerlere tırnak ekler; DictWriter(f, fieldnames=[...]) önce writeheader() ile başlık yazar. Excel ve bazı Türkçe sistemler ayırıcı olarak noktalı virgül kullanır: csv.reader(f, delimiter=\";\").",
+      "code": "import csv\n\nrows = [[\"ad\", \"şehir\"], [\"Ada\", \"İzmir\"], [\"Lin, Can\", \"Ankara\"]]\nwith open(\"kisiler.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    csv.writer(f).writerows(rows)\n\nwith open(\"kisiler.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    print(repr(f.read()))\n\nwith open(\"kisiler.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    for row in csv.reader(f):\n        print(row)",
+      "expectedOutput": "'ad,şehir\\r\\nAda,İzmir\\r\\n\"Lin, Can\",Ankara\\r\\n'\n['ad', 'şehir']\n['Ada', 'İzmir']\n['Lin, Can', 'Ankara']",
+      "why": "writer virgül içeren alanı otomatik tırnakladı ve CSV standardı gereği satırları \\r\\n ile bitirdi; newline=\"\" sayesinde bu satır sonları olduğu gibi yazıldı ve okundu. reader tırnaklı alanı tek parça olarak geri verdi.",
+      "alternatives": [
+        "Büyük ve analiz amaçlı tablolar için pandas.read_csv kullanılır; sütun türlerini de tahmin eder.",
+        "Sütun adlarıyla çalışmak için DictReader/DictWriter, sütun sırasına bağlı kalmaktan daha okunaklıdır."
+      ],
+      "traps": [
+        "CSV'yi split(\",\") ile bölmek.",
+        "Başlık satırını veri sanıp int(\"not\") gibi bir dönüşümde ValueError almak.",
+        "DictReader'dan gelen sayıları çevirmeden toplamak; \"70\" + \"90\" metin birleştirir.",
+        "newline=\"\" vermeyip Windows'ta satır aralarında boş satırlar görmek."
+      ],
+      "realCode": "import csv\n\nwith open(\"notlar.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"ad,vize,final\\nAda,70,90\\nCan,55,65\\nEce,80,\\n\")\n\nwith open(\"notlar.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    for row in csv.DictReader(f):\n        if not row[\"final\"]:\n            print(f\"{row['ad']}: final eksik\")\n            continue\n        average = int(row[\"vize\"]) * 0.4 + int(row[\"final\"]) * 0.6\n        print(f\"{row['ad']}: {average:.1f}\")",
+      "realOutput": "Ada: 82.0\nCan: 61.0\nEce: final eksik",
+      "lineByLine": [
+        "Not tablosu oluşturulur; Ece'nin final alanı boştur.",
+        "DictReader ilk satırı başlık olarak okur; her satır ad, vize, final anahtarlı bir sözlüktür.",
+        "Boş alan \"\" olarak gelir ve False sayılır; o satır raporlanıp atlanır.",
+        "Notlar metin olduğundan int ile çevrilir, ağırlıklı ortalama bir ondalıkla yazdırılır."
+      ]
+    },
+    {
+      "id": "json",
+      "title": "JSON okuma ve yazma",
+      "eyebrow": "Sözlükleri dosyaya kaydet, geri yükle",
+      "objectives": [
+        "json.dump/json.load ile Python verisini dosyaya kaydeder ve geri okur.",
+        "JSON ile Python türleri arasındaki dönüşümleri ve bozuk JSON'da oluşan JSONDecodeError'u ele alır."
+      ],
+      "prerequisites": [
+        "encoding",
+        "m4:nested-data"
+      ],
+      "summary": "JSON, sözlük ve listelerden oluşan veriyi metin olarak saklayan yaygın biçimdir. json.dump(veri, f) dosyaya yazar, json.load(f) dosyadan okur; dumps/loads aynı işi str ile yapar.",
+      "explanation": "Python dict → JSON nesne, list ve tuple → dizi, str, int, float, True/False → true/false, None → null olur. Geri okurken tuple liste olarak gelir; sözlük anahtarları her zaman str'dir, bu yüzden {1: \"a\"} geri okununca {\"1\": \"a\"} olur. set, datetime gibi türler doğrudan yazılamaz (TypeError); önce listeye ya da metne çevir. ensure_ascii=False Türkçe karakterleri \\u015f gibi kaçış kodları yerine olduğu gibi yazar; bu durumda dosyayı encoding=\"utf-8\" ile açmak şarttır. indent=2 okunabilir girintili çıktı, sort_keys=True anahtar sırası sabit çıktı üretir. JSON tek tırnak, sondaki fazladan virgül ve yorum kabul etmez; bozuk metin json.JSONDecodeError verir. Bu hata ValueError'ın alt sınıfıdır ve lineno/colno ile yerini söyler.",
+      "code": "import json\n\nsettings = {\"kullanıcı\": \"ada\", \"boyut\": 14, \"eklentiler\": [\"git\"], \"beta\": False}\nwith open(\"ayarlar.json\", \"w\", encoding=\"utf-8\") as f:\n    json.dump(settings, f, ensure_ascii=False, indent=2)\n\nwith open(\"ayarlar.json\", encoding=\"utf-8\") as f:\n    print(f.read())\nwith open(\"ayarlar.json\", encoding=\"utf-8\") as f:\n    loaded = json.load(f)\nprint(loaded == settings, type(loaded[\"boyut\"]).__name__)\nprint(json.dumps({\"x\": None, \"t\": (1, 2), \"ş\": \"ü\"}))",
+      "expectedOutput": "{\n  \"kullanıcı\": \"ada\",\n  \"boyut\": 14,\n  \"eklentiler\": [\n    \"git\"\n  ],\n  \"beta\": false\n}\nTrue int\n{\"x\": null, \"t\": [1, 2], \"\\u015f\": \"\\u00fc\"}",
+      "why": "indent=2 her öğeyi girintili satıra yazdı, ensure_ascii=False Türkçe harfleri korudu ve False JSON'da false oldu. Geri okunan veri ilk sözlüğe eşittir; sayılar int olarak döner. Son satırda None null'a, tuple diziye dönüştü; ensure_ascii verilmediği için ş ve ü kaçış kodlarıyla yazıldı.",
+      "alternatives": [
+        "Satır satır büyüyen kayıtlar için her satıra bir JSON nesnesi yazan JSON Lines biçimi kullanılır.",
+        "Yalnızca Python'un okuyacağı karmaşık nesneler için pickle vardır; güvenilmeyen kaynaktan pickle açmak güvensizdir, veri alışverişinde JSON tercih edilir."
+      ],
+      "traps": [
+        "Geri okunan verinin tuple ve int anahtarları koruduğunu sanmak.",
+        "JSON'u tek tırnakla ya da sondaki virgülle elle yazmak.",
+        "ensure_ascii=False kullanıp dosyayı encoding vermeden açmak.",
+        "dump ile dumps'ı karıştırmak: dump dosya ister, dumps metin döndürür."
+      ],
+      "realCode": "import json\n\ndef load_settings(path, default):\n    try:\n        with open(path, encoding=\"utf-8\") as f:\n            return json.load(f)\n    except FileNotFoundError:\n        return dict(default)\n    except json.JSONDecodeError as error:\n        print(f\"bozuk ayar dosyası (satır {error.lineno}), varsayılan kullanılıyor\")\n        return dict(default)\n\ndefault = {\"tema\": \"açık\"}\nprint(load_settings(\"ayar.json\", default))\nwith open(\"ayar.json\", \"w\", encoding=\"utf-8\") as f:\n    f.write('{\"tema\": \"koyu\",}')\nprint(load_settings(\"ayar.json\", default))\nwith open(\"ayar.json\", \"w\", encoding=\"utf-8\") as f:\n    json.dump({\"tema\": \"koyu\"}, f)\nprint(load_settings(\"ayar.json\", default))",
+      "realOutput": "{'tema': 'açık'}\nbozuk ayar dosyası (satır 1), varsayılan kullanılıyor\n{'tema': 'açık'}\n{'tema': 'koyu'}",
+      "lineByLine": [
+        "Ayar dosyası yoksa varsayılanın bir kopyası döner; kopya, çağıranın varsayılan sözlüğü değiştirmesini önler.",
+        "Sondaki virgül JSON'da geçersizdir; JSONDecodeError yakalanır ve satır numarasıyla bildirilir.",
+        "Geçerli dosya yazıldığında json.load kaydedilen sözlüğü döndürür.",
+        "Eksik ve bozuk dosya iki ayrı except ile ayrıldı; her durumda program çalışmaya devam eder."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "m8-q01",
+      "type": "output",
+      "topic": "dosya-modu",
+      "sectionId": "open-modes",
+      "difficulty": 1,
+      "prompt": "Dosyaya iki kez \"w\" ile yazılıyor. Çıktı ne olur?",
+      "code": "f = open(\"a.txt\", \"w\", encoding=\"utf-8\")\nf.write(\"bir\")\nf.close()\nf = open(\"a.txt\", \"w\", encoding=\"utf-8\")\nf.write(\"iki\")\nf.close()\nf = open(\"a.txt\", encoding=\"utf-8\")\nprint(f.read())\nf.close()",
+      "expectedOutput": "iki",
+      "hints": [
+        "\"w\" dosyayı her açılışta boşaltır.",
+        "İlk yazılan metin ikinci açılışta silindi."
+      ],
+      "explanation": "İkinci open(\"a.txt\", \"w\") dosyayı açar açmaz boşaltır; geriye yalnızca \"iki\" kalır."
+    },
+    {
+      "id": "m8-q02",
+      "type": "output",
+      "topic": "dosya-modu",
+      "sectionId": "open-modes",
+      "difficulty": 1,
+      "prompt": "\"a\" modu iki kez kullanılıyor. Çıktı ne olur?",
+      "code": "with open(\"sayilar.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"1\\n\")\nfor _ in range(2):\n    with open(\"sayilar.txt\", \"a\", encoding=\"utf-8\") as f:\n        f.write(\"2\\n\")\nwith open(\"sayilar.txt\", encoding=\"utf-8\") as f:\n    print(f.read().splitlines())",
+      "expectedOutput": "['1', '2', '2']",
+      "hints": [
+        "\"a\" mevcut içeriği korur.",
+        "Döngü iki kez ekleme yapar."
+      ],
+      "explanation": "\"w\" dosyayı \"1\" ile başlatır, her \"a\" açılışı sona bir \"2\" satırı ekler. splitlines satır sonlarını atarak listeyi verir."
+    },
+    {
+      "id": "m8-q03",
+      "type": "output",
+      "topic": "with",
+      "sectionId": "with-lifecycle",
+      "difficulty": 1,
+      "prompt": "with bloğunun içinde ve dışında f.closed ne gösterir?",
+      "code": "with open(\"x.txt\", \"w\", encoding=\"utf-8\") as f:\n    print(f.closed)\nprint(f.closed)",
+      "expectedOutput": "False\nTrue",
+      "hints": [
+        "Blok içindeyken dosya açıktır.",
+        "f bloktan sonra da vardır ama kapanmıştır."
+      ],
+      "explanation": "with bloğu bitince dosya kapanır; f değişkeni silinmez, yalnızca kapalı bir dosyayı gösterir."
+    },
+    {
+      "id": "m8-q04",
+      "type": "output",
+      "topic": "with",
+      "sectionId": "with-lifecycle",
+      "difficulty": 3,
+      "prompt": "Yazan dosya kapatılmadan ikinci bir open ile okunuyor. Çıktı ne olur?",
+      "code": "writer = open(\"olay.log\", \"w\", encoding=\"utf-8\")\nwriter.write(\"başladı\")\nwith open(\"olay.log\", encoding=\"utf-8\") as reader:\n    print(repr(reader.read()))\nwriter.close()\nwith open(\"olay.log\", encoding=\"utf-8\") as reader:\n    print(repr(reader.read()))",
+      "expectedOutput": "''\n'başladı'",
+      "hints": [
+        "write() veriyi önce bellekteki bir tampona koyar.",
+        "Tampon close() ya da flush() ile dosyaya aktarılır."
+      ],
+      "explanation": "\"w\" dosyayı oluşturup boşalttı; yazılan metin henüz tampondaydı, bu yüzden ilk okuma boş metin gördü. close() tamponu dosyaya aktardı ve ikinci okuma metni buldu. with kullanmak bu durumu önler."
+    },
+    {
+      "id": "m8-q05",
+      "type": "output",
+      "topic": "okuma",
+      "sectionId": "reading-lines",
+      "difficulty": 2,
+      "prompt": "Aynı dosya nesnesinde read() iki kez çağrılıyor. Çıktı ne olur?",
+      "code": "with open(\"a.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"ab\\ncd\\n\")\nwith open(\"a.txt\", encoding=\"utf-8\") as f:\n    first = f.read()\n    second = f.read()\nprint(len(first), repr(second))",
+      "expectedOutput": "6 ''",
+      "hints": [
+        "\\n de bir karakterdir.",
+        "İlk read() okuma konumunu dosyanın sonuna taşır."
+      ],
+      "explanation": "İlk read() altı karakterin tamamını (iki harf, \\n, iki harf, \\n) okur. Konum sonda kaldığı için ikinci read() boş metin döndürür."
+    },
+    {
+      "id": "m8-q06",
+      "type": "output",
+      "topic": "okuma",
+      "sectionId": "reading-lines",
+      "difficulty": 2,
+      "prompt": "Son satırı \\n ile bitmeyen dosyada readlines() ne döndürür?",
+      "code": "with open(\"a.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"x\\ny\")\nwith open(\"a.txt\", encoding=\"utf-8\") as f:\n    print(f.readlines())",
+      "expectedOutput": "['x\\n', 'y']",
+      "hints": [
+        "readlines satır sonlarını silmez.",
+        "Dosyaya son satırdan sonra \\n yazılmadı."
+      ],
+      "explanation": "readlines her satırı olduğu gibi verir: ilk satır \\n ile biter, son satır dosyada nasıl yazıldıysa öyle gelir."
+    },
+    {
+      "id": "m8-q07",
+      "type": "output",
+      "topic": "okuma",
+      "sectionId": "reading-lines",
+      "difficulty": 2,
+      "prompt": "Satırlar print ile yazdırılıyor. Çıktı kaç satırdan oluşur ve neye benzer?",
+      "code": "with open(\"a.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"a\\nb\")\nwith open(\"a.txt\", encoding=\"utf-8\") as f:\n    for line in f:\n        print(line)\nprint(\"son\")",
+      "expectedOutput": "a\n\nb\nson",
+      "hints": [
+        "İlk satır \"a\\n\" olarak gelir.",
+        "print kendi satır sonunu da ekler."
+      ],
+      "explanation": "\"a\\n\" yazdırılırken print bir \\n daha ekler ve araya boş satır girer. \"b\" satırında \\n yoktur, boşluk oluşmaz. Önlemek için print(line.rstrip(\"\\n\")) ya da print(line, end=\"\")."
+    },
+    {
+      "id": "m8-q08",
+      "type": "output",
+      "topic": "pathlib",
+      "sectionId": "pathlib",
+      "difficulty": 2,
+      "prompt": "Path nesnesinin parçaları ne yazdırır?",
+      "code": "from pathlib import Path\n\np = Path(\"arsiv\") / \"2026\" / \"yedek.tar.gz\"\nprint(p.name, p.stem, p.suffix)\nprint(p.parent.name)",
+      "expectedOutput": "yedek.tar.gz yedek.tar .gz\n2026",
+      "hints": [
+        "suffix yalnızca son uzantıdır.",
+        "parent bir üst klasörün yolu, onun name'i klasör adıdır."
+      ],
+      "explanation": "stem son uzantıyı atar ve \"yedek.tar\" kalır; suffix \".gz\"dir. Tüm uzantılar için p.suffixes ['.tar', '.gz'] verir."
+    },
+    {
+      "id": "m8-q09",
+      "type": "output",
+      "topic": "os",
+      "sectionId": "os-shutil",
+      "difficulty": 1,
+      "prompt": "Dosyalar oluşturulup biri siliniyor. Çıktı ne olur?",
+      "code": "import os\n\nfor name in [\"c.txt\", \"a.txt\", \"b.txt\"]:\n    with open(name, \"w\", encoding=\"utf-8\") as f:\n        f.write(name)\nos.remove(\"b.txt\")\nprint(sorted(os.listdir(\".\")))",
+      "expectedOutput": "['a.txt', 'c.txt']",
+      "hints": [
+        "Her çalıştırma boş klasörde başlar.",
+        "sorted alfabetik sıraya koyar."
+      ],
+      "explanation": "Üç dosya oluşturulur, os.remove biri siler. os.listdir sırası garanti olmadığından sorted ile sabit sıra elde edilir."
+    },
+    {
+      "id": "m8-q10",
+      "type": "output",
+      "topic": "encoding",
+      "sectionId": "encoding",
+      "difficulty": 1,
+      "prompt": "Karakter ve UTF-8 bayt sayısı ne çıkar?",
+      "code": "text = \"çay\"\nprint(len(text), len(text.encode(\"utf-8\")))",
+      "expectedOutput": "3 4",
+      "hints": [
+        "ç UTF-8'de iki bayttır.",
+        "a ve y birer bayttır."
+      ],
+      "explanation": "Metin 3 karakterdir; UTF-8'de ç 2, a ve y 1'er bayt tuttuğu için toplam 4 bayttır. Dosya boyutu bayt sayısıdır."
+    },
+    {
+      "id": "m8-q11",
+      "type": "output",
+      "topic": "csv",
+      "sectionId": "csv",
+      "difficulty": 2,
+      "prompt": "Aynı satır csv.reader ve split ile bölünüyor. Kaç alan çıkar?",
+      "code": "import csv\n\nwith open(\"a.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write('Ada,\"İzmir, Konak\",90\\n')\nwith open(\"a.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    line = f.readline()\nrow = next(csv.reader([line]))\nprint(len(row), len(line.split(\",\")))",
+      "expectedOutput": "3 4",
+      "hints": [
+        "Tırnak içindeki virgül alan ayırıcı değildir.",
+        "split tırnakları tanımaz."
+      ],
+      "explanation": "csv.reader tırnaklı alanı tek parça sayar: Ada, İzmir, Konak ve 90 olmak üzere 3 alan. split her virgülde böler ve 4 parça üretir; adres alanı ikiye ayrılır."
+    },
+    {
+      "id": "m8-q12",
+      "type": "output",
+      "topic": "json",
+      "sectionId": "json",
+      "difficulty": 3,
+      "prompt": "Veri JSON'a yazılıp geri okunuyor. Çıktı ne olur?",
+      "code": "import json\n\ndata = {1: (2, 3)}\nback = json.loads(json.dumps(data))\nprint(back, back == data)",
+      "expectedOutput": "{'1': [2, 3]} False",
+      "hints": [
+        "JSON nesne anahtarları her zaman metindir.",
+        "JSON'da tuple yoktur, yalnızca dizi vardır."
+      ],
+      "explanation": "dumps int anahtarı \"1\" metnine, tuple'ı diziye çevirir. loads bunları str anahtar ve liste olarak geri verir; sonuç ilk sözlüğe eşit değildir."
+    },
+    {
+      "id": "m8-q13",
+      "type": "bug",
+      "topic": "dosya-modu",
+      "sectionId": "open-modes",
+      "difficulty": 1,
+      "prompt": "Her çağrı log'a bir satır eklemeli ama dosyada yalnızca son mesaj kalıyor. Sorun nedir?",
+      "code": "def log(message):\n    with open(\"app.log\", \"w\", encoding=\"utf-8\") as f:\n        f.write(message + \"\\n\")\n\nlog(\"başladı\")\nlog(\"bitti\")\nwith open(\"app.log\", encoding=\"utf-8\") as f:\n    print(f.read().splitlines())",
+      "options": [
+        "\"w\" modu her açılışta dosyayı boşaltıyor; ekleme için \"a\" kullanılmalı",
+        "write() satır sonu eklemediği için satırlar birleşiyor",
+        "with dosyayı kapattığı için ilk yazılan kayboluyor",
+        "splitlines son satır dışındakileri atıyor"
+      ],
+      "answer": "\"w\" modu her açılışta dosyayı boşaltıyor; ekleme için \"a\" kullanılmalı",
+      "optionFeedback": {
+        "write() satır sonu eklemediği için satırlar birleşiyor": "Kod \"\\n\"i elle ekliyor; satırlar birleşseydi çıktıda iki mesaj yan yana görünürdü.",
+        "with dosyayı kapattığı için ilk yazılan kayboluyor": "Kapatmak veriyi siler değil, diske yazar. Silme işini ikinci \"w\" açılışı yapıyor.",
+        "splitlines son satır dışındakileri atıyor": "splitlines tüm satırları döndürür; dosyada zaten tek satır var."
+      },
+      "hints": [
+        "Çıktı ['bitti'].",
+        "Hangi mod mevcut içeriği korur?"
+      ],
+      "explanation": "Her log çağrısı dosyayı \"w\" ile açıp öncekini siliyor. \"a\" ile açılırsa çıktı ['başladı', 'bitti'] olur."
+    },
+    {
+      "id": "m8-q14",
+      "type": "bug",
+      "topic": "with",
+      "sectionId": "with-lifecycle",
+      "difficulty": 1,
+      "prompt": "Kod ValueError: I/O operation on closed file veriyor. Neden?",
+      "code": "with open(\"x.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"veri\")\n\nwith open(\"x.txt\", encoding=\"utf-8\") as f:\n    pass\nprint(f.read())",
+      "options": [
+        "f.read() with bloğunun dışında; blok bitince dosya kapanmıştı",
+        "Dosya \"w\" ile yazıldığı için bir daha okunamaz",
+        "f adı iki kez kullanıldığı için ilk dosya okunuyor",
+        "encoding okurken verilmemeli"
+      ],
+      "answer": "f.read() with bloğunun dışında; blok bitince dosya kapanmıştı",
+      "optionFeedback": {
+        "Dosya \"w\" ile yazıldığı için bir daha okunamaz": "Kapatılmış bir dosya başka bir open ile her zaman tekrar okunabilir.",
+        "f adı iki kez kullanıldığı için ilk dosya okunuyor": "İkinci with f'yi yeni dosya nesnesine bağladı; sorun onun da kapanmış olması.",
+        "encoding okurken verilmemeli": "Okurken de encoding verilmelidir; hata türü kapalı dosyaya işaret ediyor."
+      },
+      "hints": [
+        "pass bloğu hemen bitirir.",
+        "read çağrısını with bloğunun içine taşı."
+      ],
+      "explanation": "with bloğu pass ile hemen bitti ve dosya kapandı. Okuma işlemi bloğun içinde yapılmalıdır."
+    },
+    {
+      "id": "m8-q15",
+      "type": "bug",
+      "topic": "okuma",
+      "sectionId": "reading-lines",
+      "difficulty": 2,
+      "prompt": "Dosyada iki \"evet\" satırı var ama çıktı 0. Neden?",
+      "code": "with open(\"cevaplar.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"evet\\nhayır\\nevet\\n\")\n\ncount = 0\nwith open(\"cevaplar.txt\", encoding=\"utf-8\") as f:\n    for line in f:\n        if line == \"evet\":\n            count += 1\nprint(count)",
+      "options": [
+        "Satırlar sonlarındaki \\n ile geliyor; karşılaştırmadan önce rstrip(\"\\n\") ya da strip() gerekir",
+        "for döngüsü dosyanın yalnızca ilk satırını okur",
+        "Türkçe karakterler karşılaştırmayı bozuyor",
+        "count döngü içinde sıfırlanıyor"
+      ],
+      "answer": "Satırlar sonlarındaki \\n ile geliyor; karşılaştırmadan önce rstrip(\"\\n\") ya da strip() gerekir",
+      "optionFeedback": {
+        "for döngüsü dosyanın yalnızca ilk satırını okur": "Döngü tüm satırları dolaşır; sorun satırların içeriği.",
+        "Türkçe karakterler karşılaştırmayı bozuyor": "\"evet\"te Türkçe karakter yok; satırın sonunda \\n var.",
+        "count döngü içinde sıfırlanıyor": "count = 0 döngüden önce bir kez çalışıyor."
+      },
+      "hints": [
+        "repr(line) yazdırıp bak.",
+        "\"evet\\n\" == \"evet\" False'tur."
+      ],
+      "explanation": "Dosyadan okunan satır \"evet\\n\"dir. line.rstrip(\"\\n\") == \"evet\" ile iki satır sayılır."
+    },
+    {
+      "id": "m8-q16",
+      "type": "bug",
+      "topic": "pathlib",
+      "sectionId": "pathlib",
+      "difficulty": 2,
+      "prompt": "Kod FileNotFoundError veriyor; oysa dosyayı okumuyor, yazıyor. Neden?",
+      "code": "from pathlib import Path\n\nreport = Path(\"raporlar\") / \"ocak.txt\"\nreport.write_text(\"toplam: 5\", encoding=\"utf-8\")\nprint(report.read_text(encoding=\"utf-8\"))",
+      "options": [
+        "raporlar klasörü yok; önce report.parent.mkdir(parents=True, exist_ok=True) gerekir",
+        "write_text yalnızca var olan dosyaya yazabilir",
+        "/ operatörü yolları birleştiremez; os.path.join gerekir",
+        "Path nesnesi str'ye çevrilmeden kullanılamaz"
+      ],
+      "answer": "raporlar klasörü yok; önce report.parent.mkdir(parents=True, exist_ok=True) gerekir",
+      "optionFeedback": {
+        "write_text yalnızca var olan dosyaya yazabilir": "write_text dosya yoksa oluşturur; oluşturamadığı şey eksik klasördür.",
+        "/ operatörü yolları birleştiremez; os.path.join gerekir": "Path için / tam olarak yol birleştirmedir.",
+        "Path nesnesi str'ye çevrilmeden kullanılamaz": "Path metotları doğrudan çağrılabilir; open da Path kabul eder."
+      },
+      "hints": [
+        "Hatanın filename'i raporlar/ocak.txt.",
+        "Dosya oluşturulabilir ama klasör otomatik oluşmaz."
+      ],
+      "explanation": "Yazma, dosyayı oluşturabilir ama içinde bulunacağı klasörü oluşturmaz. mkdir(parents=True, exist_ok=True) sonrası kod \"toplam: 5\" yazdırır."
+    },
+    {
+      "id": "m8-q17",
+      "type": "bug",
+      "topic": "encoding",
+      "sectionId": "encoding",
+      "difficulty": 2,
+      "prompt": "Dosyaya \"çay\" yazıldı ama okununca \"Ã§ay\" görünüyor. Sorun nedir?",
+      "code": "with open(\"menu.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"çay\")\nwith open(\"menu.txt\", encoding=\"cp1254\") as f:\n    print(f.read())",
+      "options": [
+        "Yazarken utf-8, okurken cp1254 kullanılıyor; iki taraf aynı encoding'i kullanmalı",
+        "ç harfi dosyalara yazılamaz",
+        "Dosya \"rb\" ile açılmadığı için bozuluyor",
+        "print Türkçe karakterleri yazdıramaz"
+      ],
+      "answer": "Yazarken utf-8, okurken cp1254 kullanılıyor; iki taraf aynı encoding'i kullanmalı",
+      "optionFeedback": {
+        "ç harfi dosyalara yazılamaz": "ç, UTF-8 ile iki bayt olarak sorunsuz yazıldı.",
+        "Dosya \"rb\" ile açılmadığı için bozuluyor": "\"rb\" metin değil bytes verir; metni doğru almak için doğru encoding gerekir.",
+        "print Türkçe karakterleri yazdıramaz": "print metni olduğu gibi yazdı; metin okunurken bozuldu."
+      },
+      "hints": [
+        "ç'nin iki UTF-8 baytı cp1254'te iki ayrı karakterdir.",
+        "Okurken encoding=\"utf-8\" ver."
+      ],
+      "explanation": "UTF-8'de ç iki bayttır (c3 a7). cp1254 bunları Ã ve § olarak çözer. Bu bozulma hata vermez; bu yüzden encoding her iki tarafta da açıkça ve aynı yazılmalıdır."
+    },
+    {
+      "id": "m8-q18",
+      "type": "bug",
+      "topic": "csv",
+      "sectionId": "csv",
+      "difficulty": 2,
+      "prompt": "Toplamı yazdırması gereken kod ValueError veriyor. Neden?",
+      "code": "import csv\n\nwith open(\"puan.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"ad,puan\\nAda,90\\nCan,75\\n\")\n\ntotal = 0\nwith open(\"puan.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    for row in csv.reader(f):\n        total += int(row[1])\nprint(total)",
+      "options": [
+        "İlk satır başlık; int(\"puan\") çevrilemez. next(reader) ile atlanmalı ya da DictReader kullanılmalı",
+        "csv.reader sayıları otomatik int yapar, int ikinci kez çağrılamaz",
+        "row[1] yerine row[2] olmalı",
+        "newline=\"\" okurken verilmemeli"
+      ],
+      "answer": "İlk satır başlık; int(\"puan\") çevrilemez. next(reader) ile atlanmalı ya da DictReader kullanılmalı",
+      "optionFeedback": {
+        "csv.reader sayıları otomatik int yapar, int ikinci kez çağrılamaz": "reader tüm alanları str verir; int(\"90\") geçerlidir.",
+        "row[1] yerine row[2] olmalı": "Her satırda iki alan var; row[2] IndexError verirdi.",
+        "newline=\"\" okurken verilmemeli": "csv dosyaları okurken de newline=\"\" ile açılır."
+      },
+      "hints": [
+        "Hata mesajı: invalid literal for int() with base 10: 'puan'.",
+        "Döngüden önce başlık satırını tüket."
+      ],
+      "explanation": "reader ilk olarak ['ad', 'puan'] satırını verir. Başlık atlanınca toplam 165 olur."
+    },
+    {
+      "id": "m8-q19",
+      "type": "fill",
+      "topic": "dosya-modu",
+      "sectionId": "open-modes",
+      "difficulty": 1,
+      "prompt": "Mevcut içeriği silmeden sona ekleyen modu yaz.",
+      "code": "with open(\"log.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"1\\n\")\nwith open(\"log.txt\", \"___\", encoding=\"utf-8\") as f:\n    f.write(\"2\\n\")\nwith open(\"log.txt\", encoding=\"utf-8\") as f:\n    print(f.read().split())",
+      "answer": "a",
+      "acceptedAnswers": [
+        "a"
+      ],
+      "solutionCode": "with open(\"log.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"1\\n\")\nwith open(\"log.txt\", \"a\", encoding=\"utf-8\") as f:\n    f.write(\"2\\n\")\nwith open(\"log.txt\", encoding=\"utf-8\") as f:\n    print(f.read().split())",
+      "expectedOutput": "['1', '2']",
+      "hints": [
+        "İngilizce append.",
+        "Tek harf."
+      ],
+      "explanation": "\"a\" modu dosyanın sonuna yazar ve önceki satırı korur."
+    },
+    {
+      "id": "m8-q20",
+      "type": "fill",
+      "topic": "with",
+      "sectionId": "with-lifecycle",
+      "difficulty": 1,
+      "prompt": "Dosyayı blok bitince otomatik kapatan anahtar sözcüğü yaz.",
+      "code": "___ open(\"x.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"tamam\")\nprint(f.closed)",
+      "answer": "with",
+      "acceptedAnswers": [
+        "with"
+      ],
+      "solutionCode": "with open(\"x.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"tamam\")\nprint(f.closed)",
+      "expectedOutput": "True",
+      "hints": [
+        "Satır \"as f:\" ile bitiyor.",
+        "Bağlam yöneticisini başlatan sözcük."
+      ],
+      "explanation": "with bloğu bitince dosya kapanır; f.closed True olur."
+    },
+    {
+      "id": "m8-q21",
+      "type": "fill",
+      "topic": "json",
+      "sectionId": "json",
+      "difficulty": 1,
+      "prompt": "Sözlüğü açık dosyaya JSON olarak yazan fonksiyonun adını yaz.",
+      "code": "import json\n\nwith open(\"veri.json\", \"w\", encoding=\"utf-8\") as f:\n    json.___({\"ad\": \"Ada\"}, f)\nwith open(\"veri.json\", encoding=\"utf-8\") as f:\n    print(json.load(f)[\"ad\"])",
+      "answer": "dump",
+      "acceptedAnswers": [
+        "dump"
+      ],
+      "solutionCode": "import json\n\nwith open(\"veri.json\", \"w\", encoding=\"utf-8\") as f:\n    json.dump({\"ad\": \"Ada\"}, f)\nwith open(\"veri.json\", encoding=\"utf-8\") as f:\n    print(json.load(f)[\"ad\"])",
+      "expectedOutput": "Ada",
+      "hints": [
+        "Okuma tarafı json.load.",
+        "Sonunda s yok: s'li sürüm metin döndürür."
+      ],
+      "explanation": "json.dump(veri, dosya) dosyaya yazar; json.dumps(veri) ise metin döndürür ve dosya almaz."
+    },
+    {
+      "id": "m8-q22",
+      "type": "fill",
+      "topic": "csv",
+      "sectionId": "csv",
+      "difficulty": 2,
+      "prompt": "Satırları başlık adlarıyla sözlük olarak veren okuyucunun adını yaz.",
+      "code": "import csv\n\nwith open(\"k.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"ad,yas\\nAda,36\\nCan,20\\n\")\nwith open(\"k.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    for row in csv.___(f):\n        print(row[\"ad\"])",
+      "answer": "DictReader",
+      "acceptedAnswers": [
+        "DictReader"
+      ],
+      "solutionCode": "import csv\n\nwith open(\"k.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"ad,yas\\nAda,36\\nCan,20\\n\")\nwith open(\"k.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    for row in csv.DictReader(f):\n        print(row[\"ad\"])",
+      "expectedOutput": "Ada\nCan",
+      "hints": [
+        "Satır row[\"ad\"] ile okunuyor; yani bir sözlük.",
+        "Dict ile başlar, Reader ile biter."
+      ],
+      "explanation": "DictReader ilk satırı başlık olarak alır ve her veri satırını {\"ad\": ..., \"yas\": ...} sözlüğü yapar."
+    },
+    {
+      "id": "m8-q23",
+      "type": "order",
+      "topic": "with",
+      "sectionId": "with-lifecycle",
+      "difficulty": 1,
+      "prompt": "Dosyaya yazıp sonra okuyan ve \"merhaba\" yazdıran sırayı kur.",
+      "lines": [
+        "    print(f.read())",
+        "with open(\"a.txt\", encoding=\"utf-8\") as f:",
+        "    f.write(\"merhaba\")",
+        "with open(\"a.txt\", \"w\", encoding=\"utf-8\") as f:"
+      ],
+      "answer": "with open(\"a.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"merhaba\")\nwith open(\"a.txt\", encoding=\"utf-8\") as f:\n    print(f.read())",
+      "solutionCode": "with open(\"a.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"merhaba\")\nwith open(\"a.txt\", encoding=\"utf-8\") as f:\n    print(f.read())",
+      "expectedOutput": "merhaba",
+      "hints": [
+        "Okumadan önce dosyanın var olması gerekir.",
+        "Her with satırının gövdesi hemen altında girintilidir."
+      ],
+      "explanation": "Önce \"w\" ile yazılır ve blok bitince kapatılır; sonra ayrı bir with ile okunur."
+    },
+    {
+      "id": "m8-q24",
+      "type": "order",
+      "topic": "pathlib",
+      "sectionId": "pathlib",
+      "difficulty": 2,
+      "prompt": "Klasörü oluşturup içine dosya yazan ve dosyayı okuyan sırayı kur.",
+      "lines": [
+        "path.write_text(\"tamam\", encoding=\"utf-8\")",
+        "from pathlib import Path",
+        "print(path.read_text(encoding=\"utf-8\"))",
+        "path.parent.mkdir(exist_ok=True)",
+        "path = Path(\"cikti\") / \"ozet.txt\""
+      ],
+      "answer": "from pathlib import Path\npath = Path(\"cikti\") / \"ozet.txt\"\npath.parent.mkdir(exist_ok=True)\npath.write_text(\"tamam\", encoding=\"utf-8\")\nprint(path.read_text(encoding=\"utf-8\"))",
+      "solutionCode": "from pathlib import Path\npath = Path(\"cikti\") / \"ozet.txt\"\npath.parent.mkdir(exist_ok=True)\npath.write_text(\"tamam\", encoding=\"utf-8\")\nprint(path.read_text(encoding=\"utf-8\"))",
+      "expectedOutput": "tamam",
+      "hints": [
+        "Path kullanılmadan önce import edilir.",
+        "Klasör, dosyayı yazmadan önce oluşturulmalı."
+      ],
+      "explanation": "Yol nesnesi kurulur, üst klasör oluşturulur, sonra dosya yazılıp okunur. mkdir'den önce yazmak FileNotFoundError verir."
+    },
+    {
+      "id": "m8-q25",
+      "type": "order",
+      "topic": "csv",
+      "sectionId": "csv",
+      "difficulty": 2,
+      "prompt": "Virgül içeren bir alanı CSV'ye yazıp geri okuyan sırayı kur.",
+      "lines": [
+        "    print(next(csv.reader(f)))",
+        "import csv",
+        "    csv.writer(f).writerow([\"x\", \"y, z\"])",
+        "with open(\"a.csv\", encoding=\"utf-8\", newline=\"\") as f:",
+        "with open(\"a.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:"
+      ],
+      "answer": "import csv\nwith open(\"a.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    csv.writer(f).writerow([\"x\", \"y, z\"])\nwith open(\"a.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    print(next(csv.reader(f)))",
+      "solutionCode": "import csv\nwith open(\"a.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    csv.writer(f).writerow([\"x\", \"y, z\"])\nwith open(\"a.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    print(next(csv.reader(f)))",
+      "expectedOutput": "['x', 'y, z']",
+      "hints": [
+        "Yazma bloğu okuma bloğundan önce gelir.",
+        "next(reader) ilk satırı verir."
+      ],
+      "explanation": "writer \"y, z\" alanını tırnaklayarak yazar; reader onu tek alan olarak geri okur."
+    },
+    {
+      "id": "m8-q26",
+      "type": "order",
+      "topic": "json",
+      "sectionId": "json",
+      "difficulty": 2,
+      "prompt": "Sözlüğü JSON dosyasına kaydedip geri okuyan ve 2 yazdıran sırayı kur.",
+      "lines": [
+        "    data = json.load(f)",
+        "    json.dump({\"n\": 1}, f)",
+        "print(data[\"n\"] + 1)",
+        "with open(\"d.json\", \"w\", encoding=\"utf-8\") as f:",
+        "import json",
+        "with open(\"d.json\", encoding=\"utf-8\") as f:"
+      ],
+      "answer": "import json\nwith open(\"d.json\", \"w\", encoding=\"utf-8\") as f:\n    json.dump({\"n\": 1}, f)\nwith open(\"d.json\", encoding=\"utf-8\") as f:\n    data = json.load(f)\nprint(data[\"n\"] + 1)",
+      "solutionCode": "import json\nwith open(\"d.json\", \"w\", encoding=\"utf-8\") as f:\n    json.dump({\"n\": 1}, f)\nwith open(\"d.json\", encoding=\"utf-8\") as f:\n    data = json.load(f)\nprint(data[\"n\"] + 1)",
+      "expectedOutput": "2",
+      "hints": [
+        "dump yazma, load okuma bloğundadır.",
+        "print dosya kapandıktan sonra da data'yı kullanabilir."
+      ],
+      "explanation": "json.load sayıyı int olarak geri verir; 1 + 1 = 2. data bir Python sözlüğü olduğu için with bloğundan sonra da kullanılabilir."
+    },
+    {
+      "id": "m8-q27",
+      "type": "code",
+      "topic": "dosya-modu",
+      "sectionId": "open-modes",
+      "difficulty": 1,
+      "prompt": "İlk satırda n, sonra n satır var. Satırları liste.txt dosyasına her biri ayrı satırda olacak şekilde yaz. Sonra dosyayı okuyup her satırı \"1. elma\" biçiminde numaralı yazdır.",
+      "starterCode": "count = int(input())\nitems = [input() for _ in range(count)]\n# items'ı liste.txt'ye yaz, sonra dosyadan okuyup numaralı yazdır",
+      "answer": "count = int(input())\nitems = [input() for _ in range(count)]\nwith open(\"liste.txt\", \"w\", encoding=\"utf-8\") as f:\n    for item in items:\n        f.write(item + \"\\n\")\nwith open(\"liste.txt\", encoding=\"utf-8\") as f:\n    for number, line in enumerate(f, start=1):\n        print(f\"{number}. {line.rstrip()}\")",
+      "solutionCode": "count = int(input())\nitems = [input() for _ in range(count)]\nwith open(\"liste.txt\", \"w\", encoding=\"utf-8\") as f:\n    for item in items:\n        f.write(item + \"\\n\")\nwith open(\"liste.txt\", encoding=\"utf-8\") as f:\n    for number, line in enumerate(f, start=1):\n        print(f\"{number}. {line.rstrip()}\")",
+      "expectedOutput": "1. elma\n2. armut",
+      "exampleInput": "2\nelma\narmut",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "2\nelma\narmut",
+          "expectedOutput": "1. elma\n2. armut"
+        },
+        {
+          "label": "Tek satır",
+          "stdin": "1\nçay",
+          "expectedOutput": "1. çay"
+        },
+        {
+          "label": "Boş liste",
+          "stdin": "0",
+          "expectedOutput": ""
+        },
+        {
+          "label": "Boşluklu ürün",
+          "stdin": "3\nkuru üzüm\nsüt\nyumurta",
+          "expectedOutput": "1. kuru üzüm\n2. süt\n3. yumurta"
+        }
+      ],
+      "hints": [
+        "write'a item + \"\\n\" ver.",
+        "Okurken satır sonunu rstrip ile at, enumerate(f, start=1) ile numarala."
+      ],
+      "explanation": "Yazma ve okuma ayrı with bloklarında yapılır; ilk blok bitince veri dosyaya geçmiş olur. Satırlar \\n ile döndüğü için yazdırmadan önce temizlenir."
+    },
+    {
+      "id": "m8-q28",
+      "type": "code",
+      "topic": "dosya-modu",
+      "sectionId": "open-modes",
+      "difficulty": 2,
+      "prompt": "add(line) fonksiyonunu yaz: günlük.txt dosyasını \"a\" ile açıp line'ı yeni bir satır olarak eklesin. Başlangıç kodu dosyayı \"başlangıç\" ile oluşturur, girdideki satırları add ile ekler ve sonunda dosyadaki satır sayısını ve son satırı yazdırır.",
+      "starterCode": "with open(\"günlük.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"başlangıç\\n\")\n\ndef add(line):\n    # dosyayı \"a\" ile açıp line'ı ekle\n    pass\n\ncount = int(input())\nfor _ in range(count):\n    add(input())\n\nwith open(\"günlük.txt\", encoding=\"utf-8\") as f:\n    lines = f.read().splitlines()\nprint(len(lines), lines[-1])",
+      "answer": "with open(\"günlük.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"başlangıç\\n\")\n\ndef add(line):\n    with open(\"günlük.txt\", \"a\", encoding=\"utf-8\") as f:\n        f.write(line + \"\\n\")\n\ncount = int(input())\nfor _ in range(count):\n    add(input())\n\nwith open(\"günlük.txt\", encoding=\"utf-8\") as f:\n    lines = f.read().splitlines()\nprint(len(lines), lines[-1])",
+      "solutionCode": "with open(\"günlük.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"başlangıç\\n\")\n\ndef add(line):\n    with open(\"günlük.txt\", \"a\", encoding=\"utf-8\") as f:\n        f.write(line + \"\\n\")\n\ncount = int(input())\nfor _ in range(count):\n    add(input())\n\nwith open(\"günlük.txt\", encoding=\"utf-8\") as f:\n    lines = f.read().splitlines()\nprint(len(lines), lines[-1])",
+      "expectedOutput": "3 koşu",
+      "exampleInput": "2\nyürüyüş\nkoşu",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "2\nyürüyüş\nkoşu",
+          "expectedOutput": "3 koşu"
+        },
+        {
+          "label": "Ekleme yok",
+          "stdin": "0",
+          "expectedOutput": "1 başlangıç"
+        },
+        {
+          "label": "Tek ekleme",
+          "stdin": "1\nyoga",
+          "expectedOutput": "2 yoga"
+        }
+      ],
+      "hints": [
+        "\"w\" kullanırsan başlangıç satırı silinir.",
+        "Her eklemenin sonuna \"\\n\" koy; yoksa satırlar birleşir."
+      ],
+      "explanation": "\"a\" modu mevcut satırları korur. Satır sonu eklenmezse \"yürüyüşkoşu\" tek satır olur ve sayım yanlış çıkar."
+    },
+    {
+      "id": "m8-q29",
+      "type": "code",
+      "topic": "with",
+      "sectionId": "with-lifecycle",
+      "difficulty": 2,
+      "prompt": "read_or_none(path) fonksiyonunu yaz: dosyayı with ile açıp içeriği döndürsün; dosya yoksa None döndürsün. Girdi bir dosya yolu. Başlangıç kodu mevcut.txt dosyasını oluşturur ve sonucu yazdırır.",
+      "starterCode": "with open(\"mevcut.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"içerik hazır\")\n\ndef read_or_none(path):\n    # with ile oku; FileNotFoundError olursa None döndür\n    pass\n\npath = input()\ncontent = read_or_none(path)\nprint(content if content is not None else f\"dosya yok: {path}\")",
+      "answer": "with open(\"mevcut.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"içerik hazır\")\n\ndef read_or_none(path):\n    try:\n        with open(path, encoding=\"utf-8\") as f:\n            return f.read()\n    except FileNotFoundError:\n        return None\n\npath = input()\ncontent = read_or_none(path)\nprint(content if content is not None else f\"dosya yok: {path}\")",
+      "solutionCode": "with open(\"mevcut.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"içerik hazır\")\n\ndef read_or_none(path):\n    try:\n        with open(path, encoding=\"utf-8\") as f:\n            return f.read()\n    except FileNotFoundError:\n        return None\n\npath = input()\ncontent = read_or_none(path)\nprint(content if content is not None else f\"dosya yok: {path}\")",
+      "expectedOutput": "içerik hazır",
+      "exampleInput": "mevcut.txt",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "mevcut.txt",
+          "expectedOutput": "içerik hazır"
+        },
+        {
+          "label": "Eksik dosya",
+          "stdin": "eksik.txt",
+          "expectedOutput": "dosya yok: eksik.txt"
+        },
+        {
+          "label": "Eksik klasör",
+          "stdin": "arsiv/mevcut.txt",
+          "expectedOutput": "dosya yok: arsiv/mevcut.txt"
+        }
+      ],
+      "hints": [
+        "try içine with'i koy; return with bloğunun içinden yapılabilir.",
+        "Yalnızca FileNotFoundError'u yakala."
+      ],
+      "explanation": "with içinden return edilse bile dosya kapanır. Eksik dosya ve eksik klasör ikisi de FileNotFoundError verir; diğer hatalar (ör. encoding sorunu) gizlenmez."
+    },
+    {
+      "id": "m8-q30",
+      "type": "code",
+      "topic": "okuma",
+      "sectionId": "reading-lines",
+      "difficulty": 2,
+      "prompt": "Başlangıç kodu girdideki metni metin.txt'ye yazar. Dosyayı satır satır okuyup \"satır: X, dolu: Y, kelime: Z\" yazdır. Yalnızca boşluk içeren satırlar boş sayılır.",
+      "starterCode": "count = int(input())\nwith open(\"metin.txt\", \"w\", encoding=\"utf-8\") as f:\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\n# metin.txt'yi satır satır okuyup say",
+      "answer": "count = int(input())\nwith open(\"metin.txt\", \"w\", encoding=\"utf-8\") as f:\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\nlines = filled = words = 0\nwith open(\"metin.txt\", encoding=\"utf-8\") as f:\n    for line in f:\n        lines += 1\n        if line.strip():\n            filled += 1\n        words += len(line.split())\nprint(f\"satır: {lines}, dolu: {filled}, kelime: {words}\")",
+      "solutionCode": "count = int(input())\nwith open(\"metin.txt\", \"w\", encoding=\"utf-8\") as f:\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\nlines = filled = words = 0\nwith open(\"metin.txt\", encoding=\"utf-8\") as f:\n    for line in f:\n        lines += 1\n        if line.strip():\n            filled += 1\n        words += len(line.split())\nprint(f\"satır: {lines}, dolu: {filled}, kelime: {words}\")",
+      "expectedOutput": "satır: 3, dolu: 2, kelime: 5",
+      "exampleInput": "3\nbir iki üç\n\ndört beş",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "3\nbir iki üç\n\ndört beş",
+          "expectedOutput": "satır: 3, dolu: 2, kelime: 5"
+        },
+        {
+          "label": "Yalnız boşluk",
+          "stdin": "2\n   \ntek",
+          "expectedOutput": "satır: 2, dolu: 1, kelime: 1"
+        },
+        {
+          "label": "Boş dosya",
+          "stdin": "0",
+          "expectedOutput": "satır: 0, dolu: 0, kelime: 0"
+        },
+        {
+          "label": "Çok boşluk",
+          "stdin": "1\n  a   b  ",
+          "expectedOutput": "satır: 1, dolu: 1, kelime: 2"
+        }
+      ],
+      "hints": [
+        "line.strip() boşsa satır boştur.",
+        "split() argümansız çağrılınca ardışık boşlukları tek ayırıcı sayar."
+      ],
+      "explanation": "Satır sonu ve boşluklar strip ile atılınca boş satır \"\" olur. split() boşluk dizilerini birleştirerek kelimeleri sayar."
+    },
+    {
+      "id": "m8-q31",
+      "type": "code",
+      "topic": "okuma",
+      "sectionId": "reading-lines",
+      "difficulty": 3,
+      "prompt": "Başlangıç kodu girdideki satırları şiir.txt'ye yazar. Dosyayı okuyup en uzun satırı \"N: satır\" biçiminde yazdır (N 1'den başlar). Eşitlikte ilk satır kazanır. Dosya boşsa \"boş dosya\" yazdır. Uzunluk, satır sonu karakteri sayılmadan ölçülür.",
+      "starterCode": "count = int(input())\nwith open(\"şiir.txt\", \"w\", encoding=\"utf-8\") as f:\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\n# en uzun satırı bul",
+      "answer": "count = int(input())\nwith open(\"şiir.txt\", \"w\", encoding=\"utf-8\") as f:\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\nbest_number, best_line = 0, None\nwith open(\"şiir.txt\", encoding=\"utf-8\") as f:\n    for number, line in enumerate(f, start=1):\n        line = line.rstrip(\"\\n\")\n        if best_line is None or len(line) > len(best_line):\n            best_number, best_line = number, line\nif best_line is None:\n    print(\"boş dosya\")\nelse:\n    print(f\"{best_number}: {best_line}\")",
+      "solutionCode": "count = int(input())\nwith open(\"şiir.txt\", \"w\", encoding=\"utf-8\") as f:\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\nbest_number, best_line = 0, None\nwith open(\"şiir.txt\", encoding=\"utf-8\") as f:\n    for number, line in enumerate(f, start=1):\n        line = line.rstrip(\"\\n\")\n        if best_line is None or len(line) > len(best_line):\n            best_number, best_line = number, line\nif best_line is None:\n    print(\"boş dosya\")\nelse:\n    print(f\"{best_number}: {best_line}\")",
+      "expectedOutput": "2: dalga dalga",
+      "exampleInput": "3\ndeniz\ndalga dalga\nkum",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "3\ndeniz\ndalga dalga\nkum",
+          "expectedOutput": "2: dalga dalga"
+        },
+        {
+          "label": "Eşitlik",
+          "stdin": "3\nab\ncd\na",
+          "expectedOutput": "1: ab"
+        },
+        {
+          "label": "Boş dosya",
+          "stdin": "0",
+          "expectedOutput": "boş dosya"
+        },
+        {
+          "label": "Son satır",
+          "stdin": "2\nx\nyy",
+          "expectedOutput": "2: yy"
+        }
+      ],
+      "hints": [
+        "Karşılaştırma > olursa eşitlikte ilk satır kalır.",
+        "Hiç satır yoksa başlangıç değeri değişmez; None ile ayırt et."
+      ],
+      "explanation": "rstrip(\"\\n\") ile ölçüm satır sonunu saymaz. Kesin büyüktür karşılaştırması eşitlikte önceki satırı korur; None başlangıcı boş dosyayı ayırır."
+    },
+    {
+      "id": "m8-q32",
+      "type": "code",
+      "topic": "pathlib",
+      "sectionId": "pathlib",
+      "difficulty": 2,
+      "prompt": "Başlangıç kodu girdideki dosya adlarını klasor içinde oluşturur. klasor'deki dosyaları uzantıya göre say ve \"uzantı: sayı\" satırlarını alfabetik sırayla yazdır. Uzantılar küçük harfe çevrilir; uzantısı olmayan dosyalar \"(uzantısız)\" sayılır.",
+      "starterCode": "from pathlib import Path\n\nfolder = Path(\"klasor\")\nfolder.mkdir()\nfor name in input().split():\n    (folder / name).write_text(\"x\", encoding=\"utf-8\")\n\n# klasördeki dosyaları uzantıya göre say",
+      "answer": "from pathlib import Path\n\nfolder = Path(\"klasor\")\nfolder.mkdir()\nfor name in input().split():\n    (folder / name).write_text(\"x\", encoding=\"utf-8\")\n\ncounts = {}\nfor path in folder.iterdir():\n    suffix = path.suffix.lower() or \"(uzantısız)\"\n    counts[suffix] = counts.get(suffix, 0) + 1\nfor suffix in sorted(counts):\n    print(f\"{suffix}: {counts[suffix]}\")",
+      "solutionCode": "from pathlib import Path\n\nfolder = Path(\"klasor\")\nfolder.mkdir()\nfor name in input().split():\n    (folder / name).write_text(\"x\", encoding=\"utf-8\")\n\ncounts = {}\nfor path in folder.iterdir():\n    suffix = path.suffix.lower() or \"(uzantısız)\"\n    counts[suffix] = counts.get(suffix, 0) + 1\nfor suffix in sorted(counts):\n    print(f\"{suffix}: {counts[suffix]}\")",
+      "expectedOutput": "(uzantısız): 1\n.csv: 1\n.txt: 2",
+      "exampleInput": "a.txt b.TXT c.csv README",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "a.txt b.TXT c.csv README",
+          "expectedOutput": "(uzantısız): 1\n.csv: 1\n.txt: 2"
+        },
+        {
+          "label": "Çift uzantı",
+          "stdin": "yedek.tar.gz veri.gz",
+          "expectedOutput": ".gz: 2"
+        },
+        {
+          "label": "Tek dosya",
+          "stdin": "not.md",
+          "expectedOutput": ".md: 1"
+        }
+      ],
+      "hints": [
+        "path.suffix uzantısız dosyada \"\" döndürür; or ile yedek değer ver.",
+        "iterdir sırası belirsiz; yazdırırken sorted kullan."
+      ],
+      "explanation": "suffix yalnızca son uzantıyı verir, bu yüzden yedek.tar.gz .gz sayılır. Sayım sözlükte toplanır, çıktı sorted ile sabit sıraya alınır."
+    },
+    {
+      "id": "m8-q33",
+      "type": "code",
+      "topic": "encoding",
+      "sectionId": "encoding",
+      "difficulty": 2,
+      "prompt": "Girdideki metni metin.txt'ye UTF-8 ile yaz. Sonra dosyayı \"rb\" ile açıp bayt sayısını bul ve \"karakter: X, bayt: Y\" yazdır.",
+      "starterCode": "text = input()\n# UTF-8 ile yaz, sonra ikili modda okuyup baytları say",
+      "answer": "text = input()\nwith open(\"metin.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(text)\nwith open(\"metin.txt\", \"rb\") as f:\n    data = f.read()\nprint(f\"karakter: {len(text)}, bayt: {len(data)}\")",
+      "solutionCode": "text = input()\nwith open(\"metin.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(text)\nwith open(\"metin.txt\", \"rb\") as f:\n    data = f.read()\nprint(f\"karakter: {len(text)}, bayt: {len(data)}\")",
+      "expectedOutput": "karakter: 5, bayt: 7",
+      "exampleInput": "çiçek",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "çiçek",
+          "expectedOutput": "karakter: 5, bayt: 7"
+        },
+        {
+          "label": "ASCII",
+          "stdin": "abc",
+          "expectedOutput": "karakter: 3, bayt: 3"
+        },
+        {
+          "label": "Üç baytlık karakter",
+          "stdin": "10€",
+          "expectedOutput": "karakter: 3, bayt: 5"
+        },
+        {
+          "label": "Büyük İ",
+          "stdin": "İĞÜ",
+          "expectedOutput": "karakter: 3, bayt: 6"
+        }
+      ],
+      "hints": [
+        "\"rb\" ile açılan dosyaya encoding verilmez; read() bytes döndürür.",
+        "Satır sonu yazma; yoksa bayt sayısı bir fazla çıkar."
+      ],
+      "explanation": "Türkçe harfler UTF-8'de iki bayttır; çiçek'te iki ç olduğu için 5 karakter 7 bayt eder. Dosya boyutu her zaman bayt cinsindendir."
+    },
+    {
+      "id": "m8-q34",
+      "type": "code",
+      "topic": "csv",
+      "sectionId": "csv",
+      "difficulty": 2,
+      "prompt": "Başlangıç kodu girdideki satırları başlığıyla birlikte puan.csv'ye yazar. Dosyayı csv.DictReader ile okuyup en yüksek puanlıyı \"en yüksek: ad (puan)\" ve ortalamayı \"ortalama: X\" (bir ondalık) olarak yazdır. Eşitlikte ilk kişi kazanır.",
+      "starterCode": "count = int(input())\nwith open(\"puan.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"ad,puan\\n\")\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\n# DictReader ile oku, en yükseği ve ortalamayı bul",
+      "answer": "import csv\n\ncount = int(input())\nwith open(\"puan.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"ad,puan\\n\")\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\nwith open(\"puan.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    rows = [(row[\"ad\"], int(row[\"puan\"])) for row in csv.DictReader(f)]\nbest = max(rows, key=lambda item: item[1])\naverage = sum(score for _, score in rows) / len(rows)\nprint(f\"en yüksek: {best[0]} ({best[1]})\")\nprint(f\"ortalama: {average:.1f}\")",
+      "solutionCode": "import csv\n\ncount = int(input())\nwith open(\"puan.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"ad,puan\\n\")\n    for _ in range(count):\n        f.write(input() + \"\\n\")\n\nwith open(\"puan.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    rows = [(row[\"ad\"], int(row[\"puan\"])) for row in csv.DictReader(f)]\nbest = max(rows, key=lambda item: item[1])\naverage = sum(score for _, score in rows) / len(rows)\nprint(f\"en yüksek: {best[0]} ({best[1]})\")\nprint(f\"ortalama: {average:.1f}\")",
+      "expectedOutput": "en yüksek: Ada (90)\nortalama: 77.5",
+      "exampleInput": "2\nAda,90\nCan,65",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "2\nAda,90\nCan,65",
+          "expectedOutput": "en yüksek: Ada (90)\nortalama: 77.5"
+        },
+        {
+          "label": "Tırnaklı ad",
+          "stdin": "2\n\"Lin, Can\",80\nEce,70",
+          "expectedOutput": "en yüksek: Lin, Can (80)\nortalama: 75.0"
+        },
+        {
+          "label": "Eşitlik",
+          "stdin": "3\nA,50\nB,50\nC,20",
+          "expectedOutput": "en yüksek: A (50)\nortalama: 40.0"
+        }
+      ],
+      "hints": [
+        "Puanlar str gelir; int ile çevir.",
+        "max(..., key=...) eşitlikte ilk öğeyi döndürür."
+      ],
+      "explanation": "DictReader tırnaklı adı tek alan olarak okur; split kullanılsaydı \"Lin, Can\" bölünürdü. max eşitlikte ilk gördüğünü korur."
+    },
+    {
+      "id": "m8-q35",
+      "type": "code",
+      "topic": "os",
+      "sectionId": "os-shutil",
+      "difficulty": 2,
+      "prompt": "safe_write(path, text) fonksiyonunu yaz: dosya varsa önce shutil.copy ile path + \".bak\" yedeğini alsın, sonra text'i yazsın. Girdide n ve n sürüm metni var; hepsi sırayla ayar.txt'ye yazılır. Sonunda güncel içeriği ve yedeği yazdır; yedek yoksa \"yedek yok\" yaz.",
+      "starterCode": "import os\nimport shutil\n\ndef safe_write(path, text):\n    # varsa yedekle, sonra yaz\n    pass\n\ncount = int(input())\nfor _ in range(count):\n    safe_write(\"ayar.txt\", input())\n\nwith open(\"ayar.txt\", encoding=\"utf-8\") as f:\n    print(\"güncel:\", f.read())\nif os.path.exists(\"ayar.txt.bak\"):\n    with open(\"ayar.txt.bak\", encoding=\"utf-8\") as f:\n        print(\"yedek:\", f.read())\nelse:\n    print(\"yedek yok\")",
+      "answer": "import os\nimport shutil\n\ndef safe_write(path, text):\n    if os.path.exists(path):\n        shutil.copy(path, path + \".bak\")\n    with open(path, \"w\", encoding=\"utf-8\") as f:\n        f.write(text)\n\ncount = int(input())\nfor _ in range(count):\n    safe_write(\"ayar.txt\", input())\n\nwith open(\"ayar.txt\", encoding=\"utf-8\") as f:\n    print(\"güncel:\", f.read())\nif os.path.exists(\"ayar.txt.bak\"):\n    with open(\"ayar.txt.bak\", encoding=\"utf-8\") as f:\n        print(\"yedek:\", f.read())\nelse:\n    print(\"yedek yok\")",
+      "solutionCode": "import os\nimport shutil\n\ndef safe_write(path, text):\n    if os.path.exists(path):\n        shutil.copy(path, path + \".bak\")\n    with open(path, \"w\", encoding=\"utf-8\") as f:\n        f.write(text)\n\ncount = int(input())\nfor _ in range(count):\n    safe_write(\"ayar.txt\", input())\n\nwith open(\"ayar.txt\", encoding=\"utf-8\") as f:\n    print(\"güncel:\", f.read())\nif os.path.exists(\"ayar.txt.bak\"):\n    with open(\"ayar.txt.bak\", encoding=\"utf-8\") as f:\n        print(\"yedek:\", f.read())\nelse:\n    print(\"yedek yok\")",
+      "expectedOutput": "güncel: v2\nyedek: v1",
+      "exampleInput": "2\nv1\nv2",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "2\nv1\nv2",
+          "expectedOutput": "güncel: v2\nyedek: v1"
+        },
+        {
+          "label": "İlk yazma",
+          "stdin": "1\nv1",
+          "expectedOutput": "güncel: v1\nyedek yok"
+        },
+        {
+          "label": "Üç sürüm",
+          "stdin": "3\na\nb\nc",
+          "expectedOutput": "güncel: c\nyedek: b"
+        }
+      ],
+      "hints": [
+        "Yedek, yazmadan önce alınmalı; sonra alınırsa yeni içeriği kopyalar.",
+        "Dosya yoksa kopyalanacak bir şey yoktur; os.path.exists ile sına."
+      ],
+      "explanation": "Kopyalama \"w\" açılışından önce yapılmalıdır; \"w\" dosyayı boşalttığı anda eski içerik kaybolur. Yedek her zaman bir önceki sürümü tutar."
+    },
+    {
+      "id": "m8-q36",
+      "type": "code",
+      "topic": "json",
+      "sectionId": "json",
+      "difficulty": 2,
+      "prompt": "Başlangıç kodu girdideki metni veri.json'a yazar. Dosyayı json.load ile oku ve her anahtarı alfabetik sırayla \"anahtar: tür\" olarak yazdır (tür, type(değer).__name__). Dosya geçerli JSON değilse \"geçersiz JSON\" yazdır.",
+      "starterCode": "import json\n\nwith open(\"veri.json\", \"w\", encoding=\"utf-8\") as f:\n    f.write(input())\n\n# json.load ile oku, anahtarları ve türleri yazdır",
+      "answer": "import json\n\nwith open(\"veri.json\", \"w\", encoding=\"utf-8\") as f:\n    f.write(input())\n\ntry:\n    with open(\"veri.json\", encoding=\"utf-8\") as f:\n        data = json.load(f)\nexcept json.JSONDecodeError:\n    print(\"geçersiz JSON\")\nelse:\n    for key in sorted(data):\n        print(f\"{key}: {type(data[key]).__name__}\")",
+      "solutionCode": "import json\n\nwith open(\"veri.json\", \"w\", encoding=\"utf-8\") as f:\n    f.write(input())\n\ntry:\n    with open(\"veri.json\", encoding=\"utf-8\") as f:\n        data = json.load(f)\nexcept json.JSONDecodeError:\n    print(\"geçersiz JSON\")\nelse:\n    for key in sorted(data):\n        print(f\"{key}: {type(data[key]).__name__}\")",
+      "expectedOutput": "ad: str\nnotlar: list\nyas: int",
+      "exampleInput": "{\"yas\": 36, \"ad\": \"Ada\", \"notlar\": [90, 85]}",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "{\"yas\": 36, \"ad\": \"Ada\", \"notlar\": [90, 85]}",
+          "expectedOutput": "ad: str\nnotlar: list\nyas: int"
+        },
+        {
+          "label": "null ve bool",
+          "stdin": "{\"x\": null, \"aktif\": true, \"oran\": 0.5}",
+          "expectedOutput": "aktif: bool\noran: float\nx: NoneType"
+        },
+        {
+          "label": "Tek tırnak",
+          "stdin": "{'ad': 'Ada'}",
+          "expectedOutput": "geçersiz JSON"
+        },
+        {
+          "label": "Sondaki virgül",
+          "stdin": "{\"a\": 1,}",
+          "expectedOutput": "geçersiz JSON"
+        }
+      ],
+      "hints": [
+        "json.JSONDecodeError'u yakala.",
+        "null None'a, true bool'a, 0.5 float'a dönüşür."
+      ],
+      "explanation": "json.load JSON türlerini Python türlerine çevirir. Tek tırnak ve sondaki virgül JSON'da geçersizdir ve JSONDecodeError verir; else bloğu yalnızca okuma başarılıysa çalışır."
+    },
+    {
+      "id": "m8-q37",
+      "type": "traceback",
+      "topic": "dosya-modu",
+      "sectionId": "open-modes",
+      "difficulty": 1,
+      "prompt": "Okunmak istenen dosya hiç oluşturulmamış. Hangi hata oluşur?",
+      "code": "with open(\"rapor.txt\", encoding=\"utf-8\") as f:\n    print(f.read())",
+      "options": [
+        "FileNotFoundError",
+        "FileExistsError",
+        "NameError",
+        "ValueError"
+      ],
+      "answer": "FileNotFoundError",
+      "expectedError": "FileNotFoundError",
+      "optionFeedback": {
+        "FileExistsError": "Bu, \"x\" modunun dosya zaten varken verdiği hatadır; burada dosya yok.",
+        "NameError": "open ve f tanımlı; sorun dosya sistemiyle ilgili.",
+        "ValueError": "ValueError kapalı dosya ya da geçersiz mod gibi durumlarda çıkar; eksik dosya OSError ailesindendir."
+      },
+      "hints": [
+        "Mod verilmediği için \"r\" kullanılır.",
+        "\"r\" dosyayı oluşturmaz."
+      ],
+      "explanation": "Okuma modu dosyanın var olmasını ister. Traceback'in son satırı FileNotFoundError ve bulunamayan yolu gösterir; errno numarası platforma göre değişir."
+    },
+    {
+      "id": "m8-q38",
+      "type": "traceback",
+      "topic": "with",
+      "sectionId": "with-lifecycle",
+      "difficulty": 2,
+      "prompt": "Dosya with bloğundan sonra okunuyor. Hangi hata oluşur?",
+      "code": "with open(\"a.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"x\")\nwith open(\"a.txt\", encoding=\"utf-8\") as f:\n    first = f.readline()\nrest = f.read()",
+      "options": [
+        "ValueError",
+        "FileNotFoundError",
+        "OSError",
+        "NameError"
+      ],
+      "answer": "ValueError",
+      "expectedError": "ValueError",
+      "optionFeedback": {
+        "FileNotFoundError": "Dosya var; sorun dosya nesnesinin kapalı olması.",
+        "OSError": "Kapalı dosya işletim sistemi hatası değil, nesnenin yanlış durumda kullanılmasıdır; ValueError verir.",
+        "NameError": "f bloktan sonra da tanımlıdır; yalnızca kapalıdır."
+      },
+      "hints": [
+        "Son satır with bloğunun dışında.",
+        "Mesaj: I/O operation on closed file."
+      ],
+      "explanation": "with bitince dosya kapandı. Kapalı dosyada okuma ValueError: I/O operation on closed file verir."
+    },
+    {
+      "id": "m8-q39",
+      "type": "traceback",
+      "topic": "encoding",
+      "sectionId": "encoding",
+      "difficulty": 2,
+      "prompt": "cp1254 ile yazılmış dosya UTF-8 ile okunuyor. Hangi hata oluşur?",
+      "code": "with open(\"eski.txt\", \"w\", encoding=\"cp1254\") as f:\n    f.write(\"şeker\")\nwith open(\"eski.txt\", encoding=\"utf-8\") as f:\n    print(f.read())",
+      "options": [
+        "UnicodeDecodeError",
+        "UnicodeEncodeError",
+        "FileNotFoundError",
+        "TypeError"
+      ],
+      "answer": "UnicodeDecodeError",
+      "expectedError": "UnicodeDecodeError",
+      "optionFeedback": {
+        "UnicodeEncodeError": "Encode metinden bayta çevirmektir ve yazarken olur; burada okunurken baytlar çözülemiyor.",
+        "FileNotFoundError": "Dosya ilk with bloğunda oluşturuldu.",
+        "TypeError": "Türler doğru; sorun baytların UTF-8 kurallarına uymaması."
+      },
+      "hints": [
+        "ş cp1254'te tek bayttır: 0xfe.",
+        "0xfe UTF-8'de hiçbir karakterin başlangıcı olamaz."
+      ],
+      "explanation": "Okuma, baytları metne çözmek (decode) demektir. cp1254 baytları UTF-8 olarak çözülemeyince UnicodeDecodeError oluşur; mesaj sorunlu baytı ve konumunu söyler."
+    },
+    {
+      "id": "m8-q40",
+      "type": "traceback",
+      "topic": "json",
+      "sectionId": "json",
+      "difficulty": 2,
+      "prompt": "Elle yazılmış JSON tek tırnak içeriyor. Hangi hata oluşur?",
+      "code": "import json\n\nwith open(\"ayar.json\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"{'tema': 'koyu'}\")\nwith open(\"ayar.json\", encoding=\"utf-8\") as f:\n    print(json.load(f))",
+      "options": [
+        "JSONDecodeError",
+        "SyntaxError",
+        "KeyError",
+        "UnicodeDecodeError"
+      ],
+      "answer": "JSONDecodeError",
+      "expectedError": "JSONDecodeError",
+      "optionFeedback": {
+        "SyntaxError": "SyntaxError Python kodunun kendisi hatalıyken çıkar; buradaki bozuk metin bir veri dosyası.",
+        "KeyError": "Hiçbir anahtara erişilmiyor; hata dosya çözümlenirken oluşuyor.",
+        "UnicodeDecodeError": "Dosya UTF-8 ile yazılıp okundu; baytlar doğru çözüldü, JSON kuralları ihlal edildi."
+      },
+      "hints": [
+        "JSON'da metinler çift tırnak ister.",
+        "Traceback'te json.decoder.JSONDecodeError görünür."
+      ],
+      "explanation": "json.load JSON kurallarına uymayan metinde json.JSONDecodeError verir: Expecting property name enclosed in double quotes. Bu hata ValueError'ın alt sınıfıdır; except ValueError da yakalar."
+    }
+  ]
+}

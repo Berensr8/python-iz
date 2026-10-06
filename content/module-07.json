@@ -1,0 +1,1010 @@
+{
+  "id": 7,
+  "slug": "hata-yonetimi",
+  "title": "Hata yönetimi",
+  "description": "Traceback'ten hatanın yerini bul, beklenen hataları doğru yakala, kendi hatalarını anlamlı biçimde fırlat.",
+  "contentVersion": 1,
+  "estimatedMinutes": 120,
+  "practiceIds": [
+    "m7-q01",
+    "m7-q02",
+    "m7-q03",
+    "m7-q05",
+    "m7-q06",
+    "m7-q07",
+    "m7-q08",
+    "m7-q10",
+    "m7-q12",
+    "m7-q13",
+    "m7-q15",
+    "m7-q19",
+    "m7-q23",
+    "m7-q27",
+    "m7-q39"
+  ],
+  "sections": [
+    {
+      "id": "reading-traceback",
+      "title": "Traceback okuma",
+      "eyebrow": "Aşağıdan yukarı oku, kendi satırını bul",
+      "objectives": [
+        "Traceback'in son satırından hata türünü ve mesajını çıkarır.",
+        "Çağrı zincirinde hatanın oluştuğu ve tetiklendiği satırları ayırır."
+      ],
+      "prerequisites": [
+        "m6:def-return",
+        "m1:conversion-input"
+      ],
+      "summary": "Traceback, hata anına kadar yapılan çağrıların listesidir. Son satır hatanın türünü ve mesajını, en alttaki çerçeve hatanın oluştuğu yeri, üsttekiler oraya nasıl gelindiğini gösterir.",
+      "explanation": "\"Traceback (most recent call last)\" başlığı en son çağrının en altta olduğunu söyler. Okuma sırası: önce son satırı oku (ValueError: invalid literal...), sonra yukarı doğru çıkıp kendi yazdığın ilk dosya ve satırı bul; kütüphane içindeki satırlar çoğu zaman yalnızca hatanın geçtiği yoldur. Her çerçevede dosya adı, satır numarası ve fonksiyon adı (in load) bulunur. traceback modülü bu bilgileri programdan okumayı sağlar; aşağıdaki örnek hatayı yakalayıp çağrı zincirini çerçeve çerçeve yazdırıyor.",
+      "code": "import traceback\n\ndef parse(text):\n    return int(text)\n\ndef load(values):\n    return [parse(v) for v in values]\n\ntry:\n    load([\"1\", \"x\"])\nexcept ValueError as error:\n    for frame in traceback.extract_tb(error.__traceback__):\n        print(frame.name, frame.lineno)\n    print(type(error).__name__, \"-\", error)",
+      "expectedOutput": "<module> 10\nload 7\nparse 4\nValueError - invalid literal for int() with base 10: 'x'",
+      "why": "Zincir dıştan içe okunur: modül düzeyi 10. satırda load'u çağırdı, load 7. satırda parse'ı; hata parse'ın 4. satırındaki int() çağrısında oluştu. Mesaj sorunlu değeri ('x') açıkça söylüyor; düzeltilecek yer veri ya da parse'ın girdi kontrolüdür.",
+      "alternatives": [
+        "Konsolda tam traceback'i görmek için hatayı yakalamamak yeterlidir; yakaladıktan sonra yine görmek istersen traceback.print_exc() kullan.",
+        "Uzun traceback'lerde editörün dosya:satır bağlantısına tıklamak, satırı elle aramaktan hızlıdır."
+      ],
+      "traps": [
+        "Yalnızca en üstteki satıra bakıp hatanın orada oluştuğunu sanmak.",
+        "Hata mesajını okumadan yalnızca hata türüne bakmak; mesaj çoğu zaman sorunlu değeri gösterir.",
+        "Kütüphane içindeki satırı düzeltmeye çalışmak; sorun çoğu zaman o kütüphaneye verilen argümandadır."
+      ],
+      "realCode": "def get_port(config):\n    return int(config[\"port\"])\n\nfor config in [{\"port\": \"8080\"}, {\"host\": \"x\"}, {\"port\": \"http\"}]:\n    try:\n        print(get_port(config))\n    except (KeyError, ValueError) as error:\n        print(f\"{type(error).__name__}: {error}\")",
+      "realOutput": "8080\nKeyError: 'port'\nValueError: invalid literal for int() with base 10: 'http'",
+      "lineByLine": [
+        "Fonksiyon yapılandırmadan portu okuyup sayıya çevirir.",
+        "İlk yapılandırma geçerlidir ve 8080 yazdırılır.",
+        "port anahtarı yoksa KeyError oluşur; mesajı yalnızca eksik anahtarın tırnaklı adıdır.",
+        "Değer sayı değilse ValueError oluşur; mesaj sorunlu metni gösterir."
+      ]
+    },
+    {
+      "id": "common-errors",
+      "title": "Yaygın hata türleri",
+      "eyebrow": "Hatanın adı neyin yanlış olduğunu söyler",
+      "objectives": [
+        "Sık görülen hata türlerini nedenleriyle eşleştirir.",
+        "Hata sınıfları arasındaki üst/alt ilişkisini (LookupError gibi) okur."
+      ],
+      "prerequisites": [
+        "reading-traceback",
+        "m4:dicts"
+      ],
+      "summary": "NameError tanımsız isim, TypeError uyumsuz tip, ValueError doğru tipte geçersiz değer, IndexError/KeyError olmayan konum/anahtar, AttributeError olmayan nitelik veya metot, ZeroDivisionError sıfıra bölmedir.",
+      "explanation": "Hata türleri bir sınıf ağacı oluşturur: neredeyse hepsi Exception'dan türer. IndexError ve KeyError ortak üst sınıf LookupError'dan, ZeroDivisionError ArithmeticError'dan gelir; except LookupError ikisini birden yakalar. Ayrım için sorulacak soru: tip mi yanlış (TypeError: \"3\" + 4), yoksa tip doğru ama değer mi kabul edilemez (ValueError: int(\"üç\"))? SyntaxError ve IndentationError ise kod çalışmaya başlamadan oluşur; aynı dosyadaki try ile yakalanamaz. KeyError'un mesajı yalnızca eksik anahtarın tırnaklı hâlidir: 'b'.",
+      "code": "checks = [\n    lambda: int(\"3.5\"),\n    lambda: [1, 2][5],\n    lambda: {\"a\": 1}[\"b\"],\n    lambda: \"abc\".push(\"d\"),\n    lambda: 10 / 0,\n    lambda: \"yaş: \" + 5,\n]\nfor check in checks:\n    try:\n        check()\n    except Exception as error:\n        print(type(error).__name__)\nprint(issubclass(KeyError, LookupError), issubclass(IndexError, LookupError))",
+      "expectedOutput": "ValueError\nIndexError\nKeyError\nAttributeError\nZeroDivisionError\nTypeError\nTrue True",
+      "why": "Her lambda başka bir hatayı tetikler; except Exception hepsini yakalar ve type(error).__name__ türü yazar. Son satır IndexError ile KeyError'ın aynı üst sınıftan geldiğini doğrular.",
+      "alternatives": [
+        "Hangi hatanın oluşabileceğini öğrenmenin en hızlı yolu küçük bir denemeyi REPL'de çalıştırmaktır.",
+        "Belgelerdeki \"Raises\" bölümü bir fonksiyonun bilinçli olarak hangi hataları ürettiğini listeler."
+      ],
+      "traps": [
+        "TypeError ile ValueError'ı karıştırmak.",
+        "KeyError mesajındaki tırnakları ayrı bir sorun sanmak.",
+        "SyntaxError'ın aynı dosyadaki try/except ile yakalanacağını sanmak."
+      ],
+      "realCode": "def safe_ratio(done, total):\n    try:\n        return round(done / total * 100)\n    except ZeroDivisionError:\n        return 0\n    except TypeError:\n        return None\n\nprint(safe_ratio(3, 4), safe_ratio(5, 0), safe_ratio(\"3\", 4))",
+      "realOutput": "75 0 None",
+      "lineByLine": [
+        "Yüzde hesabı iki farklı hata üretebilir.",
+        "Toplam 0 ise anlamlı bir oran yoktur; 0 döndürülür.",
+        "Sayı yerine metin gelirse tip hatası ayrıca ele alınır ve None döner.",
+        "Her hata türüne ayrı tepki vermek, hepsini aynı except ile yutmaktan daha bilinçlidir."
+      ]
+    },
+    {
+      "id": "try-except",
+      "title": "try ve except",
+      "eyebrow": "Beklediğin hatayı yakala, gerisini bırak",
+      "objectives": [
+        "try bloğunda hata olunca akışın hangi except'e geçtiğini izler.",
+        "Geniş except kullanımının neden hataları gizlediğini açıklar."
+      ],
+      "prerequisites": [
+        "common-errors"
+      ],
+      "summary": "try içindeki satırlardan biri hata verirse kalan satırlar atlanır ve türü eşleşen ilk except çalışır. Eşleşen yoksa hata yukarı doğru yayılır.",
+      "explanation": "except ValueError as error yazımı hata nesnesini bir isme bağlar; mesajı str(error) ile okunur. Birden çok except yazılabilir; yukarıdan aşağıya denenir, bu yüzden özel türler genel türlerden önce gelmelidir. Birden çok türe aynı tepki için tuple kullanılır: except (KeyError, IndexError). Çıplak except: veya except Exception: her şeyi yakalar ve yazım hatalarını bile gizler; yalnızca en dış katmanda, hatayı kaydedip yeniden fırlatmak için kullanılır. try bloğunu küçük tut: yalnızca hata vermesini beklediğin satırı içine al.",
+      "code": "def to_number(text):\n    try:\n        value = int(text)\n        print(\"dönüştü\")\n        return value\n    except ValueError as error:\n        print(\"geçersiz:\", error)\n        return None\n\nprint(to_number(\"42\"))\nprint(to_number(\"4x\"))",
+      "expectedOutput": "dönüştü\n42\ngeçersiz: invalid literal for int() with base 10: '4x'\nNone",
+      "why": "\"42\" dönüşür ve try bloğu sonuna kadar çalışır. \"4x\" int() satırında hata verir; aynı bloktaki print(\"dönüştü\") atlanır ve except bloğu çalışır.",
+      "alternatives": [
+        "Önceden kontrol kolay ve ucuzsa (if key in d) kontrol etmek de bir seçenektir; Python topluluğu çoğu zaman \"önce dene, sonra özür dile\" (EAFP) yaklaşımını tercih eder.",
+        "Aynı tepki verilen hata türlerini tek except'te tuple ile topla."
+      ],
+      "traps": [
+        "except Exception: pass yazıp bütün hataları sessizce yutmak.",
+        "Genel except'i özel except'in üstüne yazmak; özel olan hiç çalışmaz.",
+        "try bloğuna gereğinden fazla satır koyup hangi satırın hata verdiğini belirsizleştirmek."
+      ],
+      "realCode": "def read_age(raw):\n    try:\n        age = int(raw)\n    except ValueError:\n        return \"sayı gir\"\n    if not 0 <= age <= 130:\n        return \"aralık dışı\"\n    return f\"yaş {age}\"\n\nfor raw in [\"25\", \"yirmi\", \"-3\"]:\n    print(read_age(raw))",
+      "realOutput": "yaş 25\nsayı gir\naralık dışı",
+      "lineByLine": [
+        "try yalnızca hata verebilecek dönüşüm satırını sarar.",
+        "Dönüşüm başarısızsa kullanıcıya anlaşılır bir mesaj döner.",
+        "Aralık kontrolü bir hata yakalama değil, normal bir if kontrolüdür.",
+        "Her girdi türü farklı ve öngörülebilir bir sonuç verir."
+      ]
+    },
+    {
+      "id": "else-finally",
+      "title": "else ve finally",
+      "eyebrow": "Başarı yolu ve her durumda temizlik",
+      "objectives": [
+        "try/except/else/finally bloklarının çalışma sırasını belirler.",
+        "finally'nin return veya hata durumunda da çalıştığını açıklar."
+      ],
+      "prerequisites": [
+        "try-except"
+      ],
+      "summary": "else, try bloğu hatasız biterse çalışır. finally ise hata olsun olmasın, return olsa bile her zaman en sonda çalışır.",
+      "explanation": "else bloğu yalnızca başarı durumunda yapılacak işi try'dan ayırır; böylece o işte oluşan hatalar yanlışlıkla aynı except'e düşmez. finally temizlik içindir: dosyayı kapatmak, kilidi bırakmak, geçici durumu geri almak. try veya except içinde return olsa bile finally önce çalışır, sonra fonksiyon döner. Dosyalar gibi kaynaklarda with ifadesi (M8) finally'nin işini otomatik yapar. finally içinde return yazmak hatayı yutar; bu yüzden kaçınılır.",
+      "code": "def run(value):\n    try:\n        result = 10 / value\n    except ZeroDivisionError:\n        print(\"except\")\n        return \"hata\"\n    else:\n        print(\"else\")\n        return result\n    finally:\n        print(\"finally\")\n\nprint(run(2))\nprint(run(0))",
+      "expectedOutput": "else\nfinally\n5.0\nexcept\nfinally\nhata",
+      "why": "run(2) hatasızdır: else çalışır, dönüş değeri hazırlanır ama fonksiyon dönmeden önce finally yazar. run(0)'da except çalışır; yine finally araya girer. Sonuçlar ancak finally'den sonra yazdırılır.",
+      "alternatives": [
+        "Dosya, ağ bağlantısı gibi kaynaklar için with kullanmak, finally'de elle kapatmaktan güvenlidir.",
+        "else gereksiz görünüyorsa kodu try'dan sonra yazmak da olur; else yalnızca hatasız durumda çalıştığını açıkça gösterir."
+      ],
+      "traps": [
+        "else'in except çalışınca da çalıştığını sanmak.",
+        "return olunca finally'nin atlandığını sanmak.",
+        "finally içinde return yazıp asıl hatayı yutmak."
+      ],
+      "realCode": "status = {\"busy\": False}\n\ndef process(job):\n    status[\"busy\"] = True\n    try:\n        if job == \"bozuk\":\n            raise ValueError(\"iş okunamadı\")\n        return f\"{job} tamam\"\n    finally:\n        status[\"busy\"] = False\n\nprint(process(\"rapor\"), status)\ntry:\n    process(\"bozuk\")\nexcept ValueError as error:\n    print(error, status)",
+      "realOutput": "rapor tamam {'busy': False}\niş okunamadı {'busy': False}",
+      "lineByLine": [
+        "İş başlarken durum meşgul olarak işaretlenir.",
+        "Bozuk iş bir hata fırlatır (raise bir sonraki bölümün konusu).",
+        "finally başarıda da hatada da durumu geri alır.",
+        "İki durumda da status temiz kalır; finally olmasaydı hatadan sonra busy True kalırdı."
+      ]
+    },
+    {
+      "id": "raising",
+      "title": "raise ile hata fırlatmak",
+      "eyebrow": "Sorunu sessizce geçme, adını koy",
+      "objectives": [
+        "Geçersiz girdiye uygun türde ve açıklayıcı mesajlı bir hata fırlatır.",
+        "Yakalanan hatayı çıplak raise ile yeniden fırlatmanın ne işe yaradığını açıklar."
+      ],
+      "prerequisites": [
+        "try-except",
+        "m6:def-return"
+      ],
+      "summary": "raise ValueError(\"mesaj\") bir hata oluşturur ve fonksiyonu hemen bitirir. Bir fonksiyon çalışamayacağı bir durumla karşılaşınca None gibi belirsiz bir değer döndürmek yerine hata fırlatmalıdır.",
+      "explanation": "Doğru türü seç: tip yanlışsa TypeError, değer kabul edilemezse ValueError, bulunamayan anahtar için KeyError. Mesaj sorunu çözecek kişiye yardım etmeli: hangi değer, neden geçersiz, ne bekleniyordu. except içinde tek başına raise yazmak, yakalanan hatayı traceback'iyle birlikte olduğu gibi yeniden fırlatır; hatayı kaydedip yukarıya iletmek için kullanılır. Hata fırlatmak, hatanın nerede ele alınacağına çağıranın karar vermesini sağlar.",
+      "code": "def withdraw(balance, amount):\n    if amount <= 0:\n        raise ValueError(f\"tutar pozitif olmalı: {amount}\")\n    if amount > balance:\n        raise ValueError(f\"yetersiz bakiye: {balance} < {amount}\")\n    return balance - amount\n\nprint(withdraw(100, 30))\nfor amount in [-5, 500]:\n    try:\n        withdraw(100, amount)\n    except ValueError as error:\n        print(\"reddedildi:\", error)",
+      "expectedOutput": "70\nreddedildi: tutar pozitif olmalı: -5\nreddedildi: yetersiz bakiye: 100 < 500",
+      "why": "Geçerli çekim yeni bakiyeyi döndürür. Geçersiz durumlarda fonksiyon raise satırında biter; çağıran taraf hatayı yakalayıp mesajı gösterir. Mesajlar sorunlu değeri içerdiği için neyin yanlış olduğunu ayrıca araştırmak gerekmez.",
+      "alternatives": [
+        "Durum gerçekten sık ve beklenen bir sonuçsa (ör. arama sonucunun olmaması) None döndürmek de makuldür; önemli olan bunun belgelenmesidir.",
+        "Kendi alanına özgü hatalar için özel exception sınıfları tanımlamak, çağıranın onları ayırt etmesini kolaylaştırır."
+      ],
+      "traps": [
+        "raise Exception(\"hata\") gibi genel ve bilgisiz hatalar fırlatmak.",
+        "Hata yerine print edip programın yanlış veriyle devam etmesine izin vermek.",
+        "Yeniden fırlatmak için raise error yazmak; çıplak raise niyeti daha açık gösterir ve en temiz yoldur."
+      ],
+      "realCode": "def save(record):\n    if \"id\" not in record:\n        raise KeyError(\"id\")\n    return \"kaydedildi\"\n\ndef handle(record):\n    try:\n        return save(record)\n    except KeyError:\n        print(\"log: kayıt reddedildi\")\n        raise\n\ntry:\n    handle({\"name\": \"Ada\"})\nexcept KeyError as error:\n    print(\"üst katman:\", repr(error))",
+      "realOutput": "log: kayıt reddedildi\nüst katman: KeyError('id')",
+      "lineByLine": [
+        "save, zorunlu alan yoksa KeyError fırlatır.",
+        "handle hatayı yakalar, kaydını yazar ve çıplak raise ile aynen yukarı iletir.",
+        "Üst katman aynı hata nesnesini yakalar; repr türü ve mesajı birlikte gösterir.",
+        "Ara katman hatayı yutmadığı için sorun kaybolmaz."
+      ]
+    },
+    {
+      "id": "custom-exceptions",
+      "title": "Özel exception sınıfları",
+      "eyebrow": "Kendi alanının hatalarına isim ver",
+      "objectives": [
+        "Exception'dan türeyen basit bir hata sınıfı tanımlar.",
+        "Ortak üst sınıf sayesinde bir hata ailesinin birlikte yakalanabildiğini açıklar."
+      ],
+      "prerequisites": [
+        "raising"
+      ],
+      "summary": "class InsufficientFunds(Exception): pass yeni bir hata türü tanımlar. Özel hatalar, çağıranın kendi alanındaki sorunları yerleşik hatalardan ayırmasını sağlar.",
+      "explanation": "Sınıflar M11'in konusu; şimdilik class Ad(ÜstSınıf): kalıbını bir hata türü tanımlama biçimi olarak oku. Adı Error ile bitirmek gelenektir. Bir uygulamanın hataları ortak bir üst sınıftan türetilirse (class PaymentError(Exception), class CardDeclined(PaymentError)) çağıran ister tek bir türü, ister bütün aileyi except PaymentError ile yakalayabilir. Ek bilgi taşımak için hata oluşturulurken argüman verilir; bu argümanlar error.args içinde saklanır. Yerleşik ValueError gibi bir türden türetmek, var olan except ValueError bloklarının da yeni hatayı yakalamasını sağlar.",
+      "code": "class PaymentError(Exception):\n    pass\n\nclass CardDeclined(PaymentError):\n    pass\n\nclass LimitExceeded(PaymentError):\n    pass\n\ndef pay(amount, limit):\n    if amount > limit:\n        raise LimitExceeded(amount, limit)\n    if amount == 13:\n        raise CardDeclined(\"banka reddetti\")\n    return \"ödendi\"\n\nfor amount in [50, 13, 900]:\n    try:\n        print(pay(amount, 500))\n    except LimitExceeded as error:\n        print(\"limit:\", error.args)\n    except PaymentError as error:\n        print(type(error).__name__, error)",
+      "expectedOutput": "ödendi\nCardDeclined banka reddetti\nlimit: (900, 500)",
+      "why": "LimitExceeded kendi except'iyle yakalanır ve args iki değeri taşır. CardDeclined'ın ayrı bir except'i yoktur ama PaymentError'dan türediği için genel PaymentError bloğu onu yakalar.",
+      "alternatives": [
+        "Tek bir özel durum için yerleşik bir hata (ValueError) yeterliyse yeni sınıf tanımlamaya gerek yoktur.",
+        "Hataya isimli alanlar eklemek için sınıfa __init__ yazılabilir; M11'den sonra bu kalıbı rahatça okuyacaksın."
+      ],
+      "traps": [
+        "Özel hatayı Exception yerine BaseException'dan türetmek; KeyboardInterrupt gibi sistem sinyalleriyle aynı aileye girer.",
+        "Alt sınıfın except'ini üst sınıfınkinin altına yazıp hiç çalıştırmamak.",
+        "Her küçük durum için ayrı hata sınıfı oluşturup hiyerarşiyi gereksiz büyütmek."
+      ],
+      "realCode": "class ConfigError(ValueError):\n    pass\n\ndef parse_timeout(raw):\n    if not raw.isdigit():\n        raise ConfigError(f\"timeout sayı olmalı: {raw!r}\")\n    return int(raw)\n\ntry:\n    parse_timeout(\"on\")\nexcept ValueError as error:\n    print(type(error).__name__, \"|\", error)",
+      "realOutput": "ConfigError | timeout sayı olmalı: 'on'",
+      "lineByLine": [
+        "ConfigError, ValueError'dan türer; yani bir tür ValueError'dır.",
+        "!r dönüşümü değeri tırnaklı (repr) biçimde mesaja koyar.",
+        "Çağıran yalnızca except ValueError yazmış olsa da özel hata yakalanır.",
+        "type(error).__name__ yakalanan nesnenin gerçek türünü gösterir."
+      ]
+    },
+    {
+      "id": "raise-from",
+      "title": "raise from ve hata zincirleme",
+      "eyebrow": "Düşük seviyeli hatayı anlamlı bir hataya çevir",
+      "objectives": [
+        "raise ... from error ile asıl nedeni koruyarak yeni bir hata fırlatır.",
+        "Traceback'teki \"The above exception was the direct cause\" satırını yorumlar."
+      ],
+      "prerequisites": [
+        "custom-exceptions"
+      ],
+      "summary": "raise YeniHata(...) from error, alt seviyedeki hatayı yeni hatanın nedeni (__cause__) olarak kaydeder. Traceback iki hatayı da aralarındaki ilişkiyle birlikte gösterir.",
+      "explanation": "Bir modül, içeride oluşan teknik bir hatayı (KeyError, ValueError) kendi alanının diliyle çağırana iletmek ister: \"port ayarı eksik\" gibi. raise ... from error iki hatayı bağlar; traceback önce asıl nedeni, sonra \"The above exception was the direct cause of the following exception\" satırını ve yeni hatayı gösterir. from yazılmadan except içinde yeni bir hata fırlatılırsa Python ilişkiyi yine kaydeder (__context__) ama mesaj \"During handling of the above exception, another exception occurred\" olur; bu, kazara oluşmuş ikinci bir hata izlenimi verir. raise ... from None asıl nedeni bilinçli olarak gizler; yalnızca neden gerçekten önemsizse kullanılır.",
+      "code": "class SettingsError(Exception):\n    pass\n\ndef get_port(settings):\n    try:\n        return int(settings[\"port\"])\n    except KeyError as error:\n        raise SettingsError(\"port ayarı eksik\") from error\n    except ValueError as error:\n        raise SettingsError(f\"port sayı değil: {settings['port']}\") from error\n\nfor settings in [{\"port\": \"80\"}, {}, {\"port\": \"web\"}]:\n    try:\n        print(get_port(settings))\n    except SettingsError as error:\n        print(error, \"<-\", type(error.__cause__).__name__)",
+      "expectedOutput": "80\nport ayarı eksik <- KeyError\nport sayı değil: web <- ValueError",
+      "why": "Çağıran yalnızca SettingsError ile ilgilenir; asıl teknik neden __cause__ içinde korunur ve gerektiğinde okunabilir. Gerçek bir traceback'te iki hata alt alta, neden-sonuç ilişkisiyle görünür.",
+      "alternatives": [
+        "Türü değiştirmeden yalnızca bağlam eklemek için Python 3.11'den beri error.add_note(\"...\") kullanılabilir.",
+        "Alt seviyedeki hata çağıran için zaten anlamlıysa onu çevirmeden yayılmaya bırakmak daha basittir."
+      ],
+      "traps": [
+        "from yazmayıp asıl nedeni belirsizleştirmek.",
+        "from None ile hata ayıklamada gerekli bilgiyi gizlemek.",
+        "Her katmanda hatayı yeni bir türe çevirip traceback'i gereksiz uzatmak."
+      ],
+      "realCode": "import json\n\nclass ImportFailed(Exception):\n    pass\n\ndef load_users(text):\n    try:\n        return json.loads(text)[\"users\"]\n    except (json.JSONDecodeError, KeyError) as error:\n        raise ImportFailed(\"kullanıcı dosyası okunamadı\") from error\n\ntry:\n    load_users('{\"items\": []}')\nexcept ImportFailed as error:\n    cause = error.__cause__\n    print(error, \"|\", type(cause).__name__, cause)",
+      "realOutput": "kullanıcı dosyası okunamadı | KeyError 'users'",
+      "lineByLine": [
+        "JSON ayrıştırma ve eksik anahtar iki farklı teknik hata üretebilir.",
+        "İkisi de alanın diliyle tek bir ImportFailed hatasına çevrilir.",
+        "from error asıl nedeni __cause__ olarak saklar.",
+        "Üst katman hem kullanıcıya gösterilecek mesajı hem teknik nedeni okuyabilir."
+      ]
+    },
+    {
+      "id": "assert-validation",
+      "title": "assert ve girdi doğrulaması",
+      "eyebrow": "Programcı varsayımı mı, kullanıcı hatası mı?",
+      "objectives": [
+        "assert'in iç tutarlılık kontrolü için olduğunu, girdi doğrulaması için olmadığını açıklar.",
+        "Kullanıcı girdisini if ve raise ile doğrular."
+      ],
+      "prerequisites": [
+        "raising"
+      ],
+      "summary": "assert koşul, \"mesaj\" koşul yanlışsa AssertionError fırlatır. Python -O seçeneğiyle çalıştırılınca bütün assert'ler kaldırılır; bu yüzden kullanıcı girdisini doğrulamak için kullanılmaz.",
+      "explanation": "assert, \"buraya geldiysek bu doğru olmalı\" diyen bir programcı notudur: bir fonksiyonun döndürdüğü listenin sıralı olması, bir toplamın negatif olmaması gibi. Yanlışsa programda bir hata vardır ve bunun erken fark edilmesi iyidir. Kullanıcıdan, dosyadan veya ağdan gelen veri ise her zaman yanlış olabilir; onun kontrolü if ve raise ValueError ile yapılır ve optimizasyonla kaybolmaz. assert'i parantezle yazmak (assert (koşul, \"mesaj\")) boş olmayan bir tuple oluşturur ve her zaman geçer; Python bunun için uyarı da verir. Testlerde (M16) assert ana araçtır.",
+      "code": "def average(scores):\n    if not scores:\n        raise ValueError(\"en az bir not gerekli\")\n    result = sum(scores) / len(scores)\n    assert min(scores) <= result <= max(scores), \"ortalama aralık dışında\"\n    return result\n\nprint(average([70, 90]))\ntry:\n    average([])\nexcept ValueError as error:\n    print(\"girdi hatası:\", error)\n\ntry:\n    assert 2 + 2 == 5, \"matematik bozuldu\"\nexcept AssertionError as error:\n    print(\"assert:\", error)",
+      "expectedOutput": "80.0\ngirdi hatası: en az bir not gerekli\nassert: matematik bozuldu",
+      "why": "Boş liste bir kullanıcı hatasıdır ve -O ile çalışırken de yakalanması gerektiği için ValueError ile kontrol edilir. Ortalamanın en küçük ve en büyük not arasında olması ise matematiksel bir varsayımdır; bozulursa kodda hata vardır, bu yüzden assert uygundur. Son örnek yanlış bir assert'in AssertionError ürettiğini gösterir.",
+      "alternatives": [
+        "Karmaşık girdi doğrulamaları için ileride veri doğrulama kütüphaneleri (M18) kullanılır.",
+        "assert yerine açık bir if ve raise RuntimeError, kontrolün üretimde de çalışmasını garanti eder."
+      ],
+      "traps": [
+        "Kullanıcı girdisini assert ile doğrulamak.",
+        "assert (koşul, \"mesaj\") yazıp her zaman geçen bir kontrol oluşturmak.",
+        "assert içinde yan etkisi olan bir çağrı yapmak; -O ile o çağrı da kaybolur."
+      ],
+      "realCode": "def apply_discount(price, percent):\n    if not 0 <= percent <= 100:\n        raise ValueError(f\"indirim 0-100 arası olmalı: {percent}\")\n    new_price = price * (100 - percent) / 100\n    assert 0 <= new_price <= price\n    return new_price\n\nprint(apply_discount(200, 25))\ntry:\n    apply_discount(200, 150)\nexcept ValueError as error:\n    print(error)",
+      "realOutput": "150.0\nindirim 0-100 arası olmalı: 150",
+      "lineByLine": [
+        "Dışarıdan gelen indirim oranı her zaman doğrulanır.",
+        "Geçersiz oran açıklayıcı bir ValueError ile reddedilir.",
+        "Hesaptan sonra assert programcının varsayımını kontrol eder: yeni fiyat 0 ile eski fiyat arasında.",
+        "Doğrulama sayesinde assert'in hiç başarısız olmaması beklenir."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "m7-q01",
+      "type": "output",
+      "topic": "try-except",
+      "sectionId": "try-except",
+      "difficulty": 1,
+      "prompt": "Hata sonrası hangi satırlar çalışır?",
+      "code": "try:\n    print(\"a\")\n    x = int(\"b\")\n    print(\"c\")\nexcept ValueError:\n    print(\"d\")",
+      "options": ["a ve d (iki satır)", "a, c ve d (üç satır)", "d", "a"],
+      "answer": "a ve d (iki satır)",
+      "expectedOutput": "a\nd",
+      "hints": ["Hata int(\"b\") satırında oluşur.", "try bloğunun kalanı atlanır."],
+      "explanation": "a yazdırılır, sonraki satır hata verir; print(\"c\") atlanır ve except bloğu d yazar."
+    },
+    {
+      "id": "m7-q02",
+      "type": "output",
+      "topic": "try-except",
+      "sectionId": "try-except",
+      "difficulty": 3,
+      "prompt": "Hangi except çalışır?",
+      "code": "try:\n    [1, 2][3]\nexcept LookupError:\n    print(\"genel\")\nexcept IndexError:\n    print(\"özel\")",
+      "options": ["genel", "özel", "genel ve özel", "Hata"],
+      "answer": "genel",
+      "expectedOutput": "genel",
+      "hints": ["IndexError, LookupError'un alt sınıfıdır.", "except blokları yukarıdan aşağı denenir; ilk eşleşen kazanır."],
+      "explanation": "IndexError bir LookupError'dur, bu yüzden ilk except eşleşir. Özel except hiç çalışmaz; özel türler genel türlerden önce yazılmalıdır."
+    },
+    {
+      "id": "m7-q03",
+      "type": "output",
+      "topic": "else-finally",
+      "sectionId": "else-finally",
+      "difficulty": 1,
+      "prompt": "Hatasız bir try'da hangi bloklar çalışır?",
+      "code": "try:\n    x = 1 / 1\nexcept ZeroDivisionError:\n    print(\"hata\")\nelse:\n    print(\"tamam\")\nfinally:\n    print(\"son\")",
+      "options": ["tamam ve son (iki satır)", "son", "hata ve son (iki satır)", "tamam"],
+      "answer": "tamam ve son (iki satır)",
+      "expectedOutput": "tamam\nson",
+      "hints": ["Hata olmadığı için except atlanır.", "else başarıda, finally her durumda çalışır."],
+      "explanation": "try hatasız biter; else çalışır, ardından finally her durumda çalışır."
+    },
+    {
+      "id": "m7-q04",
+      "type": "output",
+      "topic": "else-finally",
+      "sectionId": "else-finally",
+      "difficulty": 3,
+      "prompt": "return içeren try'da çıktı sırası nedir?",
+      "code": "def f():\n    try:\n        return \"try\"\n    finally:\n        print(\"finally\")\n\nprint(f())",
+      "options": ["finally, sonra try", "try, sonra finally", "yalnızca try", "yalnızca finally"],
+      "answer": "finally, sonra try",
+      "expectedOutput": "finally\ntry",
+      "hints": ["finally, fonksiyon dönmeden önce çalışır.", "print(f()) dönüş değerini ancak f bittikten sonra yazar."],
+      "explanation": "return \"try\" dönüş değerini hazırlar ama fonksiyon dönmeden finally çalışır ve önce \"finally\" yazılır. Sonra dönen değer yazdırılır."
+    },
+    {
+      "id": "m7-q05",
+      "type": "output",
+      "topic": "hata-türü",
+      "sectionId": "common-errors",
+      "difficulty": 1,
+      "prompt": "Yakalanan hatanın türü ne?",
+      "code": "try:\n    \"5\" + 5\nexcept Exception as e:\n    print(type(e).__name__)",
+      "options": ["TypeError", "ValueError", "SyntaxError", "NameError"],
+      "answer": "TypeError",
+      "expectedOutput": "TypeError",
+      "hints": ["str ile int toplanamaz.", "Sorun değerde değil, tiplerin uyumsuzluğunda."],
+      "explanation": "+ işlemi str ve int için tanımlı değildir; bu bir tip uyumsuzluğudur ve TypeError oluşur."
+    },
+    {
+      "id": "m7-q06",
+      "type": "output",
+      "topic": "hata-türü",
+      "sectionId": "common-errors",
+      "difficulty": 2,
+      "prompt": "KeyError mesajı nasıl görünür?",
+      "code": "try:\n    {\"a\": 1}[\"b\"]\nexcept KeyError as e:\n    print(e)",
+      "options": ["'b'", "b", "KeyError: b", "None"],
+      "answer": "'b'",
+      "expectedOutput": "'b'",
+      "hints": ["str(KeyError) yalnızca eksik anahtarı verir.", "Anahtar tırnaklı (repr) biçimde gösterilir."],
+      "explanation": "KeyError'un mesajı, eksik anahtarın repr hâlidir; metin anahtarlar tırnaklı görünür. Türü ayrıca yazdırmak için type(e).__name__ gerekir."
+    },
+    {
+      "id": "m7-q07",
+      "type": "output",
+      "topic": "raise",
+      "sectionId": "raising",
+      "difficulty": 2,
+      "prompt": "Çıktı ne?",
+      "code": "def check(n):\n    if n < 0:\n        raise ValueError(\"negatif\")\n    return n\n\ntry:\n    print(check(3))\n    print(check(-1))\nexcept ValueError as e:\n    print(\"yakalandı:\", e)",
+      "options": ["3 ve yakalandı: negatif (iki satır)", "yakalandı: negatif", "3 ve -1 (iki satır)", "3"],
+      "answer": "3 ve yakalandı: negatif (iki satır)",
+      "expectedOutput": "3\nyakalandı: negatif",
+      "hints": ["İlk çağrı geçerlidir.", "İkinci çağrı raise satırında biter."],
+      "explanation": "check(3) 3 döndürür ve yazdırılır. check(-1) ValueError fırlatır; print çalışmadan except mesajı yazar."
+    },
+    {
+      "id": "m7-q08",
+      "type": "output",
+      "topic": "özel-hata",
+      "sectionId": "custom-exceptions",
+      "difficulty": 2,
+      "prompt": "Alt sınıf hatası üst sınıfla yakalanınca ne yazdırılır?",
+      "code": "class AppError(Exception):\n    pass\n\nclass DbError(AppError):\n    pass\n\ntry:\n    raise DbError(\"bağlantı yok\")\nexcept AppError as e:\n    print(type(e).__name__, e)",
+      "options": ["DbError bağlantı yok", "AppError bağlantı yok", "bağlantı yok", "Hata yakalanmaz"],
+      "answer": "DbError bağlantı yok",
+      "expectedOutput": "DbError bağlantı yok",
+      "hints": ["DbError bir AppError'dur.", "Yakalanan nesnenin gerçek türü değişmez."],
+      "explanation": "except AppError alt sınıfları da yakalar, ama nesne yine DbError'dur; type(e).__name__ bunu gösterir."
+    },
+    {
+      "id": "m7-q09",
+      "type": "output",
+      "topic": "raise-from",
+      "sectionId": "raise-from",
+      "difficulty": 2,
+      "prompt": "Yeni hatanın nedeni (__cause__) hangi türdür?",
+      "code": "try:\n    try:\n        int(\"x\")\n    except ValueError as e:\n        raise RuntimeError(\"dönüşüm\") from e\nexcept RuntimeError as err:\n    print(err, type(err.__cause__).__name__)",
+      "options": ["dönüşüm ValueError", "dönüşüm RuntimeError", "ValueError dönüşüm", "dönüşüm NoneType"],
+      "answer": "dönüşüm ValueError",
+      "expectedOutput": "dönüşüm ValueError",
+      "hints": ["from e asıl hatayı __cause__ olarak saklar.", "Asıl hata int(\"x\")'ten gelir."],
+      "explanation": "Dış katman RuntimeError'u yakalar; nedeni olarak kaydedilen ValueError __cause__ üzerinden okunur."
+    },
+    {
+      "id": "m7-q10",
+      "type": "output",
+      "topic": "assert",
+      "sectionId": "assert-validation",
+      "difficulty": 2,
+      "prompt": "Hangi assert mesajı yazdırılır?",
+      "code": "try:\n    assert len(\"abc\") == 3, \"uzunluk\"\n    assert 1 > 2, \"karşılaştırma\"\nexcept AssertionError as e:\n    print(e)",
+      "options": ["karşılaştırma", "uzunluk", "uzunluk ve karşılaştırma", "Çıktı yok"],
+      "answer": "karşılaştırma",
+      "expectedOutput": "karşılaştırma",
+      "hints": ["İlk koşul doğrudur; assert sessizce geçer.", "İkinci koşul yanlıştır."],
+      "explanation": "Doğru bir assert hiçbir şey yapmaz. 1 > 2 yanlış olduğu için ikinci assert kendi mesajıyla AssertionError fırlatır."
+    },
+    {
+      "id": "m7-q11",
+      "type": "output",
+      "topic": "traceback",
+      "sectionId": "reading-traceback",
+      "difficulty": 3,
+      "prompt": "Çağrı zinciri hangi sırayla kaydedilir?",
+      "code": "import traceback\n\ndef a():\n    b()\n\ndef b():\n    raise ValueError(\"x\")\n\ntry:\n    a()\nexcept ValueError as e:\n    names = [f.name for f in traceback.extract_tb(e.__traceback__)]\n    print(names)",
+      "options": ["['<module>', 'a', 'b']", "['b', 'a', '<module>']", "['a', 'b']", "['b']"],
+      "answer": "['<module>', 'a', 'b']",
+      "expectedOutput": "['<module>', 'a', 'b']",
+      "hints": ["Traceback en son çağrıyı en sona koyar.", "Hata b'de oluştu; b'yi a, a'yı modül çağırdı."],
+      "explanation": "Çerçeveler dıştan içe sıralanır: modül düzeyi, a, b. Hatanın oluştuğu yer listenin (ve ekrandaki traceback'in) en sonundadır."
+    },
+    {
+      "id": "m7-q12",
+      "type": "output",
+      "topic": "try-except",
+      "sectionId": "try-except",
+      "difficulty": 2,
+      "prompt": "Üç değer için çıktı ne?",
+      "code": "for raw in [\"7\", \"x\", None]:\n    try:\n        print(int(raw) * 2)\n    except (ValueError, TypeError):\n        print(\"atla\")",
+      "options": ["14, atla, atla (üç satır)", "14, atla ve bir traceback", "14", "atla, atla, atla (üç satır)"],
+      "answer": "14, atla, atla (üç satır)",
+      "expectedOutput": "14\natla\natla",
+      "hints": ["int(\"x\") ValueError, int(None) TypeError verir.", "Tuple içindeki iki tür de yakalanır."],
+      "explanation": "Aynı tepki verilen iki hata türü tuple ile tek except'te toplanmış; döngü her değerde devam eder."
+    },
+    {
+      "id": "m7-q13",
+      "type": "bug",
+      "topic": "try-except",
+      "sectionId": "try-except",
+      "difficulty": 2,
+      "prompt": "Çıktı boş bir satır. Koddaki yazım hatası neden fark edilmedi?",
+      "code": "def load(data):\n    try:\n        return data[\"nmae\"]\n    except Exception:\n        return \"\"\n\nprint(load({\"name\": \"Ada\"}))",
+      "options": [
+        "except Exception her hatayı yutuyor; yazım hatasından doğan KeyError sessizce boş metne dönüşüyor",
+        "Sözlükler try içinde okunamaz",
+        "return try içinde kullanılamaz",
+        "print boş metni yazdıramaz"
+      ],
+      "answer": "except Exception her hatayı yutuyor; yazım hatasından doğan KeyError sessizce boş metne dönüşüyor",
+      "optionFeedback": {
+        "Sözlükler try içinde okunamaz": "try içinde her işlem yapılabilir; sorun hatanın gizlenmesi.",
+        "return try içinde kullanılamaz": "try içinde return geçerlidir.",
+        "print boş metni yazdıramaz": "print boş metni yazdı; boş satır tam olarak budur."
+      },
+      "hints": ["\"nmae\" anahtarı yok.", "Yalnızca beklediğin hatayı yakala ya da bu satırı hiç sarma."],
+      "explanation": "Geniş except gerçek bir programcı hatasını (anahtar yazımı) sessizce bir varsayılana çevirir. Hata görünseydi hemen düzeltilirdi."
+    },
+    {
+      "id": "m7-q14",
+      "type": "bug",
+      "topic": "else-finally",
+      "sectionId": "else-finally",
+      "difficulty": 3,
+      "prompt": "Geçersiz girdide neden ikinci bir hata oluşuyor?",
+      "code": "def read_number(text):\n    try:\n        value = int(text)\n    except ValueError:\n        print(\"geçersiz\")\n    return value\n\nprint(read_number(\"x\"))",
+      "options": [
+        "except bloğu value'ya değer atamadan devam ediyor; return value atanmamış değişkeni okuyor",
+        "except bloğu hatayı otomatik olarak yeniden fırlatıyor",
+        "int metin kabul etmez",
+        "print return'ü engeller"
+      ],
+      "answer": "except bloğu value'ya değer atamadan devam ediyor; return value atanmamış değişkeni okuyor",
+      "expectedError": "UnboundLocalError",
+      "optionFeedback": {
+        "except bloğu hatayı otomatik olarak yeniden fırlatıyor": "except bloğu raise içermediği için ValueError burada sona erer; ikinci hata return satırında doğar.",
+        "int metin kabul etmez": "int metin kabul eder; \"x\" yalnızca geçerli bir sayı değil ve bu hata zaten yakalandı.",
+        "print return'ü engeller": "print akışı değiştirmez; return value yine çalışır."
+      },
+      "hints": ["Hata sonrası value'ya hiç atama yapıldı mı?", "except içinde return None yaz veya başarılı dönüşü else bloğuna taşı."],
+      "explanation": "int(\"x\") başarısız olduğu için value hiç oluşmaz. except bittikten sonra return value atanmamış yerel değişkeni okur ve UnboundLocalError verir. Başarılı dönüşü else'e koymak veya except içinde ayrı bir değer döndürmek akışı netleştirir."
+    },
+    {
+      "id": "m7-q15",
+      "type": "bug",
+      "topic": "raise",
+      "sectionId": "raising",
+      "difficulty": 2,
+      "prompt": "Program -4 yazdırarak devam ediyor. Sorun ne?",
+      "code": "def set_age(age):\n    if age < 0:\n        print(\"yaş negatif olamaz\")\n    return age\n\nuser_age = set_age(-5)\nprint(user_age + 1)",
+      "options": [
+        "Hata yazdırılıyor ama fırlatılmıyor; geçersiz değer programda kalmaya devam ediyor",
+        "print fonksiyonu bitirir",
+        "Negatif sayılar int değildir",
+        "return yanlış yerde"
+      ],
+      "answer": "Hata yazdırılıyor ama fırlatılmıyor; geçersiz değer programda kalmaya devam ediyor",
+      "optionFeedback": {
+        "print fonksiyonu bitirir": "print fonksiyonu bitirmez; ardından return age çalışır.",
+        "Negatif sayılar int değildir": "-5 geçerli bir int'tir; sorun iş kuralının uygulanmaması.",
+        "return yanlış yerde": "return yerinde; eksik olan geçersiz durumda fonksiyonu durduran raise."
+      },
+      "hints": ["Mesajdan sonra ne oluyor?", "print yerine raise ValueError(\"yaş negatif olamaz\")."],
+      "explanation": "Mesaj ekrana yazılır ama fonksiyon geçersiz değeri döndürür ve program yanlış veriyle devam eder. raise fonksiyonu durdurur ve çağıranı karar vermeye zorlar."
+    },
+    {
+      "id": "m7-q16",
+      "type": "bug",
+      "topic": "özel-hata",
+      "sectionId": "custom-exceptions",
+      "difficulty": 3,
+      "prompt": "Zaman aşımında \"tekrar dene\" yazması bekleniyordu. Neden olmuyor?",
+      "code": "class NetworkError(Exception):\n    pass\n\nclass ReadTimeout(NetworkError):\n    pass\n\ntry:\n    raise ReadTimeout(\"10 sn\")\nexcept NetworkError:\n    print(\"ağ hatası\")\nexcept ReadTimeout:\n    print(\"tekrar dene\")",
+      "options": [
+        "Üst sınıfın except'i önce geldiği için alt sınıfın except'ine hiç sıra gelmiyor",
+        "ReadTimeout NetworkError'dan türemiyor",
+        "raise yalnızca yerleşik hataları fırlatabilir",
+        "İki except arka arkaya yazılamaz"
+      ],
+      "answer": "Üst sınıfın except'i önce geldiği için alt sınıfın except'ine hiç sıra gelmiyor",
+      "optionFeedback": {
+        "ReadTimeout NetworkError'dan türemiyor": "class ReadTimeout(NetworkError) tam olarak NetworkError'dan türer; sorun da bu yüzden çıkıyor.",
+        "raise yalnızca yerleşik hataları fırlatabilir": "Exception'dan türeyen her sınıf fırlatılabilir.",
+        "İki except arka arkaya yazılamaz": "İstenildiği kadar except yazılabilir; sıraları önemlidir."
+      },
+      "hints": ["ReadTimeout aynı zamanda bir NetworkError'dur.", "Özel olan except'i üste taşı."],
+      "explanation": "except'ler yukarıdan aşağı denenir. ReadTimeout bir NetworkError olduğu için ilk blok onu yakalar; ikinci blok ulaşılamaz koddur."
+    },
+    {
+      "id": "m7-q17",
+      "type": "bug",
+      "topic": "assert",
+      "sectionId": "assert-validation",
+      "difficulty": 3,
+      "prompt": "assert neden -40 sonucunu engellemedi?",
+      "code": "def withdraw(balance, amount):\n    assert (amount <= balance, \"yetersiz bakiye\")\n    return balance - amount\n\nprint(withdraw(10, 50))",
+      "options": [
+        "Parantez bir tuple oluşturuyor; boş olmayan tuple her zaman truthy",
+        "assert yalnızca testlerde çalışır",
+        "amount <= balance koşulu doğru",
+        "assert mesaj alamaz"
+      ],
+      "answer": "Parantez bir tuple oluşturuyor; boş olmayan tuple her zaman truthy",
+      "optionFeedback": {
+        "assert yalnızca testlerde çalışır": "assert normal programlarda da çalışır; yalnızca -O ile kaldırılır.",
+        "amount <= balance koşulu doğru": "50 <= 10 yanlıştır; ama assert bu koşulu değil tuple'ın tamamını değerlendiriyor.",
+        "assert mesaj alamaz": "assert koşul, \"mesaj\" biçiminde mesaj alır; parantez onu tuple'a çeviriyor."
+      },
+      "hints": ["(x, y) iki elemanlı bir tuple'dır.", "Doğru yazım: assert amount <= balance, \"yetersiz bakiye\"."],
+      "explanation": "Parantezli yazım tek bir tuple değerini assert eder ve boş olmayan tuple her zaman True'dur; Python bunun için SyntaxWarning verir. Ayrıca çekim tutarı dışarıdan gelen bir girdidir; doğrusu if amount > balance: raise ValueError(...) ile kontrol etmektir."
+    },
+    {
+      "id": "m7-q18",
+      "type": "bug",
+      "topic": "raise-from",
+      "sectionId": "raise-from",
+      "difficulty": 2,
+      "prompt": "Hata ayıklayan kişi int()'in asıl mesajını göremiyor. Neden?",
+      "code": "def parse(text):\n    try:\n        return int(text)\n    except ValueError:\n        raise ValueError(\"geçersiz giriş\") from None",
+      "options": [
+        "from None asıl nedeni bilinçli olarak gizler; from error ile bağlanmalı",
+        "int hata mesajı üretmez",
+        "ValueError iki kez fırlatılamaz",
+        "try içinde return kullanılamaz"
+      ],
+      "answer": "from None asıl nedeni bilinçli olarak gizler; from error ile bağlanmalı",
+      "optionFeedback": {
+        "int hata mesajı üretmez": "int, sorunlu değeri içeren bir mesaj üretir; from None onu traceback'ten siler.",
+        "ValueError iki kez fırlatılamaz": "Aynı tür yeniden fırlatılabilir; sorun bağlantının koparılması.",
+        "try içinde return kullanılamaz": "try içinde return geçerlidir."
+      },
+      "hints": ["except ValueError as error yazıp from error kullan.", "from None, neden gerçekten önemsizse kullanılır."],
+      "explanation": "from None zinciri keser; traceback yalnızca \"geçersiz giriş\" gösterir ve hangi metnin sorun çıkardığı kaybolur. from error ile iki hata birlikte görünür."
+    },
+    {
+      "id": "m7-q19",
+      "type": "fill",
+      "topic": "try-except",
+      "sectionId": "try-except",
+      "difficulty": 1,
+      "prompt": "Hatayı yakalayan bloğu başlatan sözcüğü yaz.",
+      "code": "try:\n    print(10 / 0)\n___ ZeroDivisionError:\n    print(\"sıfıra bölünmez\")",
+      "answer": "except",
+      "solutionCode": "try:\n    print(10 / 0)\nexcept ZeroDivisionError:\n    print(\"sıfıra bölünmez\")",
+      "expectedOutput": "sıfıra bölünmez",
+      "hints": ["İngilizcede \"hariç tut\".", "Sözcük except."],
+      "explanation": "except bloğu, adı verilen türde bir hata oluşursa çalışır."
+    },
+    {
+      "id": "m7-q20",
+      "type": "fill",
+      "topic": "else-finally",
+      "sectionId": "else-finally",
+      "difficulty": 1,
+      "prompt": "Hata olsa da olmasa da çalışacak bloğu başlatan sözcüğü yaz.",
+      "code": "try:\n    x = 1\nexcept ValueError:\n    pass\n___:\n    print(\"her zaman\")",
+      "answer": "finally",
+      "solutionCode": "try:\n    x = 1\nexcept ValueError:\n    pass\nfinally:\n    print(\"her zaman\")",
+      "expectedOutput": "her zaman",
+      "hints": ["else yalnızca başarı durumunda çalışır.", "Sözcük finally."],
+      "explanation": "finally her durumda çalışır. Burada else de aynı çıktıyı verirdi ama try hata verseydi else atlanırdı."
+    },
+    {
+      "id": "m7-q21",
+      "type": "fill",
+      "topic": "raise",
+      "sectionId": "raising",
+      "difficulty": 1,
+      "prompt": "Hata fırlatan sözcüğü yaz.",
+      "code": "def check(x):\n    if x < 0:\n        ___ ValueError(\"negatif\")\n    return x\n\ntry:\n    check(-1)\nexcept ValueError as e:\n    print(e)",
+      "answer": "raise",
+      "solutionCode": "def check(x):\n    if x < 0:\n        raise ValueError(\"negatif\")\n    return x\n\ntry:\n    check(-1)\nexcept ValueError as e:\n    print(e)",
+      "expectedOutput": "negatif",
+      "hints": ["İngilizcede \"yükseltmek\".", "Sözcük raise."],
+      "explanation": "raise yeni bir hata nesnesi fırlatır ve fonksiyonu hemen bitirir."
+    },
+    {
+      "id": "m7-q22",
+      "type": "fill",
+      "topic": "raise-from",
+      "sectionId": "raise-from",
+      "difficulty": 2,
+      "prompt": "Asıl hatayı yeni hatanın nedeni olarak bağlayan sözcüğü yaz.",
+      "code": "try:\n    try:\n        {}[\"k\"]\n    except KeyError as e:\n        raise LookupError(\"ayar yok\") ___ e\nexcept LookupError as err:\n    print(type(err.__cause__).__name__)",
+      "answer": "from",
+      "solutionCode": "try:\n    try:\n        {}[\"k\"]\n    except KeyError as e:\n        raise LookupError(\"ayar yok\") from e\nexcept LookupError as err:\n    print(type(err.__cause__).__name__)",
+      "expectedOutput": "KeyError",
+      "hints": ["İngilizcede \"-den\".", "Sözcük from."],
+      "explanation": "raise ... from e asıl KeyError'u yeni hatanın __cause__ alanına bağlar."
+    },
+    {
+      "id": "m7-q23",
+      "type": "order",
+      "topic": "try-except",
+      "sectionId": "try-except",
+      "difficulty": 1,
+      "prompt": "Geçersiz dönüşümü yakalayıp \"geçersiz\" yazdıracak sırayı kur.",
+      "lines": ["except ValueError:", "    print(\"geçersiz\")", "try:", "    print(int(\"abc\"))"],
+      "answer": "try:\n    print(int(\"abc\"))\nexcept ValueError:\n    print(\"geçersiz\")",
+      "solutionCode": "try:\n    print(int(\"abc\"))\nexcept ValueError:\n    print(\"geçersiz\")",
+      "expectedOutput": "geçersiz",
+      "hints": ["try önce gelir.", "Her bloğun gövdesi hemen altındadır."],
+      "explanation": "Riskli satır try içinde, tepki except içinde yer alır."
+    },
+    {
+      "id": "m7-q24",
+      "type": "order",
+      "topic": "else-finally",
+      "sectionId": "else-finally",
+      "difficulty": 2,
+      "prompt": "Dört bloğu doğru sırayla kur. Çıktı: veri, kapat.",
+      "lines": ["finally:", "    print(\"kapat\")", "try:", "    data = \"veri\"", "else:", "    print(data)", "except OSError:", "    print(\"okunamadı\")"],
+      "answer": "try:\n    data = \"veri\"\nexcept OSError:\n    print(\"okunamadı\")\nelse:\n    print(data)\nfinally:\n    print(\"kapat\")",
+      "solutionCode": "try:\n    data = \"veri\"\nexcept OSError:\n    print(\"okunamadı\")\nelse:\n    print(data)\nfinally:\n    print(\"kapat\")",
+      "expectedOutput": "veri\nkapat",
+      "hints": ["Sıra her zaman try, except, else, finally.", "else ve finally isteğe bağlıdır ama yazılırsa bu sırada gelir."],
+      "explanation": "try hatasız biter, except atlanır, else veriyi yazar, finally her durumda kapatır."
+    },
+    {
+      "id": "m7-q25",
+      "type": "order",
+      "topic": "özel-hata",
+      "sectionId": "custom-exceptions",
+      "difficulty": 2,
+      "prompt": "Özel bir hata tanımlayıp fırlatacak ve yakalayacak sırayı kur.",
+      "lines": ["    raise QuotaError(\"kota doldu\")", "class QuotaError(Exception):", "    pass", "try:", "except QuotaError as e:", "    print(\"yakalandı:\", e)"],
+      "answer": "class QuotaError(Exception):\n    pass\ntry:\n    raise QuotaError(\"kota doldu\")\nexcept QuotaError as e:\n    print(\"yakalandı:\", e)",
+      "solutionCode": "class QuotaError(Exception):\n    pass\ntry:\n    raise QuotaError(\"kota doldu\")\nexcept QuotaError as e:\n    print(\"yakalandı:\", e)",
+      "expectedOutput": "yakalandı: kota doldu",
+      "hints": ["Sınıf kullanılmadan önce tanımlanmalı.", "raise try bloğunun içinde."],
+      "explanation": "Önce hata türü tanımlanır, sonra try içinde fırlatılır ve except ile yakalanır."
+    },
+    {
+      "id": "m7-q26",
+      "type": "order",
+      "topic": "raise",
+      "sectionId": "raising",
+      "difficulty": 1,
+      "prompt": "Geçerli bir yaşı kontrol edip 30 yazdıracak sırayı kur.",
+      "lines": ["        raise ValueError(\"yaş negatif\")", "def check(age):", "print(check(30))", "    if age < 0:", "    return age"],
+      "answer": "def check(age):\n    if age < 0:\n        raise ValueError(\"yaş negatif\")\n    return age\nprint(check(30))",
+      "solutionCode": "def check(age):\n    if age < 0:\n        raise ValueError(\"yaş negatif\")\n    return age\nprint(check(30))",
+      "expectedOutput": "30",
+      "hints": ["Kontrol, değeri döndürmeden önce yapılır.", "raise if bloğunun içinde."],
+      "explanation": "Geçersiz durumda raise fonksiyonu durdurur; geçerli değer kontrolden sonra döndürülür."
+    },
+    {
+      "id": "m7-q27",
+      "type": "code",
+      "topic": "try-except",
+      "sectionId": "try-except",
+      "difficulty": 1,
+      "prompt": "Bir satır oku. Tam sayıya çevrilebiliyorsa iki katını, çevrilemiyorsa \"geçersiz\" yazdır. Örnek girdi: 21 → 42.",
+      "starterCode": "raw = input()\n# try/except ile dönüştür\n",
+      "answer": "raw = input()\ntry:\n    print(int(raw) * 2)\nexcept ValueError:\n    print(\"geçersiz\")",
+      "solutionCode": "raw = input()\ntry:\n    print(int(raw) * 2)\nexcept ValueError:\n    print(\"geçersiz\")",
+      "expectedOutput": "42",
+      "hints": ["int(raw) geçersiz metinde ValueError verir.", "Yalnızca ValueError'u yakala."],
+      "explanation": "Dönüşüm try içinde denenir; başarısız olursa except kullanıcıya anlaşılır bir sonuç verir. Ondalıklı metin de int için geçersizdir.",
+      "tests": [
+        { "label": "Örnek", "stdin": "21", "expectedOutput": "42" },
+        { "label": "Metin", "stdin": "abc", "expectedOutput": "geçersiz" },
+        { "label": "Negatif", "stdin": "-4", "expectedOutput": "-8" },
+        { "label": "Ondalık", "stdin": "3.5", "expectedOutput": "geçersiz" }
+      ],
+      "exampleInput": "21"
+    },
+    {
+      "id": "m7-q28",
+      "type": "code",
+      "topic": "try-except",
+      "sectionId": "try-except",
+      "difficulty": 2,
+      "prompt": "İki satırda iki değer oku ve tam bölüm (//) sonucunu yazdır. Değerlerden biri sayı değilse \"sayı değil\", bölen 0 ise \"sıfıra bölünemez\" yazdır.",
+      "starterCode": "left = input()\nright = input()\n# İki ayrı except ile iki hatayı ayır\n",
+      "answer": "left = input()\nright = input()\ntry:\n    print(int(left) // int(right))\nexcept ValueError:\n    print(\"sayı değil\")\nexcept ZeroDivisionError:\n    print(\"sıfıra bölünemez\")",
+      "solutionCode": "left = input()\nright = input()\ntry:\n    print(int(left) // int(right))\nexcept ValueError:\n    print(\"sayı değil\")\nexcept ZeroDivisionError:\n    print(\"sıfıra bölünemez\")",
+      "expectedOutput": "3",
+      "hints": ["Her hata türüne ayrı except yaz.", "-7 // 2 sonucu -4'tür; taban bölme eksi sonsuza yuvarlar."],
+      "explanation": "Farklı hatalar farklı mesajlar gerektirdiği için ayrı except blokları kullanılır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "7\n2", "expectedOutput": "3" },
+        { "label": "Sıfır", "stdin": "7\n0", "expectedOutput": "sıfıra bölünemez" },
+        { "label": "Metin", "stdin": "x\n2", "expectedOutput": "sayı değil" },
+        { "label": "Negatif", "stdin": "-7\n2", "expectedOutput": "-4" }
+      ],
+      "exampleInput": "7\n2"
+    },
+    {
+      "id": "m7-q29",
+      "type": "code",
+      "topic": "else-finally",
+      "sectionId": "else-finally",
+      "difficulty": 2,
+      "prompt": "Bir satır oku ve int'e çevirmeyi dene. Başarısızsa \"hata\", başarılıysa (else bloğunda) \"sayı: n\" yazdır; her durumda en sonda (finally) \"bitti\" yazdır.",
+      "starterCode": "raw = input()\n# try / except / else / finally\n",
+      "answer": "raw = input()\ntry:\n    number = int(raw)\nexcept ValueError:\n    print(\"hata\")\nelse:\n    print(f\"sayı: {number}\")\nfinally:\n    print(\"bitti\")",
+      "solutionCode": "raw = input()\ntry:\n    number = int(raw)\nexcept ValueError:\n    print(\"hata\")\nelse:\n    print(f\"sayı: {number}\")\nfinally:\n    print(\"bitti\")",
+      "expectedOutput": "sayı: 5\nbitti",
+      "hints": ["try içinde yalnızca dönüşüm olsun.", "int(\" 12 \") baştaki ve sondaki boşlukları kabul eder."],
+      "explanation": "else yalnızca dönüşüm başarılıysa çalışır; finally iki durumda da çalışır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "5", "expectedOutput": "sayı: 5\nbitti" },
+        { "label": "Metin", "stdin": "a", "expectedOutput": "hata\nbitti" },
+        { "label": "Sıfır", "stdin": "0", "expectedOutput": "sayı: 0\nbitti" },
+        { "label": "Boşluklu", "stdin": " 12 ", "expectedOutput": "sayı: 12\nbitti" }
+      ],
+      "exampleInput": "5"
+    },
+    {
+      "id": "m7-q30",
+      "type": "code",
+      "topic": "raise",
+      "sectionId": "raising",
+      "difficulty": 2,
+      "prompt": "parse_percent(text) fonksiyonunu yaz: metni int'e çevirsin, 0–100 dışındaysa ValueError(\"aralık dışı\") fırlatsın, değilse sayıyı döndürsün. Sayıya çevrilemeyen metinde int()'in kendi hatası yayılsın. Çağrı ve yakalama hazır.",
+      "starterCode": "def parse_percent(text):\n    # int'e çevir; 0-100 dışındaysa ValueError(\"aralık dışı\") fırlat\n    pass\n\ntry:\n    print(parse_percent(input()))\nexcept ValueError as error:\n    print(\"hata:\", error)\n",
+      "answer": "def parse_percent(text):\n    value = int(text)\n    if not 0 <= value <= 100:\n        raise ValueError(\"aralık dışı\")\n    return value\n\ntry:\n    print(parse_percent(input()))\nexcept ValueError as error:\n    print(\"hata:\", error)",
+      "solutionCode": "def parse_percent(text):\n    value = int(text)\n    if not 0 <= value <= 100:\n        raise ValueError(\"aralık dışı\")\n    return value\n\ntry:\n    print(parse_percent(input()))\nexcept ValueError as error:\n    print(\"hata:\", error)",
+      "expectedOutput": "45",
+      "hints": ["int(text) kendi ValueError'unu zaten üretir; onu yakalamana gerek yok.", "if not 0 <= value <= 100: raise ValueError(\"aralık dışı\")."],
+      "explanation": "Fonksiyon iki farklı geçersiz durumu aynı türde ama farklı mesajlarla bildirir; çağıran tek bir except ile ikisini de ele alır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "45", "expectedOutput": "45" },
+        { "label": "Üst sınır", "stdin": "100", "expectedOutput": "100" },
+        { "label": "Fazla", "stdin": "150", "expectedOutput": "hata: aralık dışı" },
+        { "label": "Negatif", "stdin": "-1", "expectedOutput": "hata: aralık dışı" },
+        { "label": "Metin", "stdin": "yüz", "expectedOutput": "hata: invalid literal for int() with base 10: 'yüz'" }
+      ],
+      "exampleInput": "45"
+    },
+    {
+      "id": "m7-q31",
+      "type": "code",
+      "topic": "özel-hata",
+      "sectionId": "custom-exceptions",
+      "difficulty": 2,
+      "prompt": "Exception'dan türeyen InsufficientStock sınıfını tanımla ve take(stock, amount) fonksiyonunu yaz: amount stoktan fazlaysa InsufficientStock(f\"stok {stock}, istenen {amount}\") fırlatsın, değilse kalan stoku döndürsün. Girdi: \"stok miktar\".",
+      "starterCode": "# InsufficientStock hata sınıfını tanımla\n\ndef take(stock, amount):\n    # amount > stock ise InsufficientStock fırlat, değilse kalanı döndür\n    pass\n\nstock, amount = [int(p) for p in input().split()]\ntry:\n    print(take(stock, amount))\nexcept InsufficientStock as error:\n    print(\"yetersiz:\", error)\n",
+      "answer": "class InsufficientStock(Exception):\n    pass\n\ndef take(stock, amount):\n    if amount > stock:\n        raise InsufficientStock(f\"stok {stock}, istenen {amount}\")\n    return stock - amount\n\nstock, amount = [int(p) for p in input().split()]\ntry:\n    print(take(stock, amount))\nexcept InsufficientStock as error:\n    print(\"yetersiz:\", error)",
+      "solutionCode": "class InsufficientStock(Exception):\n    pass\n\ndef take(stock, amount):\n    if amount > stock:\n        raise InsufficientStock(f\"stok {stock}, istenen {amount}\")\n    return stock - amount\n\nstock, amount = [int(p) for p in input().split()]\ntry:\n    print(take(stock, amount))\nexcept InsufficientStock as error:\n    print(\"yetersiz:\", error)",
+      "expectedOutput": "7",
+      "hints": ["İki satırlık sınıf yeter: class InsufficientStock(Exception): ve altında girintili pass.", "Stok tam olarak istenen kadarsa satış geçerlidir ve 0 kalır."],
+      "explanation": "Özel hata sınıfı çağıranın stok sorununu diğer hatalardan ayırmasını sağlar; mesaj iki değeri de gösterir.",
+      "tests": [
+        { "label": "Örnek", "stdin": "10 3", "expectedOutput": "7" },
+        { "label": "Yetersiz", "stdin": "2 5", "expectedOutput": "yetersiz: stok 2, istenen 5" },
+        { "label": "Tam stok", "stdin": "4 4", "expectedOutput": "0" },
+        { "label": "Boş stok", "stdin": "0 1", "expectedOutput": "yetersiz: stok 0, istenen 1" }
+      ],
+      "exampleInput": "10 3"
+    },
+    {
+      "id": "m7-q32",
+      "type": "code",
+      "topic": "raise-from",
+      "sectionId": "raise-from",
+      "difficulty": 3,
+      "prompt": "get_setting fonksiyonunu tamamla: anahtar yoksa oluşan KeyError'u LookupError(f\"{key} ayarı yok\") hatasına çevir ve asıl hatayı from ile bağla. Girdi: \"a=1;b=2\" biçiminde ayarlar ve bir anahtar. Çıktı ve yakalama hazır.",
+      "starterCode": "def get_setting(text, key):\n    settings = dict(pair.split(\"=\") for pair in text.split(\";\"))\n    # Anahtar yoksa KeyError'u LookupError'a çevir (from ile)\n    return settings[key]\n\ntext = input()\nkey = input()\ntry:\n    print(get_setting(text, key))\nexcept LookupError as error:\n    print(error, \"|\", type(error.__cause__).__name__)\n",
+      "answer": "def get_setting(text, key):\n    settings = dict(pair.split(\"=\") for pair in text.split(\";\"))\n    try:\n        return settings[key]\n    except KeyError as error:\n        raise LookupError(f\"{key} ayarı yok\") from error\n\ntext = input()\nkey = input()\ntry:\n    print(get_setting(text, key))\nexcept LookupError as error:\n    print(error, \"|\", type(error.__cause__).__name__)",
+      "solutionCode": "def get_setting(text, key):\n    settings = dict(pair.split(\"=\") for pair in text.split(\";\"))\n    try:\n        return settings[key]\n    except KeyError as error:\n        raise LookupError(f\"{key} ayarı yok\") from error\n\ntext = input()\nkey = input()\ntry:\n    print(get_setting(text, key))\nexcept LookupError as error:\n    print(error, \"|\", type(error.__cause__).__name__)",
+      "expectedOutput": "2",
+      "hints": ["KeyError zaten bir LookupError olduğu için çevirmeden de yakalanır; ama mesajı 'c' olur ve nedeni NoneType görünür.", "except KeyError as error: raise LookupError(...) from error."],
+      "explanation": "Çeviri, çağırana alanın dilinde bir mesaj verirken asıl KeyError'u __cause__ olarak korur.",
+      "tests": [
+        { "label": "Örnek", "stdin": "a=1;b=2\nb", "expectedOutput": "2" },
+        { "label": "Eksik anahtar", "stdin": "a=1;b=2\nc", "expectedOutput": "c ayarı yok | KeyError" },
+        { "label": "Tek ayar", "stdin": "port=80\nport", "expectedOutput": "80" },
+        { "label": "Tek ayar, eksik", "stdin": "x=1\ny", "expectedOutput": "y ayarı yok | KeyError" }
+      ],
+      "exampleInput": "a=1;b=2\nb"
+    },
+    {
+      "id": "m7-q33",
+      "type": "code",
+      "topic": "assert",
+      "sectionId": "assert-validation",
+      "difficulty": 2,
+      "prompt": "validate_age(text) fonksiyonunu assert kullanmadan yaz: metin yalnızca rakamlardan oluşmuyorsa ValueError(\"sayı değil\"), 130'dan büyükse ValueError(\"gerçekçi değil\") fırlatsın; geçerliyse int döndürsün.",
+      "starterCode": "def validate_age(text):\n    # if + raise ile doğrula\n    pass\n\ntry:\n    print(validate_age(input()))\nexcept ValueError as error:\n    print(\"geçersiz:\", error)\n",
+      "answer": "def validate_age(text):\n    if not text.isdigit():\n        raise ValueError(\"sayı değil\")\n    age = int(text)\n    if age > 130:\n        raise ValueError(\"gerçekçi değil\")\n    return age\n\ntry:\n    print(validate_age(input()))\nexcept ValueError as error:\n    print(\"geçersiz:\", error)",
+      "solutionCode": "def validate_age(text):\n    if not text.isdigit():\n        raise ValueError(\"sayı değil\")\n    age = int(text)\n    if age > 130:\n        raise ValueError(\"gerçekçi değil\")\n    return age\n\ntry:\n    print(validate_age(input()))\nexcept ValueError as error:\n    print(\"geçersiz:\", error)",
+      "expectedOutput": "30",
+      "hints": ["str.isdigit() eksi işaretli metinde de False verir.", "Kullanıcı girdisi için assert değil if + raise."],
+      "explanation": "Girdi doğrulaması her çalıştırma biçiminde etkin kalmalıdır; assert -O ile kaldırılabildiği için bu iş if ve raise ile yapılır.",
+      "tests": [
+        { "label": "Örnek", "stdin": "30", "expectedOutput": "30" },
+        { "label": "Metin", "stdin": "abc", "expectedOutput": "geçersiz: sayı değil" },
+        { "label": "Çok büyük", "stdin": "200", "expectedOutput": "geçersiz: gerçekçi değil" },
+        { "label": "Sıfır", "stdin": "0", "expectedOutput": "0" }
+      ],
+      "exampleInput": "30"
+    },
+    {
+      "id": "m7-q34",
+      "type": "code",
+      "topic": "hata-türü",
+      "sectionId": "common-errors",
+      "difficulty": 2,
+      "prompt": "İlk satırda kelimeler, ikinci satırda bir indeks var. İndeksteki kelimeyi yazdır. İndeks sayı değilse veya liste dışındaysa hatanın türünün adını (ValueError veya IndexError) yazdır.",
+      "starterCode": "words = input().split()\nraw = input()\n# İki hatayı tek except'te yakala ve türünü yazdır\n",
+      "answer": "words = input().split()\nraw = input()\ntry:\n    print(words[int(raw)])\nexcept (IndexError, ValueError) as error:\n    print(type(error).__name__)",
+      "solutionCode": "words = input().split()\nraw = input()\ntry:\n    print(words[int(raw)])\nexcept (IndexError, ValueError) as error:\n    print(type(error).__name__)",
+      "expectedOutput": "b",
+      "hints": ["except (IndexError, ValueError) as error.", "type(error).__name__ türün adını verir; -1 geçerli bir indekstir."],
+      "explanation": "Tek except iki türü yakalar; hangisi olduğunu hata nesnesinin türü söyler.",
+      "tests": [
+        { "label": "Örnek", "stdin": "a b c\n1", "expectedOutput": "b" },
+        { "label": "Dışarıda", "stdin": "a b c\n5", "expectedOutput": "IndexError" },
+        { "label": "Sayı değil", "stdin": "a b c\nx", "expectedOutput": "ValueError" },
+        { "label": "Negatif indeks", "stdin": "a b c\n-1", "expectedOutput": "c" }
+      ],
+      "exampleInput": "a b c\n1"
+    },
+    {
+      "id": "m7-q35",
+      "type": "code",
+      "topic": "traceback",
+      "sectionId": "reading-traceback",
+      "difficulty": 3,
+      "prompt": "Program bir sayının iki katını yazdırıyor. Dönüşüm başarısız olursa traceback modülüyle hatanın oluştuğu en içteki fonksiyonun adını ve hata türünü aralarında boşlukla yazdır. Örnek: x → parse ValueError.",
+      "starterCode": "import traceback\n\ndef parse(text):\n    return int(text)\n\ndef double(text):\n    return parse(text) * 2\n\nraw = input()\ntry:\n    print(double(raw))\nexcept ValueError as error:\n    # En içteki çerçevenin adı ve hata türü\n    pass\n",
+      "answer": "import traceback\n\ndef parse(text):\n    return int(text)\n\ndef double(text):\n    return parse(text) * 2\n\nraw = input()\ntry:\n    print(double(raw))\nexcept ValueError as error:\n    frames = traceback.extract_tb(error.__traceback__)\n    print(frames[-1].name, type(error).__name__)",
+      "solutionCode": "import traceback\n\ndef parse(text):\n    return int(text)\n\ndef double(text):\n    return parse(text) * 2\n\nraw = input()\ntry:\n    print(double(raw))\nexcept ValueError as error:\n    frames = traceback.extract_tb(error.__traceback__)\n    print(frames[-1].name, type(error).__name__)",
+      "expectedOutput": "42",
+      "hints": ["traceback.extract_tb(error.__traceback__) çerçeve listesi verir.", "En içteki çerçeve listenin sonundadır: [-1].name."],
+      "explanation": "Çerçeveler dıştan içe sıralanır; hatanın doğduğu kendi fonksiyonun en sondadır. int gibi yerleşik C fonksiyonlarının ayrı bir çerçevesi olmaz.",
+      "tests": [
+        { "label": "Örnek", "stdin": "21", "expectedOutput": "42" },
+        { "label": "Metin", "stdin": "x", "expectedOutput": "parse ValueError" },
+        { "label": "Negatif", "stdin": "-3", "expectedOutput": "-6" },
+        { "label": "Ondalık", "stdin": "1.5", "expectedOutput": "parse ValueError" }
+      ],
+      "exampleInput": "21"
+    },
+    {
+      "id": "m7-q36",
+      "type": "code",
+      "topic": "else-finally",
+      "sectionId": "else-finally",
+      "difficulty": 3,
+      "prompt": "İlk satırda n, sonraki n satırda değerler var. Her değeri int'e çevirmeyi dene: geçersizse geçersiz sayacını artır, geçerliyse (else) toplama ekle, her durumda (finally) işlenen sayacını artır. Sonunda \"toplam X, geçersiz Y, işlenen Z\" yazdır.",
+      "starterCode": "count = int(input())\ntotal = 0\ninvalid = 0\nprocessed = 0\nfor _ in range(count):\n    raw = input()\n    # try / except / else / finally\n\nprint(f\"toplam {total}, geçersiz {invalid}, işlenen {processed}\")\n",
+      "answer": "count = int(input())\ntotal = 0\ninvalid = 0\nprocessed = 0\nfor _ in range(count):\n    raw = input()\n    try:\n        value = int(raw)\n    except ValueError:\n        invalid += 1\n    else:\n        total += value\n    finally:\n        processed += 1\n\nprint(f\"toplam {total}, geçersiz {invalid}, işlenen {processed}\")",
+      "solutionCode": "count = int(input())\ntotal = 0\ninvalid = 0\nprocessed = 0\nfor _ in range(count):\n    raw = input()\n    try:\n        value = int(raw)\n    except ValueError:\n        invalid += 1\n    else:\n        total += value\n    finally:\n        processed += 1\n\nprint(f\"toplam {total}, geçersiz {invalid}, işlenen {processed}\")",
+      "expectedOutput": "toplam 14, geçersiz 1, işlenen 4",
+      "hints": ["try içinde yalnızca int(raw).", "Döngü içindeki finally her turda çalışır."],
+      "explanation": "Her blok tek bir sorumluluk taşır: except hatayı sayar, else başarılı değeri işler, finally her turu sayar.",
+      "tests": [
+        { "label": "Örnek", "stdin": "4\n5\nx\n10\n-1", "expectedOutput": "toplam 14, geçersiz 1, işlenen 4" },
+        { "label": "Hepsi geçersiz", "stdin": "1\nq", "expectedOutput": "toplam 0, geçersiz 1, işlenen 1" },
+        { "label": "Boş", "stdin": "0", "expectedOutput": "toplam 0, geçersiz 0, işlenen 0" },
+        { "label": "Hepsi geçerli", "stdin": "2\n3\n3", "expectedOutput": "toplam 6, geçersiz 0, işlenen 2" }
+      ],
+      "exampleInput": "4\n5\nx\n10\n-1"
+    },
+    {
+      "id": "m7-q37",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "reading-traceback",
+      "difficulty": 2,
+      "prompt": "İki fonksiyon üzerinden gelen bu çağrı hangi hatayı üretir?",
+      "code": "def a(x):\n    return b(x)\n\ndef b(x):\n    return x[\"id\"]\n\nprint(a([1, 2]))",
+      "options": ["TypeError", "KeyError", "IndexError", "NameError"],
+      "answer": "TypeError",
+      "expectedError": "TypeError",
+      "optionFeedback": {
+        "KeyError": "x bir sözlük değil liste; listede anahtar aranmaz, str indeks reddedilir.",
+        "IndexError": "İndeks sınırı aşılmadı; indeksin tipi yanlış.",
+        "NameError": "a ve b tanımlı; hata b'nin içinde, indeksleme satırında oluşur."
+      },
+      "hints": ["b'ye gelen x bir liste.", "Listeye str ile erişilmeye çalışılıyor."],
+      "explanation": "Traceback'in son çerçevesi b'deki x[\"id\"] satırıdır; liste str indeksle kullanılamaz ve TypeError oluşur. Asıl düzeltme çağıranın doğru veri göndermesidir."
+    },
+    {
+      "id": "m7-q38",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "custom-exceptions",
+      "difficulty": 2,
+      "prompt": "Bu hata yakalanır mı? Görünen hata türü ne?",
+      "code": "class AppError(Exception):\n    pass\n\ntry:\n    raise ValueError(\"x\")\nexcept AppError:\n    print(\"yakalandı\")",
+      "options": ["ValueError", "AppError", "TypeError", "SyntaxError"],
+      "answer": "ValueError",
+      "expectedError": "ValueError",
+      "optionFeedback": {
+        "AppError": "Fırlatılan ValueError'dur ve AppError ailesinden değildir; except AppError onu yakalamaz.",
+        "TypeError": "Tip uyumsuzluğu yok; fırlatılan hata olduğu gibi yayılır.",
+        "SyntaxError": "Kod sözdizimi olarak geçerli."
+      },
+      "hints": ["ValueError, AppError'un alt sınıfı mı?", "Eşleşmeyen hata yukarı yayılır."],
+      "explanation": "except yalnızca kendi türünü ve alt sınıflarını yakalar. ValueError AppError ile ilişkili olmadığı için yakalanmaz ve program ValueError ile biter."
+    },
+    {
+      "id": "m7-q39",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "assert-validation",
+      "difficulty": 1,
+      "prompt": "Bu kod hangi hatayla durur?",
+      "code": "items = []\nassert items, \"liste boş\"\nprint(items[0])",
+      "options": ["AssertionError", "IndexError", "ValueError", "TypeError"],
+      "answer": "AssertionError",
+      "expectedError": "AssertionError",
+      "optionFeedback": {
+        "IndexError": "items[0] satırına hiç ulaşılmaz; assert ondan önce durdurur.",
+        "ValueError": "assert başarısız olduğunda kendine özgü türü fırlatır.",
+        "TypeError": "Tiplerle ilgili bir sorun yok."
+      },
+      "hints": ["Boş liste falsy'dir.", "assert ilk satırdan sonra çalışır."],
+      "explanation": "assert items koşulu yanlıştır ve \"liste boş\" mesajıyla AssertionError oluşur; sonraki satıra geçilmez."
+    },
+    {
+      "id": "m7-q40",
+      "type": "traceback",
+      "topic": "traceback",
+      "sectionId": "else-finally",
+      "difficulty": 2,
+      "prompt": "finally \"temizlik\" yazdıktan sonra hangi hata görünür?",
+      "code": "try:\n    1 / 0\nfinally:\n    print(\"temizlik\")",
+      "options": ["ZeroDivisionError", "Hata görünmez", "ValueError", "RuntimeError"],
+      "answer": "ZeroDivisionError",
+      "expectedError": "ZeroDivisionError",
+      "optionFeedback": {
+        "Hata görünmez": "finally hatayı yakalamaz; çalıştıktan sonra hata yayılmaya devam eder.",
+        "ValueError": "Sıfıra bölme kendi türünü üretir.",
+        "RuntimeError": "finally hatayı başka bir türe çevirmez."
+      },
+      "hints": ["except bloğu yok.", "finally temizlik yapar ama hatayı yutmaz."],
+      "explanation": "finally önce çalışır ve \"temizlik\" yazar; except olmadığı için ZeroDivisionError ardından yayılır ve programı durdurur."
+    }
+  ]
+}
