@@ -1,9 +1,23 @@
 import type { LearningProgress, Question, QuizDraft, QuizSession } from "./learning-types";
 
-export function createQuiz(id: string, moduleId: number, mode: QuizSession["mode"], questions: Question[], timed: boolean, weakOnly = false, now = Date.now()): QuizSession {
+// Content lists the right option first in most questions, so every attempt shuffles the options.
+// The seed is the session and question, which keeps the order stable across refreshes and saves.
+function seededShuffle<T>(items: readonly T[], seed: string): T[] {
+  let state = 2166136261;
+  for (const char of seed) state = Math.imul(state ^ char.charCodeAt(0), 16777619) >>> 0;
+  const next = () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296; };
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index--) {
+    const other = Math.floor(next() * (index + 1));
+    [result[index], result[other]] = [result[other], result[index]];
+  }
+  return result;
+}
+
+export function createQuiz(id: string, moduleId: number, mode: QuizSession["mode"], questions: Question[], timed: boolean, weakOnly = false, now = Date.now(), minutes = 25): QuizSession {
   if (!questions.length || new Set(questions.map(q => q.id)).size !== questions.length) throw new Error("Geçerli, benzersiz sorular gerekli.");
-  return { id, moduleId, mode, weakOnly, questions: structuredClone(questions), startedAt: now,
-    deadline: mode !== "practice" && timed ? now + 25 * 60 * 1000 : null,
+  return { id, moduleId, mode, weakOnly, questions: questions.map(question => structuredClone(question.options && question.options.length > 1 ? { ...question, options: seededShuffle(question.options, `${id}:${question.id}`) } : question)), startedAt: now,
+    deadline: mode !== "practice" && timed ? now + minutes * 60 * 1000 : null,
     index: 0, drafts: {}, answers: {}, completedAt: null, finishReason: null };
 }
 export function initialDraft(question: Question): QuizDraft {

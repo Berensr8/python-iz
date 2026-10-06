@@ -91,5 +91,255 @@
         "expectedOutput": "ADET 0\nTOPLAM 0"
       }
     ]
+  },
+  {
+    "id": "workshop2-fix",
+    "moduleId": 6,
+    "sectionId": "mutable-default",
+    "title": "AI'ın isim temizleyicisini onar",
+    "level": "Düzelt",
+    "objective": "Paylaşılan varsayılan değeri, boş adları ve kaybolan sırayı bul ve düzelt.",
+    "prompt": "Girdi: ilk satır A grubundaki isim sayısı, ardından o kadar isim satırı; sonra aynı düzende B grubu. clean_names(names) bir grubu temizler: uçlardaki ve kelimeler arasındaki fazla boşluklar tek boşluğa iner, her kelimenin yalnız ilk harfi büyük olur, boş kalan adlar atılır, tekrar eden adlar yalnız ilk görüldükleri yerde kalır ve sıra korunur. Fonksiyon her çağrıda yeni bir liste döndürür. Program iki grubu ayrı satırlarda yazdırır. Başlangıç kodunda üç sorun var: çağrılar arasında veri sızıyor, boş adlar listeye giriyor ve sıra bozuluyor.",
+    "starterCode": "def clean_names(names, seen=[]):\n    for name in names:\n        cleaned = \" \".join(name.split()).title()\n        if cleaned not in seen:\n            seen.append(cleaned)\n    return sorted(seen)\n\ncount_a = int(input())\ngroup_a = [input() for _ in range(count_a)]\ncount_b = int(input())\ngroup_b = [input() for _ in range(count_b)]\nprint(clean_names(group_a))\nprint(clean_names(group_b))",
+    "exampleInput": "3\n  ada  lovelace \nADA LOVELACE\ncan\n1\nzeynep",
+    "exampleOutput": "['Ada Lovelace', 'Can']\n['Zeynep']",
+    "hints": [
+      "Varsayılan değer olan seen=[] fonksiyon tanımlanırken bir kez oluşturulur; bu yüzden ikinci grup birincinin adlarını da görür. Listeyi fonksiyonun içinde, her çağrıda yeniden kur.",
+      "Boş kalan adı eklemeden önce kontrol et (if cleaned and ...). sorted() ilk görülme sırasını bozar; kaldır."
+    ],
+    "solution": "def clean_names(names):\n    result = []\n    for name in names:\n        cleaned = \" \".join(name.split()).title()\n        if cleaned and cleaned not in result:\n            result.append(cleaned)\n    return result\n\ncount_a = int(input())\ngroup_a = [input() for _ in range(count_a)]\ncount_b = int(input())\ngroup_b = [input() for _ in range(count_b)]\nprint(clean_names(group_a))\nprint(clean_names(group_b))",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\n  ada  lovelace \nADA LOVELACE\ncan\n1\nzeynep",
+        "expectedOutput": "['Ada Lovelace', 'Can']\n['Zeynep']"
+      },
+      {
+        "label": "Gruplar birbirine karışmaz",
+        "stdin": "1\nali\n1\nveli",
+        "expectedOutput": "['Ali']\n['Veli']"
+      },
+      {
+        "label": "Boş adlar atılır",
+        "stdin": "3\n   \nali\n  \n1\n  ",
+        "expectedOutput": "['Ali']\n[]"
+      },
+      {
+        "label": "Sıra korunur",
+        "stdin": "3\nzeynep\nali\nveli\n0",
+        "expectedOutput": "['Zeynep', 'Ali', 'Veli']\n[]"
+      },
+      {
+        "label": "Aynı ad iki grupta",
+        "stdin": "2\nali\nali\n2\nali\nveli",
+        "expectedOutput": "['Ali']\n['Ali', 'Veli']"
+      }
+    ]
+  },
+  {
+    "id": "workshop2-build",
+    "moduleId": 6,
+    "sectionId": "def-return",
+    "title": "Başlıktan bağlantı adı (slug) üret",
+    "level": "Sıfırdan yaz",
+    "objective": "Sözleşmesi verilen bir metin temizleme fonksiyonunu eksiksiz yaz.",
+    "prompt": "make_slug(title) bir başlığı adres parçasına çevirir. Sözleşme: (1) Türkçe harfler ASCII karşılığına çevrilir (ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u; büyük harfler dahil, İ ve I da i olur). (2) Harfler küçük yazılır. (3) ASCII harf ve rakam dışındaki her karakter ayırıcıdır; art arda gelen ayırıcılar tek \"-\" olur. (4) Baştaki ve sondaki \"-\" bulunmaz. (5) Hiç harf ya da rakam kalmazsa sonuç \"bos\" olur. Program ilk satırda başlık sayısını, sonra her satırda bir başlık okur ve her başlığın adresini ayrı satırda yazdırır. İpucu: İ harfine lower() uygulanırsa iki karakter olur; çeviriyi küçültmeden önce yap.",
+    "starterCode": "# make_slug(title) fonksiyonunu sözleşmeye göre yaz.\n\ncount = int(input())\nfor _ in range(count):\n    print(make_slug(input()))",
+    "exampleInput": "3\nMerhaba Dünya!\nÇığ Şöleni İçin Öğütler\nPython 3.12 Sürümü",
+    "exampleOutput": "merhaba-dunya\ncig-soleni-icin-ogutler\npython-3-12-surumu",
+    "hints": [
+      "Önce Türkçe harfleri çevir (str.maketrans ile translate), sonra lower() uygula; ters sırada İ iki karakter olur.",
+      "Her karakteri gez: harf/rakamsa kelimeye ekle, değilse kelimeyi bitir. Kelimeleri \"-\".join ile birleştir; boş liste \"bos\" olmalı (or ile)."
+    ],
+    "solution": "TURKISH = str.maketrans(\"çğıöşüÇĞİÖŞÜI\", \"cgiosucgiosui\")\n\ndef words(text):\n    parts, word = [], \"\"\n    for char in text:\n        if char.isascii() and char.isalnum():\n            word += char\n        elif word:\n            parts.append(word)\n            word = \"\"\n    if word:\n        parts.append(word)\n    return parts\n\ndef make_slug(title):\n    return \"-\".join(words(title.translate(TURKISH).lower())) or \"bos\"\n\ncount = int(input())\nfor _ in range(count):\n    print(make_slug(input()))",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\nMerhaba Dünya!\nÇığ Şöleni İçin Öğütler\nPython 3.12 Sürümü",
+        "expectedOutput": "merhaba-dunya\ncig-soleni-icin-ogutler\npython-3-12-surumu"
+      },
+      {
+        "label": "Büyük İ ve I",
+        "stdin": "2\nİstanbul Işık\nIĞDIR",
+        "expectedOutput": "istanbul-isik\nigdir"
+      },
+      {
+        "label": "Ayırıcılar",
+        "stdin": "3\n  a -- b  \n---x---\nbir_iki+üç",
+        "expectedOutput": "a-b\nx\nbir-iki-uc"
+      },
+      {
+        "label": "Boş sonuç",
+        "stdin": "3\n!!!\n   \nçç",
+        "expectedOutput": "bos\nbos\ncc"
+      },
+      {
+        "label": "ASCII dışı karakter ve rakam",
+        "stdin": "2\nCafé 24\n2026-10-06",
+        "expectedOutput": "caf-24\n2026-10-06"
+      },
+      {
+        "label": "Tek harf",
+        "stdin": "1\nZ",
+        "expectedOutput": "z"
+      }
+    ]
+  },
+  {
+    "id": "workshop2-tests",
+    "moduleId": 6,
+    "sectionId": "lambda-higher-order",
+    "title": "Hataları yakalayan testleri kur",
+    "level": "Sıfırdan yaz",
+    "objective": "Bir fonksiyonun doğru ve hatalı sürümlerini ayırt eden test vakaları tasarla.",
+    "prompt": "Yukarıdaki make_slug sözleşmesini bir de test tarafından gör. IMPLS sözlüğünde bir doğru (dogru) ve beş hatalı sürüm var; hatalar sırayla: Türkçe harfler çevrilmiyor, uçlarda tire kalıyor, art arda ayırıcılar tek tire olmuyor, boş sonuç \"bos\" olmuyor, büyük İ yanlış çevriliyor. Sen cases listesine (girdi, beklenen çıktı) çiftleri yaz ve passes(implementation) fonksiyonunu tamamla: bir sürümde tüm vakalar geçiyorsa True döndürsün. Doğru sürümde bütün vakalar geçmeli; her hatalı sürümde en az bir vaka başarısız olmalı. Program bir satırda boşlukla ayrılmış sürüm adlarını okur ve her ad için \"ad: GEÇTİ\" ya da \"ad: YAKALANDI\" yazdırır.",
+    "starterCode": "TURKISH = str.maketrans(\"çğıöşüÇĞİÖŞÜI\", \"cgiosucgiosui\")\n\ndef words(text):\n    parts, word = [], \"\"\n    for char in text:\n        if char.isascii() and char.isalnum():\n            word += char\n        elif word:\n            parts.append(word)\n            word = \"\"\n    if word:\n        parts.append(word)\n    return parts\n\ndef slug_ok(title):\n    return \"-\".join(words(title.translate(TURKISH).lower())) or \"bos\"\n\ndef slug_hata1(title):\n    return \"-\".join(words(title.lower())) or \"bos\"\n\ndef slug_hata2(title):\n    out = \"\"\n    for char in title.translate(TURKISH).lower():\n        if char.isascii() and char.isalnum():\n            out += char\n        elif not out.endswith(\"-\"):\n            out += \"-\"\n    return out or \"bos\"\n\ndef slug_hata3(title):\n    out = \"\"\n    for char in title.translate(TURKISH).lower():\n        out += char if char.isascii() and char.isalnum() else \"-\"\n    return out.strip(\"-\") or \"bos\"\n\ndef slug_hata4(title):\n    return \"-\".join(words(title.translate(TURKISH).lower()))\n\ndef slug_hata5(title):\n    return \"-\".join(words(title.lower().translate(TURKISH))) or \"bos\"\n\nIMPLS = {\"dogru\": slug_ok, \"hata1\": slug_hata1, \"hata2\": slug_hata2, \"hata3\": slug_hata3, \"hata4\": slug_hata4, \"hata5\": slug_hata5}\n\ncases = [\n    # (\"Merhaba Dünya\", \"merhaba-dunya\"),\n]\n\ndef passes(implementation):\n    # her vakayı çalıştır; hepsi geçerse True döndür\n    pass\n\nfor name in input().split():\n    print(f\"{name}: {'GEÇTİ' if passes(IMPLS[name]) else 'YAKALANDI'}\")",
+    "exampleInput": "dogru",
+    "exampleOutput": "dogru: GEÇTİ",
+    "hints": [
+      "cases bir liste; her öğe (girdi, beklenen) çifti. passes içinde for döngüsüyle ya da all(...) ile her vakayı implementation(girdi) == beklenen diye karşılaştır.",
+      "Her hata için o hatayı tetikleyen bir girdi düşün: Türkçe harf (Dünya), büyük İ, baştaki/sondaki ayırıcı, art arda ayırıcı, hiç harf içermeyen girdi."
+    ],
+    "solution": "TURKISH = str.maketrans(\"çğıöşüÇĞİÖŞÜI\", \"cgiosucgiosui\")\n\ndef words(text):\n    parts, word = [], \"\"\n    for char in text:\n        if char.isascii() and char.isalnum():\n            word += char\n        elif word:\n            parts.append(word)\n            word = \"\"\n    if word:\n        parts.append(word)\n    return parts\n\ndef slug_ok(title):\n    return \"-\".join(words(title.translate(TURKISH).lower())) or \"bos\"\n\ndef slug_hata1(title):\n    return \"-\".join(words(title.lower())) or \"bos\"\n\ndef slug_hata2(title):\n    out = \"\"\n    for char in title.translate(TURKISH).lower():\n        if char.isascii() and char.isalnum():\n            out += char\n        elif not out.endswith(\"-\"):\n            out += \"-\"\n    return out or \"bos\"\n\ndef slug_hata3(title):\n    out = \"\"\n    for char in title.translate(TURKISH).lower():\n        out += char if char.isascii() and char.isalnum() else \"-\"\n    return out.strip(\"-\") or \"bos\"\n\ndef slug_hata4(title):\n    return \"-\".join(words(title.translate(TURKISH).lower()))\n\ndef slug_hata5(title):\n    return \"-\".join(words(title.lower().translate(TURKISH))) or \"bos\"\n\nIMPLS = {\"dogru\": slug_ok, \"hata1\": slug_hata1, \"hata2\": slug_hata2, \"hata3\": slug_hata3, \"hata4\": slug_hata4, \"hata5\": slug_hata5}\n\ncases = [\n    (\"Merhaba Dünya!\", \"merhaba-dunya\"),\n    (\"İstanbul\", \"istanbul\"),\n    (\"Işık\", \"isik\"),\n    (\"  a -- b  \", \"a-b\"),\n    (\"a -- b\", \"a-b\"),\n    (\"!!!\", \"bos\"),\n]\n\ndef passes(implementation):\n    return all(implementation(title) == expected for title, expected in cases)\n\nfor name in input().split():\n    print(f\"{name}: {'GEÇTİ' if passes(IMPLS[name]) else 'YAKALANDI'}\")",
+    "tests": [
+      {
+        "label": "Doğru sürüm",
+        "stdin": "dogru",
+        "expectedOutput": "dogru: GEÇTİ"
+      },
+      {
+        "label": "Türkçe harf hatası",
+        "stdin": "hata1",
+        "expectedOutput": "hata1: YAKALANDI"
+      },
+      {
+        "label": "Uçtaki tire hatası",
+        "stdin": "hata2",
+        "expectedOutput": "hata2: YAKALANDI"
+      },
+      {
+        "label": "Art arda ayırıcı hatası",
+        "stdin": "hata3",
+        "expectedOutput": "hata3: YAKALANDI"
+      },
+      {
+        "label": "Boş sonuç hatası",
+        "stdin": "hata4",
+        "expectedOutput": "hata4: YAKALANDI"
+      },
+      {
+        "label": "Büyük İ hatası",
+        "stdin": "hata5",
+        "expectedOutput": "hata5: YAKALANDI"
+      },
+      {
+        "label": "Karışık sıra",
+        "stdin": "hata3 dogru hata5 hata1",
+        "expectedOutput": "hata3: YAKALANDI\ndogru: GEÇTİ\nhata5: YAKALANDI\nhata1: YAKALANDI"
+      }
+    ]
+  },
+  {
+    "id": "workshop3-fix",
+    "moduleId": 8,
+    "sectionId": "csv",
+    "title": "Satış özetleyicisini onar",
+    "level": "Düzelt",
+    "objective": "Tırnaklı alanı, hatalı satırı ve boş veriyi doğru işle.",
+    "prompt": "Girdi: ilk satır CSV satır sayısı, ardından başlık (urun,adet,fiyat) dahil o kadar CSV satırı. Program satırları satis.csv'ye yazar ve okur. Bir veri satırı geçerlidir: tam üç alanı varsa ve adet ile fiyat (uç boşlukları atıldıktan sonra) yalnız rakamlardan oluşuyorsa. Çıktı tek satır: \"satır: <geçerli>, hatalı: <geçersiz>, toplam: <adet*fiyat toplamı>, ortalama: <toplam / geçerli satır, bir ondalık>\"; geçerli satır yoksa ortalama 0.0. Başlangıç kodunda üç sorun var: tırnak içindeki virgül alanı bölüyor, hatalı satır programı çökertiyor ve geçerli satır yokken sıfıra bölünüyor.",
+    "starterCode": "count = int(input())\nlines = [input() for _ in range(count)]\nwith open(\"satis.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"\\n\".join(lines) + \"\\n\")\n\nvalid = 0\nbad = 0\ntotal = 0\nwith open(\"satis.csv\", encoding=\"utf-8\") as f:\n    next(f)\n    for line in f:\n        name, qty, price = line.rstrip(\"\\n\").split(\",\")\n        total += int(qty) * int(price)\n        valid += 1\nprint(f\"satır: {valid}, hatalı: {bad}, toplam: {total}, ortalama: {total / valid:.1f}\")",
+    "exampleInput": "5\nurun,adet,fiyat\nkalem,3,150\n\"defter, çizgili\",2,900\nsilgi,x,50\nkalem,4,150",
+    "exampleOutput": "satır: 3, hatalı: 1, toplam: 2850, ortalama: 950.0",
+    "hints": [
+      "split(\",\") tırnakları tanımaz; satırları csv.reader ile oku (dosyayı newline=\"\" ile aç).",
+      "Her satırı doğrula: len(row) == 3 ve adet/fiyat isdigit(). Geçersizse bad artır ve continue ile atla. Ortalamada valid sıfırsa 0.0 kullan."
+    ],
+    "solution": "import csv\n\ncount = int(input())\nlines = [input() for _ in range(count)]\nwith open(\"satis.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"\\n\".join(lines) + \"\\n\")\n\nvalid = 0\nbad = 0\ntotal = 0\nwith open(\"satis.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    reader = csv.reader(f)\n    next(reader)\n    for row in reader:\n        if len(row) != 3 or not row[1].strip().isdigit() or not row[2].strip().isdigit():\n            bad += 1\n            continue\n        total += int(row[1]) * int(row[2])\n        valid += 1\naverage = total / valid if valid else 0.0\nprint(f\"satır: {valid}, hatalı: {bad}, toplam: {total}, ortalama: {average:.1f}\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "5\nurun,adet,fiyat\nkalem,3,150\n\"defter, çizgili\",2,900\nsilgi,x,50\nkalem,4,150",
+        "expectedOutput": "satır: 3, hatalı: 1, toplam: 2850, ortalama: 950.0"
+      },
+      {
+        "label": "Yalnız başlık",
+        "stdin": "1\nurun,adet,fiyat",
+        "expectedOutput": "satır: 0, hatalı: 0, toplam: 0, ortalama: 0.0"
+      },
+      {
+        "label": "Hepsi hatalı",
+        "stdin": "3\nurun,adet,fiyat\nkalem,iki,150\nsilgi,3",
+        "expectedOutput": "satır: 0, hatalı: 2, toplam: 0, ortalama: 0.0"
+      },
+      {
+        "label": "Tırnaklı ad ve boşluk",
+        "stdin": "3\nurun,adet,fiyat\n\"kalem, mavi\",2, 100 \n\"defter \"\"A4\"\"\",1,500",
+        "expectedOutput": "satır: 2, hatalı: 0, toplam: 700, ortalama: 350.0"
+      },
+      {
+        "label": "Eksik ve fazla alan",
+        "stdin": "4\nurun,adet,fiyat\nkalem,3\nkalem,3,150,ek\nsilgi,2,50",
+        "expectedOutput": "satır: 1, hatalı: 2, toplam: 100, ortalama: 100.0"
+      },
+      {
+        "label": "Negatif sayı hatalıdır",
+        "stdin": "3\nurun,adet,fiyat\nkalem,-1,150\nsilgi,2,50",
+        "expectedOutput": "satır: 1, hatalı: 1, toplam: 100, ortalama: 100.0"
+      }
+    ]
+  },
+  {
+    "id": "workshop3-build",
+    "moduleId": 8,
+    "sectionId": "json",
+    "title": "CSV'den JSON satış raporu yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "Doğrulama, gruplama ve hata listesiyle gerçek bir CSV→JSON raporlayıcı yaz.",
+    "prompt": "Girdi: ilk satır CSV satır sayısı, ardından başlık (urun,adet,fiyat) dahil o kadar CSV satırı. Satırları satis.csv'ye yaz, csv modülüyle oku ve rapor.json'a json.dump ile (ensure_ascii=False, sort_keys=True) şu raporu yaz: {\"hatalar\": [...], \"toplam\": ..., \"urunler\": {...}}. Her kayıt sırayla denetlenir ve ilk bulunan neden kaydedilir: alan sayısı üç değilse \"alan eksik\", adet yalnız rakamlardan oluşmuyorsa \"adet sayı değil\", fiyat yalnız rakamlardan oluşmuyorsa \"fiyat sayı değil\" (adet ve fiyat uç boşlukları atılarak denetlenir). Hatalı kayıt {\"neden\": ..., \"satir\": <dosyadaki satır numarası; başlık 1. satırdır>} olarak hatalar listesine sırayla eklenir. Geçerli kayıtlar ürün adına (uç boşlukları atılmış) göre gruplanır: urunler[ad] = {\"adet\": toplam adet, \"tutar\": toplam adet*fiyat}; toplam tüm geçerli tutarların toplamıdır. Yalnız başlık varsa rapor boş olur. Son olarak rapor.json'u okuyup içeriğini olduğu gibi yazdır.",
+    "starterCode": "# 1) satırları satis.csv'ye yaz\n# 2) csv ile oku, her kaydı doğrula ve grupla\n# 3) raporu rapor.json'a yaz, sonra dosyayı okuyup yazdır",
+    "exampleInput": "4\nurun,adet,fiyat\nkalem,3,150\n\"defter, çizgili\",2,900\nsilgi,x,50",
+    "exampleOutput": "{\"hatalar\": [{\"neden\": \"adet sayı değil\", \"satir\": 4}], \"toplam\": 2250, \"urunler\": {\"defter, çizgili\": {\"adet\": 2, \"tutar\": 1800}, \"kalem\": {\"adet\": 3, \"tutar\": 450}}}",
+    "hints": [
+      "csv.reader satırları listeler; ilk satırı next(reader) ile atla. Satır numarası için enumerate(reader, start=2) kullan.",
+      "Önce neden belirle (if/elif zinciri), neden varsa hatalar listesine ekleyip continue yap. Gruplamak için urunler.setdefault(ad, {\"adet\": 0, \"tutar\": 0}) işini görür."
+    ],
+    "solution": "import csv\nimport json\n\ncount = int(input())\nlines = [input() for _ in range(count)]\nwith open(\"satis.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as f:\n    f.write(\"\\n\".join(lines) + \"\\n\")\n\ndef is_count(text):\n    return text.strip().isdigit()\n\nreport = {\"hatalar\": [], \"toplam\": 0, \"urunler\": {}}\nwith open(\"satis.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    reader = csv.reader(f)\n    next(reader)\n    for number, row in enumerate(reader, start=2):\n        if len(row) != 3:\n            reason = \"alan eksik\"\n        elif not is_count(row[1]):\n            reason = \"adet sayı değil\"\n        elif not is_count(row[2]):\n            reason = \"fiyat sayı değil\"\n        else:\n            reason = None\n        if reason:\n            report[\"hatalar\"].append({\"satir\": number, \"neden\": reason})\n            continue\n        quantity, amount = int(row[1]), int(row[1]) * int(row[2])\n        item = report[\"urunler\"].setdefault(row[0].strip(), {\"adet\": 0, \"tutar\": 0})\n        item[\"adet\"] += quantity\n        item[\"tutar\"] += amount\n        report[\"toplam\"] += amount\n\nwith open(\"rapor.json\", \"w\", encoding=\"utf-8\") as f:\n    json.dump(report, f, ensure_ascii=False, sort_keys=True)\nwith open(\"rapor.json\", encoding=\"utf-8\") as f:\n    print(f.read())",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "4\nurun,adet,fiyat\nkalem,3,150\n\"defter, çizgili\",2,900\nsilgi,x,50",
+        "expectedOutput": "{\"hatalar\": [{\"neden\": \"adet sayı değil\", \"satir\": 4}], \"toplam\": 2250, \"urunler\": {\"defter, çizgili\": {\"adet\": 2, \"tutar\": 1800}, \"kalem\": {\"adet\": 3, \"tutar\": 450}}}"
+      },
+      {
+        "label": "Yalnız başlık",
+        "stdin": "1\nurun,adet,fiyat",
+        "expectedOutput": "{\"hatalar\": [], \"toplam\": 0, \"urunler\": {}}"
+      },
+      {
+        "label": "Aynı ürün birleşir",
+        "stdin": "4\nurun,adet,fiyat\nkalem,3,150\n kalem ,4,150\nsilgi,2,50",
+        "expectedOutput": "{\"hatalar\": [], \"toplam\": 1150, \"urunler\": {\"kalem\": {\"adet\": 7, \"tutar\": 1050}, \"silgi\": {\"adet\": 2, \"tutar\": 100}}}"
+      },
+      {
+        "label": "Hata nedenleri ve satırları",
+        "stdin": "6\nurun,adet,fiyat\nkalem,iki,150\nsilgi,3\ndefter,2,x\nkalem,1,150\ncetvel,,10",
+        "expectedOutput": "{\"hatalar\": [{\"neden\": \"adet sayı değil\", \"satir\": 2}, {\"neden\": \"alan eksik\", \"satir\": 3}, {\"neden\": \"fiyat sayı değil\", \"satir\": 4}, {\"neden\": \"adet sayı değil\", \"satir\": 6}], \"toplam\": 150, \"urunler\": {\"kalem\": {\"adet\": 1, \"tutar\": 150}}}"
+      },
+      {
+        "label": "Hepsi hatalı",
+        "stdin": "3\nurun,adet,fiyat\nkalem,-1,150\nsilgi,2,5.5",
+        "expectedOutput": "{\"hatalar\": [{\"neden\": \"adet sayı değil\", \"satir\": 2}, {\"neden\": \"fiyat sayı değil\", \"satir\": 3}], \"toplam\": 0, \"urunler\": {}}"
+      },
+      {
+        "label": "İkisi de hatalıysa ilk neden: adet",
+        "stdin": "3\nurun,adet,fiyat\nkalem,x,y\nsilgi,2,z",
+        "expectedOutput": "{\"hatalar\": [{\"neden\": \"adet sayı değil\", \"satir\": 2}, {\"neden\": \"fiyat sayı değil\", \"satir\": 3}], \"toplam\": 0, \"urunler\": {}}"
+      },
+      {
+        "label": "Tırnaklı ve boşluklu",
+        "stdin": "3\nurun,adet,fiyat\n\" kalem, mavi \", 2 , 100 \n\"defter \"\"A4\"\"\",1,500",
+        "expectedOutput": "{\"hatalar\": [], \"toplam\": 700, \"urunler\": {\"defter \\\"A4\\\"\": {\"adet\": 1, \"tutar\": 500}, \"kalem, mavi\": {\"adet\": 2, \"tutar\": 200}}}"
+      }
+    ]
   }
 ]

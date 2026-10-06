@@ -385,7 +385,14 @@
         "as, sqrt'a kok adını verir.",
         "sqrt her zaman float döndürür."
       ],
-      "explanation": "from math import sqrt as kok, sqrt fonksiyonunu kok adına bağlar. sqrt sonucu float olduğu için 5.0 yazılır."
+      "explanation": "from math import sqrt as kok, sqrt fonksiyonunu kok adına bağlar. sqrt sonucu float olduğu için 5.0 yazılır.",
+      "options": [
+        "5",
+        "5.0",
+        "25",
+        "Hata verir (kok tanımsız)"
+      ],
+      "answer": "5.0"
     },
     {
       "id": "m9-q02",
@@ -400,7 +407,14 @@
         "Modülün kendi adı değişmez.",
         "dir() geçerli dosyadaki adları listeler."
       ],
-      "explanation": "Takma ad yalnızca m adını tanımlar; modülün gerçek adı yine math'tir ama dosyada math diye bir ad yoktur."
+      "explanation": "Takma ad yalnızca m adını tanımlar; modülün gerçek adı yine math'tir ama dosyada math diye bir ad yoktur.",
+      "options": [
+        "m ve True (iki satır)",
+        "math ve True (iki satır)",
+        "m ve False (iki satır)",
+        "math ve False (iki satır)"
+      ],
+      "answer": "math ve False (iki satır)"
     },
     {
       "id": "m9-q03",
@@ -415,7 +429,14 @@
         "Modül kodu yalnızca ilk importta çalışır.",
         "Sonraki importlar sys.modules'teki modülü kullanır."
       ],
-      "explanation": "İlk import sayac.py'yi çalıştırır ve yüklendi yazar. Sonraki import ve from import aynı modül nesnesini kullanır; kod tekrar çalışmaz."
+      "explanation": "İlk import sayac.py'yi çalıştırır ve yüklendi yazar. Sonraki import ve from import aynı modül nesnesini kullanır; kod tekrar çalışmaz.",
+      "options": [
+        "yüklendi iki kez, sonra 10 (üç satır)",
+        "yüklendi bir kez, sonra 10 (iki satır)",
+        "yüklendi üç kez, sonra 10 (dört satır)",
+        "10 (tek satır)"
+      ],
+      "answer": "yüklendi bir kez, sonra 10 (iki satır)"
     },
     {
       "id": "m9-q04",
@@ -430,7 +451,14 @@
         "from ayar import count, o anki değeri yeni bir ada bağlar.",
         "increase modüldeki count'u değiştirir, senin count adını değil."
       ],
-      "explanation": "from import sırasında count 0'dı ve ana dosyadaki count bu değere bağlandı. increase modülün içindeki count'u 2 yaptı; güncel değeri görmek için ayar.count okunmalıdır."
+      "explanation": "from import sırasında count 0'dı ve ana dosyadaki count bu değere bağlandı. increase modülün içindeki count'u 2 yaptı; güncel değeri görmek için ayar.count okunmalıdır.",
+      "options": [
+        "2 2",
+        "0 0",
+        "2 0",
+        "0 2"
+      ],
+      "answer": "0 2"
     },
     {
       "id": "m9-q05",
@@ -445,7 +473,14 @@
         "Import edilen modülde __name__ \"hesap\"tır.",
         "Korumalı blok atlanır."
       ],
-      "explanation": "hesap import edildiği için __name__ == \"__main__\" yanlıştır ve deneme satırı çalışmaz; yalnızca ana programın print'i görünür."
+      "explanation": "hesap import edildiği için __name__ == \"__main__\" yanlıştır ve deneme satırı çalışmaz; yalnızca ana programın print'i görünür.",
+      "options": [
+        "deneme: 9, sonra 16 (iki satır)",
+        "deneme: 9 (tek satır)",
+        "16",
+        "Hiçbir şey yazmaz"
+      ],
+      "answer": "16"
     },
     {
       "id": "m9-q06",
@@ -460,7 +495,14 @@
         "Import edilen modülün __name__'i dosya adıdır.",
         "Çalıştırılan dosyanınki her zaman __main__'dir."
       ],
-      "explanation": "Her modül kendi __name__ değerini taşır: import edilen modul, çalıştırılan dosya ise __main__."
+      "explanation": "Her modül kendi __name__ değerini taşır: import edilen modul, çalıştırılan dosya ise __main__.",
+      "options": [
+        "modül: __main__, ana dosya: __main__ (iki satır)",
+        "modül: modul, ana dosya: modul (iki satır)",
+        "modül: __main__, ana dosya: modul (iki satır)",
+        "modül: modul, ana dosya: __main__ (iki satır)"
+      ],
+      "answer": "modül: modul, ana dosya: __main__ (iki satır)"
     },
     {
       "id": "m9-q07",
@@ -475,7 +517,14 @@
         "Alt modülden önce paketin kendisi yüklenir.",
         "Paketin kodu __init__.py'dedir."
       ],
-      "explanation": "paket.alt'a ulaşmak için önce paket yüklenir ve __init__.py çalışır, ardından alt.py çalışır."
+      "explanation": "paket.alt'a ulaşmak için önce paket yüklenir ve __init__.py çalışır, ardından alt.py çalışır.",
+      "options": [
+        "alt yükleniyor, paket başlatılıyor, 7 (üç satır)",
+        "paket başlatılıyor, alt yükleniyor, 7 (üç satır)",
+        "alt yükleniyor, 7 (iki satır; paketin __init__.py'si çalışmaz)",
+        "7 (tek satır)"
+      ],
+      "answer": "paket başlatılıyor, alt yükleniyor, 7 (üç satır)"
     },
     {
       "id": "m9-q08",
@@ -490,7 +539,14 @@
         "json standart kütüphanededir.",
         "Bulunamayan modül için find_spec None döndürür."
       ],
-      "explanation": "json bulunduğu için spec None değildir (False). Kurulu olmayan modül için find_spec None döndürür (True)."
+      "explanation": "json bulunduğu için spec None değildir (False). Kurulu olmayan modül için find_spec None döndürür (True).",
+      "options": [
+        "True ve False (iki satır)",
+        "False ve False (iki satır)",
+        "False ve True (iki satır)",
+        "None ve None (iki satır)"
+      ],
+      "answer": "False ve True (iki satır)"
     },
     {
       "id": "m9-q09",
@@ -505,7 +561,14 @@
         "dependencies bir liste.",
         "requires-python alanı yazılmamış."
       ],
-      "explanation": "İki bağımlılık vardır. requires-python tanımlanmadığı için get varsayılanı döndürür."
+      "explanation": "İki bağımlılık vardır. requires-python tanımlanmadığı için get varsayılanı döndürür.",
+      "options": [
+        "2 None",
+        "3 belirtilmemiş",
+        "KeyError verir",
+        "2 belirtilmemiş"
+      ],
+      "answer": "2 belirtilmemiş"
     },
     {
       "id": "m9-q10",
@@ -520,7 +583,14 @@
         "# sonrası atılır.",
         "Yorum satırı ve boş satır temizlenince boş kalır."
       ],
-      "explanation": "Yorum satırı ve boş satır elenir; satır sonundaki yorum ve boşluklar silinir."
+      "explanation": "Yorum satırı ve boş satır elenir; satır sonundaki yorum ve boşluklar silinir.",
+      "options": [
+        "['requests==2.32.3', '', 'pytest>=8']",
+        "['requests==2.32.3', 'pytest>=8']",
+        "['requests==2.32.3', 'pytest>=8  # yalnız geliştirme']",
+        "['requests==2.32.3', '# test araçları', 'pytest>=8']"
+      ],
+      "answer": "['requests==2.32.3', 'pytest>=8']"
     },
     {
       "id": "m9-q11",
@@ -535,7 +605,14 @@
         "Kontroller sırayla yapılır; ilk eşleşen kazanır.",
         "İlk projede uv.lock var."
       ],
-      "explanation": "Kilit dosyası önce aranır; uv.lock bulunduğu için requirements.txt'ye bakılmaz. app.py tek başına bir araç göstermez."
+      "explanation": "Kilit dosyası önce aranır; uv.lock bulunduğu için requirements.txt'ye bakılmaz. app.py tek başına bir araç göstermez.",
+      "options": [
+        "pip poetry bilinmiyor",
+        "uv poetry pip",
+        "pip pip bilinmiyor",
+        "uv poetry bilinmiyor"
+      ],
+      "answer": "uv poetry bilinmiyor"
     },
     {
       "id": "m9-q12",
@@ -550,7 +627,14 @@
         "Ortam değişkenleri str'dir.",
         "TIMEOUT tanımlı değil; varsayılan int olarak verilmiş."
       ],
-      "explanation": "WORKERS \"4\" metnidir ve \"4\" * 2 \"44\" olur. TIMEOUT yoktur, varsayılan int 30 döner ve 60 olur. Aynı satır ortama göre farklı tür döndürdüğü için varsayılanı da metin verip int ile çevirmek gerekir."
+      "explanation": "WORKERS \"4\" metnidir ve \"4\" * 2 \"44\" olur. TIMEOUT yoktur, varsayılan int 30 döner ve 60 olur. Aynı satır ortama göre farklı tür döndürdüğü için varsayılanı da metin verip int ile çevirmek gerekir.",
+      "options": [
+        "8 60",
+        "44 3030",
+        "8 8",
+        "44 60"
+      ],
+      "answer": "44 60"
     },
     {
       "id": "m9-q13",

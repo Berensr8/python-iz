@@ -1,0 +1,180 @@
+{
+  "exams": [
+    {
+      "id": "midterm-1",
+      "afterModule": 4,
+      "title": "Ara Sınav 1",
+      "scope": "M1–M4",
+      "minutes": 25,
+      "description": "Dört modülün temel kazanımlarını tek sınavda tekrar eder: her modülden eşit sayıda soru ve dördü kod yazma. Soru havuzundan seçilmiş sabit bir tekrar sınavıdır. İpuçları kapalı, çözüm açıklamaları sonda.",
+      "questionIds": [
+        "m1-q05",
+        "m1-q11",
+        "m1-q23",
+        "m1-q27",
+        "m1-q38",
+        "m2-q03",
+        "m2-q14",
+        "m2-q25",
+        "m2-q29",
+        "m2-q40",
+        "m3-q01",
+        "m3-q03",
+        "m3-q06",
+        "m3-q19",
+        "m3-q27",
+        "m4-q10",
+        "m4-q13",
+        "m4-q17",
+        "m4-q21",
+        "m4-q35"
+      ]
+    },
+    {
+      "id": "midterm-2",
+      "afterModule": 8,
+      "title": "Ara Sınav 2",
+      "scope": "M1–M8",
+      "minutes": 35,
+      "description": "Sekiz modülün kazanımlarını birlikte tekrar eder. Son öğrendiklerine (M5–M8) daha çok soru ayrıldı, önceki modüllerden de sorular var; yedi soru kod yazmayı, sekiz soru hata bulmayı ölçer. Ara Sınav 1'deki sorular tekrar edilmez. İpuçları kapalı, çözüm açıklamaları sonda.",
+      "questionIds": [
+        "m1-q01",
+        "m1-q21",
+        "m2-q01",
+        "m2-q38",
+        "m3-q28",
+        "m3-q13",
+        "m4-q02",
+        "m4-q28",
+        "m5-q27",
+        "m5-q15",
+        "m5-q01",
+        "m5-q23",
+        "m6-q30",
+        "m6-q13",
+        "m6-q10",
+        "m6-q16",
+        "m7-q32",
+        "m7-q14",
+        "m7-q06",
+        "m7-q13",
+        "m8-q31",
+        "m8-q16",
+        "m8-q11",
+        "m8-q26"
+      ]
+    }
+  ],
+  "workshops": [
+    {
+      "id": "workshop1",
+      "afterModule": 4,
+      "title": "Atölye 1 · Harcamaları analiz et",
+      "summary": "Önce bir raporun ne yaptığını açıkla, sonra bozuk hesabı onar. Son adımda yalnız gereksinimden kendi kategori raporunu yaz. Tutarlar kuruş cinsinden tam sayıdır; float yuvarlama bu projenin konusu değil.",
+      "steps": [
+        {
+          "kind": "read",
+          "label": "İncele",
+          "progressKey": "workshop1",
+          "heading": "Kodun çıktısı ne? Hangi kayıtlar eleniyor?",
+          "code": "expenses = [(\"yemek\", 120), (\"kitap\", 80), (\"yemek\", 50)]\ntotal = 0\ncount = 0\nfor category, amount in expenses:\n    if amount >= 100:\n        total += amount\n        count += 1\nprint(count, total)",
+          "inputLabel": "Çıktı (adet ve toplam)",
+          "placeholder": "Örn. 2 200",
+          "answer": "1 120",
+          "expectedOutput": "1 120",
+          "wrongHint": "Her kaydı tek başına 100 ile karşılaştır. Kategori toplamı değil, geçen kayıtların sayısı ve tutarı soruluyor.",
+          "explanation": "Filtre her kayda ayrı uygulanır. Yalnız 120 kuruşluk kayıt geçer; yemek kategorisinin toplamını önce hesaplamıyoruz. count kayıt sayısı, total geçen tutarların toplamıdır.",
+          "nextLabel": "Düzeltme adımına geç"
+        },
+        {
+          "kind": "write",
+          "label": "Düzelt",
+          "taskId": "workshop1-fix",
+          "note": "Kontrol listesi: sınırdaki tutarı dahil et · boş veriyi işle · birden fazla kaydı biriktir · yalnız istenen çıktıyı yazdır.",
+          "nextLabel": "Kendi raporunu yaz"
+        },
+        {
+          "kind": "write",
+          "label": "Sıfırdan yaz",
+          "taskId": "workshop1-build"
+        }
+      ]
+    },
+    {
+      "id": "workshop2",
+      "afterModule": 6,
+      "title": "Atölye 2 · Metin temizleyicileri",
+      "summary": "Önce yapay zekânın yazdığı bir temizleme fonksiyonunun neden beklenmedik sonuç verdiğini açıkla, sonra onu onar. Ardından sözleşmesi verilen yeni bir fonksiyonu sıfırdan yaz ve son adımda fonksiyonu bozan hataları yakalayan kendi testlerini kur.",
+      "steps": [
+        {
+          "kind": "read",
+          "label": "İncele",
+          "progressKey": "workshop2-read",
+          "heading": "İki çağrıdan sonra ekrana ne yazılır?",
+          "code": "def clean_names(names, seen=[]):\n    for name in names:\n        cleaned = \" \".join(name.split()).title()\n        if cleaned not in seen:\n            seen.append(cleaned)\n    return seen\n\nfirst = clean_names([\"  ada  lovelace \", \"ADA LOVELACE\"])\nsecond = clean_names([\"can\"])\nprint(first, second)",
+          "inputLabel": "Çıktı (iki liste)",
+          "placeholder": "Örn. [1] [2]",
+          "answer": "['Ada Lovelace', 'Can'] ['Ada Lovelace', 'Can']",
+          "expectedOutput": "['Ada Lovelace', 'Can'] ['Ada Lovelace', 'Can']",
+          "wrongHint": "Varsayılan değer olan seen=[] fonksiyon her çağrıldığında yeniden oluşmaz. İkinci çağrı hangi listeye ekleme yapıyor ve first hangi listeyi gösteriyor?",
+          "explanation": "seen=[] varsayılanı fonksiyon tanımlanırken bir kez üretilir ve her çağrıda aynı liste kullanılır. İkinci çağrı aynı listeye Can'ı ekler; return aynı nesneyi döndürdüğü için first ve second aynı listeyi gösterir ve ikisi de iki adlı listeyi yazdırır. Çözüm: seen=None ya da hiç parametre almamak ve listeyi fonksiyonun içinde kurmak.",
+          "nextLabel": "Düzeltme adımına geç"
+        },
+        {
+          "kind": "write",
+          "label": "Düzelt",
+          "taskId": "workshop2-fix",
+          "note": "Kontrol listesi: her çağrı boş bir listeyle başlasın · boş adlar atılsın · ilk görülme sırası korunsun · aynı ad bir kez yer alsın.",
+          "nextLabel": "Kendi fonksiyonunu yaz"
+        },
+        {
+          "kind": "write",
+          "label": "Sıfırdan yaz",
+          "taskId": "workshop2-build",
+          "note": "Sözleşmedeki her maddeyi ayrı bir örnekle düşün: Türkçe harf, büyük İ, art arda ayırıcı, baştaki/sondaki ayırıcı, boş sonuç.",
+          "nextLabel": "Testlerini kur"
+        },
+        {
+          "kind": "write",
+          "label": "Testlerini kur",
+          "taskId": "workshop2-tests"
+        }
+      ]
+    },
+    {
+      "id": "workshop3",
+      "afterModule": 8,
+      "title": "Atölye 3 · Satış CSV'sini raporla",
+      "summary": "Bir satış dosyasını okuyan kodun hangi satırı neden saydığını açıkla, sonra tırnaklı alan, hatalı satır ve boş dosya sorunlarını onar. Son adımda hata nedenlerini ve satır numaralarını da veren bir CSV→JSON raporlayıcıyı sıfırdan yaz.",
+      "steps": [
+        {
+          "kind": "read",
+          "label": "İncele",
+          "progressKey": "workshop3-read",
+          "heading": "Kod hangi satırları sayıyor?",
+          "code": "import csv\nfrom pathlib import Path\n\nPath(\"satis.csv\").write_text('urun,adet,fiyat\\nkalem,3,150\\n\"defter, çizgili\",2,900\\nsilgi,x,50\\nkalem,4,150\\n', encoding=\"utf-8\")\n\ntotal = 0\nbad = 0\nwith open(\"satis.csv\", encoding=\"utf-8\", newline=\"\") as f:\n    for row in csv.DictReader(f):\n        try:\n            total += int(row[\"adet\"]) * int(row[\"fiyat\"])\n        except ValueError:\n            bad += 1\nprint(total, bad)",
+          "inputLabel": "Çıktı (toplam ve hatalı sayısı)",
+          "placeholder": "Örn. 100 2",
+          "answer": "2850 1",
+          "expectedOutput": "2850 1",
+          "wrongHint": "csv modülü tırnak içindeki virgülü alan ayırıcı saymaz. Her satırı ayrı ayrı çarp; adedi sayı olmayan satır toplama girmez ve hatalı sayılır.",
+          "explanation": "Üç geçerli satır var: kalem 3×150 = 450, tırnaklı \"defter, çizgili\" 2×900 = 1800 ve ikinci kalem 4×150 = 600; toplam 2850. Adedi x olan silgi satırında int() ValueError verir ve hatalı sayılır.",
+          "nextLabel": "Düzeltme adımına geç"
+        },
+        {
+          "kind": "write",
+          "label": "Düzelt",
+          "taskId": "workshop3-fix",
+          "note": "Kontrol listesi: tırnaklı alan bölünmesin · hatalı satır programı durdurmasın · hiç geçerli satır yokken bölme hatası olmasın.",
+          "nextLabel": "Kendi raporunu yaz"
+        },
+        {
+          "kind": "write",
+          "label": "Sıfırdan yaz",
+          "taskId": "workshop3-build",
+          "note": "Hata nedenlerinin denetim sırası önemli: önce alan sayısı, sonra adet, sonra fiyat. Başlık satırı numaralandırmaya dahildir (ilk veri satırı 2. satırdır)."
+        }
+      ]
+    }
+  ]
+}

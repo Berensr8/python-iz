@@ -75,9 +75,9 @@ Kapanış: Öğrenci iç içe yapıdaki verinin hangi döngüyle işlendiğini v
 - [x] M8: open ve modlar, with, pathlib/os/shutil, CSV/JSON, encoding ve dosya yaşam döngüsü.
 - [ ] M8 arayüzü: tarayıcıdaki sanal dosyalar için yükleme/indirme ve hazır örnek dosyalar. (Şimdilik örnekler dosyalarını kod içinde kendileri oluşturuyor.)
 - [ ] Görselleştirme 2: Fonksiyon çağrısı, yerel/global kapsam, recursion ve dönüş değerleri için call stack.
-- [ ] Atölye 2 (M6 sonrası): AI'ın yazdığı metin temizleme fonksiyonunu düzelt; ardından sözleşmesi verilen yeni temizleme fonksiyonunu sıfırdan yaz ve parametrik testlerini kur.
-- [ ] Atölye 3 (M8 sonrası): CSV raporlama projesini incele; kendi CSV→JSON raporlayıcını yaz, hatalı kayıt ve boş dosya senaryolarını test et.
-- [ ] Ara sınav 2 (M8 sonrası): M1–M8; son öğrenilen konulara ağırlık ve önceki kazanımlara tekrar.
+- [x] Atölye 2 (M6 sonrası): AI'ın yazdığı metin temizleme fonksiyonunu düzelt; ardından sözleşmesi verilen yeni temizleme fonksiyonunu sıfırdan yaz ve parametrik testlerini kur. (İncele → Düzelt → Sıfırdan yaz → Testlerini kur; son adımda öğrenci doğru ve hatalı beş sürümü ayırt eden test vakaları yazar.)
+- [x] Atölye 3 (M8 sonrası): CSV raporlama projesini incele; kendi CSV→JSON raporlayıcını yaz, hatalı kayıt ve boş dosya senaryolarını test et. (İncele → Düzelt → Sıfırdan yaz; hata nedenleri ve satır numaralarıyla.)
+- [x] Ara sınav 2 (M8 sonrası): M1–M8; son öğrenilen konulara ağırlık ve önceki kazanımlara tekrar. (24 soru: M1–M4'ten 2'şer, M5–M8'den 4'er; 7 kod yazma, 8 hata bulma; 35 dakika; Ara Sınav 1 soruları tekrar edilmez.)
 
 Kapanış: Öğrenci traceback'ten kendi kodundaki ilgili satıra ulaşabiliyor; bir fonksiyonun girdisini, çıktısını ve yan etkisini ayırabiliyor; dosya işleme hatasını testle gösterebiliyor.
 
@@ -326,3 +326,16 @@ Açık kalanlar: Atölye 2–4, Ara sınav 2–4, Görselleştirme 1–4, M8 dos
 - [x] İlerleme aktarımı: aktarım kodu/bağlantısı, birleştirme, yedek hatırlatması (`docs/DEVIR-NOTU.md` bölüm 11). Kalıcı depolama izni bilerek istenmiyor.
 - [ ] Klavye sesleri ve geliştirilmiş doğru cevap sesi: şimdilik ertelendi. Araştırma notu: lisansı net ve yeniden dağıtılabilir gerçek anahtar kaydı olarak yalnızca OpenGameArt "Keyboard Soundpack #1" (CC0, tek klavye) bulundu; Mechvibes paket lisansları belirsiz, eklee paketi CC-BY (atıf ister).
 - [ ] Hesapla bulut senkronu: gerekmedi, bilerek yapılmadı (sunucu, giriş ve gizlilik yükü).
+
+### 6 Ekim 2026 — Ara sınav/atölye veri yapısı, Ara Sınav 2, Atölye 2–3 ve iki kritik düzeltme
+
+- [x] Ara sınavlar ve atölyeler artık `content/milestones.json` içinde tanımlı (sınav: hangi modülden sonra, kaç dakika, hangi sorular; atölye: okuma ve yazma adımları). Arayüz (`components/milestones.tsx`), mantık (`lib/milestones.ts`) ve doğrulayıcı bu veriyi okur; yeni bir ara sınav ya da atölye eklemek için kod değil veri yazılır. Ara sınav, ardından geldiği modülün numarasıyla (`afterModule`) tanımlanır; oturum ve deneme kayıtları bu numarayı kullanır. Eski kayıtlar ve `workshopRead.workshop1` anahtarı aynen çalışır.
+- [x] Sınav süresi sınav başına veridir (Ara Sınav 1: 25, Ara Sınav 2: 35 dakika); oturum doğrulaması 25–60 arası tam dakikayı kabul eder.
+- [x] **Kritik hata düzeltildi: M8 ve M9'un 24 çıktı sorusunun seçeneği ve cevap anahtarı yoktu.** Arayüzde cevap verilecek hiçbir kontrol çıkmıyor, "Cevabı kontrol et" kapalı kalıyordu; yani M8 ve M9'un pratik ve bitiriş testleri tamamlanamıyor, bu da M9/M10'a geçişi engelliyordu. Ayrıca bu sorular bir oturuma girince kayıt doğrulamada hata veriyordu. Seçenekler `scripts/content-builders/output-options.json` içinde, üreticiler tarafından uygulanır.
+- [x] **Kritik kalite sorunu düzeltildi: doğru cevap M3–M10'da neredeyse hep ilk seçenekti** (M6, M7, M10'da 22/22) ve seçenekler karıştırılmıyordu. Seçenekler artık her oturumda, oturum ve soruya göre sabit tohumla karıştırılıyor (`createQuiz`).
+- [x] Bunları yakalayan korumalar: `verify-content` cevaplanamayan soruyu, eksik cevap anahtarını ve yinelenen/az seçeneği reddeder; `test-learning` her sorunun cevaplanabilir olduğunu, her modülün pratiğinin arayüzdeki cevap yoluyla %100 olabildiğini ve karıştırmanın çalıştığını sınar (karıştırma kapatılınca ve eski M8 ile test kırmızıya döner).
+- [x] Ara Sınav 2 (M1–M8), Atölye 2 ve Atölye 3 eklendi (`scripts/content-builders/build_workshops.py`).
+- [x] Atölye görevlerinin 22 kısmi/bozuk çözümü testlerde kalıyor (`test-learning`); bu sırada bir test boşluğu bulundu (satırda hem adet hem fiyat hatalıysa denetim sırası sınanmıyordu) ve test eklendi.
+- [x] Kontroller: 1.082 çalıştırılabilir içerik, 205 regresyon kontrolü, 168 yazma referans vakası; TypeScript, normal ve Pages derlemeleri başarılı. Tarayıcıda: eski ilerlemeyle atölye ve ara sınav, ara sınavın yenilemeden sonra devamı, M8 pratiğinin çözülmesi, Atölye 2 ve 3 okuma adımları, Atölye 2'nin 4. adımı ve Ara Sınav 2 denendi.
+
+Açık kalanlar: Atölye 4–6, Ara sınav 3–4, Görselleştirme 1–4, Genel sınav ve bitirme projesi, M8 dosya yükleme/indirme, M11–M18, modülleri ihtiyaç olunca yükleme (ana JS parçası 1,3 MB), A1.5/A1.6/A1.7/A1.12.

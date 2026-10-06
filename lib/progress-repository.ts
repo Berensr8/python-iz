@@ -15,6 +15,8 @@ const questionSchema = z.object({
   solutionCode: shortText.optional(), exampleInput: shortText.optional(),
   tests: z.array(z.object({ label: shortText, stdin: shortText, expectedOutput: shortText })).max(100).optional(),
 });
+// Quiz and exam clocks are whole minutes between 25 and 60 (each exam names its own length in milestones.json).
+const validDuration = (milliseconds: number) => milliseconds >= 25 * 60000 && milliseconds <= 60 * 60000 && milliseconds % 60000 === 0;
 const sessionSchema = z.object({
   id: z.string().min(1).max(100), moduleId: z.number().int().min(1).max(18), mode: z.enum(["practice", "test", "midterm"]), weakOnly: z.boolean(),
   questions: z.array(questionSchema).min(1).max(100), startedAt: count, deadline: count.nullable(), index: count,
@@ -27,7 +29,7 @@ const sessionSchema = z.object({
     (session.completedAt === null && session.index >= session.questions.length) ||
     (session.completedAt === null) !== (session.finishReason === null) ||
     (session.completedAt !== null && session.index !== session.questions.length) ||
-    (session.deadline !== null && (session.mode === "practice" || session.deadline !== session.startedAt + 1500000)) ||
+    (session.deadline !== null && (session.mode === "practice" || !validDuration(session.deadline - session.startedAt))) ||
     [...Object.keys(session.answers), ...Object.keys(session.drafts)].some(id => !ids.has(id)) ||
     session.questions.slice(0, session.index).some(q => !session.answers[q.id] && session.finishReason !== "timeout");
   if (invalid) context.addIssue({ code: z.ZodIssueCode.custom, message: "Sınav oturumu tutarsız." });

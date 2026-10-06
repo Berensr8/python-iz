@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { loadPyodide } from "pyodide";
 import { defaultProgress, parseProgress, markStudy, recordWriting, studyDay, exportProgress, importProgress, mergeProgress, encodeTransfer, decodeTransfer } from "../lib/progress-repository.ts";
-import { isAnswerCorrect, wrongOptionFeedback } from "../lib/answer-check.ts";
+import { isAnswerCorrect, wrongOptionFeedback, answerKind, selectedAnswer } from "../lib/answer-check.ts";
 import { pythonErrorHint } from "../lib/python-error-hint.ts";
 import { completeLesson } from "../lib/progress-repository.ts";
-import { midtermQuestions, milestonesAvailable } from "../lib/milestones.ts";
-import { createQuiz, answerQuiz, nextQuizQuestion, finishQuiz, expireQuiz, saveQuizDraft } from "../lib/quiz-engine.ts";
+import { examQuestions, examByModule, examPassCount, milestoneAvailable, workshopSteps, workshopComplete, attemptLabel } from "../lib/milestones.ts";
+import { createQuiz, answerQuiz, nextQuizQuestion, finishQuiz, expireQuiz, saveQuizDraft, initialDraft } from "../lib/quiz-engine.ts";
 import "../public/python-runtime.js";
 
 let checks = 0;
@@ -176,7 +176,8 @@ check("Seçmeli soru yalnız tam seçenekle doğru; yanlış seçeneğin gerekç
   assert.equal(wrongOptionFeedback(q, "ValueError"), "neden"); assert.equal(wrongOptionFeedback(q, "TypeError"), undefined);
 });
 const modules = await Promise.all(Array.from({ length: 10 }, async (_, i) => JSON.parse(await readFile(new URL(`../content/module-${String(i + 1).padStart(2, "0")}.json`, import.meta.url), "utf8"))));
-const checkpoint = midtermQuestions(modules);
+const milestones = JSON.parse(await readFile(new URL("../content/milestones.json", import.meta.url), "utf8"));
+const checkpoint = examQuestions(examByModule(milestones.exams, 4), modules);
 check("Ara sınav M1–M4'ten eşit kapsam ve dört yazma sorusu içerir", () => {
   assert.equal(checkpoint.length, 20); assert.equal(new Set(checkpoint.map(q => q.id)).size, 20);
   for (let i = 1; i <= 4; i++) assert.equal(checkpoint.filter(q => q.id.startsWith(`m${i}-`)).length, 5);
@@ -190,8 +191,8 @@ check("M1–M2 gerçek örneklerinde öğretilmemiş fonksiyon ve döngü yok", 
   assert.ok(!modules[0].sections[0].code.includes("if "));
 });
 check("Ara sınav kilidi ve eski ilerleme uyumluluğu", () => {
-  assert.equal(milestonesAvailable(defaultProgress), false);
-  assert.equal(milestonesAvailable({ ...defaultProgress, unlockedModule: 5 }), true);
+  assert.equal(milestoneAvailable(defaultProgress, 4), false);
+  assert.equal(milestoneAvailable({ ...defaultProgress, unlockedModule: 5 }, 4), true);
   const old = { ...defaultProgress }; delete old.workshopRead; delete old.lessonRuns;
   assert.deepEqual(parseProgress(old).workshopRead, {});
 });
@@ -210,11 +211,144 @@ check("Süreli ara sınav boşları yanlış sayar ve bir kez kapanır", () => {
   assert.equal(p.attempts[0].score, 0); assert.equal(p.attempts[0].kind, "midterm"); assert.equal(p.attempts[0].reason, "timeout");
   assert.equal(expireQuiz(p, t0 + 2000000), p);
 });
+
+const workshop1 = milestones.workshops.find(item => item.id === "workshop1");
+check("Ara sınav/atölye kilidi modüle göre: M4 testi geçilince ya da M5 açılınca; ara sınav denemesi sayılmaz", () => {
+  const passed = { kind: "module", moduleId: 4, score: 70, date: "2026-10-01T10:00:00.000Z", weakTopics: [] };
+  assert.equal(milestoneAvailable({ ...defaultProgress, attempts: [passed] }, 4), true);
+  assert.equal(milestoneAvailable({ ...defaultProgress, attempts: [{ ...passed, score: 69 }] }, 4), false);
+  assert.equal(milestoneAvailable({ ...defaultProgress, attempts: [{ ...passed, kind: "midterm" }] }, 4), false, "ara sınav sonucu modül testi yerine geçmez");
+  assert.equal(milestoneAvailable({ ...defaultProgress, unlockedModule: 5 }, 8), false, "M8 sonrası, M9 açılana kadar kapalı");
+  assert.equal(milestoneAvailable({ ...defaultProgress, unlockedModule: 9 }, 8), true);
+});
+check("Atölye adımları sırayla açılır; durum ilerlemeden okunur", () => {
+  const key = workshop1.steps[0].progressKey, fixTask = workshop1.steps[1].taskId, buildTask = workshop1.steps[2].taskId;
+  const state = progress => workshopSteps(progress, workshop1).map(item => `${item.done ? "✓" : "·"}${item.open ? "açık" : "kilitli"}`);
+  assert.deepEqual(state(defaultProgress), ["·açık", "·kilitli", "·kilitli"]);
+  const read = { ...defaultProgress, workshopRead: { [key]: true } };
+  assert.deepEqual(state(read), ["✓açık", "·açık", "·kilitli"]);
+  const fixed = { ...read, writingResults: { [fixTask]: { passed: true, independent: true, attempts: 1 } } };
+  assert.deepEqual(state(fixed), ["✓açık", "✓açık", "·açık"]);
+  assert.equal(workshopComplete(fixed, workshop1), false);
+  assert.equal(workshopComplete({ ...fixed, writingResults: { ...fixed.writingResults, [buildTask]: { passed: true, independent: false, attempts: 2 } } }, workshop1), true);
+  assert.deepEqual(state({ ...defaultProgress, writingResults: { [fixTask]: { passed: true, independent: true, attempts: 1 } } }), ["·açık", "✓kilitli", "·kilitli"], "okuma adımı atlanamaz");
+});
+check("Deneme etiketi ve geçme sayısı veriden gelir", () => {
+  assert.equal(attemptLabel(milestones.exams, { kind: "midterm", moduleId: 4 }), "Ara Sınav 1");
+  assert.equal(attemptLabel(milestones.exams, { kind: "module", moduleId: 4 }), "Modül 4");
+  assert.equal(attemptLabel(milestones.exams, { kind: "midterm", moduleId: 99 }), "Ara sınav (M99 sonrası)");
+  assert.equal(examPassCount(20), 14); assert.equal(examPassCount(24), 17); assert.equal(examPassCount(30), 21);
+});
+check("Her ara sınav kendi süresini kullanır; geçersiz süreler reddedilir", () => {
+  const long = createQuiz("uzun", 4, "midterm", checkpoint, true, false, t0, 35);
+  assert.equal(long.deadline - long.startedAt, 35 * 60000);
+  let p = parseProgress({ ...defaultProgress, unlockedModule: 5, activeQuiz: long });
+  assert.equal(expireQuiz(p, t0 + 1500001).activeQuiz.completedAt, null, "25. dakikada bitmez");
+  assert.equal(expireQuiz(p, t0 + 35 * 60000 + 1).attempts[0].reason, "timeout");
+  for (const minutes of [10, 24, 61, 25.5]) assert.throws(() => parseProgress({ ...defaultProgress, activeQuiz: createQuiz("x", 4, "midterm", checkpoint, true, false, t0, minutes) }), undefined, `${minutes} dk geçersiz`);
+});
+
+for (const exam of milestones.exams) {
+  const questions = examQuestions(exam, modules);
+  const run = correct => {
+    let p = parseProgress({ ...defaultProgress, unlockedModule: exam.afterModule + 1, activeQuiz: createQuiz(`gen-${exam.id}-${correct}`, exam.afterModule, "midterm", questions, true, false, t0, exam.minutes) });
+    questions.forEach((q, index) => { p = answerQuiz(p, `gen-${exam.id}-${correct}`, q.id, index < correct, t0); p = nextQuizQuestion(p, `gen-${exam.id}-${correct}`, q.id, t0); });
+    return p;
+  };
+  check(`${exam.title}: tam puan, geçme sınırı (${examPassCount(questions.length)} doğru) ve modül kilidine dokunmama`, () => {
+    const full = run(questions.length), edge = run(examPassCount(questions.length)), below = run(examPassCount(questions.length) - 1);
+    assert.equal(full.attempts[0].score, 100); assert.equal(full.attempts[0].kind, "midterm"); assert.equal(full.attempts[0].moduleId, exam.afterModule);
+    assert.equal(attemptLabel(milestones.exams, full.attempts[0]), exam.title);
+    assert.ok(edge.attempts[0].score >= 70, `sınırda ${edge.attempts[0].score}`); assert.ok(below.attempts[0].score < 70, `sınırın altında ${below.attempts[0].score}`);
+    assert.ok(edge.xp - below.xp >= 80, "geçen deneme (100 XP) kalandan (20 XP) en az 80 XP fazla kazanır");
+    assert.equal(full.unlockedModule, exam.afterModule + 1);
+    assert.equal(parseProgress(full).attempts.length, 1);
+  });
+  check(`${exam.title}: kendi süresi dolunca bir kez kapanır, öncesinde açık kalır`, () => {
+    const p = parseProgress({ ...defaultProgress, activeQuiz: createQuiz(`sure-${exam.id}`, exam.afterModule, "midterm", questions, true, false, t0, exam.minutes) });
+    assert.equal(expireQuiz(p, t0 + exam.minutes * 60000 - 1000), p);
+    const done = expireQuiz(p, t0 + exam.minutes * 60000 + 1);
+    assert.equal(done.attempts.length, 1); assert.equal(done.attempts[0].reason, "timeout"); assert.equal(done.attempts[0].score, 0);
+    assert.equal(expireQuiz(done, t0 + exam.minutes * 120000), done);
+  });
+}
+
+const choiceQuestions = modules.flatMap(module => module.questions).filter(q => q.options?.length);
+const positionsOf = (id) => createQuiz(id, 1, "practice", choiceQuestions, false, false, t0).questions.map(q => q.options.indexOf(q.answer));
+check("Seçenekler her oturumda karışır: doğru cevap hep aynı konumda değil, her seçenek korunur", () => {
+  const quiz = createQuiz("oturum-a", 1, "practice", choiceQuestions, false, false, t0);
+  for (const q of quiz.questions) {
+    const original = choiceQuestions.find(item => item.id === q.id);
+    assert.deepEqual([...q.options].sort(), [...original.options].sort(), `${q.id}: seçenekler değişmemeli`);
+    assert.ok(q.options.includes(q.answer), q.id);
+  }
+  const first = positionsOf("oturum-a").filter(index => index === 0).length / choiceQuestions.length;
+  assert.ok(first < 0.4, `doğru cevap %${Math.round(first * 100)} oranında ilk sırada`);
+  const original = choiceQuestions.filter(q => q.options[0] === q.answer).length / choiceQuestions.length;
+  assert.ok(original > 0.6, "içerikte doğru cevap çoğunlukla ilk sırada; karıştırma bu yüzden şart");
+});
+check("Karıştırma aynı oturumda kararlı (yenilemede sıra değişmez), oturumlar arasında farklı, kayıt-okuma sonrası aynı", () => {
+  assert.deepEqual(positionsOf("oturum-a"), positionsOf("oturum-a"));
+  assert.notDeepEqual(positionsOf("oturum-a"), positionsOf("oturum-b"));
+  const quiz = createQuiz("oturum-a", 1, "practice", choiceQuestions.slice(0, 20), false, false, t0);
+  assert.deepEqual(parseProgress({ ...defaultProgress, activeQuiz: quiz }).activeQuiz.questions.map(q => q.options), quiz.questions.map(q => q.options));
+});
+check("Her soru cevaplanabilir: seçenek, boşluk, sıralama ya da kod girişi var; seçenekli sorunun cevabı seçeneklerde", () => {
+  for (const q of modules.flatMap(module => module.questions)) {
+    assert.notEqual(answerKind(q), "none", `${q.id} (${q.type}): cevap verilecek bir kontrol yok`);
+    if (answerKind(q) === "choice") { assert.ok(q.options.length >= 3 && q.options.includes(q.answer), q.id); assert.equal(new Set(q.options).size, q.options.length, `${q.id}: yinelenen seçenek`); }
+  }
+});
+check("Uçtan uca: her modülün pratiği, arayüzdeki cevap yoluyla doğru cevaplanınca %100 olur", () => {
+  for (const module of modules) {
+    const practice = module.practiceIds.map(id => module.questions.find(q => q.id === id));
+    let p = { ...defaultProgress, unlockedModule: 18, activeQuiz: createQuiz(`uc-${module.id}`, module.id, "practice", practice, false, false, t0) };
+    for (const q of p.activeQuiz.questions) {
+      const draft = { ...initialDraft(q), choice: answerKind(q) === "choice" ? q.answer : "", fill: answerKind(q) === "fill" ? q.answer : "", ordered: answerKind(q) === "order" ? q.answer.split("\n") : [...(q.lines ?? [])] };
+      const correct = answerKind(q) === "code" ? true : isAnswerCorrect(q, selectedAnswer(q, draft));
+      assert.ok(correct, `M${module.id} ${q.id} (${q.type}): arayüz cevabıyla doğru sayılmadı`);
+    }
+  }
+});
 const fix = tasks.find(task => task.id === "workshop1-fix");
 for (const [label, code] of [["Yalnız sınır", fix.starterCode.replace("amount > limit", "amount >= limit")], ["Yalnız toplama", fix.starterCode.replace("total = amount", "total += amount")]]) {
   const results = await runtime.assess(py, code, fix.tests);
   check(`Atölye 1: ${label} düzeltmesi yeterli değil`, () => assert.ok(results.some(result => !result.passed)));
 }
+// Atölye 2 ve 3: kısmi ya da bozuk çözümler testlerde kalmalı (her gereksinim ayrı ayrı sınanır).
+// [görev, açıklama, başlangıç kodu mu çözüm mü, değiştirilecek metin, yeni metin]
+const mutants = [
+  ["workshop2-fix", "yalnız paylaşılan varsayılan düzeltildi", "starter", "def clean_names(names, seen=[]):\n", "def clean_names(names):\n    seen = []\n"],
+  ["workshop2-fix", "yalnız boş ad filtresi eklendi", "starter", "if cleaned not in seen:", "if cleaned and cleaned not in seen:"],
+  ["workshop2-fix", "yalnız sorted kaldırıldı", "starter", "return sorted(seen)", "return seen"],
+  ["workshop2-fix", "çözüm ama sıra sıralanıyor", "solution", "    return result\n", "    return sorted(result)\n"],
+  ["workshop2-fix", "çözüm ama varsayılan liste paylaşılıyor", "solution", "def clean_names(names):\n    result = []\n", "def clean_names(names, result=[]):\n"],
+  ["workshop2-fix", "çözüm ama boş ad kalıyor", "solution", "if cleaned and cleaned not in result", "if cleaned not in result"],
+  ["workshop2-build", "boş sonuç \"bos\" olmuyor", "solution", ' or "bos"', ""],
+  ["workshop2-build", "önce küçültüp sonra çeviriyor (İ bozulur)", "solution", "title.translate(TURKISH).lower()", "title.lower().translate(TURKISH)"],
+  ["workshop2-build", "Türkçe harfler çevrilmiyor", "solution", "title.translate(TURKISH).lower()", "title.lower()"],
+  ["workshop2-build", "ayırıcılar tek tire olmuyor", "solution", "elif word:", "else:"],
+  ["workshop2-tests", "yalnız üç hata yakalayan vakalar", "solution", '    ("  a -- b  ", "a-b"),\n    ("a -- b", "a-b"),\n', ""],
+  ["workshop2-tests", "yanlış beklenen değer (doğru sürüm kalır)", "solution", '("Işık", "isik")', '("Işık", "ışık")'],
+  ["workshop2-tests", "passes her zaman True", "solution", "return all(implementation(title) == expected for title, expected in cases)", "return True"],
+  ["workshop3-fix", "hatalı satır doğrulanmıyor", "solution", "if len(row) != 3 or not row[1].strip().isdigit() or not row[2].strip().isdigit():", "if False:"],
+  ["workshop3-fix", "geçerli satır yokken sıfıra bölünüyor", "solution", "average = total / valid if valid else 0.0", "average = total / valid"],
+  ["workshop3-fix", "alan sayısı denetlenmiyor", "solution", "len(row) != 3 or ", ""],
+  ["workshop3-fix", "başlangıç kodu yalnız csv ile okunuyor", "starter", 'name, qty, price = line.rstrip("\\n").split(",")', "name, qty, price = next(__import__('csv').reader([line.rstrip('\\n')]))"],
+  ["workshop3-build", "satır numarası 1'den başlıyor", "solution", "start=2", "start=1"],
+  ["workshop3-build", "ürün adı kırpılmıyor", "solution", "row[0].strip()", "row[0]"],
+  ["workshop3-build", "anahtarlar sıralanmıyor", "solution", "sort_keys=True", "sort_keys=False"],
+  ["workshop3-build", "Türkçe karakterler kaçışlanıyor", "solution", "ensure_ascii=False, ", ""],
+  ["workshop3-build", "adet yerine fiyat önce denetleniyor", "solution", 'elif not is_count(row[1]):\n            reason = "adet sayı değil"\n        elif not is_count(row[2]):\n            reason = "fiyat sayı değil"', 'elif not is_count(row[2]):\n            reason = "fiyat sayı değil"\n        elif not is_count(row[1]):\n            reason = "adet sayı değil"'],
+];
+for (const [id, label, from, find, replacement] of mutants) {
+  const task = tasks.find(item => item.id === id);
+  const source = from === "starter" ? task.starterCode : task.solution;
+  assert.ok(source.includes(find), `${id} / ${label}: değiştirilecek metin bulunamadı (test boşa çalışırdı)`);
+  const results = await runtime.assess(py, source.replace(find, replacement), task.tests);
+  check(`${id}: ${label} — testlerde kalır`, () => assert.ok(results.some(result => !result.passed), "bozuk çözüm bütün testleri geçti"));
+}
+
 // --- Cihazlar arası aktarım: birleştirme ve aktarım kodu ---
 const phone = parseProgress({ ...defaultProgress, xp: 300, streak: 4, lastStudyDate: "2026-10-05", unlockedModule: 3, theme: "light",
   completedSections: { "m1:a": true, "m1:b": true }, lessonRuns: { "m1:a": true }, hintUsage: { "m1-q01": 1 },

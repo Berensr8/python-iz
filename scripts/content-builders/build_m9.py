@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from _options import apply_output_options
+
 ROOT = Path(__file__).resolve().parents[2] / "content"
 
 
@@ -1563,6 +1565,7 @@ print(len(api_key))
   explanation="os.environ[\"API_KEY\"] eksik anahtarda KeyError: 'API_KEY' verir. Zorunlu ayarlar için bu, programın erken ve açık biçimde durmasını sağlar; isteğe bağlı ayarlar için os.getenv kullanılır.")
 
 assert len(questions) == 40, len(questions)
+apply_output_options(questions)
 from collections import Counter
 print(Counter(item["type"] for item in questions))
 
@@ -1911,5 +1914,6 @@ print(sorted(n for n in dir(metin) if not n.startswith("_")))
 
 tasks_path = ROOT / "writing-tasks.json"
 existing = [t for t in json.loads(tasks_path.read_text(encoding="utf-8")) if t["moduleId"] != 9]
-tasks_path.write_text(json.dumps(existing + tasks, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+ordered = sorted(existing + tasks, key=lambda item: (item["moduleId"], int(item["id"].split("-w")[1])))
+tasks_path.write_text(json.dumps(ordered, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 print("module-09.json ve", len(tasks), "yazma görevi yazıldı")

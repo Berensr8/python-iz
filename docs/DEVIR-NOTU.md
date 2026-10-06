@@ -17,7 +17,7 @@ Türkçe, tarayıcıda çalışan bir Python öğrenme sitesi. Öğrenci 18 mod�
 | Soru | 400 (modül başına 40) |
 | Yazma görevi | 30 (modül başına 3: Tamamla, Düzelt, Sıfırdan yaz) |
 | Kapsam haritası | 109 alt başlıktan 70'i doğrulanmış (%64); `npm run coverage` |
-| Doğrulama | 1049 çalıştırılabilir içerik kontrolü, 144 regresyon kontrolü, 137 yazma referans vakası, `tsc` ve `build` başarılı; büyük paket uyarısı sürüyor |
+| Doğrulama | 1082 çalıştırılabilir içerik kontrolü, 205 regresyon kontrolü, 168 yazma referans vakası, `tsc` ve `build` başarılı; büyük paket uyarısı sürüyor |
 | Git/yayın | M10 öncesi değişiklikler korunmuştur. Güncel commit ve yayın durumunu git ve Sites üzerinden kontrol et; yayın kaynak kaydı oluşturur. |
 
 ## 3. Sıradaki iş
@@ -27,8 +27,8 @@ Plan sırasına göre bir sonraki içerik modülü **M11 OOP 1**'dir. Alt başl�
 Kullanıcı şimdiye kadar her seferinde arayüz işleri yerine bir sonraki içerik modülünü seçti, ama karar onundur. Bekleyen arayüz işleri:
 
 - Görselleştirme 1 (döngü/değişken tablosu, sığ/derin kopya), Görselleştirme 2 (call stack)
-- ~~Atölye 1~~ (yapıldı), Atölye 2 (M6), Atölye 3 (M8 — CSV→JSON raporlayıcı; M8 yazma görevi m8-w3 ön hazırlığıdır), Atölye 4 (M10 sonrası)
-- ~~Ara sınav 1~~ (yapıldı; `lib/milestones.ts`, `components/milestones.tsx`), Ara sınav 2 (M1–M8)
+- ~~Atölye 1–3~~ (yapıldı), Atölye 4 (M10 sonrası), Atölye 5 (M12), Atölye 6 (M16)
+- ~~Ara sınav 1–2~~ (yapıldı), Ara sınav 3 (M1–M12), Ara sınav 4 (M1–M16). Yeni bir ara sınav ya da atölye için kod yazmaya gerek yok; `content/milestones.json`'a veri eklenir (bkz. bölüm 12).
 - M8 için sanal dosya yükleme/indirme ve hazır örnek dosyalar
 - Aşama 4: yerel geliştirme rehberi ve ortam etiketleri (Tarayıcıda çalışır / yerel Python gerekir)
 
@@ -158,3 +158,18 @@ Site iki yerde yayınlanabilir; ikisi birbirini etkilemez.
 - **Hatırlatma:** `lastBackupAt` alanı (şema alanı, eski kayıtlarda `null`) yedek indirince ve kod üretince güncellenir. 100 XP'ten fazlası olup 14 gündür yedeği olmayan öğrenciye bir bant gösterilir; "1 hafta sonra hatırlat" `python-iz-backup-snooze` anahtarında tutulur (ilerleme dosyasının parçası değildir).
 - **Testler:** `scripts/test-learning.mjs` içinde birleştirme (kayıpsızlık, çift sayım yok, kendisiyle birleşince değişmeme, girdiyi bozmama), kod gidiş-dönüşü, satır sonu/boşluk toleransı, bozuk/kesik/yabancı/şişirilmiş kod reddi. Mutasyon denemesi yapıldı: XP'yi toplayan ya da boyut sınırını kaldıran bozuk kod testlerce yakalanıyor.
 - **Tarayıcıda denendi:** iki adres (`localhost` ve `127.0.0.1`) iki cihaz gibi kullanıldı; bağlantıyla ve elle yapıştırarak aktarım, bozuk kod, birleşik sonucun kaydedilen veriyle karşılaştırması.
+
+## 12. Ara sınav ve atölye verisi; iki kalıcı kural
+
+**Veri:** `content/milestones.json` iki liste tutar.
+- `exams`: `id, afterModule, title, scope, description, minutes, questionIds`. `afterModule` sınavın hangi modülden sonra açıldığını ve oturum/deneme kayıtlarındaki `moduleId`'yi belirler (Ara Sınav 1 → 4, Ara Sınav 2 → 8). Süre 25–60 tam dakika.
+- `workshops`: `id, afterModule, title, summary, steps`. Adım türleri: `read` (kodu incele, tek satır cevap; `progressKey` ilerlemede `workshopRead` altında tutulur, `answer` ve `expectedOutput` kodun gerçek çıktısıyla eşleşmeli) ve `write` (`taskId` → `content/workshop-tasks.json`). Son adım `write` olmalı; son adım dışındakilerde `nextLabel` gerekir. Adımlar sırayla açılır.
+- Atölye görevleri `workshop-tasks.json`'dadır (alanlar `writing-tasks.json` ile aynı). `verify-content` bu dosyaları ve verileri denetler: soru kimlikleri, kapsam, kod soru sayısı, görevlerin atölyelerde kullanılması, okuma adımı çıktısı.
+- Atölye 2 ve 3 `scripts/content-builders/build_workshops.py` ile üretilir (beklenen çıktılar referans çözümler çalıştırılarak hesaplanır). Atölye 1 ve ara sınavlar elle düzenlenmiş JSON'dur.
+- Yeni ara sınav soruları seçilirken `scripts` altındaki seçme betiği yoktur; Ara Sınav 2 için ölçüt: son modüllere daha çok soru, her seçim farklı bir ders bölümünü ölçsün, önceki ara sınavın soruları tekrar edilmesin, en az üç kod yazma ve bir hata bulma sorusu olsun.
+
+**Kural 1 — her soru cevaplanabilir olmalı.** `output`, `bug` ve `traceback` sorularında en az 3 farklı `options` ve `options` içinde `answer` zorunludur. Seçeneksiz bir çıktı sorusu arayüzde cevap kutusu çıkarmaz, pratiği ve bitiriş testini tamamlanamaz kılar ve oturum kaydını bozar. M8 ve M9 bu hatayla yayına çıkmıştı. M8/M9 üreticileri seçenekleri `scripts/content-builders/output-options.json` dosyasından uygular; yeni üreticide de seçenekleri baştan yaz. `verify-content` ve `test-learning` bunu zorlar.
+
+**Kural 2 — doğru cevabın konumu içerikte önemsiz, çünkü oturum seçenekleri karıştırır.** `createQuiz` seçenekleri oturum ve soru kimliğine göre sabit tohumla karıştırır (yenilemede sıra değişmez). İçerikte doğru cevap çoğunlukla ilk sırada yazılıdır; bu bilinçli olarak karıştırmaya güvenilir. Seçeneklerde "yukarıdakilerin hepsi", "hiçbiri" gibi konuma bağlı ifade kullanma.
+
+**Üreticiler:** `build_m8.py`, `build_m9.py` (modül + görev), `build_workshops.py` (atölye). Bash heredoc içinde ters bölü bozulabilir; kaçış içeren Python kodunu ham dizeyle (`r'...'`) ya da dosya yazma aracıyla oluştur.

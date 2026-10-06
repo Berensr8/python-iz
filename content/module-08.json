@@ -383,7 +383,14 @@
         "\"w\" dosyayı her açılışta boşaltır.",
         "İlk yazılan metin ikinci açılışta silindi."
       ],
-      "explanation": "İkinci open(\"a.txt\", \"w\") dosyayı açar açmaz boşaltır; geriye yalnızca \"iki\" kalır."
+      "explanation": "İkinci open(\"a.txt\", \"w\") dosyayı açar açmaz boşaltır; geriye yalnızca \"iki\" kalır.",
+      "options": [
+        "biriki",
+        "iki",
+        "bir",
+        "Hata verir (dosya zaten var)"
+      ],
+      "answer": "iki"
     },
     {
       "id": "m8-q02",
@@ -398,7 +405,14 @@
         "\"a\" mevcut içeriği korur.",
         "Döngü iki kez ekleme yapar."
       ],
-      "explanation": "\"w\" dosyayı \"1\" ile başlatır, her \"a\" açılışı sona bir \"2\" satırı ekler. splitlines satır sonlarını atarak listeyi verir."
+      "explanation": "\"w\" dosyayı \"1\" ile başlatır, her \"a\" açılışı sona bir \"2\" satırı ekler. splitlines satır sonlarını atarak listeyi verir.",
+      "options": [
+        "['2', '2']",
+        "['1', '2']",
+        "['1', '2', '2']",
+        "['1\\n', '2\\n', '2\\n']"
+      ],
+      "answer": "['1', '2', '2']"
     },
     {
       "id": "m8-q03",
@@ -413,7 +427,14 @@
         "Blok içindeyken dosya açıktır.",
         "f bloktan sonra da vardır ama kapanmıştır."
       ],
-      "explanation": "with bloğu bitince dosya kapanır; f değişkeni silinmez, yalnızca kapalı bir dosyayı gösterir."
+      "explanation": "with bloğu bitince dosya kapanır; f değişkeni silinmez, yalnızca kapalı bir dosyayı gösterir.",
+      "options": [
+        "True ve True (iki satır)",
+        "False ve False (iki satır)",
+        "Hata: f bloktan sonra tanımsızdır (NameError)",
+        "False ve True (iki satır)"
+      ],
+      "answer": "False ve True (iki satır)"
     },
     {
       "id": "m8-q04",
@@ -428,7 +449,14 @@
         "write() veriyi önce bellekteki bir tampona koyar.",
         "Tampon close() ya da flush() ile dosyaya aktarılır."
       ],
-      "explanation": "\"w\" dosyayı oluşturup boşalttı; yazılan metin henüz tampondaydı, bu yüzden ilk okuma boş metin gördü. close() tamponu dosyaya aktardı ve ikinci okuma metni buldu. with kullanmak bu durumu önler."
+      "explanation": "\"w\" dosyayı oluşturup boşalttı; yazılan metin henüz tampondaydı, bu yüzden ilk okuma boş metin gördü. close() tamponu dosyaya aktardı ve ikinci okuma metni buldu. with kullanmak bu durumu önler.",
+      "options": [
+        "'' ve 'başladı' (iki satır)",
+        "'başladı' ve 'başladı' (iki satır)",
+        "'' ve '' (iki satır)",
+        "FileNotFoundError"
+      ],
+      "answer": "'' ve 'başladı' (iki satır)"
     },
     {
       "id": "m8-q05",
@@ -443,7 +471,14 @@
         "\\n de bir karakterdir.",
         "İlk read() okuma konumunu dosyanın sonuna taşır."
       ],
-      "explanation": "İlk read() altı karakterin tamamını (iki harf, \\n, iki harf, \\n) okur. Konum sonda kaldığı için ikinci read() boş metin döndürür."
+      "explanation": "İlk read() altı karakterin tamamını (iki harf, \\n, iki harf, \\n) okur. Konum sonda kaldığı için ikinci read() boş metin döndürür.",
+      "options": [
+        "6 'ab\\ncd\\n'",
+        "6 ''",
+        "4 ''",
+        "6 None"
+      ],
+      "answer": "6 ''"
     },
     {
       "id": "m8-q06",
@@ -458,7 +493,14 @@
         "readlines satır sonlarını silmez.",
         "Dosyaya son satırdan sonra \\n yazılmadı."
       ],
-      "explanation": "readlines her satırı olduğu gibi verir: ilk satır \\n ile biter, son satır dosyada nasıl yazıldıysa öyle gelir."
+      "explanation": "readlines her satırı olduğu gibi verir: ilk satır \\n ile biter, son satır dosyada nasıl yazıldıysa öyle gelir.",
+      "options": [
+        "['x', 'y']",
+        "['x\\n', 'y\\n']",
+        "['x\\ny']",
+        "['x\\n', 'y']"
+      ],
+      "answer": "['x\\n', 'y']"
     },
     {
       "id": "m8-q07",
@@ -473,7 +515,14 @@
         "İlk satır \"a\\n\" olarak gelir.",
         "print kendi satır sonunu da ekler."
       ],
-      "explanation": "\"a\\n\" yazdırılırken print bir \\n daha ekler ve araya boş satır girer. \"b\" satırında \\n yoktur, boşluk oluşmaz. Önlemek için print(line.rstrip(\"\\n\")) ya da print(line, end=\"\")."
+      "explanation": "\"a\\n\" yazdırılırken print bir \\n daha ekler ve araya boş satır girer. \"b\" satırında \\n yoktur, boşluk oluşmaz. Önlemek için print(line.rstrip(\"\\n\")) ya da print(line, end=\"\").",
+      "options": [
+        "a, b, son (üç satır)",
+        "a, boş satır, b, boş satır, son (beş satır)",
+        "a, boş satır, b, son (dört satır)",
+        "ab ve son (iki satır)"
+      ],
+      "answer": "a, boş satır, b, son (dört satır)"
     },
     {
       "id": "m8-q08",
@@ -488,7 +537,14 @@
         "suffix yalnızca son uzantıdır.",
         "parent bir üst klasörün yolu, onun name'i klasör adıdır."
       ],
-      "explanation": "stem son uzantıyı atar ve \"yedek.tar\" kalır; suffix \".gz\"dir. Tüm uzantılar için p.suffixes ['.tar', '.gz'] verir."
+      "explanation": "stem son uzantıyı atar ve \"yedek.tar\" kalır; suffix \".gz\"dir. Tüm uzantılar için p.suffixes ['.tar', '.gz'] verir.",
+      "options": [
+        "yedek.tar.gz yedek .tar.gz, sonra 2026 (iki satır)",
+        "yedek.tar.gz yedek.tar .gz, sonra arsiv (iki satır)",
+        "yedek yedek .gz, sonra 2026 (iki satır)",
+        "yedek.tar.gz yedek.tar .gz, sonra 2026 (iki satır)"
+      ],
+      "answer": "yedek.tar.gz yedek.tar .gz, sonra 2026 (iki satır)"
     },
     {
       "id": "m8-q09",
@@ -503,7 +559,14 @@
         "Her çalıştırma boş klasörde başlar.",
         "sorted alfabetik sıraya koyar."
       ],
-      "explanation": "Üç dosya oluşturulur, os.remove biri siler. os.listdir sırası garanti olmadığından sorted ile sabit sıra elde edilir."
+      "explanation": "Üç dosya oluşturulur, os.remove biri siler. os.listdir sırası garanti olmadığından sorted ile sabit sıra elde edilir.",
+      "options": [
+        "['a.txt', 'b.txt', 'c.txt']",
+        "['a.txt', 'c.txt']",
+        "['c.txt', 'a.txt']",
+        "['b.txt']"
+      ],
+      "answer": "['a.txt', 'c.txt']"
     },
     {
       "id": "m8-q10",
@@ -518,7 +581,14 @@
         "ç UTF-8'de iki bayttır.",
         "a ve y birer bayttır."
       ],
-      "explanation": "Metin 3 karakterdir; UTF-8'de ç 2, a ve y 1'er bayt tuttuğu için toplam 4 bayttır. Dosya boyutu bayt sayısıdır."
+      "explanation": "Metin 3 karakterdir; UTF-8'de ç 2, a ve y 1'er bayt tuttuğu için toplam 4 bayttır. Dosya boyutu bayt sayısıdır.",
+      "options": [
+        "3 3",
+        "4 4",
+        "3 6",
+        "3 4"
+      ],
+      "answer": "3 4"
     },
     {
       "id": "m8-q11",
@@ -533,7 +603,14 @@
         "Tırnak içindeki virgül alan ayırıcı değildir.",
         "split tırnakları tanımaz."
       ],
-      "explanation": "csv.reader tırnaklı alanı tek parça sayar: Ada, İzmir, Konak ve 90 olmak üzere 3 alan. split her virgülde böler ve 4 parça üretir; adres alanı ikiye ayrılır."
+      "explanation": "csv.reader tırnaklı alanı tek parça sayar: Ada, İzmir, Konak ve 90 olmak üzere 3 alan. split her virgülde böler ve 4 parça üretir; adres alanı ikiye ayrılır.",
+      "options": [
+        "3 4",
+        "4 4",
+        "3 3",
+        "4 3"
+      ],
+      "answer": "3 4"
     },
     {
       "id": "m8-q12",
@@ -548,7 +625,14 @@
         "JSON nesne anahtarları her zaman metindir.",
         "JSON'da tuple yoktur, yalnızca dizi vardır."
       ],
-      "explanation": "dumps int anahtarı \"1\" metnine, tuple'ı diziye çevirir. loads bunları str anahtar ve liste olarak geri verir; sonuç ilk sözlüğe eşit değildir."
+      "explanation": "dumps int anahtarı \"1\" metnine, tuple'ı diziye çevirir. loads bunları str anahtar ve liste olarak geri verir; sonuç ilk sözlüğe eşit değildir.",
+      "options": [
+        "{1: (2, 3)} True",
+        "{'1': (2, 3)} False",
+        "{'1': [2, 3]} False",
+        "{'1': [2, 3]} True"
+      ],
+      "answer": "{'1': [2, 3]} False"
     },
     {
       "id": "m8-q13",

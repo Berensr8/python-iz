@@ -1,0 +1,27 @@
+{
+  "m8-q01": { "answer": "iki", "options": ["biriki", "iki", "bir", "Hata verir (dosya zaten var)"] },
+  "m8-q02": { "answer": "['1', '2', '2']", "options": ["['2', '2']", "['1', '2']", "['1', '2', '2']", "['1\\n', '2\\n', '2\\n']"] },
+  "m8-q03": { "answer": "False ve True (iki satır)", "options": ["True ve True (iki satır)", "False ve False (iki satır)", "Hata: f bloktan sonra tanımsızdır (NameError)", "False ve True (iki satır)"] },
+  "m8-q04": { "answer": "'' ve 'başladı' (iki satır)", "options": ["'' ve 'başladı' (iki satır)", "'başladı' ve 'başladı' (iki satır)", "'' ve '' (iki satır)", "FileNotFoundError"] },
+  "m8-q05": { "answer": "6 ''", "options": ["6 'ab\\ncd\\n'", "6 ''", "4 ''", "6 None"] },
+  "m8-q06": { "answer": "['x\\n', 'y']", "options": ["['x', 'y']", "['x\\n', 'y\\n']", "['x\\ny']", "['x\\n', 'y']"] },
+  "m8-q07": { "answer": "a, boş satır, b, son (dört satır)", "options": ["a, b, son (üç satır)", "a, boş satır, b, boş satır, son (beş satır)", "a, boş satır, b, son (dört satır)", "ab ve son (iki satır)"] },
+  "m8-q08": { "answer": "yedek.tar.gz yedek.tar .gz, sonra 2026 (iki satır)", "options": ["yedek.tar.gz yedek .tar.gz, sonra 2026 (iki satır)", "yedek.tar.gz yedek.tar .gz, sonra arsiv (iki satır)", "yedek yedek .gz, sonra 2026 (iki satır)", "yedek.tar.gz yedek.tar .gz, sonra 2026 (iki satır)"] },
+  "m8-q09": { "answer": "['a.txt', 'c.txt']", "options": ["['a.txt', 'b.txt', 'c.txt']", "['a.txt', 'c.txt']", "['c.txt', 'a.txt']", "['b.txt']"] },
+  "m8-q10": { "answer": "3 4", "options": ["3 3", "4 4", "3 6", "3 4"] },
+  "m8-q11": { "answer": "3 4", "options": ["3 4", "4 4", "3 3", "4 3"] },
+  "m8-q12": { "answer": "{'1': [2, 3]} False", "options": ["{1: (2, 3)} True", "{'1': (2, 3)} False", "{'1': [2, 3]} False", "{'1': [2, 3]} True"] },
+
+  "m9-q01": { "answer": "5.0", "options": ["5", "5.0", "25", "Hata verir (kok tanımsız)"] },
+  "m9-q02": { "answer": "math ve False (iki satır)", "options": ["m ve True (iki satır)", "math ve True (iki satır)", "m ve False (iki satır)", "math ve False (iki satır)"] },
+  "m9-q03": { "answer": "yüklendi bir kez, sonra 10 (iki satır)", "options": ["yüklendi iki kez, sonra 10 (üç satır)", "yüklendi bir kez, sonra 10 (iki satır)", "yüklendi üç kez, sonra 10 (dört satır)", "10 (tek satır)"] },
+  "m9-q04": { "answer": "0 2", "options": ["2 2", "0 0", "2 0", "0 2"] },
+  "m9-q05": { "answer": "16", "options": ["deneme: 9, sonra 16 (iki satır)", "deneme: 9 (tek satır)", "16", "Hiçbir şey yazmaz"] },
+  "m9-q06": { "answer": "modül: modul, ana dosya: __main__ (iki satır)", "options": ["modül: __main__, ana dosya: __main__ (iki satır)", "modül: modul, ana dosya: modul (iki satır)", "modül: __main__, ana dosya: modul (iki satır)", "modül: modul, ana dosya: __main__ (iki satır)"] },
+  "m9-q07": { "answer": "paket başlatılıyor, alt yükleniyor, 7 (üç satır)", "options": ["alt yükleniyor, paket başlatılıyor, 7 (üç satır)", "paket başlatılıyor, alt yükleniyor, 7 (üç satır)", "alt yükleniyor, 7 (iki satır; paketin __init__.py'si çalışmaz)", "7 (tek satır)"] },
+  "m9-q08": { "answer": "False ve True (iki satır)", "options": ["True ve False (iki satır)", "False ve False (iki satır)", "False ve True (iki satır)", "None ve None (iki satır)"] },
+  "m9-q09": { "answer": "2 belirtilmemiş", "options": ["2 None", "3 belirtilmemiş", "KeyError verir", "2 belirtilmemiş"] },
+  "m9-q10": { "answer": "['requests==2.32.3', 'pytest>=8']", "options": ["['requests==2.32.3', '', 'pytest>=8']", "['requests==2.32.3', 'pytest>=8']", "['requests==2.32.3', 'pytest>=8  # yalnız geliştirme']", "['requests==2.32.3', '# test araçları', 'pytest>=8']"] },
+  "m9-q11": { "answer": "uv poetry bilinmiyor", "options": ["pip poetry bilinmiyor", "uv poetry pip", "pip pip bilinmiyor", "uv poetry bilinmiyor"] },
+  "m9-q12": { "answer": "44 60", "options": ["8 60", "44 3030", "8 8", "44 60"] }
+}
