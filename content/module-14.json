@@ -1,0 +1,1486 @@
+{
+  "id": 14,
+  "slug": "type-hints",
+  "title": "Type hints",
+  "description": "Fonksiyonlara, koleksiyonlara ve sınıflara tip ipucu yaz; Optional, TypedDict, Protocol, generics ve Callable'ı oku; mypy'nin neyi denetlediğini ve dış verinin neden ayrıca doğrulanması gerektiğini öğren.",
+  "contentVersion": 1,
+  "estimatedMinutes": 140,
+  "practiceIds": [
+    "m14-q01",
+    "m14-q03",
+    "m14-q04",
+    "m14-q06",
+    "m14-q08",
+    "m14-q09",
+    "m14-q10",
+    "m14-q12",
+    "m14-q13",
+    "m14-q16",
+    "m14-q19",
+    "m14-q22",
+    "m14-q27",
+    "m14-q29",
+    "m14-q35"
+  ],
+  "sections": [
+    {
+      "id": "annotations-basics",
+      "title": "Tip ipuçlarının temeli",
+      "eyebrow": "Kodun ne beklediğini yaz",
+      "objectives": [
+        "Parametrelere, dönüş değerine ve değişkenlere tip ipucu (annotation) yazar ve fonksiyonun __annotations__ sözlüğünde saklandığını gösterir.",
+        "Tip ipuçlarının çalışma anında denetlenmediğini ve değer dönüştürmediğini açıklar; ne işe yaradıklarını (okunurluk, editör, statik denetleyici) bilir."
+      ],
+      "prerequisites": [
+        "m6:def-return",
+        "m1:variables-types"
+      ],
+      "summary": "def greet(name: str) -> str: name'in metin, dönüşün metin olması beklendiğini söyler. Python bu bilgiyi saklar ama çalışma anında denetlemez: greet(5) yine çalışır. Tip ipuçları okuyan insanlar, editörler ve mypy gibi araçlar içindir.",
+      "explanation": "Tip ipucu (type hint, annotation), bir adın hangi türde değer taşımasının beklendiğini yazmanın yoludur. Parametreden sonra iki nokta ve tür (name: str), varsayılanla birlikte (excited: bool = False), dönüş türü için -> (-> str) yazılır. Değişkenlere de yazılabilir: count: int = 3. Yalnızca anotasyon yazıp değer vermek (count: int) değişken oluşturmaz. Python bu bilgiyi fonksiyonun __annotations__ sözlüğünde saklar ama çalışma anında hiçbir şeyi denetlemez ve dönüştürmez: double(n: int) fonksiyonuna 'ab' verirsen 'abab' döner, total: int = 'on' hata vermez. Tip ipucu bir sözleşmedir, bir kural motoru değildir. O hâlde ne işe yarar? Kodu okuyan kişi fonksiyonun neyi beklediğini hemen görür; editör otomatik tamamlama ve uyarı verir; mypy ya da pyright gibi statik denetleyiciler programı çalıştırmadan uyumsuzlukları bulur (bu modülün son bölümü). Yapay zekânın ürettiği kodu incelerken tip ipuçları niyeti okumanın en hızlı yoludur. Tip ipuçları isteğe bağlıdır ve kademeli eklenebilir: önce genel fonksiyonların imzalarından başla. Yerel değişkenlerin çoğuna yazmaya gerek yoktur; denetleyici sağdaki değerden türü çıkarır.",
+      "code": "def greet(name: str, excited: bool = False) -> str:\n    return f\"Merhaba {name}\" + (\"!\" if excited else \".\")\n\ndef double(n: int) -> int:\n    return n * 2\n\nprint(greet(\"Ada\"))\nprint(greet.__annotations__)\nprint(double(4), double(\"ab\"))\ntotal: int = \"on\"\nprint(total, type(total))",
+      "expectedOutput": "Merhaba Ada.\n{'name': <class 'str'>, 'excited': <class 'bool'>, 'return': <class 'str'>}\n8 abab\non <class 'str'>",
+      "why": "İpuçları __annotations__ sözlüğünde saklandı ama hiçbiri çalışma anında uygulanmadı: double'a metin verildiğinde * tekrar etme işlemi yaptı ve 'abab' döndü; int olarak işaretlenen total bir str'ye bağlandı. Bu hataları yakalamak statik denetleyicinin işidir.",
+      "alternatives": [
+        "Uyumsuzlukları çalıştırmadan bulmak için mypy ya da editörün yerleşik denetleyicisini (Pylance/pyright) kullan.",
+        "Dışarıdan gelen veriyi (kullanıcı girdisi, JSON) gerçekten doğrulamak için isinstance denetimi ya da doğrulama kütüphanesi gerekir (bu modülün son bölümü)."
+      ],
+      "traps": [
+        "Tip ipucunun değeri dönüştürdüğünü sanmak: age: int yazmak input()'tan gelen metni sayıya çevirmez.",
+        "Tip ipucunun yanlış türde çağrıyı engellediğini sanmak; Python çalıştırır, hata sonra ve başka bir yerde çıkar.",
+        "count: int yazınca count'un 0 olarak tanımlandığını sanmak (değer verilmedikçe ad yoktur).",
+        "Varsayılanlı parametrede sırayı karıştırmak: excited: bool = False doğru, excited = False: bool sözdizimi hatasıdır."
+      ],
+      "realCode": "def average(scores: list[int]) -> float:\n    if not scores:\n        return 0.0\n    return sum(scores) / len(scores)\n\ndef describe(name: str, scores: list[int]) -> str:\n    return f\"{name}: {average(scores):.1f}\"\n\nprint(describe(\"Ada\", [90, 85, 77]))\nprint(describe(\"Can\", []))",
+      "realOutput": "Ada: 84.0\nCan: 0.0",
+      "lineByLine": [
+        "average bir tam sayı listesi alır ve float döndürür; imza bunu belgeler.",
+        "Boş liste için 0.0 döndürmek, dönüş türünün her yolda float olmasını sağlar.",
+        "describe'ın imzası, iki parametreyi ve metin döndüreceğini tek satırda anlatır.",
+        "İpuçları çalışmayı değiştirmez; çıktı ipuçsuz sürümle aynıdır."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · typing (giriş)",
+          "url": "https://docs.python.org/3.12/library/typing.html"
+        },
+        {
+          "title": "Python 3.12 · Fonksiyon anotasyonları",
+          "url": "https://docs.python.org/3.12/tutorial/controlflow.html#function-annotations"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "collection-types",
+      "title": "Koleksiyon tipleri",
+      "eyebrow": "list[int], dict[str, float] ve geniş parametre tipleri",
+      "objectives": [
+        "list[int], dict[str, list[int]], set[str], tuple[int, int] ve tuple[int, ...] yazımlarını okur ve yazar.",
+        "Parametrelerde geniş (Iterable, Sequence, Mapping), dönüşte kesin (list, dict) tip kullanmanın nedenini açıklar."
+      ],
+      "prerequisites": [
+        "annotations-basics",
+        "m4:dicts",
+        "m13:iterator-protocol"
+      ],
+      "summary": "Kap türlerinin içindeki öğe türü köşeli parantezle yazılır: list[int], dict[str, float], tuple[int, str]. Değişken uzunluklu tuple tuple[int, ...] olur. Parametre için collections.abc.Iterable gibi geniş türler, fonksiyonu daha çok çağırana açık tutar.",
+      "explanation": "Python 3.9'dan beri yerleşik türler köşeli parantezle parametrelenir: list[int] tam sayılar listesi, dict[str, list[int]] metinden tam sayı listesine sözlük, set[str] metin kümesi demektir. tuple biraz farklıdır: tuple[int, str] tam iki öğeli (int, str) demettir; tuple[int, ...] ise her uzunlukta tam sayı demetidir. Eski kodlarda typing modülünden List[int], Dict[str, int] yazımını görürsün; anlamı aynıdır, yeni kodda yerleşik yazımı kullan. Bu yazımlar da yalnızca bilgidir: list[int] çalışma anında bir 'tip nesnesidir', listedeki öğeleri denetlemez. Parametrelerde gerektiğinden dar tip istemek fonksiyonun kullanımını kısıtlar. Fonksiyon yalnızca öğeleri dolaşıyorsa collections.abc.Iterable[float] iste: liste, demet, küme, range ve generator (M13) hepsi kabul edilir. İndeks ve len gerekiyorsa Sequence, sözlük gibi okuma yapıyorsan Mapping iste. Dönüş tipinde ise kesin ol (list[str], dict[str, int]): çağıran, eline geçen nesneyle neler yapabileceğini bilsin. Karmaşık tipleri okunur tutmak için takma ad (alias) tanımlayabilirsin: Scores = dict[str, list[int]]. Python 3.12 bunun için type Scores = dict[str, list[int]] yazımını da getirdi.",
+      "code": "from collections.abc import Iterable, Mapping\n\ndef total(prices: Iterable[float]) -> float:\n    return sum(prices)\n\ndef lookup(stock: Mapping[str, int], name: str) -> int:\n    return stock.get(name, 0)\n\npoint: tuple[int, int] = (3, 4)\nscores: dict[str, list[int]] = {\"Ada\": [90, 85]}\ntags: set[str] = {\"python\", \"tip\"}\nprint(total([1.5, 2.5]), total((10, 20)), total(x / 2 for x in range(3)))\nprint(lookup({\"kalem\": 3}, \"silgi\"))\nprint(list[int], dict[str, list[int]], tuple[int, ...])\nprint(sorted(tags), point, scores[\"Ada\"])",
+      "expectedOutput": "4.0 30 1.5\n0\nlist[int] dict[str, list[int]] tuple[int, ...]\n['python', 'tip'] (3, 4) [90, 85]",
+      "why": "Iterable[float] isteyen total; listeyi, demeti ve bir generator'ı aynı şekilde kabul etti. Mapping isteyen lookup sözlükle çalıştı. Koleksiyon tipleri yazdırıldığında kendi gösterimleriyle görünür: bunlar çalışma anında değer denetlemeyen tip nesneleridir.",
+      "alternatives": [
+        "Uzun bir tipi tekrar tekrar yazmak yerine bir ad ver: Scores = dict[str, list[int]].",
+        "Sabit alanlı kayıtlar için dict[str, object] yerine TypedDict ya da dataclass kullan (sonraki bölümler, M12)."
+      ],
+      "traps": [
+        "Sözlük tipini dict[str: int] diye yazmak; doğru yazım dict[str, int] (iki nokta dilim üretir).",
+        "Yalnızca dolaşan bir fonksiyonda list[float] isteyip demet ya da generator verenleri gereksiz yere uyumsuz saymak.",
+        "tuple[int] ile tuple[int, ...]'ı karıştırmak: ilki tam bir öğeli demettir.",
+        "Yeni kodda typing.List, typing.Dict kullanmak; Python 3.9+ yerleşik list, dict yazımını destekler."
+      ],
+      "realCode": "def group_by_city(people: list[tuple[str, str]]) -> dict[str, list[str]]:\n    groups: dict[str, list[str]] = {}\n    for name, city in people:\n        groups.setdefault(city, []).append(name)\n    return groups\n\nprint(group_by_city([(\"Ada\", \"İzmir\"), (\"Can\", \"Ankara\"), (\"Eda\", \"İzmir\")]))",
+      "realOutput": "{'İzmir': ['Ada', 'Eda'], 'Ankara': ['Can']}",
+      "lineByLine": [
+        "Parametre (ad, şehir) demetlerinden oluşan bir listedir.",
+        "Dönüş türü, şehirden ad listesine giden bir sözlüktür.",
+        "Boş sözlüğe tip ipucu yazmak, denetleyicinin içine ne konacağını bilmesini sağlar.",
+        "İmza okununca gövdeye bakmadan ne girip ne çıktığı anlaşılır."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Genel (generic) yerleşik tipler",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html#types-genericalias"
+        },
+        {
+          "title": "Python 3.12 · collections.abc",
+          "url": "https://docs.python.org/3.12/library/collections.abc.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "optional-union",
+      "title": "Optional, Union ve |",
+      "eyebrow": "Değer olmayabilir ya da birden çok türde olabilir",
+      "objectives": [
+        "int | None (Optional[int]) ve int | str (Union[int, str]) yazımlarını okur, birbirine eşit olduklarını bilir.",
+        "None olabilecek bir değeri kullanmadan önce denetler (daraltma) ve None döndürebilen fonksiyonun dönüş tipini doğru yazar."
+      ],
+      "prerequisites": [
+        "annotations-basics",
+        "m5:identity-equality"
+      ],
+      "summary": "int | None, değerin ya int ya da None olabileceğini söyler; eski yazımı Optional[int]'tir. int | float gibi birleşimler Union'dır. None olabilecek bir değeri kullanmadan önce if value is None ile denetlemek gerekir; denetleyici bu kontrolden sonra türü daraltır.",
+      "explanation": "Bir fonksiyon bazen sonuç bulamaz: find_index aranan öğe yoksa None döndürür. Dönüş türü bu yüzden int değil int | None'dır. Python 3.10'dan beri | işareti kullanılır; eski kodda Optional[int] (yani Union[int, None]) ve Union[int, str] görürsün. Hepsi aynı anlamdadır ve birbirine eşittir. Optional adı yanıltıcıdır: parametrenin isteğe bağlı olduğunu değil, None olabileceğini söyler. Varsayılanı None olan parametre için doğru yazım port: int | None = None'dır. None olabilecek bir değeri doğrudan kullanmak (sonuc.upper(), index + 1) çalışma anında AttributeError ya da TypeError verir. Bunu önlemek için önce denetle: if index is None: return 'yok'. Bu kontrolden sonra mypy, index'in artık int olduğunu bilir; buna tip daraltma (narrowing) denir. isinstance(value, str) de daraltır. Birleşimleri gerektiğinde kullan ama çok geniş birleşimler (int | str | list | None) kullanımı zorlaştırır; çoğu zaman tek bir türe dönüştürmek ya da ayrı fonksiyonlar yazmak daha temizdir. Eksik bulgu için None döndürmek yerine hata fırlatmak da bir tasarım seçeneğidir (M7).",
+      "code": "from typing import Optional, Union\n\ndef find_index(items: list[str], target: str) -> int | None:\n    for index, item in enumerate(items):\n        if item == target:\n            return index\n    return None\n\ndef parse_amount(text: str) -> int | float:\n    return float(text) if \".\" in text else int(text)\n\ndef label(index: int | None) -> str:\n    if index is None:\n        return \"yok\"\n    return f\"#{index + 1}\"\n\nnames = [\"ada\", \"can\"]\nprint(find_index(names, \"can\"), find_index(names, \"eda\"))\nprint(label(find_index(names, \"can\")), label(find_index(names, \"eda\")))\nprint(parse_amount(\"3\"), parse_amount(\"2.5\"))\nprint(Optional[int] == (int | None), Union[int, str] == (int | str))",
+      "expectedOutput": "1 None\n#2 yok\n3 2.5\nTrue True",
+      "why": "find_index bulamadığında None döndürdü; dönüş tipi bunu açıkça söylüyor. label önce None'ı ayırdı, sonra index'i sayı olarak kullandı. parse_amount girdiye göre int ya da float döndürdü. Son satır eski ve yeni yazımların aynı tipi gösterdiğini doğrular.",
+      "alternatives": [
+        "Bulunamama gerçekten bir hataysa None yerine özel bir hata fırlat (M7); çağıranlar None denetimini unutamaz.",
+        "Varsayılan bir değer anlamlıysa dict.get(anahtar, varsayılan) gibi None yerine o değeri döndür."
+      ],
+      "traps": [
+        "None döndürebilen fonksiyonun dönüş tipini yalnızca int yazmak; mypy 'Missing return statement' ya da uyumsuzluk uyarısı verir.",
+        "None olabilecek değeri denetlemeden kullanmak (AttributeError: 'NoneType' object has no attribute ...).",
+        "Optional[int]'i 'parametre isteğe bağlı' diye okumak; isteğe bağlılığı varsayılan değer sağlar.",
+        "if not value: ile None denetlemek; 0 ve boş metin de yanlış sayılır, kesin denetim için is None kullan."
+      ],
+      "realCode": "def get_port(settings: dict[str, str], default: int | None = None) -> int | None:\n    raw = settings.get(\"port\")\n    if raw is None:\n        return default\n    return int(raw)\n\nprint(get_port({\"port\": \"8080\"}), get_port({}), get_port({}, 80))",
+      "realOutput": "8080 None 80",
+      "lineByLine": [
+        "Ayar sözlüğü metin değerler taşır; port ayarı olmayabilir.",
+        "settings.get bulunamazsa None döndürür; bu durum ayrıca ele alınır.",
+        "Varsayılan da None olabildiği için dönüş tipi int | None'dır.",
+        "Ayar varsa metin int'e çevrilir; tip ipucu bunu otomatik yapmaz."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Union tipi (X | Y)",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html#types-union"
+        },
+        {
+          "title": "Python 3.12 · typing.Optional",
+          "url": "https://docs.python.org/3.12/library/typing.html#typing.Optional"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "typeddict",
+      "title": "TypedDict",
+      "eyebrow": "Sözlüğün şeklini tanımla",
+      "objectives": [
+        "TypedDict ile anahtarları ve değer türleri belli bir sözlük şekli tanımlar; NotRequired ile isteğe bağlı anahtar belirtir.",
+        "TypedDict'in çalışma anında sıradan bir dict olduğunu ve gelen veriyi doğrulamadığını açıklar; dataclass ile farkını bilir."
+      ],
+      "prerequisites": [
+        "collection-types",
+        "m8:json",
+        "m12:dataclass"
+      ],
+      "summary": "JSON'dan gelen veri gibi sabit anahtarlı sözlükler için class Movie(TypedDict): title: str; year: int yazılır. Denetleyici yanlış anahtar ya da tür kullanımını bulur; çalışma anında ise nesne sıradan bir dict'tir ve hiçbir şey denetlenmez.",
+      "explanation": "dict[str, object] bir sözlüğün hangi anahtarları taşıdığını anlatmaz. TypedDict bunu yapar: class Movie(TypedDict): gövdesine anahtarları ve türlerini yazarsın. Bir değişkene m: Movie = {...} dediğinde mypy eksik anahtarı, fazladan anahtarı ya da yanlış türü yakalar; editör de anahtar adlarını tamamlar. Varsayılan olarak bütün anahtarlar zorunludur. İsteğe bağlı bir anahtar için NotRequired[float] yaz (ya da sınıfa total=False ver ve zorunluları Required ile işaretle). Bu bilgi Movie.__required_keys__ ve __optional_keys__'te görünür. Önemli: TypedDict yalnızca statik bir tanımdır. Movie(...) ya da {...} ile oluşturulan nesne sıradan bir dict'tir; type() dict der, yanlış türde değer çalışma anında kabul edilir, eksik anahtar KeyError verir. json.loads ile gelen veriyi : Movie diye işaretlemek onu doğrulamaz; doğrulama ayrıca yapılmalıdır (bu modülün son bölümü, M18'de pydantic). Ne zaman hangisi? Veri zaten sözlük olarak geliyor ve sözlük olarak kalacaksa (JSON, API yanıtları) TypedDict; davranışı ve kuralları olan bir nesne istiyorsan dataclass (M12) ya da normal sınıf.",
+      "code": "from typing import TypedDict, NotRequired\n\nclass Movie(TypedDict):\n    title: str\n    year: int\n    rating: NotRequired[float]\n\nm: Movie = {\"title\": \"Dune\", \"year\": 2021}\nprint(m, type(m).__name__)\nprint(sorted(Movie.__required_keys__), sorted(Movie.__optional_keys__))\nbad: Movie = {\"title\": \"X\", \"year\": \"iki bin\"}\nprint(bad[\"year\"])\nprint(m.get(\"rating\", \"puan yok\"))",
+      "expectedOutput": "{'title': 'Dune', 'year': 2021} dict\n['title', 'year'] ['rating']\niki bin\npuan yok",
+      "why": "m bir Movie olarak işaretlendi ama çalışma anında sıradan bir dict'tir. Sınıf, hangi anahtarların zorunlu hangisinin isteğe bağlı olduğunu saklar. year'ı metin olan bad sorunsuz oluştu; bu uyumsuzluğu yalnızca mypy yakalar. İsteğe bağlı rating için get ile varsayılan kullanıldı.",
+      "alternatives": [
+        "Davranışı ve doğrulaması olan bir kayıt istiyorsan @dataclass kullan (M12).",
+        "Dışarıdan gelen veriyi gerçekten doğrulamak için alanları elle denetle ya da pydantic gibi bir kütüphane kullan (M18)."
+      ],
+      "traps": [
+        "TypedDict'in JSON verisini doğruladığını sanmak; yanlış tür sessizce içeri girer.",
+        "TypedDict'ten nesne kurup öznitelik erişimi beklemek (m.title); erişim sözlük gibi m['title'] ile yapılır.",
+        "İsteğe bağlı anahtarı m['rating'] ile okuyup KeyError almak; get ya da in denetimi kullan.",
+        "isinstance(x, Movie) denemek; TypedDict ile isinstance kullanılamaz (TypeError)."
+      ],
+      "realCode": "import json\nfrom typing import TypedDict\n\nclass User(TypedDict):\n    id: int\n    name: str\n    email: str\n\ndef parse_users(text: str) -> list[User]:\n    return json.loads(text)\n\nusers = parse_users('[{\"id\": 1, \"name\": \"Ada\", \"email\": \"ada@ornek.com\"}]')\nfor user in users:\n    print(user[\"id\"], user[\"name\"])\nprint(type(users[0]).__name__)",
+      "realOutput": "1 Ada\ndict",
+      "lineByLine": [
+        "User, bir API'nin döndürdüğü kullanıcı kaydının şeklini tanımlar.",
+        "parse_users'ın dönüş tipi, çağıranın hangi anahtarları kullanabileceğini söyler; editör user['na...] yazarken tamamlar.",
+        "json.loads gerçek denetim yapmaz; veri şekle uymasa bile aynı list[dict] döner.",
+        "Çalışma anında her kayıt sıradan bir dict'tir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · typing.TypedDict",
+          "url": "https://docs.python.org/3.12/library/typing.html#typing.TypedDict"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "protocol",
+      "title": "Protocol: yapısal tipler",
+      "eyebrow": "Duck typing'in tip denetleyiciye anlatılmış hâli",
+      "objectives": [
+        "Protocol ile 'bu metotlara sahip olan her nesne' türünü tanımlar; sınıfların Protocol'den türemeden ona uyabildiğini gösterir.",
+        "runtime_checkable ile isinstance denetiminin yalnızca adların varlığına baktığını, imza ve türleri denetlemediğini bilir; abc ile farkını açıklar."
+      ],
+      "prerequisites": [
+        "annotations-basics",
+        "m12:polymorphism",
+        "m12:abc"
+      ],
+      "summary": "class Shape(Protocol): def area(self) -> float: ... yazınca, area metodu olan her sınıf bir Shape sayılır; türemeye gerek yoktur. Bu, M12'deki duck typing'in tip denetleyicinin anlayacağı biçimidir. abc kalıtım ister, Protocol ise yalnızca yapıya bakar.",
+      "explanation": "M12'de duck typing'i gördün: area metodu olan her nesne aynı döngüde kullanılabiliyordu, ama bu arayüz hiçbir yerde yazılı değildi. abc arayüzü yazdırıyordu ama alt sınıfların ondan türemesini istiyordu. Protocol ikisinin ortasıdır: arayüzü yazarsın, sınıflar ondan türemek zorunda kalmaz. class Shape(Protocol): gövdesine beklenen metotların imzalarını yazarsın (gövde ... olur). Artık total_area(shapes: list[Shape]) imzası, area metodu uygun olan her sınıfın nesnesini kabul eder; Square, Shape'i hiç bilmese de uyar. Uymayan bir nesne verirsen mypy bunu çalıştırmadan söyler. Buna yapısal tipleme (structural typing) denir; abc'deki kalıtıma dayalı yaklaşım ise nominal tiplemedir. Protocol'ler çalışma anında da var olur ama varsayılan olarak isinstance ile kullanılamaz. @runtime_checkable eklersen isinstance çalışır; ancak bu denetim yalnızca adın var olup olmadığına bakar, imzayı, dönüş türünü hatta adın çağrılabilir olup olmadığını denetlemez. Protocol sınıfının kendisinden nesne üretilemez (TypeError). Ne zaman? Bir fonksiyonun yalnızca birkaç davranışa ihtiyacı varsa (yazılabilir bir şey, kapatılabilir bir kaynak, alanı hesaplanabilen bir şekil) Protocol iste; testlerde sahte nesneler vermek de kolaylaşır. Ortak kod paylaşacak ve alt sınıfları zorlayacaksan abc kullan.",
+      "code": "from typing import Protocol, runtime_checkable\n\n@runtime_checkable\nclass Shape(Protocol):\n    def area(self) -> float: ...\n\nclass Square:\n    def __init__(self, side: int) -> None:\n        self.side = side\n\n    def area(self) -> float:\n        return self.side ** 2\n\nclass Rectangle:\n    def __init__(self, width: int, height: int) -> None:\n        self.width, self.height = width, height\n\n    def area(self) -> float:\n        return self.width * self.height\n\nclass Robot:\n    def walk(self) -> str:\n        return \"yürüyor\"\n\ndef total_area(shapes: list[Shape]) -> float:\n    return sum(shape.area() for shape in shapes)\n\nprint(total_area([Square(2), Rectangle(2, 3)]))\nprint(isinstance(Square(1), Shape), isinstance(Robot(), Shape))\nprint(issubclass(Square, Shape), Shape in Square.__mro__)",
+      "expectedOutput": "10\nTrue False\nTrue False",
+      "why": "Square ve Rectangle Shape'ten türemedi ama area metotları olduğu için Shape sayıldı; total_area ikisini de kabul etti. Robot'ta area olmadığı için isinstance False verdi. Son satır, uyumun kalıtımdan değil yapıdan geldiğini gösterir: Shape, Square'in MRO'sunda yoktur.",
+      "alternatives": [
+        "Ortak davranış paylaşacak ve uygulamayı zorlayacaksan abc ile soyut sınıf yaz (M12).",
+        "Arayüz tek bir çağrıdan ibaretse Callable (bu modülde) daha kısa olabilir."
+      ],
+      "traps": [
+        "runtime_checkable isinstance denetiminin imzayı ya da türleri doğruladığını sanmak; yalnızca adın varlığına bakar.",
+        "Protocol'den nesne üretmeye çalışmak (TypeError: Protocols cannot be instantiated).",
+        "Protocol'ü kullanmak için sınıfların ondan türemesi gerektiğini sanmak.",
+        "Metot adını ya da parametrelerini Protocol'dekinden farklı yazmak; mypy uyumsuzluk bildirir, çalışma anında ise AttributeError gelir."
+      ],
+      "realCode": "from typing import Protocol\n\nclass Writer(Protocol):\n    def write(self, text: str) -> None: ...\n\nclass Console:\n    def write(self, text: str) -> None:\n        print(text)\n\nclass Memory:\n    def __init__(self) -> None:\n        self.lines: list[str] = []\n\n    def write(self, text: str) -> None:\n        self.lines.append(text)\n\ndef report(writer: Writer, total: int) -> None:\n    writer.write(f\"toplam: {total}\")\n\nreport(Console(), 42)\nmemory = Memory()\nreport(memory, 7)\nprint(memory.lines)",
+      "realOutput": "toplam: 42\n['toplam: 7']",
+      "lineByLine": [
+        "Writer, report'un ihtiyaç duyduğu tek davranışı (write) tanımlar.",
+        "Console ve Memory Writer'dan türemez; write metotları olduğu için uyarlar.",
+        "Gerçek programda Console, testte Memory verilir: report'u değiştirmeden çıktı yakalanır.",
+        "Memory'nin lines listesi, testin neyin yazıldığını denetlemesini sağlar."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · typing.Protocol",
+          "url": "https://docs.python.org/3.12/library/typing.html#typing.Protocol"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "generics",
+      "title": "Generics ve TypeVar",
+      "eyebrow": "Türü sonradan belli olan kod",
+      "objectives": [
+        "TypeVar ile 'girdi hangi türdeyse çıktı da o tür' ilişkisini kuran genel (generic) fonksiyon yazar.",
+        "Generic[T] ile genel sınıf tanımlar, Box[int] gibi kullanır; bound ile tip değişkenini sınırlamayı ve Python 3.12'nin yeni yazımını tanır."
+      ],
+      "prerequisites": [
+        "collection-types",
+        "m11:class-object"
+      ],
+      "summary": "T = TypeVar('T') bir tip değişkenidir: def first(items: list[T]) -> T, int listesi verilirse int, str listesi verilirse str döndüğünü söyler. Sınıflar Generic[T] ile genel yapılır: Box[int] tam sayı tutan kutudur. Çalışma anında T hiçbir şeyi denetlemez.",
+      "explanation": "Bazı fonksiyonlar türden bağımsız çalışır ama girdiyle çıktı arasında bir ilişki vardır: first, liste ne tutuyorsa onun bir öğesini döndürür. list[object] -> object yazsaydın bu ilişki kaybolurdu ve first([1, 2]) + 1 satırını denetleyici reddederdi. Tip değişkeni bu ilişkiyi yazar: T = TypeVar('T'), def first(items: list[T]) -> T. Denetleyici her çağrıda T'nin yerine geçen türü çıkarır. Sınıflar da genel olabilir: class Box(Generic[T]) içindeki T, nesne kurulurken belirlenir. box: Box[int] = Box(5) yazınca box.get() int döndürür. Yerleşik list[int], dict[str, int] de böyle genel sınıflardır. Birden çok tip değişkeni olabilir: Registry(Generic[K, V]). Tip değişkeni sınırlanabilir: TypeVar('N', int, float) yalnızca bu türlerden birini, TypeVar('T', bound=HasId) ise HasId'ye (ör. bir Protocol) uyan türleri kabul eder. Python 3.12 daha kısa bir yazım getirdi: def first[T](items: list[T]) -> T ve class Box[T]: (TypeVar tanımlamaya gerek kalmaz). Bu sitedeki Python 3.12 bunu çalıştırır ama 3.11 ve öncesinde sözdizimi hatasıdır; ikisini de okuyabilmen gerekir. Fonksiyonun __annotations__'ında tip değişkeni ~T olarak görünür.",
+      "code": "from typing import Generic, TypeVar\n\nT = TypeVar(\"T\")\nNum = TypeVar(\"Num\", int, float)\n\ndef first(items: list[T]) -> T:\n    return items[0]\n\ndef pairwise(items: list[T]) -> list[tuple[T, T]]:\n    return list(zip(items, items[1:]))\n\ndef biggest(a: Num, b: Num) -> Num:\n    return a if a >= b else b\n\nclass Box(Generic[T]):\n    def __init__(self, value: T) -> None:\n        self.value = value\n\n    def get(self) -> T:\n        return self.value\n\nprint(first([3, 1, 2]), first([\"a\", \"b\"]))\nprint(pairwise([1, 2, 3]))\nprint(biggest(2, 7), biggest(1.5, 0.5))\nbox: Box[int] = Box(5)\nprint(box.get(), type(box).__name__, first.__annotations__)",
+      "expectedOutput": "3 a\n[(1, 2), (2, 3)]\n7 1.5\n5 Box {'items': list[~T], 'return': ~T}",
+      "why": "first ve pairwise her türde listeyle çalıştı; ipuçları girdi ile çıktı arasındaki tür ilişkisini anlatır. biggest yalnızca int ya da float için tanımlandı. Box[int] ile kurulan kutu sıradan bir Box nesnesidir; T çalışma anında hiçbir şeyi denetlemez. Annotation sözlüğünde tip değişkeni ~T olarak görünür.",
+      "alternatives": [
+        "Python 3.12+ projelerde def first[T](items: list[T]) -> T yazımı daha kısadır.",
+        "Tür ilişkisi gerekmiyorsa (yalnızca dolaşılıyor ve sonuç başka türdeyse) Iterable[object] gibi düz bir tip yeterlidir."
+      ],
+      "traps": [
+        "TypeVar'ı yalnızca bir yerde kullanmak (def f(x: T) -> None): ilişki kurmuyorsa object yeterlidir.",
+        "Box[int] yazmanın değerlerin int olmasını çalışma anında zorladığını sanmak.",
+        "TypeVar adını değişkenden farklı vermek (T = TypeVar('U')); denetleyiciler uyarır.",
+        "3.12 yazımını (def f[T]) eski Python sürümlerinde kullanmak: SyntaxError."
+      ],
+      "realCode": "from typing import Generic, TypeVar\n\nK = TypeVar(\"K\")\nV = TypeVar(\"V\")\n\nclass Registry(Generic[K, V]):\n    def __init__(self) -> None:\n        self._items: dict[K, V] = {}\n\n    def add(self, key: K, value: V) -> None:\n        self._items[key] = value\n\n    def get(self, key: K, default: V) -> V:\n        return self._items.get(key, default)\n\nports: Registry[str, int] = Registry()\nports.add(\"web\", 8080)\nprint(ports.get(\"web\", 0), ports.get(\"db\", 5432))",
+      "realOutput": "8080 5432",
+      "lineByLine": [
+        "Registry iki tip değişkeniyle tanımlanır: anahtar türü K ve değer türü V.",
+        "Registry[str, int] yazımı, bu kaydın metin anahtar ve tam sayı değer tuttuğunu söyler.",
+        "get'in dönüş türü V olduğu için denetleyici ports.get(...) sonucunun int olduğunu bilir.",
+        "Çalışma anında sıradan bir sözlük sarmalayıcısıdır; tipler davranışı değiştirmez."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Generics",
+          "url": "https://docs.python.org/3.12/library/typing.html#generics"
+        },
+        {
+          "title": "Python 3.12 · Tip parametre listeleri (PEP 695)",
+          "url": "https://docs.python.org/3.12/reference/compound_stmts.html#type-params"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "callable",
+      "title": "Callable ve tip takma adları",
+      "eyebrow": "Fonksiyon alan ve döndüren kodun tipi",
+      "objectives": [
+        "Callable[[int], str] yazımıyla fonksiyon parametrelerini ve fonksiyon döndüren fonksiyonları tiplendirir.",
+        "Tip takma adlarıyla (Number = int | float) uzun tipleri okunur kılar ve decorator imzalarında ParamSpec kalıbını tanır."
+      ],
+      "prerequisites": [
+        "generics",
+        "m6:lambda-higher-order",
+        "m13:decorators"
+      ],
+      "summary": "Callable[[int, int], str] iki int alıp str döndüren her çağrılabilir şeyi anlatır: fonksiyon, lambda, metot ya da __call__'lu nesne. Fonksiyon alan (callback) ve fonksiyon döndüren kodda kullanılır. Uzun tiplere ad vermek (Transform = Callable[[Number], Number]) imzaları kısaltır.",
+      "explanation": "M6'da fonksiyonları değer gibi kullandın (map, sorted'ın key'i, closure), M13'te decorator'lar fonksiyon alıp fonksiyon döndürdü. Bu kodun tipi collections.abc.Callable ile yazılır: köşeli parantez içinde önce parametre türlerinin listesi, sonra dönüş türü gelir. Callable[[int], int] tek int alıp int döndürür, Callable[[], str] hiç argüman almayıp str döndürür. Argümanları önemsizse Callable[..., str] yazılır. Parametre olarak: def apply(f: Callable[[int], int], x: int) -> int. Dönüş değeri olarak: def make_multiplier(factor: int) -> Callable[[int], int]. Denetleyici, verilen fonksiyonun imzasının uyup uymadığını kontrol eder; argüman sayısı tutmayan bir fonksiyon verirsen çalıştırmadan uyarır (çalışma anında ise TypeError ancak çağrıda gelir). Tipler uzadıkça okunurluk düşer. Takma ad bir atamadır: Number = int | float, Transform = Callable[[Number], Number]. Python 3.12'de type Transform = ... yazımı da vardır. Decorator'ların doğru tiplenmesi için ParamSpec kullanılır: P = ParamSpec('P'), R = TypeVar('R') ve def logged(func: Callable[P, R]) -> Callable[P, R]. Bu kalıp sarmalanan fonksiyonun parametre imzasının korunduğunu denetleyiciye anlatır; gerçek kodda sık görürsün, okuyabilmen yeterli.",
+      "code": "from collections.abc import Callable\n\nNumber = int | float\nTransform = Callable[[Number], Number]\n\ndef apply_all(values: list[Number], steps: list[Transform]) -> list[Number]:\n    result = values\n    for step in steps:\n        result = [step(value) for value in result]\n    return result\n\ndef double(x: Number) -> Number:\n    return x * 2\n\ndef make_adder(amount: int) -> Callable[[int], int]:\n    def add(x: int) -> int:\n        return x + amount\n    return add\n\nprint(apply_all([1, 2, 3], [double, lambda x: x + 1]))\nadd_ten = make_adder(10)\nprint(add_ten(5), make_adder.__annotations__[\"return\"])\nprint(Transform)",
+      "expectedOutput": "[3, 5, 7]\n15 collections.abc.Callable[[int], int]\ncollections.abc.Callable[[int | float], int | float]",
+      "why": "apply_all, Transform imzasına uyan her çağrılabilir şeyi (adlı fonksiyon ve lambda) sırayla uyguladı. make_adder bir fonksiyon döndürdü; dönüş tipi bunu Callable ile anlatıyor. Takma ad Transform, açıldığında uzun tipin kendisidir.",
+      "alternatives": [
+        "Çağrılabilir nesnenin ek metotları ya da isimli parametreleri de önemliyse __call__ içeren bir Protocol yaz.",
+        "Python 3.12+ projelerde takma adlar için type Transform = Callable[[Number], Number] yazımını kullanabilirsin."
+      ],
+      "traps": [
+        "Callable[int, int] yazmak; parametre türleri her zaman bir liste içinde olmalı: Callable[[int], int].",
+        "Argümansız fonksiyon bekleyen bir yere (Callable[[], str]) argüman isteyen fonksiyon vermek; çağrıda TypeError gelir.",
+        "Callable'ı typing'den ya da collections.abc'den karıştırarak içe aktarmak; ikisi de çalışır ama yeni kodda collections.abc önerilir.",
+        "Decorator'ları Callable[..., Any] ile tiplendirip parametre bilgisini kaybetmek; ParamSpec bunu korur."
+      ],
+      "realCode": "from collections.abc import Callable\nfrom functools import wraps\nfrom typing import ParamSpec, TypeVar\n\nP = ParamSpec(\"P\")\nR = TypeVar(\"R\")\n\ndef logged(func: Callable[P, R]) -> Callable[P, R]:\n    @wraps(func)\n    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:\n        print(\"çağrı:\", func.__name__)\n        return func(*args, **kwargs)\n    return wrapper\n\n@logged\ndef add(a: int, b: int) -> int:\n    return a + b\n\nprint(add(2, 3))",
+      "realOutput": "çağrı: add\n5",
+      "lineByLine": [
+        "P, sarmalanan fonksiyonun bütün parametre imzasını; R, dönüş türünü temsil eder.",
+        "logged'un imzası 'aynı parametreleri alıp aynı türü döndüren bir fonksiyon döner' der.",
+        "wrapper'ın *args ve **kwargs'ı P.args ve P.kwargs ile işaretlenir; denetleyici add('x', 2) çağrısını yine yakalar.",
+        "Çalışma anında sıradan bir decorator'dır (M13); tipler yalnızca denetleyici içindir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Callable",
+          "url": "https://docs.python.org/3.12/library/typing.html#annotating-callable-objects"
+        },
+        {
+          "title": "Python 3.12 · typing.ParamSpec",
+          "url": "https://docs.python.org/3.12/library/typing.html#typing.ParamSpec"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "mypy-runtime",
+      "title": "mypy mantığı ve çalışma zamanı doğrulaması",
+      "eyebrow": "Tipleri kim denetler, veriyi kim doğrular?",
+      "objectives": [
+        "mypy'nin kodu çalıştırmadan tip ipuçlarına göre denetlediğini, çıktı biçimini (dosya:satır: error: ... [kod]) ve Any ile # type: ignore'un etkisini okur.",
+        "Tip ipucu ile çalışma zamanı doğrulamasını ayırır; dışarıdan gelen veriyi isinstance ve değer denetimleriyle kendisi doğrular, cast'in hiçbir şey yapmadığını bilir."
+      ],
+      "prerequisites": [
+        "annotations-basics",
+        "optional-union",
+        "m7:raising"
+      ],
+      "summary": "mypy (ya da pyright) programı çalıştırmadan tip ipuçlarını okur ve uyumsuzlukları raporlar. Çalışma anında ise Python ipuçlarını uygulamaz: kullanıcıdan, dosyadan ya da ağdan gelen veriyi kendin doğrulamalısın. İkisi farklı sorunları çözer ve birbirinin yerini tutmaz.",
+      "explanation": "mypy statik bir denetleyicidir: kendi bilgisayarında pip install mypy ile kurulur, mypy uygulama.py ile çalıştırılır ve kodu çalıştırmadan okur. Bulduğu her sorunu dosya:satır: error: açıklama [hata-kodu] biçiminde yazar, örneğin app.py:12: error: Argument 1 to \"greet\" has incompatible type \"int\"; expected \"str\"  [arg-type]. reveal_type(x) satırı, mypy'nin x için çıkardığı türü raporlatır. Editörlerdeki Pylance/pyright aynı işi yazarken yapar. Bu araçlar tarayıcıdaki editörde çalışmaz; bu bölümdeki mypy örnekleri yerel Python içindir. Denetim kademelidir: ipucu olmayan fonksiyonların gövdesi varsayılan olarak denetlenmez; Any türü 'her şey olabilir' der ve o değerle ilgili denetimi kapatır; # type: ignore[arg-type] yorumu tek bir satırdaki uyarıyı susturur. Bunları ancak nedenini bilerek kullan; --strict seçeneği eksik ipuçlarını da hata sayar. Çalışma anında ise durum farklıdır: input(), json.loads, dosyadan okunan satırlar ve API yanıtları ipuçlarını hiç görmez. Bu veriyi isinstance, değer aralığı ve anahtar denetimleriyle doğrula ve uygun hatayı fırlat (M7). bool, int'in alt sınıfı olduğu için isinstance(True, int) True verir; gerekiyorsa ayrıca denetle. isinstance, list[int] gibi parametreli tiplerle kullanılamaz (TypeError); listeyi ve öğelerini ayrı ayrı denetlemen gerekir. typing.cast(int, değer) yalnızca denetleyiciye 'bana güven, bu int' der; çalışma anında değeri değiştirmez, denetlemez. typing.get_type_hints(fonksiyon) ipuçlarını çalışma anında okur; kendi küçük doğrulayıcını yazarken ya da pydantic gibi kütüphanelerin (M18) nasıl çalıştığını anlamak için kullanılır.",
+      "code": "from typing import get_type_hints\n\ndef set_age(age: int) -> str:\n    return f\"yaş: {age}\"\n\ndef checked_set_age(age: int) -> str:\n    if not isinstance(age, int) or isinstance(age, bool):\n        raise TypeError(f\"age int olmalı, {type(age).__name__} geldi\")\n    if age < 0:\n        raise ValueError(\"age negatif olamaz\")\n    return f\"yaş: {age}\"\n\nprint(set_age(\"on\"))\nprint(get_type_hints(set_age))\nfor value in (30, \"otuz\", -1):\n    try:\n        print(checked_set_age(value))\n    except (TypeError, ValueError) as error:\n        print(type(error).__name__, error)",
+      "expectedOutput": "yaş: on\n{'age': <class 'int'>, 'return': <class 'str'>}\nyaş: 30\nTypeError age int olmalı, str geldi\nValueError age negatif olamaz",
+      "why": "set_age ipucuna rağmen metni kabul etti; mypy bu çağrıyı işaretlerdi ama Python çalıştırdı. get_type_hints ipuçlarını çalışma anında okuyabildiğimizi gösterir. checked_set_age ise gerçekten doğruladı: yanlış türü TypeError, geçersiz değeri ValueError ile reddetti.",
+      "alternatives": [
+        "Çok alanlı dış veriyi doğrulamak için elle yazılmış denetimler yerine pydantic gibi bir doğrulama kütüphanesi kullanılabilir (M18).",
+        "Projede kademeli ilerle: önce genel fonksiyonların imzalarına ipucu ekle, mypy'yi CI'da çalıştır, sonra --strict'e doğru sıkılaştır (M16)."
+      ],
+      "traps": [
+        "mypy hatasız geçti diye dış verinin doğru olduğunu sanmak; mypy çalışma anındaki veriyi görmez.",
+        "cast'in değeri dönüştürdüğünü ya da denetlediğini sanmak.",
+        "Uyarıları Any ya da # type: ignore ile sessizce kapatıp gerçek hatayı gizlemek.",
+        "isinstance(x, list[int]) yazmak (TypeError); önce isinstance(x, list), sonra öğeleri denetle."
+      ],
+      "realCode": "def total_price(prices: list[int]) -> int:\n    return sum(prices)\n\nuser_input = \"100\"\nprices: list[int] = [50, int(user_input)]\nprint(total_price(prices))\n# Son satır yorumdan çıkarılırsa mypy, programı çalıştırmadan her öğe için şunu söyler:\n# app.py:9: error: List item 0 has incompatible type \"str\"; expected \"int\"  [list-item]\n# total_price([\"50\", \"100\"])",
+      "realOutput": "150",
+      "lineByLine": [
+        "total_price yalnızca tam sayı listesi beklediğini imzasıyla söyler.",
+        "Kullanıcıdan gelen metin, listeye girmeden önce int() ile dönüştürülür; ipucu bunu kendisi yapmaz.",
+        "Yorumdaki çağrı çalıştırılsaydı sum metinleri toplayamayıp TypeError verirdi; mypy ise sorunu çalıştırmadan, satır numarası ve hata koduyla bildirir.",
+        "mypy'yi yerelde mypy app.py ile çalıştırırsın; editördeki denetleyici aynı uyarıyı yazarken gösterir."
+      ],
+      "sources": [
+        {
+          "title": "mypy · Belgeler",
+          "url": "https://mypy.readthedocs.io/en/stable/"
+        },
+        {
+          "title": "Python 3.12 · typing.cast ve get_type_hints",
+          "url": "https://docs.python.org/3.12/library/typing.html#typing.get_type_hints"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır. mypy ve pyright bu sitede çalışmaz; mypy komutları ve çıktıları yerel Python içindir."
+    }
+  ],
+  "questions": [
+    {
+      "id": "m14-q01",
+      "type": "output",
+      "topic": "denetim-yok",
+      "sectionId": "annotations-basics",
+      "difficulty": 1,
+      "prompt": "int ipucu verilmiş fonksiyona iki metin veriliyor. Çıktı ne olur?",
+      "code": "def add(a: int, b: int) -> int:\n    return a + b\n\nprint(add(\"3\", \"4\"))",
+      "expectedOutput": "34",
+      "options": [
+        "34",
+        "7",
+        "TypeError verir",
+        "None"
+      ],
+      "hints": [
+        "Python tip ipuçlarını çalışma anında denetler mi?",
+        "İki metin + ile ne olur?"
+      ],
+      "explanation": "Tip ipuçları çalışma anında uygulanmaz ve değer dönüştürmez. a + b iki metni birleştirir ve '34' döner; mypy ise bu çağrıyı çalıştırmadan işaretlerdi.",
+      "answer": "34"
+    },
+    {
+      "id": "m14-q02",
+      "type": "output",
+      "topic": "annotations",
+      "sectionId": "annotations-basics",
+      "difficulty": 2,
+      "prompt": "Fonksiyonun __annotations__ sözlüğünün anahtarları nelerdir?",
+      "code": "def f(x: int, y: str = \"a\") -> bool:\n    return True\n\nprint(list(f.__annotations__))",
+      "expectedOutput": "['x', 'y', 'return']",
+      "options": [
+        "['return', 'x', 'y']",
+        "['x', 'y', 'return']",
+        "['x', 'y']",
+        "['x', 'return']"
+      ],
+      "hints": [
+        "Varsayılanlı parametrenin de ipucu var.",
+        "Dönüş ipucu hangi anahtarla saklanır?"
+      ],
+      "explanation": "Her ipuçlu parametre adıyla, dönüş ipucu 'return' anahtarıyla saklanır; sıra tanımdaki sıradır.",
+      "answer": "['x', 'y', 'return']"
+    },
+    {
+      "id": "m14-q03",
+      "type": "output",
+      "topic": "yalniz-anotasyon",
+      "sectionId": "annotations-basics",
+      "difficulty": 2,
+      "prompt": "Değeri olmayan bir değişken anotasyonu okunuyor. Çıktı ne olur?",
+      "code": "x: int\ntry:\n    print(x)\nexcept NameError:\n    print(\"tanımsız\")",
+      "expectedOutput": "tanımsız",
+      "options": [
+        "None",
+        "<class 'int'>",
+        "tanımsız",
+        "0"
+      ],
+      "hints": [
+        "x: int bir değer atıyor mu?",
+        "Değer verilmeyen ad tanımlı mıdır?"
+      ],
+      "explanation": "x: int yalnızca bir ipucudur, değer atamaz; x adı oluşmaz ve okunması NameError verir. Varsayılan bir 0 ya da None da yoktur.",
+      "answer": "tanımsız"
+    },
+    {
+      "id": "m14-q04",
+      "type": "output",
+      "topic": "koleksiyon",
+      "sectionId": "collection-types",
+      "difficulty": 1,
+      "prompt": "Koleksiyon tipi yazdırılıyor. Çıktı ne olur?",
+      "code": "scores: dict[str, list[int]] = {\"ada\": [1, 2]}\nprint(dict[str, list[int]], len(scores[\"ada\"]))",
+      "expectedOutput": "dict[str, list[int]] 2",
+      "options": [
+        "<class 'dict'> 2",
+        "dict 2",
+        "TypeError verir",
+        "dict[str, list[int]] 2"
+      ],
+      "hints": [
+        "Parametrelenmiş tip kendi yazımıyla görünür.",
+        "scores['ada'] kaç öğeli?"
+      ],
+      "explanation": "dict[str, list[int]] çalışma anında bir tip nesnesidir ve yazıldığı gibi gösterilir. Değişkendeki sözlük sıradan bir dict'tir; listede iki öğe vardır.",
+      "answer": "dict[str, list[int]] 2"
+    },
+    {
+      "id": "m14-q05",
+      "type": "output",
+      "topic": "iterable",
+      "sectionId": "collection-types",
+      "difficulty": 2,
+      "prompt": "Iterable[int] isteyen fonksiyona farklı türler veriliyor. Çıktı ne olur?",
+      "code": "from collections.abc import Iterable\n\ndef total(xs: Iterable[int]) -> int:\n    return sum(xs)\n\nprint(total([1, 2]), total({3, 4}), total(range(4)), total(n for n in (5,)))",
+      "expectedOutput": "3 7 6 5",
+      "options": [
+        "3 7 6 5",
+        "3 TypeError",
+        "3 7 10 5",
+        "3 7 6 0"
+      ],
+      "hints": [
+        "Iterable, dolaşılabilen her şeyi kapsar.",
+        "range(4) 0, 1, 2, 3 üretir."
+      ],
+      "explanation": "Liste, küme, range ve generator dolaşılabilir oldukları için hepsi Iterable[int]'e uyar: 1 + 2, 3 + 4, 0 + 1 + 2 + 3 ve 5.",
+      "answer": "3 7 6 5"
+    },
+    {
+      "id": "m14-q06",
+      "type": "output",
+      "topic": "daraltma",
+      "sectionId": "optional-union",
+      "difficulty": 2,
+      "prompt": "str | None alan fonksiyon üç farklı değerle çağrılıyor. Çıktı ne olur?",
+      "code": "def shout(text: str | None) -> str:\n    if not text:\n        return \"-\"\n    return text.upper()\n\nprint(shout(None), shout(\"\"), shout(\"ok\"))",
+      "expectedOutput": "- - OK",
+      "options": [
+        "AttributeError verir",
+        "- - OK",
+        "- OK",
+        "None - OK"
+      ],
+      "hints": [
+        "if not text hem None'ı hem boş metni yakalar.",
+        "Yalnızca dolu metin büyütülür."
+      ],
+      "explanation": "not text, None için de boş metin için de doğrudur; ikisi '-' döner. Bu denetimden sonra text kesinlikle dolu bir str'dir ve upper güvenle çağrılır.",
+      "answer": "- - OK"
+    },
+    {
+      "id": "m14-q07",
+      "type": "output",
+      "topic": "optional-esitlik",
+      "sectionId": "optional-union",
+      "difficulty": 3,
+      "prompt": "Eski ve yeni birleşim yazımları karşılaştırılıyor. Çıktı ne olur?",
+      "code": "from typing import Optional, Union\n\nprint(Optional[int] == Union[int, None], (int | None) == Optional[int])",
+      "expectedOutput": "True True",
+      "options": [
+        "False True",
+        "False False",
+        "True True",
+        "True False"
+      ],
+      "hints": [
+        "Optional[X], Union[X, None]'ın kısaltmasıdır.",
+        "X | None, Python 3.10'dan beri aynı tipin yeni yazımıdır."
+      ],
+      "explanation": "Optional[int] tanım gereği Union[int, None]'dır ve int | None ile aynı tipi gösterir; üç yazım birbirine eşittir.",
+      "answer": "True True"
+    },
+    {
+      "id": "m14-q08",
+      "type": "output",
+      "topic": "typeddict-dict",
+      "sectionId": "typeddict",
+      "difficulty": 2,
+      "prompt": "TypedDict ile kurulan nesnelerin çalışma anındaki türü nedir?",
+      "code": "from typing import TypedDict\n\nclass Point(TypedDict):\n    x: int\n    y: int\n\np: Point = {\"x\": 1, \"y\": 2}\nq = Point(x=3, y=4)\nprint(type(q).__name__, q[\"x\"] + p[\"y\"], isinstance(p, dict))",
+      "expectedOutput": "dict 5 True",
+      "options": [
+        "Point 5 True",
+        "Point 5 False",
+        "dict 4 True",
+        "dict 5 True"
+      ],
+      "hints": [
+        "TypedDict çalışma anında yeni bir tür üretir mi?",
+        "q['x'] 3, p['y'] 2'dir."
+      ],
+      "explanation": "TypedDict yalnızca statik bir şekil tanımıdır; Point(...) çağrısı da sıradan bir dict döndürür. 3 + 2 = 5 ve p bir dict'tir.",
+      "answer": "dict 5 True"
+    },
+    {
+      "id": "m14-q09",
+      "type": "output",
+      "topic": "runtime-checkable",
+      "sectionId": "protocol",
+      "difficulty": 3,
+      "prompt": "runtime_checkable bir Protocol ile isinstance denetleniyor. Çıktı ne olur?",
+      "code": "from typing import Protocol, runtime_checkable\n\n@runtime_checkable\nclass Closer(Protocol):\n    def close(self) -> None: ...\n\nclass File:\n    def close(self) -> None:\n        print(\"kapandı\")\n\nclass Door:\n    close = \"kapı\"\n\nprint(isinstance(File(), Closer), isinstance(Door(), Closer), isinstance(\"x\", Closer))",
+      "expectedOutput": "True True False",
+      "options": [
+        "True True False",
+        "True False False",
+        "True False True",
+        "False False False"
+      ],
+      "hints": [
+        "runtime_checkable isinstance neye bakar?",
+        "Door'da close adlı bir şey var mı? Çağrılabilir olması denetlenir mi?"
+      ],
+      "explanation": "runtime_checkable isinstance yalnızca close adının var olup olmadığına bakar. File da Door da bu adı taşır (Door'unki bir metin bile olsa); str'de close yoktur. İmza ve tür denetimi mypy'nin işidir.",
+      "answer": "True True False"
+    },
+    {
+      "id": "m14-q10",
+      "type": "output",
+      "topic": "typevar",
+      "sectionId": "generics",
+      "difficulty": 2,
+      "prompt": "TypeVar ile tiplenmiş fonksiyon farklı türlerle çağrılıyor. Çıktı ne olur?",
+      "code": "from typing import TypeVar\n\nT = TypeVar(\"T\")\n\ndef last(items: list[T]) -> T:\n    return items[-1]\n\nprint(last([1, 2, 3]), last(\"abc\"), T.__name__)",
+      "expectedOutput": "3 c T",
+      "options": [
+        "3 c ~T",
+        "3 c T",
+        "3 abc T",
+        "TypeError verir"
+      ],
+      "hints": [
+        "Çalışma anında list[T] ipucu bir metni reddeder mi?",
+        "'abc'[-1] nedir?"
+      ],
+      "explanation": "TypeVar çalışma anında hiçbir şeyi denetlemez; last bir metinle de çalışır ve son karakteri döndürür. Tip değişkeninin adı 'T'dir (annotation'larda ~T olarak görünür).",
+      "answer": "3 c T"
+    },
+    {
+      "id": "m14-q11",
+      "type": "output",
+      "topic": "callable",
+      "sectionId": "callable",
+      "difficulty": 2,
+      "prompt": "Callable[[int], int] alan fonksiyon iki kez uyguluyor. Çıktı ne olur?",
+      "code": "from collections.abc import Callable\n\ndef apply(f: Callable[[int], int], x: int) -> int:\n    return f(f(x))\n\nprint(apply(lambda n: n * 3, 2), apply(abs, -4))",
+      "expectedOutput": "18 4",
+      "options": [
+        "18 -4",
+        "12 16",
+        "18 4",
+        "6 4"
+      ],
+      "hints": [
+        "f(f(x)): önce içteki çağrı.",
+        "Yerleşik abc de bir çağrılabilirdir."
+      ],
+      "explanation": "İlk çağrı 2 → 6 → 18 verir. abs(-4) 4, abs(4) yine 4'tür. Lambda ve yerleşik fonksiyon, imzaya uyan çağrılabilirlerdir.",
+      "answer": "18 4"
+    },
+    {
+      "id": "m14-q12",
+      "type": "output",
+      "topic": "cast",
+      "sectionId": "mypy-runtime",
+      "difficulty": 3,
+      "prompt": "typing.cast ile bir değer int diye işaretleniyor. Çıktı ne olur?",
+      "code": "from typing import Any, cast\n\nvalue: Any = \"42\"\nnumber = cast(int, value)\nprint(number, type(number).__name__)",
+      "expectedOutput": "42 str",
+      "options": [
+        "42 int",
+        "TypeError verir",
+        "ValueError verir",
+        "42 str"
+      ],
+      "hints": [
+        "cast değeri dönüştürür mü?",
+        "cast yalnızca kime bir şey söyler?"
+      ],
+      "explanation": "cast yalnızca denetleyiciye 'bu değeri int say' der; çalışma anında değeri olduğu gibi döndürür. number hâlâ '42' metnidir. Dönüştürmek için int(value) gerekir.",
+      "answer": "42 str"
+    },
+    {
+      "id": "m14-q13",
+      "type": "bug",
+      "topic": "denetim-yok",
+      "sectionId": "annotations-basics",
+      "difficulty": 1,
+      "prompt": "Kullanıcı 5 yazdığında neden 'ses: 5555555555' çıkıyor?",
+      "code": "def set_volume(level: int) -> None:\n    print(\"ses:\", level * 10)\n\nset_volume(input())",
+      "answer": "Tip ipucu çalışma anında dönüştürme ya da denetim yapmaz; input() str döndürür, int(...) ile çevrilmeli",
+      "options": [
+        "Tip ipucu çalışma anında dönüştürme ya da denetim yapmaz; input() str döndürür, int(...) ile çevrilmeli",
+        "level: int yazımı değeri on kez tekrarlamaya zorlar",
+        "-> None dönüş ipucu sonucu bozar",
+        "print iki değeri birleştirirken sayıyı metne çevirir"
+      ],
+      "optionFeedback": {
+        "level: int yazımı değeri on kez tekrarlamaya zorlar": "İpucu davranışı değiştirmez; tekrarı metin * 10 işlemi yapar.",
+        "-> None dönüş ipucu sonucu bozar": "Fonksiyon zaten bir şey döndürmüyor; sorun parametrenin türünde.",
+        "print iki değeri birleştirirken sayıyı metne çevirir": "print değeri olduğu gibi gösterir; değer zaten '5555555555' metnidir."
+      },
+      "hints": [
+        "input() hangi türde değer döndürür?",
+        "Metin * 10 ne yapar?"
+      ],
+      "explanation": "input() '5' metnini döndürür; level: int ipucu bunu sayıya çevirmez. '5' * 10 metni on kez tekrarlar. Çağrı set_volume(int(input())) olmalı; mypy bu hatayı çalıştırmadan gösterirdi."
+    },
+    {
+      "id": "m14-q14",
+      "type": "bug",
+      "topic": "dict-tipi",
+      "sectionId": "collection-types",
+      "difficulty": 2,
+      "prompt": "Kod çalışıyor ama tip denetleyici dönüş tipini geçersiz buluyor. Sorun ne?",
+      "code": "def count_words(words: list[str]) -> dict[str: int]:\n    counts = {}\n    for word in words:\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\nprint(count_words([\"a\", \"b\", \"a\"]))",
+      "answer": "Sözlük tipinde anahtar ve değer türü virgülle ayrılır: dict[str, int]; iki nokta bir dilim üretir",
+      "options": [
+        "counts.get tip ipucu olan fonksiyonlarda çalışmaz",
+        "Sözlük tipinde anahtar ve değer türü virgülle ayrılır: dict[str, int]; iki nokta bir dilim üretir",
+        "list[str] parametre olarak kullanılamaz",
+        "Dönüş tipi yalnızca dict olabilir, içi yazılamaz"
+      ],
+      "optionFeedback": {
+        "list[str] parametre olarak kullanılamaz": "list[str] geçerli bir parametre tipidir.",
+        "Dönüş tipi yalnızca dict olabilir, içi yazılamaz": "dict[str, int] gibi içi yazılmış tipler geçerlidir ve tercih edilir.",
+        "counts.get tip ipucu olan fonksiyonlarda çalışmaz": "get her yerde çalışır; kod da doğru çıktı veriyor."
+      },
+      "hints": [
+        "Kod doğru sonucu yazdırıyor; sorun yalnızca ipucunda.",
+        "dict tipinin iki parametresi neyle ayrılır?"
+      ],
+      "explanation": "dict[str: int] Python'da dilim nesnesiyle parametrelenmiş anlamsız bir tip üretir; çalışma anında hata vermez ama denetleyici geçersiz sayar. Doğrusu dict[str, int]."
+    },
+    {
+      "id": "m14-q15",
+      "type": "bug",
+      "topic": "eksik-donus",
+      "sectionId": "optional-union",
+      "difficulty": 2,
+      "prompt": "Can için neden TypeError oluşuyor? (mypy bu fonksiyon için 'Missing return statement' uyarısı verir.)",
+      "code": "def find_age(people: dict[str, int], name: str) -> int:\n    if name in people:\n        return people[name]\n\nage = find_age({\"Ada\": 30}, \"Can\")\nprint(age + 1)",
+      "answer": "Ad yoksa fonksiyon None döndürüyor; dönüş tipi int | None olmalı ve çağıran None'ı denetlemeli",
+      "options": [
+        "-> int ipucu çalışma anında None'ı 0'a çevirir",
+        "age + 1 işleminde int ile int toplanamaz",
+        "Ad yoksa fonksiyon None döndürüyor; dönüş tipi int | None olmalı ve çağıran None'ı denetlemeli",
+        "dict[str, int] tipinde anahtarlar aranamaz"
+      ],
+      "optionFeedback": {
+        "dict[str, int] tipinde anahtarlar aranamaz": "in ile anahtar aramak sorunsuzdur.",
+        "-> int ipucu çalışma anında None'ı 0'a çevirir": "İpuçları hiçbir değeri dönüştürmez; None olduğu gibi döner.",
+        "age + 1 işleminde int ile int toplanamaz": "Sorun age'in int değil None olması."
+      },
+      "hints": [
+        "Can sözlükte yok; fonksiyon hangi satırla bitiyor?",
+        "return yazılmayan yol ne döndürür?"
+      ],
+      "explanation": "Ad bulunamazsa fonksiyon return'süz biter ve None döner; None + 1 TypeError verir. Dönüş tipini int | None yapıp çağırırken if age is None denetle ya da bulunamadığında bir varsayılan döndür."
+    },
+    {
+      "id": "m14-q16",
+      "type": "bug",
+      "topic": "typeddict-dogrulama",
+      "sectionId": "typeddict",
+      "difficulty": 2,
+      "prompt": "User bir TypedDict olduğu hâlde neden TypeError oluşuyor?",
+      "code": "import json\nfrom typing import TypedDict\n\nclass User(TypedDict):\n    name: str\n    age: int\n\nuser: User = json.loads('{\"name\": \"Ada\", \"age\": \"otuz\"}')\nprint(user[\"age\"] + 1)",
+      "answer": "TypedDict yalnızca statik bir şekildir; JSON'dan gelen veriyi doğrulamaz, age burada bir metin",
+      "options": [
+        "json.loads TypedDict'leri okuyamaz",
+        "TypedDict'te int alanı tanımlanamaz",
+        "user['age'] yerine user.age yazılmalı",
+        "TypedDict yalnızca statik bir şekildir; JSON'dan gelen veriyi doğrulamaz, age burada bir metin"
+      ],
+      "optionFeedback": {
+        "json.loads TypedDict'leri okuyamaz": "json.loads sıradan bir dict döndürür; TypedDict'ten habersizdir.",
+        "TypedDict'te int alanı tanımlanamaz": "Her türde alan tanımlanabilir.",
+        "user['age'] yerine user.age yazılmalı": "TypedDict nesnesi bir dict'tir; anahtarla erişilir."
+      },
+      "hints": [
+        "Çalışma anında user'ın türü nedir?",
+        "JSON'daki age değerinin türü ne?"
+      ],
+      "explanation": "user: User işaretlemesi veriyi kontrol etmez; json.loads'tan gelen dict'te age metindir ve '... + 1' TypeError verir. Dış veri isinstance denetimleriyle ya da bir doğrulama kütüphanesiyle doğrulanmalıdır."
+    },
+    {
+      "id": "m14-q17",
+      "type": "bug",
+      "topic": "protocol-uyum",
+      "sectionId": "protocol",
+      "difficulty": 2,
+      "prompt": "notify(Sms()) neden AttributeError verir?",
+      "code": "from typing import Protocol\n\nclass Sender(Protocol):\n    def send(self, text: str) -> None: ...\n\nclass Sms:\n    def send_text(self, text: str) -> None:\n        print(\"sms:\", text)\n\ndef notify(sender: Sender) -> None:\n    sender.send(\"selam\")\n\nnotify(Sms())",
+      "answer": "Sms, Protocol'ün istediği send metodunu sunmuyor (send_text); türemek gerekmez ama metot adı ve imzası uymalı",
+      "options": [
+        "Sms, Protocol'ün istediği send metodunu sunmuyor (send_text); türemek gerekmez ama metot adı ve imzası uymalı",
+        "Sms, Sender'dan türemediği için Protocol'e hiçbir zaman uyamaz",
+        "Protocol sınıfları fonksiyon parametresi tipi olamaz",
+        "print Protocol metotlarının içinde kullanılamaz"
+      ],
+      "optionFeedback": {
+        "Sms, Sender'dan türemediği için Protocol'e hiçbir zaman uyamaz": "Protocol yapısaldır; send metodu olsaydı Sms türemeden uyardı.",
+        "Protocol sınıfları fonksiyon parametresi tipi olamaz": "Protocol'lerin asıl kullanım yeri parametre tipleridir.",
+        "print Protocol metotlarının içinde kullanılamaz": "Sorun print değil; çağrılan send metodu yok."
+      },
+      "hints": [
+        "notify hangi metodu çağırıyor?",
+        "Sms'te o adla bir metot var mı?"
+      ],
+      "explanation": "notify sender.send(...) çağırır ama Sms'in metodu send_text adındadır; çalışma anında AttributeError gelir. mypy aynı sorunu notify(Sms()) satırında, çalıştırmadan bildirirdi."
+    },
+    {
+      "id": "m14-q18",
+      "type": "bug",
+      "topic": "callable-imza",
+      "sectionId": "callable",
+      "difficulty": 2,
+      "prompt": "run(greet) neden TypeError verir?",
+      "code": "from collections.abc import Callable\n\ndef run(callback: Callable[[], str]) -> str:\n    return callback()\n\ndef greet(name: str) -> str:\n    return \"selam \" + name\n\nprint(run(greet))",
+      "answer": "run argümansız bir fonksiyon bekliyor (Callable[[], str]); greet ise bir argüman istiyor",
+      "options": [
+        "callback() yerine callback yazılmalı",
+        "run argümansız bir fonksiyon bekliyor (Callable[[], str]); greet ise bir argüman istiyor",
+        "Callable tipi fonksiyonlara uygulanamaz, yalnızca sınıflara uygulanır",
+        "greet'in dönüş tipi str olduğu için çağrılamaz"
+      ],
+      "optionFeedback": {
+        "Callable tipi fonksiyonlara uygulanamaz, yalnızca sınıflara uygulanır": "Callable her çağrılabilir şeyi kapsar; fonksiyonlar başta gelir.",
+        "greet'in dönüş tipi str olduğu için çağrılamaz": "Dönüş tipi doğru; sorun parametre sayısı.",
+        "callback() yerine callback yazılmalı": "O zaman fonksiyon çağrılmaz, nesnesi döndürülür; asıl sorun eksik argüman."
+      },
+      "hints": [
+        "Callable[[], str] içindeki boş liste neyi söyler?",
+        "run, callback'i kaç argümanla çağırıyor?"
+      ],
+      "explanation": "run callback'i argümansız çağırır ama greet name bekler: 'missing 1 required positional argument'. Uygun bir sarmalayıcı verilmeli: run(lambda: greet('Ada')). mypy imza uyumsuzluğunu çalıştırmadan gösterirdi."
+    },
+    {
+      "id": "m14-q19",
+      "type": "fill",
+      "topic": "union",
+      "sectionId": "optional-union",
+      "difficulty": 1,
+      "prompt": "Dönüş değerinin int ya da None olabileceğini yazan işareti tamamla.",
+      "code": "def parse(text: str) -> int ___ None:\n    return int(text) if text.isdigit() else None\n\nprint(parse(\"12\"), parse(\"x\"))",
+      "answer": "|",
+      "expectedOutput": "12 None",
+      "hints": [
+        "Python 3.10'dan beri iki türü birleştiren işaret.",
+        "Bit düzeyinde 'veya' işlecidir."
+      ],
+      "explanation": "int | None, değerin int ya da None olabileceğini söyler; eski yazımı Optional[int]'tir.",
+      "acceptedAnswers": [
+        "|"
+      ],
+      "solutionCode": "def parse(text: str) -> int | None:\n    return int(text) if text.isdigit() else None\n\nprint(parse(\"12\"), parse(\"x\"))"
+    },
+    {
+      "id": "m14-q20",
+      "type": "fill",
+      "topic": "typeddict",
+      "sectionId": "typeddict",
+      "difficulty": 1,
+      "prompt": "Sözlüğün şeklini tanımlayan taban sınıfı yaz.",
+      "code": "from typing import TypedDict\n\nclass Book(___):\n    title: str\n    pages: int\n\nb: Book = {\"title\": \"Dune\", \"pages\": 412}\nprint(b[\"pages\"])",
+      "answer": "TypedDict",
+      "expectedOutput": "412",
+      "hints": [
+        "typing'den içe aktarılan ad.",
+        "Adı 'tiplenmiş sözlük' demektir."
+      ],
+      "explanation": "class Book(TypedDict) anahtarları ve türlerini tanımlar; b çalışma anında sıradan bir dict'tir.",
+      "acceptedAnswers": [
+        "TypedDict"
+      ],
+      "solutionCode": "from typing import TypedDict\n\nclass Book(TypedDict):\n    title: str\n    pages: int\n\nb: Book = {\"title\": \"Dune\", \"pages\": 412}\nprint(b[\"pages\"])"
+    },
+    {
+      "id": "m14-q21",
+      "type": "fill",
+      "topic": "protocol",
+      "sectionId": "protocol",
+      "difficulty": 2,
+      "prompt": "Yapısal bir arayüz tanımlayan taban sınıfı yaz.",
+      "code": "from typing import Protocol\n\nclass Greeter(___):\n    def greet(self) -> str: ...\n\nclass Tr:\n    def greet(self) -> str:\n        return \"merhaba\"\n\ndef hello(g: Greeter) -> str:\n    return g.greet()\n\nprint(hello(Tr()))",
+      "answer": "Protocol",
+      "expectedOutput": "merhaba",
+      "hints": [
+        "typing'den içe aktarılan ad.",
+        "Tr bu sınıftan türemediği hâlde ona uyar."
+      ],
+      "explanation": "Greeter bir Protocol'dür; greet metodu olan her sınıf (Tr gibi) türemeden ona uyar.",
+      "acceptedAnswers": [
+        "Protocol"
+      ],
+      "solutionCode": "from typing import Protocol\n\nclass Greeter(Protocol):\n    def greet(self) -> str: ...\n\nclass Tr:\n    def greet(self) -> str:\n        return \"merhaba\"\n\ndef hello(g: Greeter) -> str:\n    return g.greet()\n\nprint(hello(Tr()))"
+    },
+    {
+      "id": "m14-q22",
+      "type": "fill",
+      "topic": "typevar",
+      "sectionId": "generics",
+      "difficulty": 2,
+      "prompt": "Tip değişkeni tanımlayan yardımcıyı yaz.",
+      "code": "from typing import TypeVar\n\nT = ___(\"T\")\n\ndef first(items: list[T]) -> T:\n    return items[0]\n\nprint(first([\"x\", \"y\"]))",
+      "answer": "TypeVar",
+      "expectedOutput": "x",
+      "hints": [
+        "typing'den içe aktarılan ad.",
+        "Adı 'tip değişkeni' demektir."
+      ],
+      "explanation": "T = TypeVar('T') bir tip değişkenidir; first'ün girdi listesindeki türle aynı türde değer döndürdüğünü anlatır.",
+      "acceptedAnswers": [
+        "TypeVar"
+      ],
+      "solutionCode": "from typing import TypeVar\n\nT = TypeVar(\"T\")\n\ndef first(items: list[T]) -> T:\n    return items[0]\n\nprint(first([\"x\", \"y\"]))"
+    },
+    {
+      "id": "m14-q23",
+      "type": "order",
+      "topic": "annotations",
+      "sectionId": "annotations-basics",
+      "difficulty": 1,
+      "prompt": "Tip ipuçlu bir fonksiyon tanımlayıp sonucunu yazdıran sırayı kur.",
+      "expectedOutput": "10.0",
+      "hints": [
+        "Fonksiyon kullanılmadan önce tanımlanır.",
+        "Dönüş ipucu def satırındadır."
+      ],
+      "explanation": "area tanımlanır, sonucu ipuçlu result değişkenine atanır ve yazdırılır: 2.5 x 4 = 10.0.",
+      "answer": "def area(width: float, height: float) -> float:\n    return width * height\nresult: float = area(2.5, 4)\nprint(result)",
+      "lines": [
+        "result: float = area(2.5, 4)",
+        "def area(width: float, height: float) -> float:",
+        "print(result)",
+        "    return width * height"
+      ],
+      "solutionCode": "def area(width: float, height: float) -> float:\n    return width * height\nresult: float = area(2.5, 4)\nprint(result)"
+    },
+    {
+      "id": "m14-q24",
+      "type": "order",
+      "topic": "iterable",
+      "sectionId": "collection-types",
+      "difficulty": 2,
+      "prompt": "Iterable[str] alan ve en uzun kelimeyi bulan sırayı kur.",
+      "expectedOutput": "python",
+      "hints": [
+        "İçe aktarma en üstte olmalı.",
+        "return döngünün dışında, fonksiyon gövdesi hizasında durur."
+      ],
+      "explanation": "longest, dolaşılabilen her metin kaynağını kabul eder ve en uzun kelimeyi döndürür.",
+      "answer": "from collections.abc import Iterable\ndef longest(words: Iterable[str]) -> str:\n    best = \"\"\n    for word in words:\n        if len(word) > len(best):\n            best = word\n    return best\nprint(longest([\"py\", \"python\", \"pip\"]))",
+      "lines": [
+        "    for word in words:",
+        "print(longest([\"py\", \"python\", \"pip\"]))",
+        "def longest(words: Iterable[str]) -> str:",
+        "            best = word",
+        "from collections.abc import Iterable",
+        "    return best",
+        "    best = \"\"",
+        "        if len(word) > len(best):"
+      ],
+      "solutionCode": "from collections.abc import Iterable\ndef longest(words: Iterable[str]) -> str:\n    best = \"\"\n    for word in words:\n        if len(word) > len(best):\n            best = word\n    return best\nprint(longest([\"py\", \"python\", \"pip\"]))"
+    },
+    {
+      "id": "m14-q25",
+      "type": "order",
+      "topic": "generic-sinif",
+      "sectionId": "generics",
+      "difficulty": 2,
+      "prompt": "Genel bir Stack sınıfı tanımlayıp kullanan sırayı kur.",
+      "expectedOutput": "[3]",
+      "hints": [
+        "T, sınıfta kullanılmadan önce tanımlanmalı.",
+        "Nesne, sınıf tanımından sonra kurulur."
+      ],
+      "explanation": "TypeVar tanımlanır, Stack Generic[T] ile genel yapılır; Stack[int] ipucuyla kurulan nesneye 3 eklenir.",
+      "answer": "from typing import Generic, TypeVar\nT = TypeVar(\"T\")\nclass Stack(Generic[T]):\n    def __init__(self) -> None:\n        self.items: list[T] = []\n    def push(self, item: T) -> None:\n        self.items.append(item)\ns: Stack[int] = Stack()\ns.push(3)\nprint(s.items)",
+      "lines": [
+        "s: Stack[int] = Stack()",
+        "class Stack(Generic[T]):",
+        "print(s.items)",
+        "from typing import Generic, TypeVar",
+        "    def push(self, item: T) -> None:",
+        "s.push(3)",
+        "    def __init__(self) -> None:",
+        "T = TypeVar(\"T\")",
+        "        self.items.append(item)",
+        "        self.items: list[T] = []"
+      ],
+      "solutionCode": "from typing import Generic, TypeVar\nT = TypeVar(\"T\")\nclass Stack(Generic[T]):\n    def __init__(self) -> None:\n        self.items: list[T] = []\n    def push(self, item: T) -> None:\n        self.items.append(item)\ns: Stack[int] = Stack()\ns.push(3)\nprint(s.items)"
+    },
+    {
+      "id": "m14-q26",
+      "type": "order",
+      "topic": "callable",
+      "sectionId": "callable",
+      "difficulty": 2,
+      "prompt": "Bir fonksiyonu iki kez uygulayan sırayı kur.",
+      "expectedOutput": "7",
+      "hints": [
+        "Callable içe aktarılmadan ipucunda kullanılamaz.",
+        "inc, twice'a argüman olarak verilir; çağrıdan önce tanımlanmalı."
+      ],
+      "explanation": "twice, int alıp int döndüren bir fonksiyonu iki kez uygular: 5 → 6 → 7.",
+      "answer": "from collections.abc import Callable\ndef twice(f: Callable[[int], int], x: int) -> int:\n    return f(f(x))\ndef inc(n: int) -> int:\n    return n + 1\nprint(twice(inc, 5))",
+      "lines": [
+        "def inc(n: int) -> int:",
+        "print(twice(inc, 5))",
+        "def twice(f: Callable[[int], int], x: int) -> int:",
+        "    return n + 1",
+        "from collections.abc import Callable",
+        "    return f(f(x))"
+      ],
+      "solutionCode": "from collections.abc import Callable\ndef twice(f: Callable[[int], int], x: int) -> int:\n    return f(f(x))\ndef inc(n: int) -> int:\n    return n + 1\nprint(twice(inc, 5))"
+    },
+    {
+      "id": "m14-q27",
+      "type": "code",
+      "topic": "annotations",
+      "sectionId": "annotations-basics",
+      "difficulty": 1,
+      "prompt": "full_name fonksiyonuna tip ipuçları ekle: first ve last metin, upper bool (varsayılan False), dönüş metin. Program adı, soyadı ve 'evet'/'hayır' okur; sonucu ve fonksiyonun ipuçlarını yazar.",
+      "starterCode": "def full_name(first, last, upper=False):\n    # parametrelere ve dönüşe tip ipucu ekle\n    name = f\"{first} {last}\"\n    return name.upper() if upper else name\n\nfirst = input()\nlast = input()\nupper = input() == \"evet\"\nprint(full_name(first, last, upper))\nprint(full_name.__annotations__)",
+      "answer": "def full_name(first: str, last: str, upper: bool = False) -> str:\n    name = f\"{first} {last}\"\n    return name.upper() if upper else name\n\nfirst = input()\nlast = input()\nupper = input() == \"evet\"\nprint(full_name(first, last, upper))\nprint(full_name.__annotations__)",
+      "exampleInput": "ada\nlovelace\nhayır",
+      "expectedOutput": "ada lovelace\n{'first': <class 'str'>, 'last': <class 'str'>, 'upper': <class 'bool'>, 'return': <class 'str'>}",
+      "tests": [
+        {
+          "label": "Büyütmeden",
+          "stdin": "ada\nlovelace\nhayır",
+          "expectedOutput": "ada lovelace\n{'first': <class 'str'>, 'last': <class 'str'>, 'upper': <class 'bool'>, 'return': <class 'str'>}"
+        },
+        {
+          "label": "Büyük harf",
+          "stdin": "Can\nYıldız\nevet",
+          "expectedOutput": "CAN YILDIZ\n{'first': <class 'str'>, 'last': <class 'str'>, 'upper': <class 'bool'>, 'return': <class 'str'>}"
+        },
+        {
+          "label": "Kısa adlar",
+          "stdin": "a\nb\nevet",
+          "expectedOutput": "A B\n{'first': <class 'str'>, 'last': <class 'str'>, 'upper': <class 'bool'>, 'return': <class 'str'>}"
+        }
+      ],
+      "hints": [
+        "Parametre ipucu adın hemen ardından gelir: first: str.",
+        "Varsayılanlı parametrede önce ipucu sonra varsayılan: upper: bool = False; dönüş için -> str."
+      ],
+      "explanation": "İpuçları davranışı değiştirmez ama __annotations__'ta saklanır; program bu sözlüğü yazdırarak her ipucunun yerinde olduğunu gösterir.",
+      "solutionCode": "def full_name(first: str, last: str, upper: bool = False) -> str:\n    name = f\"{first} {last}\"\n    return name.upper() if upper else name\n\nfirst = input()\nlast = input()\nupper = input() == \"evet\"\nprint(full_name(first, last, upper))\nprint(full_name.__annotations__)"
+    },
+    {
+      "id": "m14-q28",
+      "type": "code",
+      "topic": "koleksiyon",
+      "sectionId": "collection-types",
+      "difficulty": 2,
+      "prompt": "word_lengths(words) fonksiyonunu yaz: her kelimeden uzunluğuna giden bir sözlük döndürsün. İpuçlarını yerleşik yazımla ver: parametre list[str], dönüş dict[str, int]. Program sözlüğü sıralı yazar ve ipuçlarını gösterir.",
+      "starterCode": "def word_lengths(words):\n    # her kelimeden uzunluğuna giden sözlüğü döndür; ipuçlarını ekle\n    return {}\n\nwords = input().split()\nlengths = word_lengths(words)\nprint(sorted(lengths.items()))\nprint(word_lengths.__annotations__)",
+      "answer": "def word_lengths(words: list[str]) -> dict[str, int]:\n    return {word: len(word) for word in words}\n\nwords = input().split()\nlengths = word_lengths(words)\nprint(sorted(lengths.items()))\nprint(word_lengths.__annotations__)",
+      "exampleInput": "elma armut kivi",
+      "expectedOutput": "[('armut', 5), ('elma', 4), ('kivi', 4)]\n{'words': list[str], 'return': dict[str, int]}",
+      "tests": [
+        {
+          "label": "Üç kelime",
+          "stdin": "elma armut kivi",
+          "expectedOutput": "[('armut', 5), ('elma', 4), ('kivi', 4)]\n{'words': list[str], 'return': dict[str, int]}"
+        },
+        {
+          "label": "Tekrar eden kelime",
+          "stdin": "a a",
+          "expectedOutput": "[('a', 1)]\n{'words': list[str], 'return': dict[str, int]}"
+        },
+        {
+          "label": "Tek kelime",
+          "stdin": "python",
+          "expectedOutput": "[('python', 6)]\n{'words': list[str], 'return': dict[str, int]}"
+        }
+      ],
+      "hints": [
+        "Sözlük kurucu: {word: len(word) for word in words}.",
+        "İpuçları: words: list[str] ve -> dict[str, int] (typing.List değil, yerleşik list)."
+      ],
+      "explanation": "Koleksiyon tiplerinin içindeki türler köşeli parantezle yazılır; dict'te anahtar ve değer türü virgülle ayrılır.",
+      "solutionCode": "def word_lengths(words: list[str]) -> dict[str, int]:\n    return {word: len(word) for word in words}\n\nwords = input().split()\nlengths = word_lengths(words)\nprint(sorted(lengths.items()))\nprint(word_lengths.__annotations__)"
+    },
+    {
+      "id": "m14-q29",
+      "type": "code",
+      "topic": "optional",
+      "sectionId": "optional-union",
+      "difficulty": 2,
+      "prompt": "find_user(users: dict[str, int], name: str) -> int | None adı yoksa None, varsa yaşı döndürsün. describe(age: int | None) -> str, None için 'bilinmiyor', değilse 'N yaşında' döndürsün (0 da geçerli bir yaştır). Program kayıtları ve bir adı okur; sonucu ve iki ipucunu yazar.",
+      "starterCode": "def find_user(users, name):\n    # ipuçlarını ekle; ad yoksa None döndür\n    return None\n\ndef describe(age):\n    # ipuçlarını ekle; None için \"bilinmiyor\"\n    return \"\"\n\nusers = {}\nfor _ in range(int(input())):\n    name, age = input().split()\n    users[name] = int(age)\nprint(describe(find_user(users, input())))\nprint(find_user.__annotations__[\"return\"], describe.__annotations__[\"age\"])",
+      "answer": "def find_user(users: dict[str, int], name: str) -> int | None:\n    return users.get(name)\n\ndef describe(age: int | None) -> str:\n    if age is None:\n        return \"bilinmiyor\"\n    return f\"{age} yaşında\"\n\nusers = {}\nfor _ in range(int(input())):\n    name, age = input().split()\n    users[name] = int(age)\nprint(describe(find_user(users, input())))\nprint(find_user.__annotations__[\"return\"], describe.__annotations__[\"age\"])",
+      "exampleInput": "2\nAda 30\nCan 25\nCan",
+      "expectedOutput": "25 yaşında\nint | None int | None",
+      "tests": [
+        {
+          "label": "Bulunan",
+          "stdin": "2\nAda 30\nCan 25\nCan",
+          "expectedOutput": "25 yaşında\nint | None int | None"
+        },
+        {
+          "label": "Bulunmayan",
+          "stdin": "1\nAda 30\nEda",
+          "expectedOutput": "bilinmiyor\nint | None int | None"
+        },
+        {
+          "label": "Kayıt yok",
+          "stdin": "0\nAda",
+          "expectedOutput": "bilinmiyor\nint | None int | None"
+        },
+        {
+          "label": "Sıfır yaş",
+          "stdin": "1\nBebek 0\nBebek",
+          "expectedOutput": "0 yaşında\nint | None int | None"
+        }
+      ],
+      "hints": [
+        "users.get(name) bulunamazsa None döndürür.",
+        "describe'da if not age değil if age is None kullan; 0 yaşı da geçerli."
+      ],
+      "explanation": "int | None, sonucun bulunamayabileceğini açıkça söyler. None denetimi is None ile yapılmalı; if not age 0 yaşını da 'bilinmiyor' sayardı.",
+      "solutionCode": "def find_user(users: dict[str, int], name: str) -> int | None:\n    return users.get(name)\n\ndef describe(age: int | None) -> str:\n    if age is None:\n        return \"bilinmiyor\"\n    return f\"{age} yaşında\"\n\nusers = {}\nfor _ in range(int(input())):\n    name, age = input().split()\n    users[name] = int(age)\nprint(describe(find_user(users, input())))\nprint(find_user.__annotations__[\"return\"], describe.__annotations__[\"age\"])"
+    },
+    {
+      "id": "m14-q30",
+      "type": "code",
+      "topic": "typeddict",
+      "sectionId": "typeddict",
+      "difficulty": 2,
+      "prompt": "Product adında bir TypedDict yaz: name (str), price (int) zorunlu, stock (int) NotRequired. restock_needed(products: list[Product]) -> list[str], stoğu hiç yazılmamış ya da 5'ten az olan ürünlerin adlarını sıralı döndürsün. Program ürünleri okur, sonucu ve anahtar bilgisini yazar.",
+      "starterCode": "from typing import TypedDict, NotRequired\n\n# Product TypedDict'ini ve restock_needed fonksiyonunu yaz\n\nproducts = []\nfor _ in range(int(input())):\n    parts = input().split()\n    item = Product(name=parts[0], price=int(parts[1]))\n    if len(parts) == 3:\n        item[\"stock\"] = int(parts[2])\n    products.append(item)\nprint(restock_needed(products))\nprint(sorted(Product.__required_keys__), sorted(Product.__optional_keys__))",
+      "answer": "from typing import TypedDict, NotRequired\n\nclass Product(TypedDict):\n    name: str\n    price: int\n    stock: NotRequired[int]\n\ndef restock_needed(products: list[Product]) -> list[str]:\n    return sorted(product[\"name\"] for product in products if product.get(\"stock\", 0) < 5)\n\nproducts = []\nfor _ in range(int(input())):\n    parts = input().split()\n    item = Product(name=parts[0], price=int(parts[1]))\n    if len(parts) == 3:\n        item[\"stock\"] = int(parts[2])\n    products.append(item)\nprint(restock_needed(products))\nprint(sorted(Product.__required_keys__), sorted(Product.__optional_keys__))",
+      "exampleInput": "3\nkalem 15 10\nsilgi 5 2\ndefter 40",
+      "expectedOutput": "['defter', 'silgi']\n['name', 'price'] ['stock']",
+      "tests": [
+        {
+          "label": "Karışık",
+          "stdin": "3\nkalem 15 10\nsilgi 5 2\ndefter 40",
+          "expectedOutput": "['defter', 'silgi']\n['name', 'price'] ['stock']"
+        },
+        {
+          "label": "Sınır 5",
+          "stdin": "1\na 1 5",
+          "expectedOutput": "[]\n['name', 'price'] ['stock']"
+        },
+        {
+          "label": "Ürün yok",
+          "stdin": "0",
+          "expectedOutput": "[]\n['name', 'price'] ['stock']"
+        },
+        {
+          "label": "Sıralı çıktı",
+          "stdin": "2\nb 1 4\na 1",
+          "expectedOutput": "['a', 'b']\n['name', 'price'] ['stock']"
+        }
+      ],
+      "hints": [
+        "İsteğe bağlı anahtar için stock: NotRequired[int].",
+        "product.get('stock', 0) eksik stoğu 0 sayar; sonuçları sorted ile döndür."
+      ],
+      "explanation": "TypedDict anahtarların şeklini anlatır; isteğe bağlı stock'a get ile güvenle erişilir. Çalışma anında ürünler sıradan sözlüklerdir.",
+      "solutionCode": "from typing import TypedDict, NotRequired\n\nclass Product(TypedDict):\n    name: str\n    price: int\n    stock: NotRequired[int]\n\ndef restock_needed(products: list[Product]) -> list[str]:\n    return sorted(product[\"name\"] for product in products if product.get(\"stock\", 0) < 5)\n\nproducts = []\nfor _ in range(int(input())):\n    parts = input().split()\n    item = Product(name=parts[0], price=int(parts[1]))\n    if len(parts) == 3:\n        item[\"stock\"] = int(parts[2])\n    products.append(item)\nprint(restock_needed(products))\nprint(sorted(Product.__required_keys__), sorted(Product.__optional_keys__))"
+    },
+    {
+      "id": "m14-q31",
+      "type": "code",
+      "topic": "protocol",
+      "sectionId": "protocol",
+      "difficulty": 3,
+      "prompt": "runtime_checkable bir Discount Protocol'ü yaz: apply(self, price: int) -> int. Percent(percent) price * (100 - percent) // 100, Fixed(amount) price - amount döndürsün; ikisi de Discount'tan türemesin. checkout(prices: list[int], discount: Discount) -> int toplam fiyata indirimi uygulasın ve sonucu 0'ın altına düşürmesin.",
+      "starterCode": "from typing import Protocol, runtime_checkable\n\n# Discount Protocol'ünü (runtime_checkable) yaz\n# Percent ve Fixed sınıflarını Discount'tan TÜRETMEDEN yaz\n# checkout(prices, discount) fonksiyonunu yaz\n\nkind, value = input().split()\nprices = [int(p) for p in input().split()]\ndiscount = Percent(int(value)) if kind == \"yüzde\" else Fixed(int(value))\nprint(checkout(prices, discount))\nprint(isinstance(discount, Discount), Discount in type(discount).__mro__)",
+      "answer": "from typing import Protocol, runtime_checkable\n\n@runtime_checkable\nclass Discount(Protocol):\n    def apply(self, price: int) -> int: ...\n\nclass Percent:\n    def __init__(self, percent: int) -> None:\n        self.percent = percent\n\n    def apply(self, price: int) -> int:\n        return price * (100 - self.percent) // 100\n\nclass Fixed:\n    def __init__(self, amount: int) -> None:\n        self.amount = amount\n\n    def apply(self, price: int) -> int:\n        return price - self.amount\n\ndef checkout(prices: list[int], discount: Discount) -> int:\n    return max(0, discount.apply(sum(prices)))\n\nkind, value = input().split()\nprices = [int(p) for p in input().split()]\ndiscount = Percent(int(value)) if kind == \"yüzde\" else Fixed(int(value))\nprint(checkout(prices, discount))\nprint(isinstance(discount, Discount), Discount in type(discount).__mro__)",
+      "exampleInput": "yüzde 10\n100 200",
+      "expectedOutput": "270\nTrue False",
+      "tests": [
+        {
+          "label": "Yüzde",
+          "stdin": "yüzde 10\n100 200",
+          "expectedOutput": "270\nTrue False"
+        },
+        {
+          "label": "Sıfırın altına düşmez",
+          "stdin": "sabit 50\n30 10",
+          "expectedOutput": "0\nTrue False"
+        },
+        {
+          "label": "Sabit",
+          "stdin": "sabit 5\n10",
+          "expectedOutput": "5\nTrue False"
+        },
+        {
+          "label": "Sıfır yüzde",
+          "stdin": "yüzde 0\n7 8",
+          "expectedOutput": "15\nTrue False"
+        }
+      ],
+      "hints": [
+        "Protocol gövdesinde metot imzası ve ... yeterlidir; isinstance için @runtime_checkable gerekir.",
+        "Percent ve Fixed'in başlığına Discount yazma; yalnızca apply metotları olsun."
+      ],
+      "explanation": "Percent ve Fixed, Discount'tan türemeden apply metotları sayesinde ona uyar. isinstance True verir ama Discount MRO'da yoktur: uyum yapısaldır.",
+      "solutionCode": "from typing import Protocol, runtime_checkable\n\n@runtime_checkable\nclass Discount(Protocol):\n    def apply(self, price: int) -> int: ...\n\nclass Percent:\n    def __init__(self, percent: int) -> None:\n        self.percent = percent\n\n    def apply(self, price: int) -> int:\n        return price * (100 - self.percent) // 100\n\nclass Fixed:\n    def __init__(self, amount: int) -> None:\n        self.amount = amount\n\n    def apply(self, price: int) -> int:\n        return price - self.amount\n\ndef checkout(prices: list[int], discount: Discount) -> int:\n    return max(0, discount.apply(sum(prices)))\n\nkind, value = input().split()\nprices = [int(p) for p in input().split()]\ndiscount = Percent(int(value)) if kind == \"yüzde\" else Fixed(int(value))\nprint(checkout(prices, discount))\nprint(isinstance(discount, Discount), Discount in type(discount).__mro__)"
+    },
+    {
+      "id": "m14-q32",
+      "type": "code",
+      "topic": "typevar",
+      "sectionId": "generics",
+      "difficulty": 2,
+      "prompt": "chunk(items: list[T], size: int) -> list[list[T]] genel fonksiyonunu yaz (T bir TypeVar): listeyi size uzunluğunda parçalara bölsün, son parça kısa olabilir. Program sayılarla ve metinlerle çağırır, ipuçlarını yazar.",
+      "starterCode": "from typing import TypeVar\n\nT = TypeVar(\"T\")\n\ndef chunk(items, size):\n    # ipuçlarını ekle: list[T], int -> list[list[T]]\n    return []\n\nnumbers = [int(x) for x in input().split()]\nsize = int(input())\nprint(chunk(numbers, size))\nprint(chunk(input().split(), size))\nprint(chunk.__annotations__)",
+      "answer": "from typing import TypeVar\n\nT = TypeVar(\"T\")\n\ndef chunk(items: list[T], size: int) -> list[list[T]]:\n    return [items[start:start + size] for start in range(0, len(items), size)]\n\nnumbers = [int(x) for x in input().split()]\nsize = int(input())\nprint(chunk(numbers, size))\nprint(chunk(input().split(), size))\nprint(chunk.__annotations__)",
+      "exampleInput": "1 2 3 4 5\n2\na b c",
+      "expectedOutput": "[[1, 2], [3, 4], [5]]\n[['a', 'b'], ['c']]\n{'items': list[~T], 'size': <class 'int'>, 'return': list[list[~T]]}",
+      "tests": [
+        {
+          "label": "Sayılar ve metinler",
+          "stdin": "1 2 3 4 5\n2\na b c",
+          "expectedOutput": "[[1, 2], [3, 4], [5]]\n[['a', 'b'], ['c']]\n{'items': list[~T], 'size': <class 'int'>, 'return': list[list[~T]]}"
+        },
+        {
+          "label": "Boyut büyük",
+          "stdin": "7\n3\nx",
+          "expectedOutput": "[[7]]\n[['x']]\n{'items': list[~T], 'size': <class 'int'>, 'return': list[list[~T]]}"
+        },
+        {
+          "label": "Boyut 1",
+          "stdin": "1 2\n1\np q",
+          "expectedOutput": "[[1], [2]]\n[['p'], ['q']]\n{'items': list[~T], 'size': <class 'int'>, 'return': list[list[~T]]}"
+        }
+      ],
+      "hints": [
+        "range(0, len(items), size) parçaların başlangıçlarını verir.",
+        "İpuçlarında T'yi kullan; annotations çıktısında ~T olarak görünecek."
+      ],
+      "explanation": "Aynı fonksiyon int ve str listeleriyle çalışır; T, denetleyiciye dönen parçaların girdiyle aynı türde öğe taşıdığını anlatır.",
+      "solutionCode": "from typing import TypeVar\n\nT = TypeVar(\"T\")\n\ndef chunk(items: list[T], size: int) -> list[list[T]]:\n    return [items[start:start + size] for start in range(0, len(items), size)]\n\nnumbers = [int(x) for x in input().split()]\nsize = int(input())\nprint(chunk(numbers, size))\nprint(chunk(input().split(), size))\nprint(chunk.__annotations__)"
+    },
+    {
+      "id": "m14-q33",
+      "type": "code",
+      "topic": "generic-sinif",
+      "sectionId": "generics",
+      "difficulty": 3,
+      "prompt": "Stack(Generic[T]) sınıfını yaz: push(item: T) -> None, pop() -> T (boşsa IndexError('yığın boş')), peek() -> T | None (boşsa None), size() -> int. Program komutları ('push x', 'pop', 'peek', 'size') işler ve sonda sınıfın tip parametrelerini ve peek'in dönüş ipucunu yazar.",
+      "starterCode": "from typing import Generic, TypeVar\n\nT = TypeVar(\"T\")\n\nclass Stack(Generic[T]):\n    # push, pop, peek ve size metotlarını ipuçlarıyla yaz\n    pass\n\nstack: Stack[str] = Stack()\nfor _ in range(int(input())):\n    parts = input().split()\n    if parts[0] == \"push\":\n        stack.push(parts[1])\n    elif parts[0] == \"pop\":\n        try:\n            print(stack.pop())\n        except IndexError as error:\n            print(\"hata:\", error)\n    elif parts[0] == \"peek\":\n        top = stack.peek()\n        print(\"boş\" if top is None else top)\n    else:\n        print(stack.size())\nprint(Stack.__parameters__, Stack.peek.__annotations__[\"return\"])",
+      "answer": "from typing import Generic, TypeVar\n\nT = TypeVar(\"T\")\n\nclass Stack(Generic[T]):\n    def __init__(self) -> None:\n        self._items: list[T] = []\n\n    def push(self, item: T) -> None:\n        self._items.append(item)\n\n    def pop(self) -> T:\n        if not self._items:\n            raise IndexError(\"yığın boş\")\n        return self._items.pop()\n\n    def peek(self) -> T | None:\n        return self._items[-1] if self._items else None\n\n    def size(self) -> int:\n        return len(self._items)\n\nstack: Stack[str] = Stack()\nfor _ in range(int(input())):\n    parts = input().split()\n    if parts[0] == \"push\":\n        stack.push(parts[1])\n    elif parts[0] == \"pop\":\n        try:\n            print(stack.pop())\n        except IndexError as error:\n            print(\"hata:\", error)\n    elif parts[0] == \"peek\":\n        top = stack.peek()\n        print(\"boş\" if top is None else top)\n    else:\n        print(stack.size())\nprint(Stack.__parameters__, Stack.peek.__annotations__[\"return\"])",
+      "exampleInput": "4\npush a\npush b\npop\npeek",
+      "expectedOutput": "b\na\n(~T,) typing.Optional[~T]",
+      "tests": [
+        {
+          "label": "Normal akış",
+          "stdin": "4\npush a\npush b\npop\npeek",
+          "expectedOutput": "b\na\n(~T,) typing.Optional[~T]"
+        },
+        {
+          "label": "Boş yığın",
+          "stdin": "3\npeek\npop\nsize",
+          "expectedOutput": "boş\nhata: yığın boş\n0\n(~T,) typing.Optional[~T]"
+        },
+        {
+          "label": "Boyut",
+          "stdin": "3\npush x\npush y\nsize",
+          "expectedOutput": "2\n(~T,) typing.Optional[~T]"
+        }
+      ],
+      "hints": [
+        "Listeyi __init__ içinde self._items: list[T] = [] ile kur.",
+        "peek'in dönüş ipucu T | None; çalışma anında typing.Optional[~T] olarak görünür."
+      ],
+      "explanation": "Stack[str] ipucu denetleyiciye yığının metin tuttuğunu söyler; pop'un dönüşü bu yüzden str bilinir. peek boş yığında None döndürebildiği için T | None'dır.",
+      "solutionCode": "from typing import Generic, TypeVar\n\nT = TypeVar(\"T\")\n\nclass Stack(Generic[T]):\n    def __init__(self) -> None:\n        self._items: list[T] = []\n\n    def push(self, item: T) -> None:\n        self._items.append(item)\n\n    def pop(self) -> T:\n        if not self._items:\n            raise IndexError(\"yığın boş\")\n        return self._items.pop()\n\n    def peek(self) -> T | None:\n        return self._items[-1] if self._items else None\n\n    def size(self) -> int:\n        return len(self._items)\n\nstack: Stack[str] = Stack()\nfor _ in range(int(input())):\n    parts = input().split()\n    if parts[0] == \"push\":\n        stack.push(parts[1])\n    elif parts[0] == \"pop\":\n        try:\n            print(stack.pop())\n        except IndexError as error:\n            print(\"hata:\", error)\n    elif parts[0] == \"peek\":\n        top = stack.peek()\n        print(\"boş\" if top is None else top)\n    else:\n        print(stack.size())\nprint(Stack.__parameters__, Stack.peek.__annotations__[\"return\"])"
+    },
+    {
+      "id": "m14-q34",
+      "type": "code",
+      "topic": "callable",
+      "sectionId": "callable",
+      "difficulty": 2,
+      "prompt": "make_multiplier(factor: int) -> Callable[[int], int] bir çarpan fonksiyonu döndürsün; apply_all(funcs: list[Callable[[int], int]], value: int) -> list[int] her fonksiyonu değere uygulasın. Callable'ı collections.abc'den kullan. Program çarpanları ve değeri okur; sonucu ve iki ipucunu yazar.",
+      "starterCode": "from collections.abc import Callable\n\ndef make_multiplier(factor):\n    # ipuçlarını ekle; factor ile çarpan bir fonksiyon döndür\n    pass\n\ndef apply_all(funcs, value):\n    # ipuçlarını ekle; her fonksiyonu value'ya uygula\n    return []\n\nfactors = [int(x) for x in input().split()]\nvalue = int(input())\nprint(apply_all([make_multiplier(f) for f in factors], value))\nprint(make_multiplier.__annotations__[\"return\"])\nprint(apply_all.__annotations__[\"funcs\"])",
+      "answer": "from collections.abc import Callable\n\ndef make_multiplier(factor: int) -> Callable[[int], int]:\n    def multiply(x: int) -> int:\n        return x * factor\n    return multiply\n\ndef apply_all(funcs: list[Callable[[int], int]], value: int) -> list[int]:\n    return [func(value) for func in funcs]\n\nfactors = [int(x) for x in input().split()]\nvalue = int(input())\nprint(apply_all([make_multiplier(f) for f in factors], value))\nprint(make_multiplier.__annotations__[\"return\"])\nprint(apply_all.__annotations__[\"funcs\"])",
+      "exampleInput": "2 3\n5",
+      "expectedOutput": "[10, 15]\ncollections.abc.Callable[[int], int]\nlist[collections.abc.Callable[[int], int]]",
+      "tests": [
+        {
+          "label": "İki çarpan",
+          "stdin": "2 3\n5",
+          "expectedOutput": "[10, 15]\ncollections.abc.Callable[[int], int]\nlist[collections.abc.Callable[[int], int]]"
+        },
+        {
+          "label": "Sıfır değer",
+          "stdin": "1\n0",
+          "expectedOutput": "[0]\ncollections.abc.Callable[[int], int]\nlist[collections.abc.Callable[[int], int]]"
+        },
+        {
+          "label": "Negatif çarpan",
+          "stdin": "-1 10\n4",
+          "expectedOutput": "[-4, 40]\ncollections.abc.Callable[[int], int]\nlist[collections.abc.Callable[[int], int]]"
+        }
+      ],
+      "hints": [
+        "make_multiplier içinde x * factor döndüren bir iç fonksiyon tanımla ve onu döndür (closure, M6).",
+        "Callable'ın parametre türleri listede olmalı: Callable[[int], int]."
+      ],
+      "explanation": "Fonksiyon döndüren ve fonksiyon listesi alan kodun ipuçları Callable ile yazılır; köşeli parantezdeki ilk liste parametre türleri, ikinci öğe dönüş türüdür.",
+      "solutionCode": "from collections.abc import Callable\n\ndef make_multiplier(factor: int) -> Callable[[int], int]:\n    def multiply(x: int) -> int:\n        return x * factor\n    return multiply\n\ndef apply_all(funcs: list[Callable[[int], int]], value: int) -> list[int]:\n    return [func(value) for func in funcs]\n\nfactors = [int(x) for x in input().split()]\nvalue = int(input())\nprint(apply_all([make_multiplier(f) for f in factors], value))\nprint(make_multiplier.__annotations__[\"return\"])\nprint(apply_all.__annotations__[\"funcs\"])"
+    },
+    {
+      "id": "m14-q35",
+      "type": "code",
+      "topic": "calisma-zamani",
+      "sectionId": "mypy-runtime",
+      "difficulty": 2,
+      "prompt": "validate_age(value: object) -> int yaz: değer int değilse (bool da int sayılmaz) TypeError(f'yaş tam sayı olmalı: {tür adı}'), 0-150 aralığı dışındaysa ValueError(f'yaş aralık dışında: {değer}') fırlatsın, geçerliyse değeri döndürsün. Program JSON değerleri okur ve sonucu ya da hatayı yazar.",
+      "starterCode": "import json\n\ndef validate_age(value: object) -> int:\n    # isinstance ile türü, sonra aralığı denetle\n    return value\n\nfor _ in range(int(input())):\n    raw = json.loads(input())\n    try:\n        print(\"geçerli:\", validate_age(raw))\n    except (TypeError, ValueError) as error:\n        print(type(error).__name__, error)",
+      "answer": "import json\n\ndef validate_age(value: object) -> int:\n    if not isinstance(value, int) or isinstance(value, bool):\n        raise TypeError(f\"yaş tam sayı olmalı: {type(value).__name__}\")\n    if not 0 <= value <= 150:\n        raise ValueError(f\"yaş aralık dışında: {value}\")\n    return value\n\nfor _ in range(int(input())):\n    raw = json.loads(input())\n    try:\n        print(\"geçerli:\", validate_age(raw))\n    except (TypeError, ValueError) as error:\n        print(type(error).__name__, error)",
+      "exampleInput": "5\n30\n\"otuz\"\n-1\ntrue\n12.5",
+      "expectedOutput": "geçerli: 30\nTypeError yaş tam sayı olmalı: str\nValueError yaş aralık dışında: -1\nTypeError yaş tam sayı olmalı: bool\nTypeError yaş tam sayı olmalı: float",
+      "tests": [
+        {
+          "label": "Karışık",
+          "stdin": "5\n30\n\"otuz\"\n-1\ntrue\n12.5",
+          "expectedOutput": "geçerli: 30\nTypeError yaş tam sayı olmalı: str\nValueError yaş aralık dışında: -1\nTypeError yaş tam sayı olmalı: bool\nTypeError yaş tam sayı olmalı: float"
+        },
+        {
+          "label": "Üst sınır",
+          "stdin": "2\n150\n151",
+          "expectedOutput": "geçerli: 150\nValueError yaş aralık dışında: 151"
+        },
+        {
+          "label": "null",
+          "stdin": "1\nnull",
+          "expectedOutput": "TypeError yaş tam sayı olmalı: NoneType"
+        },
+        {
+          "label": "Sıfır",
+          "stdin": "1\n0",
+          "expectedOutput": "geçerli: 0"
+        }
+      ],
+      "hints": [
+        "bool, int'in alt sınıfıdır: isinstance(True, int) True verir; ayrıca denetle.",
+        "Önce tür, sonra aralık: 0 <= value <= 150."
+      ],
+      "explanation": "value: object ipucu, fonksiyonun her türlü girdiyle çağrılabileceğini dürüstçe söyler; doğrulama çalışma anında isinstance ve aralık denetimiyle yapılır.",
+      "solutionCode": "import json\n\ndef validate_age(value: object) -> int:\n    if not isinstance(value, int) or isinstance(value, bool):\n        raise TypeError(f\"yaş tam sayı olmalı: {type(value).__name__}\")\n    if not 0 <= value <= 150:\n        raise ValueError(f\"yaş aralık dışında: {value}\")\n    return value\n\nfor _ in range(int(input())):\n    raw = json.loads(input())\n    try:\n        print(\"geçerli:\", validate_age(raw))\n    except (TypeError, ValueError) as error:\n        print(type(error).__name__, error)"
+    },
+    {
+      "id": "m14-q36",
+      "type": "code",
+      "topic": "get-type-hints",
+      "sectionId": "mypy-runtime",
+      "difficulty": 3,
+      "prompt": "validate(data: dict, schema: type) -> list[str] yaz: get_type_hints(schema) ile alan türlerini al; eksik anahtar için 'eksik: anahtar', türü tam eşleşmeyen (type(değer) is beklenen değilse) anahtar için 'tür: anahtar', şemada olmayan anahtar için 'fazla: anahtar' ekle ve listeyi sıralı döndür. Program User şemasıyla bir JSON nesnesini doğrular.",
+      "starterCode": "import json\nfrom typing import TypedDict, get_type_hints\n\nclass User(TypedDict):\n    name: str\n    age: int\n    active: bool\n\ndef validate(data: dict, schema: type) -> list[str]:\n    # get_type_hints(schema) ile beklenen türleri al ve hataları topla\n    return []\n\nerrors = validate(json.loads(input()), User)\nprint(\"geçerli\" if not errors else \"\\n\".join(errors))",
+      "answer": "import json\nfrom typing import TypedDict, get_type_hints\n\nclass User(TypedDict):\n    name: str\n    age: int\n    active: bool\n\ndef validate(data: dict, schema: type) -> list[str]:\n    hints = get_type_hints(schema)\n    errors = []\n    for key, expected in hints.items():\n        if key not in data:\n            errors.append(f\"eksik: {key}\")\n        elif type(data[key]) is not expected:\n            errors.append(f\"tür: {key}\")\n    for key in data:\n        if key not in hints:\n            errors.append(f\"fazla: {key}\")\n    return sorted(errors)\n\nerrors = validate(json.loads(input()), User)\nprint(\"geçerli\" if not errors else \"\\n\".join(errors))",
+      "exampleInput": "{\"name\": \"Ada\", \"age\": 30, \"active\": true}",
+      "expectedOutput": "geçerli",
+      "tests": [
+        {
+          "label": "Geçerli",
+          "stdin": "{\"name\": \"Ada\", \"age\": 30, \"active\": true}",
+          "expectedOutput": "geçerli"
+        },
+        {
+          "label": "Eksik ve yanlış tür",
+          "stdin": "{\"name\": \"Ada\", \"age\": \"30\"}",
+          "expectedOutput": "eksik: active\ntür: age"
+        },
+        {
+          "label": "bool int sayılmaz, fazla anahtar",
+          "stdin": "{\"name\": 1, \"age\": true, \"active\": false, \"x\": 0}",
+          "expectedOutput": "fazla: x\ntür: age\ntür: name"
+        },
+        {
+          "label": "Boş nesne",
+          "stdin": "{}",
+          "expectedOutput": "eksik: active\neksik: age\neksik: name"
+        }
+      ],
+      "hints": [
+        "get_type_hints(User) {'name': str, 'age': int, 'active': bool} sözlüğünü verir.",
+        "type(değer) is beklenen tam eşleşme ister; bu yüzden True bir int sayılmaz. Hataları bir listede toplayıp sorted ile döndür."
+      ],
+      "explanation": "TypedDict tek başına hiçbir şeyi doğrulamaz, ama ipuçları çalışma anında okunabilir. pydantic gibi kütüphaneler bu fikri çok daha kapsamlı uygular.",
+      "solutionCode": "import json\nfrom typing import TypedDict, get_type_hints\n\nclass User(TypedDict):\n    name: str\n    age: int\n    active: bool\n\ndef validate(data: dict, schema: type) -> list[str]:\n    hints = get_type_hints(schema)\n    errors = []\n    for key, expected in hints.items():\n        if key not in data:\n            errors.append(f\"eksik: {key}\")\n        elif type(data[key]) is not expected:\n            errors.append(f\"tür: {key}\")\n    for key in data:\n        if key not in hints:\n            errors.append(f\"fazla: {key}\")\n    return sorted(errors)\n\nerrors = validate(json.loads(input()), User)\nprint(\"geçerli\" if not errors else \"\\n\".join(errors))"
+    },
+    {
+      "id": "m14-q37",
+      "type": "traceback",
+      "topic": "isinstance-generic",
+      "sectionId": "mypy-runtime",
+      "difficulty": 2,
+      "prompt": "isinstance'a parametreli bir tip veriliyor. Hangi hata oluşur?",
+      "code": "values = [1, 2, 3]\nprint(isinstance(values, list[int]))",
+      "expectedError": "TypeError",
+      "options": [
+        "TypeError",
+        "ValueError",
+        "NameError",
+        "AttributeError"
+      ],
+      "optionFeedback": {
+        "ValueError": "Değer geçersiz değil; isinstance'ın ikinci argümanı bu türde olamaz.",
+        "NameError": "list ve int tanımlı adlardır.",
+        "AttributeError": "Hiçbir öznitelik aranmıyor."
+      },
+      "hints": [
+        "isinstance öğelerin türünü denetleyebilir mi?",
+        "list[int] çalışma anında nasıl bir nesnedir?"
+      ],
+      "explanation": "isinstance parametreli tiplerle kullanılamaz: TypeError: isinstance() argument 2 cannot be a parameterized generic. Önce isinstance(values, list), sonra öğeleri tek tek denetle.",
+      "answer": "TypeError"
+    },
+    {
+      "id": "m14-q38",
+      "type": "traceback",
+      "topic": "typeddict-eksik",
+      "sectionId": "typeddict",
+      "difficulty": 1,
+      "prompt": "TypedDict'te zorunlu bir anahtar eksik. Okunurken hangi hata oluşur?",
+      "code": "from typing import TypedDict\n\nclass Config(TypedDict):\n    host: str\n    port: int\n\ncfg: Config = {\"host\": \"localhost\"}\nprint(cfg[\"port\"])",
+      "expectedError": "KeyError",
+      "options": [
+        "ValueError",
+        "KeyError",
+        "TypeError",
+        "AttributeError"
+      ],
+      "optionFeedback": {
+        "TypeError": "Nesne bir dict ve anahtarla erişim geçerli; anahtar yok.",
+        "AttributeError": "Öznitelik değil sözlük anahtarı aranıyor.",
+        "ValueError": "Bir değer dönüştürülmüyor."
+      },
+      "hints": [
+        "cfg çalışma anında sıradan bir dict.",
+        "Olmayan anahtarı köşeli parantezle okumak hangi hatayı verir?"
+      ],
+      "explanation": "TypedDict eksik anahtar için varsayılan eklemez; cfg sıradan bir dict olduğundan cfg['port'] KeyError verir. mypy eksik anahtarı atama satırında, çalıştırmadan bildirirdi.",
+      "answer": "KeyError"
+    },
+    {
+      "id": "m14-q39",
+      "type": "traceback",
+      "topic": "protocol-ornek",
+      "sectionId": "protocol",
+      "difficulty": 2,
+      "prompt": "Bir Protocol sınıfından doğrudan nesne üretiliyor. Hangi hata oluşur?",
+      "code": "from typing import Protocol\n\nclass Shape(Protocol):\n    def area(self) -> float: ...\n\nshape = Shape()",
+      "expectedError": "TypeError",
+      "options": [
+        "AttributeError",
+        "NameError",
+        "TypeError",
+        "NotImplementedError"
+      ],
+      "optionFeedback": {
+        "NotImplementedError": "Hata gövdeden değil, nesne kurulurken Protocol kuralından gelir.",
+        "AttributeError": "Öznitelik aranmıyor; örnekleme engelleniyor.",
+        "NameError": "Shape tanımlı bir sınıftır."
+      },
+      "hints": [
+        "Protocol bir arayüz tanımıdır; kendisi bir uygulama mıdır?",
+        "Hata nesne kurulurken mi çıkıyor?"
+      ],
+      "explanation": "Protocol sınıfları örneklenemez: TypeError: Protocols cannot be instantiated. Protocol'e uyan somut bir sınıf yazılıp onun nesnesi kullanılır.",
+      "answer": "TypeError"
+    },
+    {
+      "id": "m14-q40",
+      "type": "traceback",
+      "topic": "none-kullanimi",
+      "sectionId": "optional-union",
+      "difficulty": 2,
+      "prompt": "str | None döndüren fonksiyonun sonucu denetlenmeden kullanılıyor. Hangi hata oluşur?",
+      "code": "def find(names: list[str], prefix: str) -> str | None:\n    for name in names:\n        if name.startswith(prefix):\n            return name\n    return None\n\nprint(find([\"ada\"], \"c\").upper())",
+      "expectedError": "AttributeError",
+      "options": [
+        "TypeError",
+        "ValueError",
+        "NameError",
+        "AttributeError"
+      ],
+      "optionFeedback": {
+        "TypeError": "Bir işlem değil, None üzerinde olmayan bir metot aranıyor.",
+        "ValueError": "Değer dönüştürülmüyor.",
+        "NameError": "find ve upper tanımlı; sorun None'da upper olmaması."
+      },
+      "hints": [
+        "'c' ile başlayan bir ad var mı?",
+        "None nesnesinin upper metodu var mı?"
+      ],
+      "explanation": "Eşleşme olmadığı için find None döndürür ve None.upper() AttributeError: 'NoneType' object has no attribute 'upper' verir. Önce if result is None denetimi yapılmalı; mypy bu satırı çalıştırmadan işaretlerdi.",
+      "answer": "AttributeError"
+    }
+  ]
+}

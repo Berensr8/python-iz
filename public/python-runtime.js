@@ -38,6 +38,39 @@ def _from_workdir(module):
         return any(isinstance(location, str) and location and (not _os.path.isabs(location) or location.startswith(_workdir + _os.sep)) for location in locations)
     except Exception:
         return False
+# asyncio: Pyodide's own asyncio.run needs WebAssembly stack switching, which most browsers lack,
+# and this code already runs inside Pyodide's loop. Each run gets a plain asyncio loop instead.
+# Idle waits are skipped, so asyncio.sleep finishes at once while loop.time() still advances as in
+# real Python; a program that would wait forever raises instead of freezing the page.
+import asyncio as _asyncio, asyncio.runners as _asyncio_runners, time as _time
+class _IzSelector:
+    def __init__(self, loop):
+        self._loop = loop
+    def select(self, timeout=None):
+        if timeout is None:
+            raise RuntimeError("asyncio programı sonsuza dek bekleyecekti: hazır görev de zamanlanmış iş de yok (hiç tamamlanmayan bir Future ya da Event bekleniyor olabilir).")
+        self._loop._skipped += timeout
+        return []
+    def close(self):
+        pass
+class _IzLoop(_asyncio.BaseEventLoop):
+    def __init__(self):
+        super().__init__()
+        self._skipped = 0.0
+        self._selector = _IzSelector(self)
+    def time(self):
+        return _time.monotonic() + self._skipped
+    def _process_events(self, event_list):
+        pass
+    def _write_to_self(self):
+        pass
+class _IzPolicy(_asyncio.DefaultEventLoopPolicy):
+    def new_event_loop(self):
+        return _IzLoop()
+_saved_asyncio = (_asyncio.run, _asyncio.get_event_loop_policy(), _asyncio.events._get_running_loop())
+_asyncio.run = _asyncio_runners.run
+_asyncio.set_event_loop_policy(_IzPolicy())
+_asyncio.events._set_running_loop(None)
 with _contextlib.redirect_stdout(_output), _contextlib.redirect_stderr(_output):
     try:
         exec(compile(source_code, "cozum.py", "exec"), _namespace)
@@ -48,6 +81,9 @@ with _contextlib.redirect_stdout(_output), _contextlib.redirect_stderr(_output):
             _tb = _tb.tb_next
         _error = "".join(_traceback.format_exception(type(_exception), _exception, _tb))
     finally:
+        _asyncio.run = _saved_asyncio[0]
+        _asyncio.set_event_loop_policy(_saved_asyncio[1])
+        _asyncio.events._set_running_loop(_saved_asyncio[2])
         for _name in [name for name, module in list(_sys.modules.items()) if _from_workdir(module)]:
             del _sys.modules[_name]
         _sys.path[:] = _saved_path

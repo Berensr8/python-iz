@@ -101,31 +101,31 @@
       { "id": "composition", "title": "Composition alternatifi", "depth": "okuma", "status": "doğrulandı", "sections": ["m11:composition"] }
     ] },
     { "id": 12, "title": "OOP 2", "subtopics": [
-      { "id": "polimorfizm-abc", "title": "Polimorfizm ve abc", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "dunder", "title": "Dunder metotlar ve operator overloading", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "mro", "title": "Multiple inheritance ve MRO", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "dataclass-slots", "title": "dataclass ve slots", "depth": "temel", "status": "planlandı", "sections": [] },
-      { "id": "descriptor-metaclass", "title": "Descriptor ve metaclass", "depth": "tanıma", "status": "planlandı", "sections": [] }
+      { "id": "polimorfizm-abc", "title": "Polimorfizm ve abc", "depth": "okuma", "status": "doğrulandı", "sections": ["m12:polymorphism", "m12:abc"] },
+      { "id": "dunder", "title": "Dunder metotlar ve operator overloading", "depth": "okuma", "status": "doğrulandı", "sections": ["m12:dunder-basics", "m12:operator-overloading"] },
+      { "id": "mro", "title": "Multiple inheritance ve MRO", "depth": "okuma", "status": "doğrulandı", "sections": ["m12:mro"] },
+      { "id": "dataclass-slots", "title": "dataclass ve slots", "depth": "temel", "status": "doğrulandı", "sections": ["m12:dataclass", "m12:slots"] },
+      { "id": "descriptor-metaclass", "title": "Descriptor ve metaclass", "depth": "tanıma", "status": "doğrulandı", "sections": ["m12:descriptor-metaclass"] }
     ] },
     { "id": 13, "title": "İleri yapılar", "subtopics": [
-      { "id": "iterator", "title": "Iterator protokolü", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "generator", "title": "Generator ve yield", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "decorator", "title": "Decorator ve parametreli decorator", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "context-manager", "title": "Context manager (sınıf ve contextlib)", "depth": "okuma", "status": "planlandı", "sections": [] }
+      { "id": "iterator", "title": "Iterator protokolü", "depth": "okuma", "status": "doğrulandı", "sections": ["m13:iterator-protocol", "m13:custom-iterator"] },
+      { "id": "generator", "title": "Generator ve yield", "depth": "okuma", "status": "doğrulandı", "sections": ["m13:generators", "m13:generator-pipelines"] },
+      { "id": "decorator", "title": "Decorator ve parametreli decorator", "depth": "okuma", "status": "doğrulandı", "sections": ["m13:decorators", "m13:decorator-params"] },
+      { "id": "context-manager", "title": "Context manager (sınıf ve contextlib)", "depth": "okuma", "status": "doğrulandı", "sections": ["m13:context-manager-class", "m13:contextlib"] }
     ] },
     { "id": 14, "title": "Type hints", "subtopics": [
-      { "id": "temel-hints", "title": "Temel type hints ve koleksiyon tipleri", "depth": "temel", "status": "planlandı", "sections": [] },
-      { "id": "optional-union", "title": "Optional, Union ve |", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "typeddict-protocol", "title": "TypedDict ve Protocol", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "generics-callable", "title": "Generics ve Callable", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "mypy", "title": "mypy mantığı; annotation ile çalışma zamanı doğrulaması farkı", "depth": "okuma", "status": "planlandı", "sections": [] }
+      { "id": "temel-hints", "title": "Temel type hints ve koleksiyon tipleri", "depth": "temel", "status": "doğrulandı", "sections": ["m14:annotations-basics", "m14:collection-types"] },
+      { "id": "optional-union", "title": "Optional, Union ve |", "depth": "okuma", "status": "doğrulandı", "sections": ["m14:optional-union"] },
+      { "id": "typeddict-protocol", "title": "TypedDict ve Protocol", "depth": "okuma", "status": "doğrulandı", "sections": ["m14:typeddict", "m14:protocol"] },
+      { "id": "generics-callable", "title": "Generics ve Callable", "depth": "okuma", "status": "doğrulandı", "sections": ["m14:generics", "m14:callable"] },
+      { "id": "mypy", "title": "mypy mantığı; annotation ile çalışma zamanı doğrulaması farkı", "depth": "okuma", "status": "doğrulandı", "sections": ["m14:mypy-runtime"] }
     ] },
     { "id": 15, "title": "Eşzamanlılık", "subtopics": [
-      { "id": "threading-multiprocessing", "title": "threading ve multiprocessing", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "gil", "title": "GIL (sürüm/derleme bağlamında)", "depth": "tanıma", "status": "planlandı", "sections": [] },
-      { "id": "asyncio", "title": "asyncio, async/await ve event loop", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "io-cpu", "title": "I/O ve CPU bağımlı iş ayrımı", "depth": "okuma", "status": "planlandı", "sections": [] },
-      { "id": "cancellation-timeout", "title": "Cancellation, timeout ve paylaşılan veri hataları", "depth": "okuma", "status": "planlandı", "sections": [] }
+      { "id": "threading-multiprocessing", "title": "threading ve multiprocessing", "depth": "okuma", "status": "doğrulandı", "sections": ["m15:threads", "m15:gil-processes"] },
+      { "id": "gil", "title": "GIL (sürüm/derleme bağlamında)", "depth": "tanıma", "status": "doğrulandı", "sections": ["m15:gil-processes"] },
+      { "id": "asyncio", "title": "asyncio, async/await ve event loop", "depth": "okuma", "status": "doğrulandı", "sections": ["m15:coroutines", "m15:tasks-gather", "m15:blocking-loop"] },
+      { "id": "io-cpu", "title": "I/O ve CPU bağımlı iş ayrımı", "depth": "okuma", "status": "doğrulandı", "sections": ["m15:io-cpu", "m15:blocking-loop"] },
+      { "id": "cancellation-timeout", "title": "Cancellation, timeout ve paylaşılan veri hataları", "depth": "okuma", "status": "doğrulandı", "sections": ["m15:cancellation-timeout", "m15:shared-state"] }
     ] },
     { "id": 16, "title": "Kod kalitesi", "subtopics": [
       { "id": "pdb", "title": "breakpoint ve pdb", "depth": "okuma", "status": "planlandı", "sections": [] },

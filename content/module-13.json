@@ -1,0 +1,1504 @@
+{
+  "id": 13,
+  "slug": "ileri-yapilar",
+  "title": "İleri yapılar",
+  "description": "for döngüsünün arkasındaki iterator protokolünü, değerleri istendikçe üreten generator'ları ve tembel boru hatlarını, fonksiyonları saran decorator'ları ve with bloğunu yöneten context manager'ları okuyup kendi kodunda yaz.",
+  "contentVersion": 1,
+  "estimatedMinutes": 150,
+  "practiceIds": [
+    "m13-q01",
+    "m13-q03",
+    "m13-q04",
+    "m13-q07",
+    "m13-q09",
+    "m13-q11",
+    "m13-q12",
+    "m13-q14",
+    "m13-q16",
+    "m13-q18",
+    "m13-q20",
+    "m13-q22",
+    "m13-q26",
+    "m13-q29",
+    "m13-q33"
+  ],
+  "sections": [
+    {
+      "id": "iterator-protocol",
+      "title": "Iterable, iterator ve for'un arkası",
+      "eyebrow": "for döngüsü aslında ne yapıyor?",
+      "objectives": [
+        "iterable (iter() ile iterator veren) ile iterator (next() ile sıradaki değeri veren) arasındaki farkı açıklar ve for döngüsünün iter/next/StopIteration ile nasıl çalıştığını gösterir.",
+        "Iterator'ın tek yönlü ve tek kullanımlık olduğunu, map, zip, enumerate ve dosyaların iterator döndürdüğünü bilir; next(it, varsayılan) kullanır."
+      ],
+      "prerequisites": [
+        "m3:for-range",
+        "m3:enumerate-zip",
+        "m12:dunder-basics"
+      ],
+      "summary": "Liste gibi yinelenebilir (iterable) bir nesneden iter() ile bir iterator alınır; next() her çağrıda sıradaki değeri verir, değer kalmayınca StopIteration fırlatır. for döngüsü bunu senin yerine yapar. Iterator tükenince yeniden başlamaz.",
+      "explanation": "for x in nesne: yazınca Python önce iter(nesne) ile bir iterator alır, sonra her turda next(iterator) çağırır ve StopIteration gelince döngüyü sessizce bitirir. İki kavram var: iterable, iter() verilebilen her şeydir (list, str, dict, set, range, dosya); iterator ise next() ile sıradaki değeri veren nesnedir ve iter(iterator) kendisini döndürür. Liste bir iterable'dır, iterator değildir: her for döngüsü listeden yeni bir iterator alır, bu yüzden liste tekrar tekrar dolaşılabilir. Iterator ise tek yönlü ve tek kullanımlıktır: ilerledikçe tükenir, geri sarılmaz. next ile ilk değeri aldıktan sonra kalanını for ile gezebilir ya da list() ile toplayabilirsin; bir kez tükenen iterator ikinci list() çağrısında boş liste verir. map, filter, zip, enumerate, reversed ve açık dosya nesneleri iterator döndürür; sonucu iki kez kullanmak istiyorsan list() ile bir kez listeye çevir. Bir başlık satırını atlamak için next(satırlar) kullanmak yaygındır; iterator boş olabilecekse next(it, varsayılan) StopIteration yerine varsayılanı döndürür. Bunun yararı tembelliktir: iterator değerleri ancak istendiğinde üretir. Milyonlarca satırlık bir dosyayı satır satır dolaşmak belleğe tamamını almayı gerektirmez. Kendi iterable sınıflarını ve generator'ları sonraki bölümlerde bu protokol üzerine kuracaksın.",
+      "code": "numbers = [10, 20, 30]\nit = iter(numbers)\nprint(type(it).__name__)\nprint(next(it), next(it))\nfor value in it:\n    print(\"döngüde:\", value)\nprint(list(it))\ntry:\n    next(it)\nexcept StopIteration:\n    print(\"StopIteration\")\n\nwords = iter([\"a\", \"b\"])\nprint(list(words), list(words))\nprint(iter(numbers) is iter(numbers), iter(it) is it)",
+      "expectedOutput": "list_iterator\n10 20\ndöngüde: 30\n[]\nStopIteration\n['a', 'b'] []\nFalse True",
+      "why": "İki next çağrısı ilk iki değeri tüketti; for döngüsü aynı iterator'dan yalnızca kalan 30'u aldı ve sonra iterator boştu. Liste tükenmez: iter(numbers) her çağrıda yeni bir iterator üretir (False). Iterator'dan yeniden iterator istemek ise aynı nesneyi verir (True); bu yüzden iterator ikinci kez baştan başlamaz.",
+      "alternatives": [
+        "Değerleri birden çok kez kullanacaksan iterator'ı bir kez list() ile listeye çevir.",
+        "Yalnızca ilk öğeye ihtiyacın varsa next(iter(nesne), varsayılan) ile bütün diziyi dolaşmadan al."
+      ],
+      "traps": [
+        "map, zip ya da filter sonucunu iki kez dolaşmaya çalışmak: ikinci dolaşma boş gelir.",
+        "Boş olabilecek bir iterator'da varsayılansız next çağırmak (StopIteration).",
+        "Listeyi iterator sanıp next(liste) yazmak (TypeError: 'list' object is not an iterator).",
+        "Bir iterator'ı for ile dolaşırken aynı iterator'dan next ile de değer çekip öğe atlamak."
+      ],
+      "realCode": "lines = iter([\"ad,puan\", \"Ada,90\", \"Can,75\"])\nheader = next(lines).split(\",\")\nrows = [dict(zip(header, line.split(\",\"))) for line in lines]\nprint(header, rows)\npairs = zip([1, 2, 3], \"ab\")\nprint(list(pairs), list(pairs))\nprint(next(iter([]), \"boş\"))",
+      "realOutput": "['ad', 'puan'] [{'ad': 'Ada', 'puan': '90'}, {'ad': 'Can', 'puan': '75'}]\n[(1, 'a'), (2, 'b')] []\nboş",
+      "lineByLine": [
+        "next(lines) başlık satırını alır; liste kurucu aynı iterator'dan yalnızca kalan satırları gezer.",
+        "zip başlıkla değerleri eşleyip her satırı sözlüğe çevirir.",
+        "zip bir iterator döndürür ve en kısa girdide durur; ikinci list() boş gelir.",
+        "Boş bir iterator'da next'in ikinci argümanı StopIteration yerine varsayılan değeri döndürür."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Iterator'lar",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html#iterators"
+        },
+        {
+          "title": "Python sözlüğü · iterator",
+          "url": "https://docs.python.org/3.12/glossary.html#term-iterator"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "custom-iterator",
+      "title": "Kendi iterable sınıfın",
+      "eyebrow": "for döngüsüyle dolaşılabilen nesneler kur",
+      "objectives": [
+        "__iter__ ve __next__ ile kendi iterator sınıfını yazar ve değer bitince StopIteration fırlatır.",
+        "Kendisi iterator olan (tek kullanımlık) bir sınıf ile her __iter__ çağrısında yeni bir iterator veren (tekrar kullanılabilir) iterable'ı ayırır; __iter__'i generator olarak yazar."
+      ],
+      "prerequisites": [
+        "iterator-protocol",
+        "m12:dunder-basics"
+      ],
+      "summary": "Bir sınıfa __iter__ yazarsan nesnesi for, list, sum ve in ile kullanılabilir. __iter__ self döndürüp __next__ yazan sınıf tek kullanımlıktır; her çağrıda yeni bir iterator (ya da generator) döndüren __iter__ ise tekrar tekrar dolaşılabilir.",
+      "explanation": "Kendi sınıfını yinelenebilir yapmak için __iter__ yazarsın; Python for döngüsünde onu çağırır. İki yol var. Birincisi sınıfın kendisinin iterator olmasıdır: __iter__ self döndürür, __next__ her çağrıda sıradaki değeri verir ve değer kalmayınca raise StopIteration yazar. Bu nesne tek kullanımlıktır: durumu (self.current) nesnenin içinde ilerlediği için ikinci for döngüsünde hiçbir şey vermez. İkincisi iterable ile iterator'ı ayırmaktır: __iter__ her çağrıldığında yeni bir iterator nesnesi döndürür. Listenin davranışı budur; aynı nesne istendiği kadar dolaşılabilir. Çoğu sınıf için doğru seçim budur. En kısa yol __iter__'i bir generator olarak yazmaktır: gövdesinde yield olan __iter__ her çağrıldığında yeni bir generator döner, sen ayrıca __next__ ve StopIteration yazmazsın (generator'ları sonraki bölümde ayrıntılı göreceksin). __iter__'i olan bir nesne in işleci için de dolaşılır (ayrı bir __contains__ yoksa), sum, max, sorted, list ve tuple da onu kabul eder. M12'de gördüğün __getitem__ tabanlı eski yol hâlâ çalışır ama yeni kodda __iter__ yaz. __next__ değer bitince None döndürmek gibi bir yolla bitmeye çalışırsa döngü sonsuza kadar sürer: yineleme yalnızca StopIteration ile biter.",
+      "code": "class Countdown:\n    \"\"\"Kendisi iterator: tek kullanımlık.\"\"\"\n\n    def __init__(self, start):\n        self.current = start\n\n    def __iter__(self):\n        return self\n\n    def __next__(self):\n        if self.current <= 0:\n            raise StopIteration\n        self.current -= 1\n        return self.current + 1\n\nclass Range3:\n    \"\"\"Iterable: her for için yeni bir iterator verir.\"\"\"\n\n    def __init__(self, stop):\n        self.stop = stop\n\n    def __iter__(self):\n        return Countdown(self.stop)\n\ndown = Countdown(3)\nprint(list(down), list(down))\nr = Range3(2)\nprint(list(r), list(r))\nprint(sum(Countdown(4)), 2 in Range3(3), max(Range3(5)))",
+      "expectedOutput": "[3, 2, 1] []\n[2, 1] [2, 1]\n10 True 5",
+      "why": "Countdown kendi durumunu taşıdığı için ilk list() onu tüketti, ikincisi boş kaldı. Range3 her __iter__ çağrısında yeni bir Countdown ürettiği için iki kez dolaşıldı. sum, in ve max aynı protokolü kullandı: 2 in Range3(3) önce 3'ü, sonra 2'yi üretip True verdi.",
+      "alternatives": [
+        "__iter__'i gövdesinde yield olan bir metot olarak yaz; ayrı iterator sınıfına gerek kalmaz.",
+        "Veriyi zaten bir listede tutuyorsan __iter__ içinde return iter(self._items) yazmak yeterlidir."
+      ],
+      "traps": [
+        "Tekrar dolaşılması gereken bir sınıfta __iter__'den self döndürmek: ikinci dolaşma boş gelir.",
+        "__next__'in sonunda StopIteration yerine None döndürmek: döngü hiç bitmez.",
+        "__iter__'in bir iterator yerine liste ya da None döndürmesi (TypeError: iter() returned non-iterator).",
+        "Dolaşma sırasında nesnenin içindeki listeyi değiştirmek; atlanan ya da tekrar gelen öğeler olur."
+      ],
+      "realCode": "class Pages:\n    def __init__(self, items, size):\n        self.items, self.size = items, size\n\n    def __iter__(self):\n        for start in range(0, len(self.items), self.size):\n            yield self.items[start:start + self.size]\n\npages = Pages(list(\"abcdefg\"), 3)\nfor number, page in enumerate(pages, start=1):\n    print(number, page)\nprint(len(list(pages)))",
+      "realOutput": "1 ['a', 'b', 'c']\n2 ['d', 'e', 'f']\n3 ['g']\n3",
+      "lineByLine": [
+        "Pages, bir listeyi sabit boyutlu sayfalara bölen bir iterable'dır (API'lerin sayfalı sonuçları gibi).",
+        "__iter__ gövdesinde yield olduğu için her çağrıda yeni bir generator döner; __next__ yazılmadı.",
+        "enumerate sayfaları 1'den numaralar; son sayfa daha kısadır.",
+        "Aynı nesne ikinci kez dolaşıldığında yine üç sayfa çıkar: Pages tek kullanımlık değildir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Iterator'lar (kendi sınıfın)",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html#iterators"
+        },
+        {
+          "title": "Python 3.12 · Iterator türleri",
+          "url": "https://docs.python.org/3.12/library/stdtypes.html#iterator-types"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "generators",
+      "title": "Generator fonksiyonları ve yield",
+      "eyebrow": "Değerleri istendikçe üret",
+      "objectives": [
+        "Gövdesinde yield olan fonksiyonun çağrılınca çalışmadığını, bir generator nesnesi döndürdüğünü ve her next'te bir sonraki yield'e kadar ilerleyip orada duraklayıp sürdüğünü izler.",
+        "Generator'ın tükendiğini, return'ün yinelemeyi bitirdiğini (değeri StopIteration.value'da) ve return ile yield arasındaki farkı açıklar."
+      ],
+      "prerequisites": [
+        "iterator-protocol",
+        "m6:def-return"
+      ],
+      "summary": "Gövdesinde yield bulunan fonksiyon bir generator fonksiyonudur: çağrısı gövdeyi çalıştırmaz, bir generator (iterator) döndürür. Her next(), gövdeyi bir sonraki yield'e kadar çalıştırır, değeri verir ve yerel değişkenleriyle birlikte orada bekler.",
+      "explanation": "Normal bir fonksiyon return ile tek bir değer döndürür ve biter. Gövdesinde yield olan fonksiyon ise farklı çalışır: countdown(3) çağrısı tek satır bile çalıştırmaz, bir generator nesnesi döndürür. Generator bir iterator'dır; next() çağrıldığında gövde kaldığı yerden bir sonraki yield'e kadar çalışır, yield'in değerini verir ve yerel değişkenleri, döngü konumu dahil, olduğu gibi bekletir. Gövdenin sonuna gelinince (ya da return çalışınca) generator StopIteration fırlatır ve tükenir; for döngüsü bunu sessizce bitiş olarak yorumlar. Generator'da return değer de taşıyabilir: return 5, StopIteration.value'da 5 olarak görünür ama for ve list bu değeri görmez. Tükenen generator yeniden başlamaz: aynı değerleri tekrar istiyorsan fonksiyonu yeniden çağır. Gövdede yield'den sonra gelen print gibi satırlar, ancak bir sonraki next istendiğinde çalışır; çıktıların sırası bu yüzden şaşırtıcı görünebilir. Neden kullanılır? Bir listeyi baştan kurup döndürmek yerine değerleri birer birer üretmek bellek kazandırır, sonsuz akışları mümkün kılar ve okuma/süzme/dönüştürme adımlarını küçük fonksiyonlara böler. Değeri birden çok kez kullanacaksan ya da uzunluğunu (len) bilmen gerekiyorsa sonucu list() ile topla.",
+      "code": "def countdown(n):\n    print(\"başladı\")\n    while n > 0:\n        yield n\n        n -= 1\n    print(\"bitti\")\n\ngen = countdown(3)\nprint(type(gen).__name__)\nprint(next(gen))\nprint(next(gen))\nprint(list(gen))\nprint(list(gen))\n\ndef numbered(items):\n    for index, item in enumerate(items, 1):\n        yield f\"{index}. {item}\"\n    return len(items)\n\nprint(list(numbered([\"süt\", \"ekmek\"])))\ntry:\n    next(numbered([]))\nexcept StopIteration as stop:\n    print(\"dönüş değeri:\", stop.value)",
+      "expectedOutput": "generator\nbaşladı\n3\n2\nbitti\n[1]\n[]\n['1. süt', '2. ekmek']\ndönüş değeri: 0",
+      "why": "countdown(3) çağrısı 'başladı' yazmadı; gövde ilk next ile çalıştı. Her next bir yield'de durdu. list(gen) kalan tek değeri (1) aldı, döngü bitince 'bitti' yazıldı ve generator tükendi; ikinci list boş geldi. numbered'ın return değeri list()'e girmedi, yalnızca StopIteration.value'da göründü.",
+      "alternatives": [
+        "Az sayıda değeri birden çok kez kullanacaksan doğrudan liste döndüren normal bir fonksiyon daha basittir.",
+        "Tek satırlık dönüşümler için generator ifadesi (n * n for n in sayılar) yeterlidir; sonraki bölümde."
+      ],
+      "traps": [
+        "Generator fonksiyonunu çağırınca gövdenin çalıştığını sanmak; hiçbir şey next istenene kadar çalışmaz.",
+        "Generator'ı iki kez dolaşmak: ikincisi boş gelir.",
+        "Generator'da her değeri üretmek isterken return yazmak: ilk return yinelemeyi bitirir.",
+        "len(generator) ya da generator[0] denemek: generator'ın uzunluğu ve indeksi yoktur (TypeError)."
+      ],
+      "realCode": "def read_records(lines):\n    for number, line in enumerate(lines, start=1):\n        line = line.strip()\n        if not line or line.startswith(\"#\"):\n            continue\n        name, score = line.split(\":\")\n        yield number, name, int(score)\n\ndata = [\"# notlar\", \"Ada:90\", \"\", \"Can:75\"]\nfor number, name, score in read_records(data):\n    print(number, name, score)\nbest = max(read_records(data), key=lambda record: record[2])\nprint(\"en yüksek:\", best[1])",
+      "realOutput": "2 Ada 90\n4 Can 75\nen yüksek: Ada",
+      "lineByLine": [
+        "read_records boş satırları ve yorumları atlar, geçerli satırları satır numarasıyla birlikte üretir.",
+        "Satır numarası, girdideki gerçek konumdur (2 ve 4); hata mesajı yazarken işe yarar.",
+        "max ikinci bir dolaşma ister; read_records yeniden çağrılarak yeni bir generator alınır.",
+        "Fonksiyon bütün kayıtları listede toplamadığı için büyük dosyalarda da az bellek kullanır."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Generator'lar",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html#generators"
+        },
+        {
+          "title": "Python 3.12 · yield ifadeleri",
+          "url": "https://docs.python.org/3.12/reference/expressions.html#yield-expressions"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "generator-pipelines",
+      "title": "Generator ifadeleri ve boru hatları",
+      "eyebrow": "Tembel adımları birbirine bağla",
+      "objectives": [
+        "Generator ifadesi (x for x in ...) ile liste kurucuyu ayırır ve generator'ları birbirine bağlayarak tembel bir veri boru hattı kurar.",
+        "yield from ile alt generator'ın değerlerini aktarır; sonsuz generator'ları itertools.islice ile sınırlar ve generator'ı yalnızca bir kez tüketebileceğini hesaba katar."
+      ],
+      "prerequisites": [
+        "generators",
+        "m5:list-comprehension",
+        "m10:itertools-functools"
+      ],
+      "summary": "Köşeli yerine yuvarlak parantezle yazılan kurucu, liste değil generator üretir: (n * n for n in sayılar). Generator'lar birbirini besleyerek tembel bir boru hattı kurar; her değer ancak en sondaki tüketici istediğinde üretilir.",
+      "explanation": "[n * n for n in sayılar] bütün sonuçları bir listede toplar. (n * n for n in sayılar) ise bir generator ifadesidir: değerleri ancak istendiğinde üretir. Tek argümanlı çağrılarda ek parantez gerekmez: sum(n * n for n in sayılar). Generator'lar boru hattı gibi birbirine bağlanabilir: satırları okuyan, onları ayrıştıran, süzen ve dönüştüren her adım bir öncekinin çıktısını tüketir. Hiçbir ara liste kurulmaz; en sondaki tüketici (for, sum, list, max) bir değer istediğinde zincirin her halkası tam bir adım çalışır. Bu yüzden sonsuz bir kaynak bile kullanılabilir: naturals() hiç bitmeyen bir generator'dır, itertools.islice ilk birkaç değeri alıp gerisini hiç üretmez (M10). yield from alt_generator, alt generator'ın bütün değerlerini sırayla dışarı verir; for x in alt: yield x yazmanın kısa ve doğru yoludur. İç içe yapıları düzleştirmek ya da bir generator'ı küçük parçalara bölmek için kullanılır. Dikkat edilecek tek şey tüketmedir: generator bir kez dolaşılır. 2 in gen gibi bir sorgu bile aradığı değere kadar olanları tüketir ve kalanlar ilerideki kullanıma kalır. Aynı sonuçları birden çok yerde kullanacaksan listeye çevir; büyük veride ise boru hattını iki kez kurmak (fonksiyonu yeniden çağırmak) daha az bellek tüketir.",
+      "code": "from itertools import islice, count\n\ndef naturals():\n    n = 1\n    while True:\n        yield n\n        n += 1\n\nsquares = (n * n for n in naturals())\nevens = (n for n in squares if n % 2 == 0)\nprint(list(islice(evens, 4)))\nprint(sum(n * n for n in range(1, 4)))\n\ndef flatten(groups):\n    for group in groups:\n        yield from group\n\nprint(list(flatten([[1, 2], (3,), \"ab\"])))\ngen = (x for x in [1, 2, 3])\nprint(2 in gen, list(gen))\nprint(list(islice(count(10, 5), 3)))",
+      "expectedOutput": "[4, 16, 36, 64]\n14\n[1, 2, 3, 'a', 'b']\nTrue [3]\n[10, 15, 20]",
+      "why": "naturals sonsuzdur ama islice yalnızca dört çift kare istediği için zincir sekizinci doğal sayıda durdu. sum'a verilen generator ifadesi ara liste kurmadı. flatten, yield from ile her grubun öğelerini sırayla verdi; bir str de iterable'dır. 2 in gen, 1 ve 2'yi tüketti; list(gen) yalnızca kalan 3'ü aldı.",
+      "alternatives": [
+        "Sonucu birden çok kez kullanacaksan ya da indeksle erişeceksen liste kurucu yaz.",
+        "Hazır yapı taşları için itertools'a bak (chain, islice, takewhile, groupby; M10)."
+      ],
+      "traps": [
+        "Generator ifadesini iki kez kullanmak; ikinci kullanım boş gelir.",
+        "Sonsuz bir generator'ı list() ile toplamak: program hiç bitmez.",
+        "in ya da next ile yapılan bir sorgunun generator'dan değer tükettiğini unutmak.",
+        "yield from yerine yield alt_generator yazmak: değerler yerine generator nesnesinin kendisi üretilir."
+      ],
+      "realCode": "logs = [\n    \"INFO başladı\",\n    \"ERROR disk dolu\",\n    \"INFO devam\",\n    \"ERROR ağ yok\",\n    \"ERROR disk dolu\",\n]\n\ndef parse(lines):\n    for line in lines:\n        level, message = line.split(\" \", 1)\n        yield level, message\n\ndef only(level, records):\n    return (message for lvl, message in records if lvl == level)\n\nseen = set()\nfor message in only(\"ERROR\", parse(logs)):\n    if message not in seen:\n        seen.add(message)\n        print(message)",
+      "realOutput": "disk dolu\nağ yok",
+      "lineByLine": [
+        "parse her satırı (düzey, mesaj) çiftine ayırır; only bu akıştan yalnızca bir düzeyi süzer.",
+        "only bir generator ifadesi döndürür; iki adım da tembeldir, ara liste kurulmaz.",
+        "Döngü değerleri tek tek çeker; tekrar eden hata mesajları bir küme ile atlanır.",
+        "Aynı yapı, logs yerine gigabaytlık bir dosya nesnesi verildiğinde de az bellekle çalışır."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Generator ifadeleri",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html#generator-expressions"
+        },
+        {
+          "title": "Python 3.12 · itertools",
+          "url": "https://docs.python.org/3.12/library/itertools.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "decorators",
+      "title": "Decorator temelleri",
+      "eyebrow": "Bir fonksiyonu değiştirmeden sarmala",
+      "objectives": [
+        "Decorator'ın fonksiyon alıp fonksiyon döndüren bir fonksiyon olduğunu ve @dec yazımının f = dec(f) atamasıyla aynı olduğunu gösterir; decorator'ın tanım anında bir kez çalıştığını bilir.",
+        "Sarmalayıcıyı *args/**kwargs ile yazar, sonucu döndürür ve functools.wraps ile asıl fonksiyonun adını ve belgesini korur."
+      ],
+      "prerequisites": [
+        "m6:closure",
+        "m6:args-kwargs",
+        "m10:itertools-functools"
+      ],
+      "summary": "Decorator, bir fonksiyonu alıp yerine başka bir fonksiyon (genellikle onu çağıran bir sarmalayıcı) döndüren fonksiyondur. def'in üstündeki @shout, greet = shout(greet) demektir. Sarmalayıcı *args, **kwargs ile her argümanı geçirmeli, sonucu döndürmeli ve @wraps(func) ile işaretlenmelidir.",
+      "explanation": "Python'da fonksiyonlar değerdir: bir değişkene atanır, başka bir fonksiyona verilir, bir fonksiyondan döndürülür (M6). Decorator bunun üzerine kurulur: shout(func) içinde wrapper adında yeni bir fonksiyon tanımlar, wrapper func'ı çağırıp sonucunu değiştirir ve shout wrapper'ı döndürür. wrapper, func'ı bir closure olarak hatırlar. @shout satırı def greet'in hemen üstüne yazılır ve greet = shout(greet) ile birebir aynıdır. Bu atama fonksiyon tanımlanırken bir kez yapılır; decorator'ın gövdesindeki kod (wrapper'ın dışındaki satırlar) modül yüklenirken çalışır, sarmalayıcının gövdesi ise her çağrıda çalışır. Sarmalayıcıyı genel yaz: def wrapper(*args, **kwargs): return func(*args, **kwargs). Argüman almayan bir wrapper, argümanlı bir fonksiyonu sarınca TypeError verir; return yazmayı unutan wrapper ise her zaman None döndürür. Sarmalayıcı yeni bir fonksiyon olduğu için asıl fonksiyonun adı (__name__), belgesi (__doc__) ve imzası kaybolur; hata ayıklama, belgeler ve testler yanlış ad görür. functools.wraps(func) bu bilgileri wrapper'a kopyalar ve asıl fonksiyonu __wrapped__ olarak saklar; her decorator'da kullan. Gördüğün yerler: @property ve @classmethod (M11), @functools.lru_cache (M10), @dataclass (M12), web çatılarında @app.get(...) gibi rota kayıtları; günlükleme, süre ölçme, önbellekleme, yetki denetimi ve yeniden deneme yaygın kullanımlardır.",
+      "code": "from functools import wraps\n\ndef shout(func):\n    @wraps(func)\n    def wrapper(*args, **kwargs):\n        result = func(*args, **kwargs)\n        return result.upper() + \"!\"\n    return wrapper\n\n@shout\ndef greet(name, polite=False):\n    \"\"\"Selam verir.\"\"\"\n    return f\"{'merhaba' if polite else 'selam'} {name}\"\n\nprint(greet(\"ada\"))\nprint(greet(\"can\", polite=True))\nprint(greet.__name__, greet.__doc__)\n\ndef plain(name):\n    return name\n\nsame = shout(plain)\nprint(same(\"x\"), same.__wrapped__(\"x\"))\n\ndef no_wraps(func):\n    def wrapper(*args, **kwargs):\n        return func(*args, **kwargs)\n    return wrapper\n\n@no_wraps\ndef report():\n    \"\"\"Rapor üretir.\"\"\"\n\nprint(report.__name__, report.__doc__)",
+      "expectedOutput": "SELAM ADA!\nMERHABA CAN!\ngreet Selam verir.\nX! x\nwrapper None",
+      "why": "@shout, greet'i sarmalayıcıyla değiştirdi; konumsal ve isimli argümanlar *args/**kwargs ile asıl fonksiyona geçti, sonuç büyük harfe çevrildi. wraps sayesinde greet adını ve belgesini korudu. shout(plain) aynı işin @ olmadan yazılışıdır ve __wrapped__ asıl fonksiyona ulaştırır. wraps kullanmayan decorator'da ad 'wrapper', belge None oldu.",
+      "alternatives": [
+        "Davranış yalnızca bir yerde gerekiyorsa decorator yazmak yerine fonksiyonun içine eklemek daha açıktır.",
+        "Önbellek gibi hazır ihtiyaçlar için kendi decorator'ını yazmadan önce functools'a bak (lru_cache, cache)."
+      ],
+      "traps": [
+        "wrapper içinde return'ü unutmak: dekore edilen fonksiyon her zaman None döndürür.",
+        "wrapper'ı argümansız yazmak (def wrapper():): argümanlı fonksiyonda TypeError verir.",
+        "decorator'dan wrapper yerine wrapper() döndürmek ya da hiçbir şey döndürmemek: ad None'a bağlanır.",
+        "@wraps(func) eklememek: ad, belge ve testlerde görünen bilgi kaybolur."
+      ],
+      "realCode": "from functools import wraps\n\ndef count_calls(func):\n    @wraps(func)\n    def wrapper(*args, **kwargs):\n        wrapper.calls += 1\n        return func(*args, **kwargs)\n    wrapper.calls = 0\n    return wrapper\n\n@count_calls\ndef add(a, b):\n    return a + b\n\nadd(1, 2)\nadd(3, 4)\nprint(add(5, 6), add.calls, add.__name__)",
+      "realOutput": "11 3 add",
+      "lineByLine": [
+        "count_calls, sarmalayıcı fonksiyonun kendisine bir calls özniteliği ekler; fonksiyonlar da nesnedir.",
+        "Her çağrıda sayaç artar ve asıl fonksiyon aynı argümanlarla çağrılır.",
+        "Üç çağrıdan sonra sayaç 3'tür; print argümanları soldan sağa değerlendirildiği için add(5, 6) sayaçtan önce çalışır.",
+        "wraps sayesinde add.__name__ hâlâ 'add'dir."
+      ],
+      "sources": [
+        {
+          "title": "Python sözlüğü · decorator",
+          "url": "https://docs.python.org/3.12/glossary.html#term-decorator"
+        },
+        {
+          "title": "Python 3.12 · functools.wraps",
+          "url": "https://docs.python.org/3.12/library/functools.html#functools.wraps"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "decorator-params",
+      "title": "Parametreli ve yığılmış decorator'lar",
+      "eyebrow": "@retry(3) nasıl çalışır?",
+      "objectives": [
+        "Parametreli decorator'ın üç katmanını (parametreyi alan fonksiyon → decorator → sarmalayıcı) okur ve yazar; @dec(…) ile @dec farkını açıklar.",
+        "Birden çok decorator yığıldığında ifadelerin yukarıdan aşağı değerlendirildiğini, sarmalamanın ise aşağıdan yukarı uygulandığını ve çağrıda dıştan içe çalıştığını izler."
+      ],
+      "prerequisites": [
+        "decorators"
+      ],
+      "summary": "@repeat(2) önce repeat(2)'yi çağırır; bu çağrı asıl decorator'ı döndürür ve o da fonksiyona uygulanır. Bu yüzden parametreli decorator üç iç içe fonksiyondur. Yığılmış decorator'larda def'e en yakın olan önce uygulanır, çağrıda ise en üstteki en dıştadır.",
+      "explanation": "@ işaretinden sonra herhangi bir ifade gelebilir. @repeat(2) yazınca Python önce repeat(2) ifadesini değerlendirir; bunun sonucu asıl decorator olmalıdır. Bu yüzden parametreli decorator üç katmanlıdır: dıştaki fonksiyon parametreyi (times) alır ve decorator'ı döndürür, decorator fonksiyonu alıp sarmalayıcıyı döndürür, sarmalayıcı her çağrıda çalışır. İçteki katmanlar dıştakilerin parametrelerini closure olarak görür. Karışıklık genelde parantezlerde olur: parametresiz bir decorator'ı @log() diye çağırırsan log fonksiyon yerine hiç argüman almadan çağrılır ve TypeError verir; parametreli bir decorator'ı parantezsiz @repeat yazarsan repeat, fonksiyonu times parametresi sanır ve fonksiyonun yerine yanlış bir nesne konur. Birden çok decorator üst üste yazılabilir. @tag('b') @tag('i') def word() ifadesi word = tag('b')(tag('i')(word)) demektir: def'e en yakın decorator önce uygulanır, en üstteki en dışa sarılır. Çağrıldığında dıştaki sarmalayıcı önce başlar ve içtekini çağırır; sonuç <b><i>…</i></b> olur. Decorator ifadeleri (tag('b'), tag('i')) ise uygulanmadan önce yukarıdan aşağı değerlendirilir. Sıra önemlidir: önbellek ile yetki denetimini ters sırada yığmak, yetkisiz bir kullanıcıya önbellekteki sonucu gösterebilir. Yeniden deneme (retry), zaman aşımı, oran sınırı ve rota kaydı gibi gerçek kod örneklerinde parametreli decorator'lar çok yaygındır; yazmaktan çok okumayı bilmen yeterli.",
+      "code": "from functools import wraps\n\ndef repeat(times):\n    def decorator(func):\n        @wraps(func)\n        def wrapper(*args, **kwargs):\n            return [func(*args, **kwargs) for _ in range(times)]\n        return wrapper\n    return decorator\n\ndef tag(name):\n    def decorator(func):\n        @wraps(func)\n        def wrapper(*args, **kwargs):\n            return f\"<{name}>{func(*args, **kwargs)}</{name}>\"\n        return wrapper\n    return decorator\n\n@repeat(2)\ndef hello(who):\n    return f\"merhaba {who}\"\n\nprint(hello(\"Ada\"))\n\n@tag(\"b\")\n@tag(\"i\")\ndef word():\n    return \"kalın\"\n\nprint(word())\n\ndef trace(label):\n    print(\"decorator kuruluyor:\", label)\n    def decorator(func):\n        print(\"uygulanıyor:\", label)\n        return func\n    return decorator\n\n@trace(\"dış\")\n@trace(\"iç\")\ndef task():\n    return \"iş\"\n\nprint(task())",
+      "expectedOutput": "['merhaba Ada', 'merhaba Ada']\n<b><i>kalın</i></b>\ndecorator kuruluyor: dış\ndecorator kuruluyor: iç\nuygulanıyor: iç\nuygulanıyor: dış\niş",
+      "why": "repeat(2) bir decorator döndürdü ve hello'yu iki kez çağıran sarmalayıcıyla değiştirdi. tag('i') word'e önce uygulandı, tag('b') onun dışına sarıldı. trace çıktısı sırayı açıkça gösterir: ifadeler yukarıdan aşağı değerlendirildi (dış, iç), uygulama ise aşağıdan yukarı yapıldı (iç, dış).",
+      "alternatives": [
+        "Yalnızca birkaç sabit seçenek varsa ayrı parametresiz decorator'lar (retry_three, retry_five) daha basit olabilir.",
+        "Yeniden deneme gibi işler için olgun kütüphaneler (tenacity gibi) vardır; kendi sürümünü yazmadan önce bak."
+      ],
+      "traps": [
+        "Parametresiz decorator'ı @log() diye çağırmak (TypeError) ya da parametreliyi @repeat diye parantezsiz yazmak.",
+        "Yığma sırasını ters düşünmek: def'e en yakın decorator önce uygulanır.",
+        "Üç katmandan birinde return'ü unutmak; ad None'a bağlanır ya da sonuç kaybolur.",
+        "Parametreyi sarmalayıcı içinde değiştirmek (times -= 1): closure değişkenine atama nonlocal ister ve paylaşılan durum yaratır."
+      ],
+      "realCode": "from functools import wraps\n\ndef retry(times, exceptions=(ValueError,)):\n    def decorator(func):\n        @wraps(func)\n        def wrapper(*args, **kwargs):\n            for attempt in range(1, times + 1):\n                try:\n                    return func(*args, **kwargs)\n                except exceptions as error:\n                    print(f\"deneme {attempt} başarısız: {error}\")\n            raise RuntimeError(f\"{func.__name__} {times} denemede başarısız\")\n        return wrapper\n    return decorator\n\nanswers = iter([\"\", \"\", \"42\"])\n\n@retry(3)\ndef read_number():\n    text = next(answers)\n    if not text:\n        raise ValueError(\"boş yanıt\")\n    return int(text)\n\nprint(read_number())",
+      "realOutput": "deneme 1 başarısız: boş yanıt\ndeneme 2 başarısız: boş yanıt\n42",
+      "lineByLine": [
+        "retry(times, exceptions) parametreleri alır ve asıl decorator'ı döndürür.",
+        "Sarmalayıcı yalnızca belirtilen hata türlerinde yeniden dener; başka hatalar olduğu gibi yükselir.",
+        "answers ağ ya da kullanıcı gibi güvenilmez bir kaynağı taklit eder: ilk iki yanıt boştur.",
+        "Üçüncü denemede değer geldiği için 42 döner; bütün denemeler başarısız olsaydı RuntimeError fırlatılacaktı."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Fonksiyon tanımları ve decorator'lar",
+          "url": "https://docs.python.org/3.12/reference/compound_stmts.html#function-definitions"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "context-manager-class",
+      "title": "Context manager: __enter__ ve __exit__",
+      "eyebrow": "with bloğunun girişini ve çıkışını yönet",
+      "objectives": [
+        "with ifadesinin __enter__ ve __exit__ çağrılarını, as ile bağlanan değeri ve bloktan hata ile çıkılsa bile __exit__'in çalıştığını açıklar ve kendi context manager sınıfını yazar.",
+        "__exit__'in hata bilgisini (tür, değer, traceback) aldığını ve True döndürürse hatayı yuttuğunu bilir; hatayı yalnızca bilinçli olarak yutar."
+      ],
+      "prerequisites": [
+        "m8:with-lifecycle",
+        "m7:else-finally",
+        "m12:dunder-basics"
+      ],
+      "summary": "with X() as y: bloğu önce X().__enter__()'i çağırır ve dönüşü y'ye bağlar; blok nasıl biterse bitsin (normal, return, hata) __exit__ çağrılır. __exit__ hata bilgisini alır; False (ya da None) döndürürse hata yükselmeye devam eder, True döndürürse yutulur.",
+      "explanation": "M8'de with open(...) as f: kalıbını kullandın; dosya, blok nasıl biterse bitsin kapanıyordu. Bu davranış iki dunder metotla tanımlanır. with ifadesi önce nesnenin __enter__ metodunu çağırır; dönen değer as'ten sonraki ada bağlanır (çoğu zaman self, ama başka bir şey de olabilir). Blok bitince __exit__(exc_type, exc, tb) çağrılır. Blok hatasız biterse üç argüman da None'dır. Blok içinde bir hata olursa __exit__ yine çağrılır ve hatanın türünü, nesnesini ve traceback'ini alır; temizlik (kapatma, kilidi bırakma, geri alma) bu yüzden kesin olarak yapılır. try/finally'nin yeniden kullanılabilir bir paketidir. __exit__'in dönüş değeri önemlidir: False ya da None (return yazmamak) hatanın with'in dışına yükselmesine izin verir; True hatayı yutar ve program with'ten sonraki satırdan devam eder. Her hatayı yutmak hataları gizler; yalnızca belirli ve beklenen türleri yut, gerisini yükselt. Context manager'lar kaynakların ömrünü yönetir: dosya ve ağ bağlantıları, kilitler (threading.Lock, M15), veritabanı işlemleri (commit/rollback, M18), geçici ayar değişiklikleri, süre ölçümü. Bir sınıf yazmak, durum tutman ya da birden çok metot sunman gerektiğinde uygundur; kısa senaryolar için sonraki bölümdeki contextlib daha az kod ister.",
+      "code": "class Tag:\n    def __init__(self, name):\n        self.name = name\n\n    def __enter__(self):\n        print(f\"<{self.name}>\")\n        return self\n\n    def __exit__(self, exc_type, exc, tb):\n        print(f\"</{self.name}>\")\n        return False\n\nwith Tag(\"p\") as tag:\n    print(\"içerik:\", tag.name)\n\nclass Ignore:\n    def __init__(self, *errors):\n        self.errors = errors\n\n    def __enter__(self):\n        return self\n\n    def __exit__(self, exc_type, exc, tb):\n        if exc_type is not None and issubclass(exc_type, self.errors):\n            print(\"yutuldu:\", exc_type.__name__)\n            return True\n        return False\n\nwith Ignore(KeyError):\n    {}[\"x\"]\nprint(\"devam\")\ntry:\n    with Tag(\"div\"):\n        raise ValueError(\"bozuk\")\nexcept ValueError as error:\n    print(\"dışarıda yakalandı:\", error)",
+      "expectedOutput": "<p>\niçerik: p\n</p>\nyutuldu: KeyError\ndevam\n<div>\n</div>\ndışarıda yakalandı: bozuk",
+      "why": "Tag'in __enter__'i açılış etiketini yazıp nesneyi as tag'e bağladı; blok bitince __exit__ kapanış etiketini yazdı. Ignore, KeyError'u True döndürerek yuttu ve program devam etti. Tag ise False döndürdüğü için ValueError dışarı yükseldi, ama önce </div> yazıldı: temizlik hata durumunda da yapıldı.",
+      "alternatives": [
+        "Basit giriş/çıkış işleri için contextlib.contextmanager ile bir generator fonksiyonu yaz (sonraki bölüm).",
+        "Yalnızca belirli bir hatayı görmezden gelmek için hazır contextlib.suppress(KeyError) kullan."
+      ],
+      "traps": [
+        "__exit__'ten koşulsuz True döndürüp bütün hataları sessizce yutmak.",
+        "__enter__'den bir şey döndürmeyi unutup as değişkeninin None olması.",
+        "Temizliği __exit__ yerine with bloğunun sonuna yazmak: hata olunca atlanır.",
+        "__enter__ ya da __exit__ olmayan bir nesneyi with ile kullanmak (TypeError)."
+      ],
+      "realCode": "class Transaction:\n    def __init__(self, account):\n        self.account = account\n\n    def __enter__(self):\n        self.snapshot = dict(self.account)\n        return self.account\n\n    def __exit__(self, exc_type, exc, tb):\n        if exc_type is not None:\n            self.account.clear()\n            self.account.update(self.snapshot)\n            print(\"geri alındı:\", exc)\n        return False\n\naccount = {\"bakiye\": 100}\nwith Transaction(account) as acc:\n    acc[\"bakiye\"] -= 30\nprint(account)\ntry:\n    with Transaction(account) as acc:\n        acc[\"bakiye\"] -= 500\n        if acc[\"bakiye\"] < 0:\n            raise ValueError(\"bakiye eksiye düştü\")\nexcept ValueError as error:\n    print(\"hata:\", error)\nprint(account)",
+      "realOutput": "{'bakiye': 70}\ngeri alındı: bakiye eksiye düştü\nhata: bakiye eksiye düştü\n{'bakiye': 70}",
+      "lineByLine": [
+        "__enter__ hesabın bir kopyasını alır ve hesabın kendisini as acc'ye verir.",
+        "İlk blok hatasız biter; değişiklik kalır ve bakiye 70 olur.",
+        "İkinci blokta hata olunca __exit__ hesabı kopyadan geri yükler ve False döndürerek hatayı dışarı bırakır.",
+        "Çağıran hatayı görür ve yakalar; hesap tutarlı hâlde (70) kalır. Veritabanı işlemlerinin rollback mantığı budur."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · with ifadesi bağlam yöneticileri",
+          "url": "https://docs.python.org/3.12/reference/datamodel.html#with-statement-context-managers"
+        },
+        {
+          "title": "Python 3.12 · with ifadesi",
+          "url": "https://docs.python.org/3.12/reference/compound_stmts.html#the-with-statement"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "contextlib",
+      "title": "contextlib ile context manager",
+      "eyebrow": "Bir generator ile with yaz",
+      "objectives": [
+        "@contextmanager ile generator tabanlı context manager yazar; yield öncesini giriş, sonrasını çıkış olarak kullanır ve temizliği try/finally ile garanti eder.",
+        "contextlib.suppress ve ExitStack'i tanır; birden çok kaynağın ters sırayla kapandığını bilir."
+      ],
+      "prerequisites": [
+        "context-manager-class",
+        "generators"
+      ],
+      "summary": "@contextmanager, tek bir yield içeren generator fonksiyonunu context manager'a çevirir: yield'den öncesi __enter__, sonrası __exit__ gibi çalışır, yield'in değeri as'e bağlanır. Hata durumunda da temizliğin çalışması için yield try/finally içine yazılır.",
+      "explanation": "Her context manager için sınıf yazmak uzundur. contextlib.contextmanager decorator'ı, içinde tek bir yield olan generator fonksiyonunu context manager'a çevirir: yield'e kadar olan kod with bloğuna girerken çalışır, yield'in değeri as'ten sonraki ada bağlanır, blok bittiğinde yield'den sonraki kod çalışır. Kritik ayrıntı: with bloğunda bir hata olursa bu hata generator'ın içinde, yield satırında yükselir. yield try/finally içinde değilse yield'den sonraki temizlik satırları atlanır. Bu yüzden kalıp şudur: hazırla; try: yield kaynak; finally: temizle. Hatayı yakalayıp yutmak istersen yield'i try/except ile sarabilirsin, ama yutmadığın sürece hata dışarı çıkar. contextlib'de hazır araçlar vardır: suppress(HataTürü) yalnızca o hatayı yutar (bilinçli olarak yok saymak için), ExitStack ise sayısı çalışma anında belli olan kaynakları (ör. bir dizi dosya) tek with içinde açar ve hepsini ters sırayla kapatır. redirect_stdout, chdir (3.11+) ve closing da sık görülür. Hangi yolu seçmeli? Durum tutman, birden çok metot sunman ya da yeniden kullanılabilir bir nesne gerekiyorsa sınıf; kısa bir giriş/çıkış işi için @contextmanager. İkisi de with açısından aynı davranır.",
+      "code": "from contextlib import contextmanager, suppress, ExitStack\n\n@contextmanager\ndef tag(name):\n    print(f\"<{name}>\")\n    try:\n        yield name.upper()\n    finally:\n        print(f\"</{name}>\")\n\nwith tag(\"ul\") as upper:\n    print(\"içerik\", upper)\n\ntry:\n    with tag(\"li\"):\n        raise ValueError(\"bozuk\")\nexcept ValueError:\n    print(\"hata yine dışarı çıktı\")\n\nwith suppress(FileNotFoundError):\n    open(\"yok.txt\", encoding=\"utf-8\")\nprint(\"suppress sonrası\")\n\nwith ExitStack() as stack:\n    names = [stack.enter_context(tag(n)) for n in (\"a\", \"b\")]\n    print(names)",
+      "expectedOutput": "<ul>\niçerik UL\n</ul>\n<li>\n</li>\nhata yine dışarı çıktı\nsuppress sonrası\n<a>\n<b>\n['A', 'B']\n</b>\n</a>",
+      "why": "tag'in yield öncesi giriş, finally bloğu çıkış işini yaptı; yield'in değeri as upper'a bağlandı. li bloğundaki hata yield satırında yükseldi, finally yine kapanış etiketini yazdı ve hata dışarı çıktı. suppress yalnızca FileNotFoundError'ı yuttu. ExitStack iki tag'i sırayla açtı ve ters sırayla kapattı.",
+      "alternatives": [
+        "Durum tutan ya da başka metotlar da sunan bir kaynak için __enter__/__exit__ sınıfı yaz.",
+        "Tek bir hatayı yok saymak için try/except: pass yerine suppress niyeti daha açık gösterir; ama hatayı gerçekten yok saymak istediğinden emin ol."
+      ],
+      "traps": [
+        "yield'i try/finally içine almamak: with bloğunda hata olunca temizlik atlanır.",
+        "Generator'ın ikinci bir yield'e ulaşması ya da hiç yield'e ulaşmaması (RuntimeError: generator didn't stop / didn't yield).",
+        "suppress ile geniş hata türlerini (Exception) yutup gerçek hataları gizlemek.",
+        "@contextmanager ile dekore edilen fonksiyonu with olmadan çağırıp kodun çalıştığını sanmak."
+      ],
+      "realCode": "from contextlib import contextmanager\n\nsettings = {\"debug\": False}\n\n@contextmanager\ndef temporarily(key, value):\n    old = settings[key]\n    settings[key] = value\n    try:\n        yield\n    finally:\n        settings[key] = old\n\nwith temporarily(\"debug\", True):\n    print(\"içeride:\", settings[\"debug\"])\nprint(\"dışarıda:\", settings[\"debug\"])\ntry:\n    with temporarily(\"debug\", True):\n        raise RuntimeError(\"test\")\nexcept RuntimeError:\n    pass\nprint(\"hatadan sonra:\", settings[\"debug\"])",
+      "realOutput": "içeride: True\ndışarıda: False\nhatadan sonra: False",
+      "lineByLine": [
+        "temporarily bir ayarı geçici olarak değiştirir; eski değer yield'den önce saklanır.",
+        "with bloğunda ayar True'dur; blok bitince finally eski değeri geri koyar.",
+        "Blokta hata olsa bile finally çalıştığı için ayar False'a döner; hata ise dışarıda yakalanır.",
+        "Testlerde ortam değişkeni ya da ayar değiştirmenin güvenli yolu budur (pytest'in monkeypatch'i de aynı fikri kullanır, M16)."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · contextlib",
+          "url": "https://docs.python.org/3.12/library/contextlib.html"
+        }
+      ],
+      "runtime": "browser"
+    }
+  ],
+  "questions": [
+    {
+      "id": "m13-q01",
+      "type": "output",
+      "topic": "iterator",
+      "sectionId": "iterator-protocol",
+      "difficulty": 1,
+      "prompt": "Bir iterator'dan önce next ile değer alınıyor, sonra iki kez listeye çevriliyor. Çıktı ne olur?",
+      "code": "it = iter([1, 2, 3])\nfirst = next(it)\nprint(first, list(it), list(it))",
+      "expectedOutput": "1 [2, 3] []",
+      "options": [
+        "1 [2, 3] []",
+        "1 [2, 3] [2, 3]",
+        "1 [1, 2, 3] []",
+        "1 [2, 3] [1, 2, 3]"
+      ],
+      "hints": [
+        "next ilk değeri tüketti.",
+        "Tükenen iterator baştan başlar mı?"
+      ],
+      "explanation": "next(it) 1'i aldı; ilk list() kalan 2 ve 3'ü tüketti. Iterator geri sarılmadığı için ikinci list() boş liste verir.",
+      "answer": "1 [2, 3] []"
+    },
+    {
+      "id": "m13-q02",
+      "type": "output",
+      "topic": "map-tukenme",
+      "sectionId": "iterator-protocol",
+      "difficulty": 2,
+      "prompt": "map sonucu iki kez toplanıyor. Çıktı ne olur?",
+      "code": "squares = map(lambda n: n * n, [1, 2, 3])\nprint(sum(squares), sum(squares))",
+      "expectedOutput": "14 0",
+      "options": [
+        "TypeError verir",
+        "14 0",
+        "14 14",
+        "0 14"
+      ],
+      "hints": [
+        "map liste değil, iterator döndürür.",
+        "Boş bir dizinin toplamı kaçtır?"
+      ],
+      "explanation": "map bir iterator'dır. İlk sum değerleri tüketip 1 + 4 + 9 = 14 verir; ikinci sum boş iterator'ı toplar ve 0 döner.",
+      "answer": "14 0"
+    },
+    {
+      "id": "m13-q03",
+      "type": "output",
+      "topic": "kendi-iterator",
+      "sectionId": "custom-iterator",
+      "difficulty": 2,
+      "prompt": "__iter__ self döndüren bir sınıf iki kez dolaşılıyor. Çıktı ne olur?",
+      "code": "class Two:\n    def __init__(self):\n        self.n = 0\n\n    def __iter__(self):\n        return self\n\n    def __next__(self):\n        if self.n == 2:\n            raise StopIteration\n        self.n += 1\n        return self.n\n\nt = Two()\nprint(list(t), list(t), list(Two()))",
+      "expectedOutput": "[1, 2] [] [1, 2]",
+      "options": [
+        "[1, 2] [] []",
+        "[0, 1] [] [0, 1]",
+        "[1, 2] [] [1, 2]",
+        "[1, 2] [1, 2] [1, 2]"
+      ],
+      "hints": [
+        "İlk list() sonunda t.n kaç olur?",
+        "Two() yeni bir nesne, kendi sayacıyla."
+      ],
+      "explanation": "t kendisinin iterator'ıdır; ilk list() sayacı 2'ye getirir, ikinci list() hemen StopIteration alır. Yeni bir Two() kendi sayacıyla baştan başlar.",
+      "answer": "[1, 2] [] [1, 2]"
+    },
+    {
+      "id": "m13-q04",
+      "type": "output",
+      "topic": "generator-sira",
+      "sectionId": "generators",
+      "difficulty": 1,
+      "prompt": "Generator fonksiyonu çağrılıyor ve bir değer isteniyor. Çıktı ne olur?",
+      "code": "def gen():\n    print(\"A\")\n    yield 1\n    print(\"B\")\n\ng = gen()\nprint(\"C\")\nprint(next(g))",
+      "expectedOutput": "C\nA\n1",
+      "options": [
+        "A / C / 1",
+        "C / A / 1 / B",
+        "A / 1 / C",
+        "C / A / 1"
+      ],
+      "hints": [
+        "gen() çağrısı gövdeyi çalıştırır mı?",
+        "next, gövdeyi ilk yield'e kadar çalıştırır."
+      ],
+      "explanation": "gen() yalnızca generator nesnesini kurar; gövde çalışmaz. 'C' yazıldıktan sonra next gövdeyi başlatır: 'A' yazılır ve yield 1'de durulur. 'B' ancak bir sonraki next istenirse çalışırdı.",
+      "answer": "C / A / 1"
+    },
+    {
+      "id": "m13-q05",
+      "type": "output",
+      "topic": "generator-sira",
+      "sectionId": "generators",
+      "difficulty": 2,
+      "prompt": "yield'ler arasında print var ve generator listeye çevriliyor. Çıktı ne olur?",
+      "code": "def steps():\n    yield \"bir\"\n    print(\"ara\")\n    yield \"iki\"\n\nprint(list(steps()))",
+      "expectedOutput": "ara\n['bir', 'iki']",
+      "options": [
+        "ara / ['bir', 'iki']",
+        "['bir', 'iki'] / ara",
+        "['bir', 'ara', 'iki']",
+        "['bir', 'iki']"
+      ],
+      "hints": [
+        "print, listeye bir değer ekler mi?",
+        "list() bütün değerleri toplamadan önce yazdırılabilir mi?"
+      ],
+      "explanation": "list() generator'ı tüketirken ikinci değeri isterken 'ara' satırı çalışır ve hemen ekrana yazılır. Liste ancak generator bitince tamamlanır ve sonra yazdırılır; print değer üretmez.",
+      "answer": "ara / ['bir', 'iki']"
+    },
+    {
+      "id": "m13-q06",
+      "type": "output",
+      "topic": "generator-return",
+      "sectionId": "generators",
+      "difficulty": 3,
+      "prompt": "Generator'da return'den sonra bir yield daha var. Çıktı ne olur?",
+      "code": "def g():\n    yield 1\n    return 5\n    yield 2\n\nprint(list(g()))\nit = g()\nnext(it)\ntry:\n    next(it)\nexcept StopIteration as stop:\n    print(stop.value)",
+      "expectedOutput": "[1]\n5",
+      "options": [
+        "[1] / None",
+        "[1] / 5",
+        "[1, 5] / 5",
+        "[1, 2] / None"
+      ],
+      "hints": [
+        "return generator'ı bitirir; sonraki yield'e ulaşılır mı?",
+        "return'ün değeri nerede görünür?"
+      ],
+      "explanation": "return yinelemeyi bitirir; yield 2 hiç çalışmaz ve list() yalnızca [1] toplar. return değeri listeye girmez, StopIteration.value'da 5 olarak görünür.",
+      "answer": "[1] / 5"
+    },
+    {
+      "id": "m13-q07",
+      "type": "output",
+      "topic": "generator-ifadesi",
+      "sectionId": "generator-pipelines",
+      "difficulty": 2,
+      "prompt": "Generator ifadesinde in sorgusundan sonra kalanlar listeleniyor. Çıktı ne olur?",
+      "code": "gen = (n * 2 for n in range(5))\nprint(4 in gen, list(gen))",
+      "expectedOutput": "True [6, 8]",
+      "options": [
+        "True [8]",
+        "False []",
+        "True [6, 8]",
+        "True [0, 2, 4, 6, 8]"
+      ],
+      "hints": [
+        "gen sırayla 0, 2, 4, 6, 8 üretir.",
+        "in, aradığını bulana kadar değer tüketir."
+      ],
+      "explanation": "4 in gen; 0, 2 ve 4'ü tüketip True döner. list(gen) yalnızca kalan 6 ve 8'i toplar.",
+      "answer": "True [6, 8]"
+    },
+    {
+      "id": "m13-q08",
+      "type": "output",
+      "topic": "yield-from",
+      "sectionId": "generator-pipelines",
+      "difficulty": 2,
+      "prompt": "yield from ile iç generator dışarı aktarılıyor. Çıktı ne olur?",
+      "code": "def inner():\n    yield 1\n    yield 2\n\ndef outer():\n    yield 0\n    yield from inner()\n    yield 3\n\nprint(list(outer()))",
+      "expectedOutput": "[0, 1, 2, 3]",
+      "options": [
+        "[0, [1, 2], 3]",
+        "[0, 3]",
+        "[1, 2, 0, 3]",
+        "[0, 1, 2, 3]"
+      ],
+      "hints": [
+        "yield from, alt generator'ın değerlerini tek tek verir.",
+        "Değerler hangi sırayla gelir?"
+      ],
+      "explanation": "outer önce 0'ı verir, yield from inner'ın 1 ve 2'sini sırayla aktarır, sonra 3 gelir. Değerler bir liste olarak değil tek tek üretilir.",
+      "answer": "[0, 1, 2, 3]"
+    },
+    {
+      "id": "m13-q09",
+      "type": "output",
+      "topic": "decorator-zamani",
+      "sectionId": "decorators",
+      "difficulty": 2,
+      "prompt": "Decorator'ın gövdesinde print var. Çıktı sırası nedir?",
+      "code": "def announce(func):\n    print(\"süsleniyor:\", func.__name__)\n    return func\n\n@announce\ndef work():\n    return \"çalıştı\"\n\nprint(\"tanımdan sonra\")\nprint(work())",
+      "expectedOutput": "süsleniyor: work\ntanımdan sonra\nçalıştı",
+      "options": [
+        "süsleniyor: work / tanımdan sonra / çalıştı",
+        "tanımdan sonra / süsleniyor: work / çalıştı",
+        "tanımdan sonra / çalıştı",
+        "tanımdan sonra / süsleniyor: work / çalıştı / süsleniyor: work"
+      ],
+      "hints": [
+        "@announce satırı work = announce(work) demektir.",
+        "Bu atama ne zaman yapılır: tanımda mı, çağrıda mı?"
+      ],
+      "explanation": "Decorator fonksiyon tanımlanırken bir kez çalışır ve 'süsleniyor' yazar. announce asıl fonksiyonu olduğu gibi döndürdüğü için work() çağrısında decorator kodu tekrar çalışmaz.",
+      "answer": "süsleniyor: work / tanımdan sonra / çalıştı"
+    },
+    {
+      "id": "m13-q10",
+      "type": "output",
+      "topic": "wrapper-return",
+      "sectionId": "decorators",
+      "difficulty": 3,
+      "prompt": "Sarmalayıcı asıl fonksiyonu çağırıyor. add(2, 3) ne verir?",
+      "code": "def log(func):\n    def wrapper(*args):\n        print(\"çağrı\", args)\n        func(*args)\n    return wrapper\n\n@log\ndef add(a, b):\n    return a + b\n\nprint(add(2, 3))",
+      "expectedOutput": "çağrı (2, 3)\nNone",
+      "options": [
+        "çağrı 2 3 / 5",
+        "çağrı (2, 3) / None",
+        "çağrı (2, 3) / 5",
+        "5"
+      ],
+      "hints": [
+        "*args bir demettir.",
+        "wrapper func'ın sonucunu döndürüyor mu?"
+      ],
+      "explanation": "args demet olarak (2, 3) yazdırılır. wrapper func(*args) sonucunu döndürmediği için add(2, 3) None verir; doğrusu return func(*args) olmalı.",
+      "answer": "çağrı (2, 3) / None"
+    },
+    {
+      "id": "m13-q11",
+      "type": "output",
+      "topic": "yigma",
+      "sectionId": "decorator-params",
+      "difficulty": 3,
+      "prompt": "İki parametreli decorator üst üste. base() ne döndürür?",
+      "code": "def plus(n):\n    def deco(func):\n        def wrapper():\n            return func() + n\n        return wrapper\n    return deco\n\ndef times(n):\n    def deco(func):\n        def wrapper():\n            return func() * n\n        return wrapper\n    return deco\n\n@plus(1)\n@times(10)\ndef base():\n    return 2\n\nprint(base())",
+      "expectedOutput": "21",
+      "options": [
+        "12",
+        "22",
+        "21",
+        "30"
+      ],
+      "hints": [
+        "def'e en yakın decorator önce uygulanır.",
+        "base = plus(1)(times(10)(base))"
+      ],
+      "explanation": "times(10) içte, plus(1) dışta durur. Çağrıda dıştaki sarmalayıcı içtekini çağırır: 2 * 10 = 20, sonra 20 + 1 = 21.",
+      "answer": "21"
+    },
+    {
+      "id": "m13-q12",
+      "type": "output",
+      "topic": "exit-true",
+      "sectionId": "context-manager-class",
+      "difficulty": 2,
+      "prompt": "__exit__ True döndürüyor ve blokta bir hata oluşuyor. Çıktı ne olur?",
+      "code": "class Quiet:\n    def __enter__(self):\n        return \"kaynak\"\n\n    def __exit__(self, exc_type, exc, tb):\n        print(\"kapandı\", exc_type.__name__ if exc_type else None)\n        return True\n\nwith Quiet() as res:\n    print(res)\n    1 / 0\n    print(\"buraya gelmez\")\nprint(\"program sürüyor\")",
+      "expectedOutput": "kaynak\nkapandı ZeroDivisionError\nprogram sürüyor",
+      "options": [
+        "kaynak / kapandı ZeroDivisionError / buraya gelmez / program sürüyor",
+        "kaynak / kapandı None / program sürüyor",
+        "kaynak / kapandı ZeroDivisionError (ardından ZeroDivisionError ile durur)",
+        "kaynak / kapandı ZeroDivisionError / program sürüyor"
+      ],
+      "hints": [
+        "as res, __enter__'in döndürdüğü değeri alır.",
+        "Hata bloğun kalanını atlar; __exit__ True döndürürse hata ne olur?"
+      ],
+      "explanation": "__enter__ 'kaynak' döndürür. 1 / 0 bloğun kalanını atlar ve __exit__ hata türüyle çağrılır. True döndüğü için hata yutulur ve program with'ten sonra devam eder.",
+      "answer": "kaynak / kapandı ZeroDivisionError / program sürüyor"
+    },
+    {
+      "id": "m13-q13",
+      "type": "bug",
+      "topic": "stopiteration",
+      "sectionId": "custom-iterator",
+      "difficulty": 2,
+      "prompt": "list(Countdown(3)) neden hiç bitmez?",
+      "code": "class Countdown:\n    def __init__(self, start):\n        self.current = start\n\n    def __iter__(self):\n        return self\n\n    def __next__(self):\n        if self.current > 0:\n            self.current -= 1\n            return self.current + 1\n        return None\n\nprint(list(Countdown(3)))",
+      "answer": "Bitişte None döndürüyor; yineleme yalnızca StopIteration ile biter, list sonsuza kadar None ekler",
+      "options": [
+        "Bitişte None döndürüyor; yineleme yalnızca StopIteration ile biter, list sonsuza kadar None ekler",
+        "__iter__ self döndürdüğü için nesne dolaşılamaz",
+        "self.current eksiltildiği için sayaç hiç sıfıra inmez",
+        "list() kendi sınıflarını dolaşamaz"
+      ],
+      "optionFeedback": {
+        "__iter__ self döndürdüğü için nesne dolaşılamaz": "Kendisi iterator olan sınıfın __iter__'i self döndürür; bu doğrudur.",
+        "self.current eksiltildiği için sayaç hiç sıfıra inmez": "Sayaç 3, 2, 1 diye iner ve 0'a ulaşır; sorun 0'dan sonrası.",
+        "list() kendi sınıflarını dolaşamaz": "__iter__/__next__ olan her nesne list() ile dolaşılabilir."
+      },
+      "hints": [
+        "Sayaç 0'a inince __next__ ne yapıyor?",
+        "for ve list yinelemenin bittiğini nereden anlar?"
+      ],
+      "explanation": "İlk üç değerden sonra __next__ None döndürmeye devam eder; None da geçerli bir değerdir. Yineleme ancak raise StopIteration ile biter, bu yüzden list sonsuza kadar None ekler."
+    },
+    {
+      "id": "m13-q14",
+      "type": "bug",
+      "topic": "return-yield",
+      "sectionId": "generators",
+      "difficulty": 1,
+      "prompt": "Bütün çift sayılar beklenirken neden yalnızca 2 yazılıyor?",
+      "code": "def evens(numbers):\n    for n in numbers:\n        if n % 2 == 0:\n            return n\n\nprint(evens([1, 2, 3, 4]))",
+      "answer": "return ilk çift sayıda fonksiyonu bitirir; her değeri üretmek için yield kullanılmalı",
+      "options": [
+        "print bir listeyi yazdıramaz",
+        "return ilk çift sayıda fonksiyonu bitirir; her değeri üretmek için yield kullanılmalı",
+        "% işleci çift sayıları doğru bulamaz",
+        "for döngüsü listenin yalnızca ilk iki öğesini gezer"
+      ],
+      "optionFeedback": {
+        "% işleci çift sayıları doğru bulamaz": "n % 2 == 0 çift sayıyı doğru bulur; 2 de 4 de çifttir.",
+        "for döngüsü listenin yalnızca ilk iki öğesini gezer": "Döngü bütün listeyi gezerdi; return onu erken kesiyor.",
+        "print bir listeyi yazdıramaz": "print listeleri yazdırır; sorun fonksiyonun tek değer döndürmesi."
+      },
+      "hints": [
+        "return çalışınca fonksiyona ne olur?",
+        "Değerleri birer birer üretmenin anahtar sözcüğü hangisi?"
+      ],
+      "explanation": "return ilk eşleşmede fonksiyonu bitirir ve yalnızca 2'yi döndürür. yield n yazılırsa fonksiyon generator olur; print(list(evens(...))) [2, 4] verir."
+    },
+    {
+      "id": "m13-q15",
+      "type": "bug",
+      "topic": "generator-tukenme",
+      "sectionId": "generator-pipelines",
+      "difficulty": 2,
+      "prompt": "ortalama satırı neden ZeroDivisionError verir?",
+      "code": "scores = (int(s) for s in \"70 80 90\".split())\nprint(\"toplam:\", sum(scores))\nprint(\"ortalama:\", sum(scores) / len(list(scores)))",
+      "answer": "Generator ifadesi ilk sum ile tükendi; sonraki kullanımlar boş görür, bir listeye çevrilmeli",
+      "options": [
+        "split() boşluklara göre bölemediği için liste boş",
+        "len() generator'larla hiç kullanılamaz, bu yüzden 0 döner",
+        "Generator ifadesi ilk sum ile tükendi; sonraki kullanımlar boş görür, bir listeye çevrilmeli",
+        "int() dönüşümü bu satırda yeniden yapılmadığı için değerler kayboldu"
+      ],
+      "optionFeedback": {
+        "int() dönüşümü bu satırda yeniden yapılmadığı için değerler kayboldu": "Dönüşüm doğru; sorun generator'ın bir kez dolaşılabilmesi.",
+        "split() boşluklara göre bölemediği için liste boş": "İlk satır 240 yazdırıyor; bölme doğru çalışıyor.",
+        "len() generator'larla hiç kullanılamaz, bu yüzden 0 döner": "Burada len'e generator değil list(scores) veriliyor; liste boş olduğu için 0 çıkıyor."
+      },
+      "hints": [
+        "İlk satır doğru toplamı yazıyor mu?",
+        "Generator ikinci kez dolaşılabilir mi?"
+      ],
+      "explanation": "İlk sum generator'ı tüketir. İkinci satırda sum(scores) 0, list(scores) boş liste olur ve 0 / 0 ZeroDivisionError verir. Değerleri birden çok kez kullanmak için scores = [int(s) for s in ...] yazılmalı."
+    },
+    {
+      "id": "m13-q16",
+      "type": "bug",
+      "topic": "wrapper-args",
+      "sectionId": "decorators",
+      "difficulty": 2,
+      "prompt": "add(1, 2) neden TypeError verir?",
+      "code": "def log(func):\n    def wrapper():\n        print(\"çağrılıyor\")\n        return func()\n    return wrapper\n\n@log\ndef add(a, b):\n    return a + b\n\nprint(add(1, 2))",
+      "answer": "wrapper argüman almıyor; *args, **kwargs ile alıp func'a geçirmeli",
+      "options": [
+        "decorator'lar argümanlı fonksiyonlara uygulanamaz",
+        "@log satırı fonksiyon tanımından sonra yazılmalı",
+        "wrapper içinde print kullanıldığı için sonuç kayboluyor",
+        "wrapper argüman almıyor; *args, **kwargs ile alıp func'a geçirmeli"
+      ],
+      "optionFeedback": {
+        "decorator'lar argümanlı fonksiyonlara uygulanamaz": "Uygulanabilir; sarmalayıcının argümanları kabul edip iletmesi gerekir.",
+        "@log satırı fonksiyon tanımından sonra yazılmalı": "Decorator def satırının hemen üstüne yazılır.",
+        "wrapper içinde print kullanıldığı için sonuç kayboluyor": "print sonucu etkilemez; hata çağrı sırasında argüman sayısından çıkıyor."
+      },
+      "hints": [
+        "add artık hangi fonksiyonu gösteriyor?",
+        "add(1, 2) çağrısı wrapper'a kaç argüman veriyor?"
+      ],
+      "explanation": "@log sonrası add, wrapper'dır. add(1, 2) wrapper'a iki argüman verir ama wrapper hiç parametre almaz: 'takes 0 positional arguments but 2 were given'. def wrapper(*args, **kwargs): return func(*args, **kwargs) yazılmalı."
+    },
+    {
+      "id": "m13-q17",
+      "type": "bug",
+      "topic": "parantez",
+      "sectionId": "decorator-params",
+      "difficulty": 2,
+      "prompt": "Bu tanım neden daha çağrı yapılmadan TypeError verir?",
+      "code": "def log(func):\n    def wrapper(*args, **kwargs):\n        print(\"çağrılıyor\")\n        return func(*args, **kwargs)\n    return wrapper\n\n@log()\ndef work():\n    return 1",
+      "answer": "log parametresiz bir decorator; @log() onu func olmadan çağırıyor, @log yazılmalı",
+      "options": [
+        "log parametresiz bir decorator; @log() onu func olmadan çağırıyor, @log yazılmalı",
+        "work hiçbir argüman almadığı için dekore edilemez",
+        "wrapper'da *args ve **kwargs birlikte kullanılamaz",
+        "Decorator'lar yalnızca sınıf metotlarına uygulanabilir"
+      ],
+      "optionFeedback": {
+        "work hiçbir argüman almadığı için dekore edilemez": "Argümansız fonksiyonlar da dekore edilebilir.",
+        "wrapper'da *args ve **kwargs birlikte kullanılamaz": "İkisi birlikte kullanılır; genel sarmalayıcının standart biçimi budur.",
+        "Decorator'lar yalnızca sınıf metotlarına uygulanabilir": "Decorator'lar her fonksiyona uygulanabilir."
+      },
+      "hints": [
+        "@ işaretinden sonraki ifade önce değerlendirilir.",
+        "log() çağrısı log'un hangi parametresini eksik bırakıyor?"
+      ],
+      "explanation": "@log() önce log()'u argümansız çağırır; log func parametresini beklediği için 'missing 1 required positional argument' TypeError'ı tanım anında çıkar. Parametresiz decorator @log diye yazılır; parantez yalnızca parametreli (üç katmanlı) decorator'larda kullanılır."
+    },
+    {
+      "id": "m13-q18",
+      "type": "bug",
+      "topic": "contextmanager-finally",
+      "sectionId": "contextlib",
+      "difficulty": 3,
+      "prompt": "with bloğunda hata olunca neden 'kapat' yazılmıyor?",
+      "code": "from contextlib import contextmanager\n\n@contextmanager\ndef opened(name):\n    print(\"aç\", name)\n    yield name\n    print(\"kapat\", name)\n\ntry:\n    with opened(\"rapor.txt\"):\n        raise ValueError(\"yazma hatası\")\nexcept ValueError:\n    pass",
+      "answer": "yield try/finally içinde değil; hata yield satırında yükselir ve sonraki temizlik satırı atlanır",
+      "options": [
+        "yield bir değer döndürdüğü için fonksiyon orada biter",
+        "yield try/finally içinde değil; hata yield satırında yükselir ve sonraki temizlik satırı atlanır",
+        "@contextmanager hata olduğunda generator'ı hiç devam ettirmez, bu yüzden temizlik yazılamaz",
+        "except ValueError: pass satırı 'kapat' çıktısını da siler"
+      ],
+      "optionFeedback": {
+        "@contextmanager hata olduğunda generator'ı hiç devam ettirmez, bu yüzden temizlik yazılamaz": "Hatayı generator'ın içine, yield noktasına iletir; finally bloğu bu yüzden çalışabilir.",
+        "except ValueError: pass satırı 'kapat' çıktısını da siler": "except yazılmış çıktıyı silmez; 'kapat' hiç yazdırılmadı.",
+        "yield bir değer döndürdüğü için fonksiyon orada biter": "yield fonksiyonu bitirmez, duraklatır; hatasız durumda 'kapat' yazılırdı."
+      },
+      "hints": [
+        "Hatasız bir blokta 'kapat' yazılır mıydı?",
+        "Blokta hata olunca generator'ın içinde hangi satırda hata yükselir?"
+      ],
+      "explanation": "with bloğundaki hata generator'ın içinde, yield satırında yeniden fırlatılır; yield'den sonraki satırlar atlanır. Temizlik kesin çalışsın diye kalıp try: yield name / finally: print('kapat', name) olmalı."
+    },
+    {
+      "id": "m13-q19",
+      "type": "fill",
+      "topic": "next",
+      "sectionId": "iterator-protocol",
+      "difficulty": 1,
+      "prompt": "Iterator'dan ilk değeri alan yerleşik fonksiyonu yaz.",
+      "code": "it = iter([\"a\", \"b\"])\nfirst = ___(it)\nprint(first, list(it))",
+      "answer": "next",
+      "expectedOutput": "a ['b']",
+      "hints": [
+        "Iterator'dan sıradaki değeri veren yerleşik fonksiyon.",
+        "for döngüsü de her turda bunu çağırır."
+      ],
+      "explanation": "next(it) iterator'dan sıradaki değeri alır; list(it) yalnızca kalanı toplar.",
+      "acceptedAnswers": [
+        "next"
+      ],
+      "solutionCode": "it = iter([\"a\", \"b\"])\nfirst = next(it)\nprint(first, list(it))"
+    },
+    {
+      "id": "m13-q20",
+      "type": "fill",
+      "topic": "yield",
+      "sectionId": "generators",
+      "difficulty": 1,
+      "prompt": "Fonksiyonu, kareleri birer birer üreten bir generator yapan anahtar sözcüğü yaz.",
+      "code": "def squares(limit):\n    for n in range(limit):\n        ___ n * n\n\nprint(list(squares(4)))",
+      "answer": "yield",
+      "expectedOutput": "[0, 1, 4, 9]",
+      "hints": [
+        "return bir kez döner; burada her turda bir değer gerekiyor.",
+        "Değeri verip fonksiyonu duraklatan sözcük."
+      ],
+      "explanation": "yield her turda bir değer üretir ve fonksiyonu duraklatır; list() bütün değerleri toplar.",
+      "acceptedAnswers": [
+        "yield"
+      ],
+      "solutionCode": "def squares(limit):\n    for n in range(limit):\n        yield n * n\n\nprint(list(squares(4)))"
+    },
+    {
+      "id": "m13-q21",
+      "type": "fill",
+      "topic": "wraps",
+      "sectionId": "decorators",
+      "difficulty": 2,
+      "prompt": "Sarmalayıcının asıl fonksiyonun adını ve belgesini korumasını sağlayan decorator'ı yaz.",
+      "code": "from functools import wraps\n\ndef keep(func):\n    @___(func)\n    def wrapper(*args, **kwargs):\n        return func(*args, **kwargs)\n    return wrapper\n\n@keep\ndef report():\n    \"\"\"Rapor.\"\"\"\n\nprint(report.__name__, report.__doc__)",
+      "answer": "wraps",
+      "expectedOutput": "report Rapor.",
+      "hints": [
+        "functools'tan içe aktarılan ad.",
+        "Asıl fonksiyonu argüman olarak alır."
+      ],
+      "explanation": "@wraps(func), __name__, __doc__ gibi bilgileri wrapper'a kopyalar; bu yüzden report adını ve belgesini korur.",
+      "acceptedAnswers": [
+        "wraps"
+      ],
+      "solutionCode": "from functools import wraps\n\ndef keep(func):\n    @wraps(func)\n    def wrapper(*args, **kwargs):\n        return func(*args, **kwargs)\n    return wrapper\n\n@keep\ndef report():\n    \"\"\"Rapor.\"\"\"\n\nprint(report.__name__, report.__doc__)"
+    },
+    {
+      "id": "m13-q22",
+      "type": "fill",
+      "topic": "exit",
+      "sectionId": "context-manager-class",
+      "difficulty": 2,
+      "prompt": "with bloğundan çıkarken çağrılan özel metodun adını yaz.",
+      "code": "class Door:\n    def __enter__(self):\n        print(\"açıldı\")\n        return self\n\n    def ___(self, exc_type, exc, tb):\n        print(\"kapandı\")\n\nwith Door():\n    print(\"içeride\")",
+      "answer": "__exit__",
+      "expectedOutput": "açıldı\niçeride\nkapandı",
+      "hints": [
+        "Girişte __enter__ çağrılır; çıkışta?",
+        "Üç hata parametresi alır."
+      ],
+      "explanation": "with bloğu bitince __exit__ çağrılır; blokta hata olsaydı türü, nesnesi ve traceback'i bu parametrelere gelirdi.",
+      "acceptedAnswers": [
+        "__exit__"
+      ],
+      "solutionCode": "class Door:\n    def __enter__(self):\n        print(\"açıldı\")\n        return self\n\n    def __exit__(self, exc_type, exc, tb):\n        print(\"kapandı\")\n\nwith Door():\n    print(\"içeride\")"
+    },
+    {
+      "id": "m13-q23",
+      "type": "order",
+      "topic": "iter-generator",
+      "sectionId": "custom-iterator",
+      "difficulty": 2,
+      "prompt": "__iter__'i generator olan bir sınıfla çift sayıları listeleyen sırayı kur.",
+      "expectedOutput": "[0, 2, 4, 6]",
+      "hints": [
+        "__iter__ içindeki for döngüsünün gövdesinde yield olmalı.",
+        "Nesne, sınıf tanımlandıktan sonra kullanılır."
+      ],
+      "explanation": "Evens'in __iter__'i bir generator'dır; her dolaşmada yeni bir generator döner ve 0'dan 7'ye kadar çift sayıları üretir.",
+      "answer": "class Evens:\n    def __init__(self, limit):\n        self.limit = limit\n    def __iter__(self):\n        for n in range(0, self.limit, 2):\n            yield n\nprint(list(Evens(7)))",
+      "lines": [
+        "        for n in range(0, self.limit, 2):",
+        "print(list(Evens(7)))",
+        "    def __init__(self, limit):",
+        "            yield n",
+        "class Evens:",
+        "    def __iter__(self):",
+        "        self.limit = limit"
+      ],
+      "solutionCode": "class Evens:\n    def __init__(self, limit):\n        self.limit = limit\n    def __iter__(self):\n        for n in range(0, self.limit, 2):\n            yield n\nprint(list(Evens(7)))"
+    },
+    {
+      "id": "m13-q24",
+      "type": "order",
+      "topic": "boru-hatti",
+      "sectionId": "generator-pipelines",
+      "difficulty": 2,
+      "prompt": "Yalnızca rakamlardan oluşan satırları toplayan tembel boru hattını kur.",
+      "expectedOutput": "8",
+      "hints": [
+        "Her adım bir öncekinin generator'ını kullanır.",
+        "En son tüketici sum'dır."
+      ],
+      "explanation": "digits rakam olmayan satırı süzer, numbers kalanları sayıya çevirir; sum değerleri çektikçe zincir çalışır: 3 + 5 = 8.",
+      "answer": "lines = [\"3\", \"x\", \"5\"]\ndigits = (line for line in lines if line.isdigit())\nnumbers = (int(d) for d in digits)\nprint(sum(numbers))",
+      "lines": [
+        "print(sum(numbers))",
+        "digits = (line for line in lines if line.isdigit())",
+        "numbers = (int(d) for d in digits)",
+        "lines = [\"3\", \"x\", \"5\"]"
+      ],
+      "solutionCode": "lines = [\"3\", \"x\", \"5\"]\ndigits = (line for line in lines if line.isdigit())\nnumbers = (int(d) for d in digits)\nprint(sum(numbers))"
+    },
+    {
+      "id": "m13-q25",
+      "type": "order",
+      "topic": "parametreli",
+      "sectionId": "decorator-params",
+      "difficulty": 3,
+      "prompt": "Parametreli bir decorator tanımlayıp kullanan sırayı kur.",
+      "expectedOutput": "Sn. Ada",
+      "hints": [
+        "Üç katman: parametre → decorator → wrapper.",
+        "Her katman bir içteki fonksiyonu return eder; return satırlarının girintisine dikkat."
+      ],
+      "explanation": "prefix('Sn. ') decorator'ı döndürür, decorator title'ı wrapper ile değiştirir; wrapper önek ekleyerek sonucu döndürür.",
+      "answer": "def prefix(text):\n    def decorator(func):\n        def wrapper(name):\n            return text + func(name)\n        return wrapper\n    return decorator\n@prefix(\"Sn. \")\ndef title(name):\n    return name.title()\nprint(title(\"ada\"))",
+      "lines": [
+        "@prefix(\"Sn. \")",
+        "        def wrapper(name):",
+        "print(title(\"ada\"))",
+        "        return wrapper",
+        "def prefix(text):",
+        "    return name.title()",
+        "            return text + func(name)",
+        "    return decorator",
+        "    def decorator(func):",
+        "def title(name):"
+      ],
+      "solutionCode": "def prefix(text):\n    def decorator(func):\n        def wrapper(name):\n            return text + func(name)\n        return wrapper\n    return decorator\n@prefix(\"Sn. \")\ndef title(name):\n    return name.title()\nprint(title(\"ada\"))"
+    },
+    {
+      "id": "m13-q26",
+      "type": "order",
+      "topic": "contextmanager",
+      "sectionId": "contextlib",
+      "difficulty": 2,
+      "prompt": "@contextmanager ile bir bölümün başını ve sonunu yazan sırayı kur.",
+      "expectedOutput": "başla rapor\nyazılıyor\nbitir rapor",
+      "hints": [
+        "yield, with bloğunun çalıştığı noktadır.",
+        "Decorator, def satırının hemen üstündedir."
+      ],
+      "explanation": "yield'den önceki satır girişte, with bloğu yield noktasında, yield'den sonraki satır çıkışta çalışır.",
+      "answer": "from contextlib import contextmanager\n@contextmanager\ndef section(name):\n    print(\"başla\", name)\n    yield\n    print(\"bitir\", name)\nwith section(\"rapor\"):\n    print(\"yazılıyor\")",
+      "lines": [
+        "    print(\"bitir\", name)",
+        "with section(\"rapor\"):",
+        "from contextlib import contextmanager",
+        "    print(\"başla\", name)",
+        "    print(\"yazılıyor\")",
+        "def section(name):",
+        "    yield",
+        "@contextmanager"
+      ],
+      "solutionCode": "from contextlib import contextmanager\n@contextmanager\ndef section(name):\n    print(\"başla\", name)\n    yield\n    print(\"bitir\", name)\nwith section(\"rapor\"):\n    print(\"yazılıyor\")"
+    },
+    {
+      "id": "m13-q27",
+      "type": "code",
+      "topic": "next-baslik",
+      "sectionId": "iterator-protocol",
+      "difficulty": 1,
+      "prompt": "İlk satır N, ardından N satır gelir; ilk satır başlıktır. Satırlardan bir iterator kur, next ile başlığı al (satır yoksa varsayılan None), kalan satırları say. Çıktı: 'başlık: X | kayıt: K'; hiç satır yoksa 'boş'.",
+      "starterCode": "lines = iter([input() for _ in range(int(input()))])\n# next ile başlığı al (satır yoksa None)\nheader = None",
+      "answer": "lines = iter([input() for _ in range(int(input()))])\nheader = next(lines, None)\nif header is None:\n    print(\"boş\")\nelse:\n    print(f\"başlık: {header} | kayıt: {sum(1 for _ in lines)}\")",
+      "exampleInput": "3\nad,puan\nAda,90\nCan,75",
+      "expectedOutput": "başlık: ad,puan | kayıt: 2",
+      "tests": [
+        {
+          "label": "Normal",
+          "stdin": "3\nad,puan\nAda,90\nCan,75",
+          "expectedOutput": "başlık: ad,puan | kayıt: 2"
+        },
+        {
+          "label": "Yalnız başlık",
+          "stdin": "1\nad,puan",
+          "expectedOutput": "başlık: ad,puan | kayıt: 0"
+        },
+        {
+          "label": "Hiç satır yok",
+          "stdin": "0",
+          "expectedOutput": "boş"
+        },
+        {
+          "label": "Tek kayıt",
+          "stdin": "2\nx\ny",
+          "expectedOutput": "başlık: x | kayıt: 1"
+        }
+      ],
+      "hints": [
+        "next(lines, None) boş iterator'da hata yerine None verir.",
+        "Kalanları saymak için sum(1 for _ in lines) ya da len(list(lines)) kullanılabilir."
+      ],
+      "explanation": "next başlığı tüketir; aynı iterator'ın kalanı yalnızca kayıtları içerir. Varsayılan değer boş girdide StopIteration'ı önler.",
+      "solutionCode": "lines = iter([input() for _ in range(int(input()))])\nheader = next(lines, None)\nif header is None:\n    print(\"boş\")\nelse:\n    print(f\"başlık: {header} | kayıt: {sum(1 for _ in lines)}\")"
+    },
+    {
+      "id": "m13-q28",
+      "type": "code",
+      "topic": "kendi-iterable",
+      "sectionId": "custom-iterator",
+      "difficulty": 2,
+      "prompt": "Cycle(items, rounds) sınıfının __iter__'ini generator olarak yaz: öğeleri sırayla rounds tur boyunca üretsin. Nesne tekrar dolaşılabilir olmalı. Program öğeleri ve tur sayısını okur, listeyi yazar ve ikinci dolaşmanın aynı sonucu verdiğini gösterir.",
+      "starterCode": "class Cycle:\n    def __init__(self, items, rounds):\n        self.items = items\n        self.rounds = rounds\n\n    def __iter__(self):\n        # her tur için öğeleri sırayla yield et\n        return iter([])\n\ncycle = Cycle(input().split(), int(input()))\nprint(list(cycle))\nprint(\"tekrar:\", list(cycle) == list(cycle))",
+      "answer": "class Cycle:\n    def __init__(self, items, rounds):\n        self.items = items\n        self.rounds = rounds\n\n    def __iter__(self):\n        for _ in range(self.rounds):\n            yield from self.items\n\ncycle = Cycle(input().split(), int(input()))\nprint(list(cycle))\nprint(\"tekrar:\", list(cycle) == list(cycle))",
+      "exampleInput": "a b\n2",
+      "expectedOutput": "['a', 'b', 'a', 'b']\ntekrar: True",
+      "tests": [
+        {
+          "label": "İki tur",
+          "stdin": "a b\n2",
+          "expectedOutput": "['a', 'b', 'a', 'b']\ntekrar: True"
+        },
+        {
+          "label": "Tek tur",
+          "stdin": "x y z\n1",
+          "expectedOutput": "['x', 'y', 'z']\ntekrar: True"
+        },
+        {
+          "label": "Sıfır tur",
+          "stdin": "a\n0",
+          "expectedOutput": "[]\ntekrar: True"
+        },
+        {
+          "label": "Tek öğe, üç tur",
+          "stdin": "k\n3",
+          "expectedOutput": "['k', 'k', 'k']\ntekrar: True"
+        }
+      ],
+      "hints": [
+        "__iter__ içinde for _ in range(self.rounds) döngüsü kur.",
+        "Her turda öğeleri yield from self.items ile ver."
+      ],
+      "explanation": "__iter__ gövdesinde yield olduğu için her list() çağrısı yeni bir generator alır; nesne tekrar tekrar aynı sonucu verir.",
+      "solutionCode": "class Cycle:\n    def __init__(self, items, rounds):\n        self.items = items\n        self.rounds = rounds\n\n    def __iter__(self):\n        for _ in range(self.rounds):\n            yield from self.items\n\ncycle = Cycle(input().split(), int(input()))\nprint(list(cycle))\nprint(\"tekrar:\", list(cycle) == list(cycle))"
+    },
+    {
+      "id": "m13-q29",
+      "type": "code",
+      "topic": "chunks",
+      "sectionId": "generators",
+      "difficulty": 2,
+      "prompt": "chunks(items, size) generator'ını yaz: listeyi size uzunluğunda parçalar hâlinde üretsin, son parça kısa olabilir. Program öğeleri ve boyutu okur, her parçayı '|' ile birleştirip ayrı satıra yazar ve sonda 'parça: N' gösterir.",
+      "starterCode": "def chunks(items, size):\n    # size uzunluğunda parçaları yield et\n    return []\n\nitems = input().split()\nsize = int(input())\ncount = 0\nfor part in chunks(items, size):\n    print(\"|\".join(part))\n    count += 1\nprint(\"parça:\", count)",
+      "answer": "def chunks(items, size):\n    for start in range(0, len(items), size):\n        yield items[start:start + size]\n\nitems = input().split()\nsize = int(input())\ncount = 0\nfor part in chunks(items, size):\n    print(\"|\".join(part))\n    count += 1\nprint(\"parça:\", count)",
+      "exampleInput": "a b c d e\n2",
+      "expectedOutput": "a|b\nc|d\ne\nparça: 3",
+      "tests": [
+        {
+          "label": "Kısa son parça",
+          "stdin": "a b c d e\n2",
+          "expectedOutput": "a|b\nc|d\ne\nparça: 3"
+        },
+        {
+          "label": "Tam bölünür",
+          "stdin": "1 2 3 4\n2",
+          "expectedOutput": "1|2\n3|4\nparça: 2"
+        },
+        {
+          "label": "Boyut büyük",
+          "stdin": "x y\n5",
+          "expectedOutput": "x|y\nparça: 1"
+        },
+        {
+          "label": "Boyut 1",
+          "stdin": "p q r\n1",
+          "expectedOutput": "p\nq\nr\nparça: 3"
+        }
+      ],
+      "hints": [
+        "range(0, len(items), size) parçaların başlangıç indekslerini verir.",
+        "Her başlangıç için items[start:start + size] dilimini yield et."
+      ],
+      "explanation": "Generator her parçayı istendiğinde üretir; dilimleme son parçanın kısa olmasını kendiliğinden halleder.",
+      "solutionCode": "def chunks(items, size):\n    for start in range(0, len(items), size):\n        yield items[start:start + size]\n\nitems = input().split()\nsize = int(input())\ncount = 0\nfor part in chunks(items, size):\n    print(\"|\".join(part))\n    count += 1\nprint(\"parça:\", count)"
+    },
+    {
+      "id": "m13-q30",
+      "type": "code",
+      "topic": "sonsuz",
+      "sectionId": "generator-pipelines",
+      "difficulty": 3,
+      "prompt": "fibonacci() adında sonsuz bir generator yaz (0, 1, 1, 2, 3, 5, ...). Program n ve bir sınır okur; itertools.islice ile ilk n değeri yazar, sonra sınırdan büyük ilk Fibonacci sayısını yazar.",
+      "starterCode": "from itertools import islice\n\ndef fibonacci():\n    # 0, 1, 1, 2, 3, 5, ... sonsuza kadar yield et\n    yield 0\n\nn = int(input())\nlimit = int(input())\nprint(list(islice(fibonacci(), n)))\nprint(\"ilk büyük:\", next(x for x in fibonacci() if x > limit))",
+      "answer": "from itertools import islice\n\ndef fibonacci():\n    a, b = 0, 1\n    while True:\n        yield a\n        a, b = b, a + b\n\nn = int(input())\nlimit = int(input())\nprint(list(islice(fibonacci(), n)))\nprint(\"ilk büyük:\", next(x for x in fibonacci() if x > limit))",
+      "exampleInput": "7\n10",
+      "expectedOutput": "[0, 1, 1, 2, 3, 5, 8]\nilk büyük: 13",
+      "tests": [
+        {
+          "label": "Normal",
+          "stdin": "7\n10",
+          "expectedOutput": "[0, 1, 1, 2, 3, 5, 8]\nilk büyük: 13"
+        },
+        {
+          "label": "Hiç değer",
+          "stdin": "0\n0",
+          "expectedOutput": "[]\nilk büyük: 1"
+        },
+        {
+          "label": "Büyük sınır",
+          "stdin": "3\n1000",
+          "expectedOutput": "[0, 1, 1]\nilk büyük: 1597"
+        },
+        {
+          "label": "Sınır bir Fibonacci",
+          "stdin": "2\n21",
+          "expectedOutput": "[0, 1]\nilk büyük: 34"
+        }
+      ],
+      "hints": [
+        "İki değişkenle başla: a, b = 0, 1; while True içinde a'yı yield et.",
+        "Sonra a, b = b, a + b ile ilerle; generator sonsuz olduğu için yalnızca islice ve next ile tüket."
+      ],
+      "explanation": "Sonsuz generator değerleri yalnızca istendikçe üretir; islice ilk n değeri, next ise koşulu sağlayan ilk değeri alıp durur.",
+      "solutionCode": "from itertools import islice\n\ndef fibonacci():\n    a, b = 0, 1\n    while True:\n        yield a\n        a, b = b, a + b\n\nn = int(input())\nlimit = int(input())\nprint(list(islice(fibonacci(), n)))\nprint(\"ilk büyük:\", next(x for x in fibonacci() if x > limit))"
+    },
+    {
+      "id": "m13-q31",
+      "type": "code",
+      "topic": "boru-hatti",
+      "sectionId": "generator-pipelines",
+      "difficulty": 2,
+      "prompt": "parse(lines) generator'ı her 'DÜZEY mesaj' satırını (düzey, mesaj) çiftine ayırsın; only(level, records) yalnızca o düzeydeki mesajları üretsin. Program satırları ve aranan düzeyi okur, tekrarlananları atlayarak mesajları ilk görülme sırasıyla numaralandırır; hiç yoksa 'kayıt yok' yazar.",
+      "starterCode": "def parse(lines):\n    # her satırı (düzey, mesaj) olarak yield et\n    return []\n\ndef only(level, records):\n    # yalnızca istenen düzeydeki mesajları yield et\n    return []\n\nlines = [input() for _ in range(int(input()))]\nlevel = input()\nseen = []\nfor message in only(level, parse(lines)):\n    if message not in seen:\n        seen.append(message)\nfor number, message in enumerate(seen, start=1):\n    print(f\"{number}. {message}\")\nif not seen:\n    print(\"kayıt yok\")",
+      "answer": "def parse(lines):\n    for line in lines:\n        level, message = line.split(\" \", 1)\n        yield level, message\n\ndef only(level, records):\n    for record_level, message in records:\n        if record_level == level:\n            yield message\n\nlines = [input() for _ in range(int(input()))]\nlevel = input()\nseen = []\nfor message in only(level, parse(lines)):\n    if message not in seen:\n        seen.append(message)\nfor number, message in enumerate(seen, start=1):\n    print(f\"{number}. {message}\")\nif not seen:\n    print(\"kayıt yok\")",
+      "exampleInput": "4\nERROR disk dolu\nINFO başladı\nERROR ağ yok\nERROR disk dolu\nERROR",
+      "expectedOutput": "1. disk dolu\n2. ağ yok",
+      "tests": [
+        {
+          "label": "Tekrar atlanır",
+          "stdin": "4\nERROR disk dolu\nINFO başladı\nERROR ağ yok\nERROR disk dolu\nERROR",
+          "expectedOutput": "1. disk dolu\n2. ağ yok"
+        },
+        {
+          "label": "Başka düzey",
+          "stdin": "3\nINFO a b\nERROR c\nINFO d\nINFO",
+          "expectedOutput": "1. a b\n2. d"
+        },
+        {
+          "label": "Eşleşme yok",
+          "stdin": "1\nINFO tamam\nERROR",
+          "expectedOutput": "kayıt yok"
+        },
+        {
+          "label": "Satır yok",
+          "stdin": "0\nERROR",
+          "expectedOutput": "kayıt yok"
+        }
+      ],
+      "hints": [
+        "line.split(' ', 1) yalnızca ilk boşluktan böler; mesajdaki boşluklar korunur.",
+        "only içinde for düzey, mesaj in records ile dolaş ve eşleşeni yield et."
+      ],
+      "explanation": "İki küçük generator bir boru hattı kurar; ara liste oluşmaz. Tekrar denetimi ise sırayı korumak için bir listeyle yapılır.",
+      "solutionCode": "def parse(lines):\n    for line in lines:\n        level, message = line.split(\" \", 1)\n        yield level, message\n\ndef only(level, records):\n    for record_level, message in records:\n        if record_level == level:\n            yield message\n\nlines = [input() for _ in range(int(input()))]\nlevel = input()\nseen = []\nfor message in only(level, parse(lines)):\n    if message not in seen:\n        seen.append(message)\nfor number, message in enumerate(seen, start=1):\n    print(f\"{number}. {message}\")\nif not seen:\n    print(\"kayıt yok\")"
+    },
+    {
+      "id": "m13-q32",
+      "type": "code",
+      "topic": "generator-filtre",
+      "sectionId": "generators",
+      "difficulty": 2,
+      "prompt": "read_numbers(lines) generator'ını yaz: boş satırları ve '#' ile başlayan yorumları atlasın, tam sayıya çevrilebilen satırları int olarak üretsin, çevrilemeyenleri sessizce atlasın. Program toplamı ve geçerli sayı adedini yazar.",
+      "starterCode": "def read_numbers(lines):\n    # boş ve yorum satırlarını atla, geçerli tam sayıları yield et\n    return []\n\nlines = [input() for _ in range(int(input()))]\nvalues = list(read_numbers(lines))\nprint(\"toplam:\", sum(values), \"| adet:\", len(values))",
+      "answer": "def read_numbers(lines):\n    for line in lines:\n        line = line.strip()\n        if not line or line.startswith(\"#\"):\n            continue\n        try:\n            yield int(line)\n        except ValueError:\n            continue\n\nlines = [input() for _ in range(int(input()))]\nvalues = list(read_numbers(lines))\nprint(\"toplam:\", sum(values), \"| adet:\", len(values))",
+      "exampleInput": "5\n# başlık\n10\n\nabc\n-3",
+      "expectedOutput": "toplam: 7 | adet: 2",
+      "tests": [
+        {
+          "label": "Karışık",
+          "stdin": "5\n# başlık\n10\n\nabc\n-3",
+          "expectedOutput": "toplam: 7 | adet: 2"
+        },
+        {
+          "label": "Boşluklu sayı",
+          "stdin": "2\n  5  \n#7",
+          "expectedOutput": "toplam: 5 | adet: 1"
+        },
+        {
+          "label": "Hiç geçerli yok",
+          "stdin": "2\nx\n# y",
+          "expectedOutput": "toplam: 0 | adet: 0"
+        },
+        {
+          "label": "Ondalık atlanır",
+          "stdin": "3\n1.5\n2\n3",
+          "expectedOutput": "toplam: 5 | adet: 2"
+        }
+      ],
+      "hints": [
+        "Satırı strip() ile temizle; boşsa ya da '#' ile başlıyorsa continue.",
+        "int(line)'ı try içinde yield et; ValueError'da atla."
+      ],
+      "explanation": "Generator yalnızca geçerli değerleri üretir; temizlik ve doğrulama tek yerde durur, çağıran kod yalnızca sayılarla ilgilenir.",
+      "solutionCode": "def read_numbers(lines):\n    for line in lines:\n        line = line.strip()\n        if not line or line.startswith(\"#\"):\n            continue\n        try:\n            yield int(line)\n        except ValueError:\n            continue\n\nlines = [input() for _ in range(int(input()))]\nvalues = list(read_numbers(lines))\nprint(\"toplam:\", sum(values), \"| adet:\", len(values))"
+    },
+    {
+      "id": "m13-q33",
+      "type": "code",
+      "topic": "decorator",
+      "sectionId": "decorators",
+      "difficulty": 2,
+      "prompt": "count_calls decorator'ını yaz: sarmalayıcı her çağrıda kendi calls özniteliğini artırsın, asıl fonksiyonun sonucunu döndürsün ve @wraps ile adını korusun. Program sayıları okuyup dekore edilmiş square'i her biri için çağırır.",
+      "starterCode": "from functools import wraps\n\ndef count_calls(func):\n    # wrapper yaz: calls'u artır, func'ın sonucunu döndür; @wraps(func) kullan\n    return func\n\n@count_calls\ndef square(n):\n    return n * n\n\nnumbers = [int(x) for x in input().split()]\nprint([square(n) for n in numbers])\nprint(\"çağrı:\", square.calls, \"| ad:\", square.__name__)",
+      "answer": "from functools import wraps\n\ndef count_calls(func):\n    @wraps(func)\n    def wrapper(*args, **kwargs):\n        wrapper.calls += 1\n        return func(*args, **kwargs)\n    wrapper.calls = 0\n    return wrapper\n\n@count_calls\ndef square(n):\n    return n * n\n\nnumbers = [int(x) for x in input().split()]\nprint([square(n) for n in numbers])\nprint(\"çağrı:\", square.calls, \"| ad:\", square.__name__)",
+      "exampleInput": "2 3 4",
+      "expectedOutput": "[4, 9, 16]\nçağrı: 3 | ad: square",
+      "tests": [
+        {
+          "label": "Üç çağrı",
+          "stdin": "2 3 4",
+          "expectedOutput": "[4, 9, 16]\nçağrı: 3 | ad: square"
+        },
+        {
+          "label": "Tek çağrı",
+          "stdin": "-5",
+          "expectedOutput": "[25]\nçağrı: 1 | ad: square"
+        },
+        {
+          "label": "Tekrarlanan değer",
+          "stdin": "1 1 1 1",
+          "expectedOutput": "[1, 1, 1, 1]\nçağrı: 4 | ad: square"
+        }
+      ],
+      "hints": [
+        "Sayaç için wrapper.calls = 0 ataması wrapper tanımından sonra, return'den önce yapılır.",
+        "wrapper içinde wrapper.calls += 1 ve return func(*args, **kwargs)."
+      ],
+      "explanation": "Fonksiyonlar nesne olduğu için sarmalayıcıya öznitelik eklenebilir. wraps, adı square olarak korur; sonucu döndürmeyi unutmak listeyi None'larla doldururdu.",
+      "solutionCode": "from functools import wraps\n\ndef count_calls(func):\n    @wraps(func)\n    def wrapper(*args, **kwargs):\n        wrapper.calls += 1\n        return func(*args, **kwargs)\n    wrapper.calls = 0\n    return wrapper\n\n@count_calls\ndef square(n):\n    return n * n\n\nnumbers = [int(x) for x in input().split()]\nprint([square(n) for n in numbers])\nprint(\"çağrı:\", square.calls, \"| ad:\", square.__name__)"
+    },
+    {
+      "id": "m13-q34",
+      "type": "code",
+      "topic": "parametreli",
+      "sectionId": "decorator-params",
+      "difficulty": 3,
+      "prompt": "in_range(low, high) adında parametreli bir decorator yaz: dekore edilen fonksiyonun bütün konumsal argümanları [low, high] aralığında değilse ValueError(f'{değer} aralık dışında') fırlatsın, değilse fonksiyonun sonucunu döndürsün. Program iki not okur ve ortalamayı ya da hatayı yazar.",
+      "starterCode": "from functools import wraps\n\ndef in_range(low, high):\n    # üç katman: parametreler → decorator → wrapper\n    pass\n\n@in_range(0, 100)\ndef average(a, b):\n    return (a + b) / 2\n\ntry:\n    print(average(int(input()), int(input())))\nexcept ValueError as error:\n    print(\"hata:\", error)",
+      "answer": "from functools import wraps\n\ndef in_range(low, high):\n    def decorator(func):\n        @wraps(func)\n        def wrapper(*args, **kwargs):\n            for value in args:\n                if not low <= value <= high:\n                    raise ValueError(f\"{value} aralık dışında\")\n            return func(*args, **kwargs)\n        return wrapper\n    return decorator\n\n@in_range(0, 100)\ndef average(a, b):\n    return (a + b) / 2\n\ntry:\n    print(average(int(input()), int(input())))\nexcept ValueError as error:\n    print(\"hata:\", error)",
+      "exampleInput": "80\n90",
+      "expectedOutput": "85.0",
+      "tests": [
+        {
+          "label": "Geçerli",
+          "stdin": "80\n90",
+          "expectedOutput": "85.0"
+        },
+        {
+          "label": "Üst sınır dışı",
+          "stdin": "80\n120",
+          "expectedOutput": "hata: 120 aralık dışında"
+        },
+        {
+          "label": "Alt sınır dışı",
+          "stdin": "-1\n50",
+          "expectedOutput": "hata: -1 aralık dışında"
+        },
+        {
+          "label": "Sınırlar dahil",
+          "stdin": "0\n100",
+          "expectedOutput": "50.0"
+        }
+      ],
+      "hints": [
+        "in_range bir decorator döndürmeli, decorator bir wrapper döndürmeli.",
+        "wrapper içinde for value in args ile her argümanı low <= value <= high diye denetle."
+      ],
+      "explanation": "@in_range(0, 100) önce in_range'i çağırır ve dönen decorator average'a uygulanır. wrapper argümanları denetleyip ancak geçerliyse asıl fonksiyonu çağırır.",
+      "solutionCode": "from functools import wraps\n\ndef in_range(low, high):\n    def decorator(func):\n        @wraps(func)\n        def wrapper(*args, **kwargs):\n            for value in args:\n                if not low <= value <= high:\n                    raise ValueError(f\"{value} aralık dışında\")\n            return func(*args, **kwargs)\n        return wrapper\n    return decorator\n\n@in_range(0, 100)\ndef average(a, b):\n    return (a + b) / 2\n\ntry:\n    print(average(int(input()), int(input())))\nexcept ValueError as error:\n    print(\"hata:\", error)"
+    },
+    {
+      "id": "m13-q35",
+      "type": "code",
+      "topic": "context-manager",
+      "sectionId": "context-manager-class",
+      "difficulty": 2,
+      "prompt": "Ledger context manager sınıfını yaz: __enter__ boş bir liste döndürsün (kayıtlar buna eklenecek); __exit__ hata yoksa 'toplam: X' yazsın, ValueError olursa 'iptal: mesaj' yazıp hatayı yutsun (True), başka hataları yutmasın. Program tutarları okur, negatif tutarda ValueError fırlatır ve sonda 'devam' yazar.",
+      "starterCode": "class Ledger:\n    def __enter__(self):\n        pass\n\n    def __exit__(self, exc_type, exc, tb):\n        pass\n\namounts = [int(x) for x in input().split()]\nwith Ledger() as entries:\n    for amount in amounts:\n        if amount < 0:\n            raise ValueError(f\"negatif tutar: {amount}\")\n        entries.append(amount)\nprint(\"devam\")",
+      "answer": "class Ledger:\n    def __enter__(self):\n        self.entries = []\n        return self.entries\n\n    def __exit__(self, exc_type, exc, tb):\n        if exc_type is None:\n            print(\"toplam:\", sum(self.entries))\n            return False\n        if issubclass(exc_type, ValueError):\n            print(\"iptal:\", exc)\n            return True\n        return False\n\namounts = [int(x) for x in input().split()]\nwith Ledger() as entries:\n    for amount in amounts:\n        if amount < 0:\n            raise ValueError(f\"negatif tutar: {amount}\")\n        entries.append(amount)\nprint(\"devam\")",
+      "exampleInput": "10 20 30",
+      "expectedOutput": "toplam: 60\ndevam",
+      "tests": [
+        {
+          "label": "Hatasız",
+          "stdin": "10 20 30",
+          "expectedOutput": "toplam: 60\ndevam"
+        },
+        {
+          "label": "Negatif tutar",
+          "stdin": "10 -5 30",
+          "expectedOutput": "iptal: negatif tutar: -5\ndevam"
+        },
+        {
+          "label": "Tek tutar",
+          "stdin": "0",
+          "expectedOutput": "toplam: 0\ndevam"
+        },
+        {
+          "label": "İlk tutar negatif",
+          "stdin": "-1",
+          "expectedOutput": "iptal: negatif tutar: -1\ndevam"
+        }
+      ],
+      "hints": [
+        "__enter__ listeyi self'e kaydedip döndürmeli; __exit__ toplamı oradan hesaplar.",
+        "exc_type None ise hata yoktur; issubclass(exc_type, ValueError) ise yut (True döndür)."
+      ],
+      "explanation": "__enter__'in dönüşü as entries'e bağlanır. __exit__ her durumda çalışır; yalnızca beklenen ValueError'ı yutar, diğer hataları yükselmeye bırakır.",
+      "solutionCode": "class Ledger:\n    def __enter__(self):\n        self.entries = []\n        return self.entries\n\n    def __exit__(self, exc_type, exc, tb):\n        if exc_type is None:\n            print(\"toplam:\", sum(self.entries))\n            return False\n        if issubclass(exc_type, ValueError):\n            print(\"iptal:\", exc)\n            return True\n        return False\n\namounts = [int(x) for x in input().split()]\nwith Ledger() as entries:\n    for amount in amounts:\n        if amount < 0:\n            raise ValueError(f\"negatif tutar: {amount}\")\n        entries.append(amount)\nprint(\"devam\")"
+    },
+    {
+      "id": "m13-q36",
+      "type": "code",
+      "topic": "contextmanager",
+      "sectionId": "contextlib",
+      "difficulty": 3,
+      "prompt": "@contextmanager ile changed(store, key, value) yaz: anahtarı geçici olarak value yapsın; blok bitince (hata olsa bile) eski değeri geri koysun, anahtar önceden yoksa silsin. Program sözlüğü ve geçici değişikliği okur, blok içinde ve sonrasında sözlüğü yazar; 'hata' girdisinde blok içinde RuntimeError fırlatılır.",
+      "starterCode": "from contextlib import contextmanager\n\n@contextmanager\ndef changed(store, key, value):\n    # eski durumu sakla, değeri koy, yield et; finally ile geri yükle\n    yield\n\nstore = dict(pair.split(\"=\") for pair in input().split())\nkey, value = input().split(\"=\")\nmode = input()\ntry:\n    with changed(store, key, value):\n        print(\"içeride:\", sorted(store.items()))\n        if mode == \"hata\":\n            raise RuntimeError(\"blok hatası\")\nexcept RuntimeError as error:\n    print(\"yakalandı:\", error)\nprint(\"sonra:\", sorted(store.items()))",
+      "answer": "from contextlib import contextmanager\n\n@contextmanager\ndef changed(store, key, value):\n    missing = key not in store\n    old = store.get(key)\n    store[key] = value\n    try:\n        yield\n    finally:\n        if missing:\n            del store[key]\n        else:\n            store[key] = old\n\nstore = dict(pair.split(\"=\") for pair in input().split())\nkey, value = input().split(\"=\")\nmode = input()\ntry:\n    with changed(store, key, value):\n        print(\"içeride:\", sorted(store.items()))\n        if mode == \"hata\":\n            raise RuntimeError(\"blok hatası\")\nexcept RuntimeError as error:\n    print(\"yakalandı:\", error)\nprint(\"sonra:\", sorted(store.items()))",
+      "exampleInput": "debug=0 port=80\ndebug=1\nnormal",
+      "expectedOutput": "içeride: [('debug', '1'), ('port', '80')]\nsonra: [('debug', '0'), ('port', '80')]",
+      "tests": [
+        {
+          "label": "Var olan anahtar",
+          "stdin": "debug=0 port=80\ndebug=1\nnormal",
+          "expectedOutput": "içeride: [('debug', '1'), ('port', '80')]\nsonra: [('debug', '0'), ('port', '80')]"
+        },
+        {
+          "label": "Yeni anahtar silinir",
+          "stdin": "port=80\nmode=test\nnormal",
+          "expectedOutput": "içeride: [('mode', 'test'), ('port', '80')]\nsonra: [('port', '80')]"
+        },
+        {
+          "label": "Hata olsa da geri alınır",
+          "stdin": "debug=0\ndebug=1\nhata",
+          "expectedOutput": "içeride: [('debug', '1')]\nyakalandı: blok hatası\nsonra: [('debug', '0')]"
+        },
+        {
+          "label": "Hata ve yeni anahtar",
+          "stdin": "a=1\nb=2\nhata",
+          "expectedOutput": "içeride: [('a', '1'), ('b', '2')]\nyakalandı: blok hatası\nsonra: [('a', '1')]"
+        }
+      ],
+      "hints": [
+        "Önce anahtarın var olup olmadığını ve eski değerini sakla.",
+        "yield'i try/finally içine al; finally'de anahtar önceden yoksa del, varsa eski değeri geri koy."
+      ],
+      "explanation": "try/finally sayesinde blokta hata olsa da geri yükleme çalışır; hata ise yutulmadan dışarı çıkar ve çağıran onu yakalar.",
+      "solutionCode": "from contextlib import contextmanager\n\n@contextmanager\ndef changed(store, key, value):\n    missing = key not in store\n    old = store.get(key)\n    store[key] = value\n    try:\n        yield\n    finally:\n        if missing:\n            del store[key]\n        else:\n            store[key] = old\n\nstore = dict(pair.split(\"=\") for pair in input().split())\nkey, value = input().split(\"=\")\nmode = input()\ntry:\n    with changed(store, key, value):\n        print(\"içeride:\", sorted(store.items()))\n        if mode == \"hata\":\n            raise RuntimeError(\"blok hatası\")\nexcept RuntimeError as error:\n    print(\"yakalandı:\", error)\nprint(\"sonra:\", sorted(store.items()))"
+    },
+    {
+      "id": "m13-q37",
+      "type": "traceback",
+      "topic": "stopiteration",
+      "sectionId": "iterator-protocol",
+      "difficulty": 1,
+      "prompt": "Tükenmiş bir iterator'dan bir değer daha isteniyor. Hangi hata oluşur?",
+      "code": "it = iter([1])\nnext(it)\nnext(it)",
+      "expectedError": "StopIteration",
+      "options": [
+        "StopIteration",
+        "IndexError",
+        "ValueError",
+        "TypeError"
+      ],
+      "optionFeedback": {
+        "IndexError": "İndeksle erişim yok; iterator'ın sonuna gelindiğini StopIteration bildirir.",
+        "ValueError": "Değer geçersiz değil; değer kalmadı.",
+        "TypeError": "it bir iterator olduğu için next ile kullanılabilir."
+      },
+      "hints": [
+        "Listede kaç öğe var, kaç next çağrılıyor?",
+        "for döngüsünün bitişi anlamak için yakaladığı hata."
+      ],
+      "explanation": "İkinci next'te değer kalmadığı için StopIteration fırlatılır. for döngüsü bunu sessizce yakalar; elle next çağırırken sen yakalamalı ya da next(it, varsayılan) kullanmalısın.",
+      "answer": "StopIteration"
+    },
+    {
+      "id": "m13-q38",
+      "type": "traceback",
+      "topic": "generator-len",
+      "sectionId": "generator-pipelines",
+      "difficulty": 2,
+      "prompt": "Bir generator ifadesinin uzunluğu soruluyor. Hangi hata oluşur?",
+      "code": "squares = (n * n for n in range(5))\nprint(len(squares))",
+      "expectedError": "TypeError",
+      "options": [
+        "ValueError",
+        "TypeError",
+        "AttributeError",
+        "StopIteration"
+      ],
+      "optionFeedback": {
+        "AttributeError": "Bir öznitelik aranmıyor; len desteklenmeyen bir türe uygulanıyor.",
+        "StopIteration": "Generator henüz hiç dolaşılmadı; hata len çağrısından geliyor.",
+        "ValueError": "Değerle ilgili bir sorun yok; tür len'i desteklemiyor."
+      },
+      "hints": [
+        "Generator değerlerini önceden bilir mi?",
+        "len hangi metodu arar?"
+      ],
+      "explanation": "Generator değerleri istendikçe ürettiği için uzunluğunu bilmez ve __len__ tanımlamaz: TypeError: object of type 'generator' has no len(). Uzunluk için önce listeye çevir ya da sum(1 for _ in ...) ile say.",
+      "answer": "TypeError"
+    },
+    {
+      "id": "m13-q39",
+      "type": "traceback",
+      "topic": "decorator-return",
+      "sectionId": "decorators",
+      "difficulty": 2,
+      "prompt": "Decorator sarmalayıcıyı döndürmeyi unutuyor. greet() çağrısında hangi hata oluşur?",
+      "code": "def log(func):\n    def wrapper(*args, **kwargs):\n        print(\"çağrılıyor\")\n        return func(*args, **kwargs)\n\n@log\ndef greet():\n    return \"selam\"\n\ngreet()",
+      "expectedError": "TypeError",
+      "options": [
+        "AttributeError",
+        "RecursionError",
+        "TypeError",
+        "NameError"
+      ],
+      "optionFeedback": {
+        "NameError": "greet adı tanımlı; ama None'a bağlı.",
+        "AttributeError": "Öznitelik aranmıyor; None çağrılmaya çalışılıyor.",
+        "RecursionError": "Fonksiyon kendini çağırmıyor."
+      },
+      "hints": [
+        "log fonksiyonu ne döndürüyor?",
+        "@log, greet = log(greet) demektir."
+      ],
+      "explanation": "log return wrapper yazmadığı için None döndürür ve greet None'a bağlanır. greet() çağrısı TypeError: 'NoneType' object is not callable verir.",
+      "answer": "TypeError"
+    },
+    {
+      "id": "m13-q40",
+      "type": "traceback",
+      "topic": "with-protokol",
+      "sectionId": "context-manager-class",
+      "difficulty": 2,
+      "prompt": "__enter__ ve __exit__ olmayan bir nesne with ile kullanılıyor. Hangi hata oluşur?",
+      "code": "class Plain:\n    pass\n\nwith Plain() as p:\n    print(\"içeride\")",
+      "expectedError": "TypeError",
+      "options": [
+        "NameError",
+        "ValueError",
+        "StopIteration",
+        "TypeError"
+      ],
+      "optionFeedback": {
+        "NameError": "Plain tanımlı; sorun nesnenin with protokolünü desteklememesi.",
+        "ValueError": "Değerle ilgili bir sorun yok.",
+        "StopIteration": "Yineleme yok; with farklı bir protokol kullanır."
+      },
+      "hints": [
+        "with hangi iki özel metodu arar?",
+        "Python 3.11 ve sonrasında bu durum hangi hata türüyle bildirilir?"
+      ],
+      "explanation": "with, nesnenin __enter__ ve __exit__ metotlarını arar. Python 3.11'den beri bunlar yoksa TypeError: 'Plain' object does not support the context manager protocol verilir (önceki sürümlerde AttributeError).",
+      "answer": "TypeError"
+    }
+  ]
+}

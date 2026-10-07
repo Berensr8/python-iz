@@ -13,22 +13,22 @@ Türkçe, tarayıcıda çalışan bir Python öğrenme sitesi. Öğrenci 18 mod�
 
 | | Durum |
 |---|---|
-| İçerik modülleri | **M1–M11 hazır** (`content/module-01.json` … `module-11.json`) |
-| Soru | 440 (modül başına 40) |
-| Yazma görevi | 33 (modül başına 3: Tamamla, Düzelt, Sıfırdan yaz) |
-| Kapsam haritası | 109 alt başlıktan 76'sı doğrulanmış (%70); `npm run coverage` |
-| Doğrulama | 1195 çalıştırılabilir içerik kontrolü, 239 regresyon kontrolü, 182 yazma referans vakası, `tsc`, `build` ve `build:pages` başarılı |
+| İçerik modülleri | **M1–M15 hazır** (`content/module-01.json` … `module-15.json`) |
+| Soru | 600 (modül başına 40) |
+| Yazma görevi | 45 (modül başına 3: Tamamla, Düzelt, Sıfırdan yaz) |
+| Kapsam haritası | 109 alt başlıktan 95'i doğrulanmış (%87); `npm run coverage` |
+| Doğrulama | 1635 çalıştırılabilir içerik kontrolü, 444 regresyon kontrolü, 259 yazma referans vakası, 4 yerel örnek (`verify:local`), `tsc`, `build` ve `build:pages` başarılı |
 | Git/yayın | M10 öncesi değişiklikler korunmuştur. Güncel commit ve yayın durumunu git ve Sites üzerinden kontrol et; yayın kaynak kaydı oluşturur. |
 
 ## 3. Sıradaki iş
 
-Plan sırasına göre bir sonraki içerik modülü **M12 OOP 2**'dir (polimorfizm ve abc, dunder metotlar ve operator overloading, multiple inheritance/MRO, dataclass ve slots, descriptor/metaclass tanıma düzeyi). Alt başlıkları `content/coverage.json` içinde `"id": 12` altında. M11 tamamlandı; M12 sınıf kavramlarını M11'de bırakılan yerden alır: `__repr__`/`__str__` M11'de tanıtıldı, çoklu kalıtım ve `abc` ise bilerek M12'ye bırakıldı. M11 `scripts/content-builders/build_m11.py` ile üretilir (bölümler `m11_sections.py`, sorular `m11_questions.py`, yazma görevleri `m11_tasks.py`); M12 için bu dört dosya şablon olarak kopyalanabilir. M10 JSON'u doğrudan düzenlenir; M8/M9 üreticileri M10'u üretmez.
+Plan sırasına göre bir sonraki içerik modülü **M16 Kod kalitesi**'dir (breakpoint/pdb, logging, unittest/pytest; fixture, parametrik test, mock ve regresyon testi okuma; ruff/black/mypy tanıma; proje yapısı). Alt başlıkları `content/coverage.json` içinde `"id": 16` altında. Dikkat: pytest, ruff, black ve mypy tarayıcıda çalışmaz; pdb etkileşimli olduğu için Worker'da kullanılamaz. unittest ve logging standart kütüphanededir ve çalışır (unittest için `unittest.main(argv=[...], exit=False)` ya da `TextTestRunner(stream=sys.stdout)`; çıktıdaki süre satırı belirlenimci değildir, ayıklanmalı). Komut ve araç çıktıları gerekiyorsa M15'teki gibi `localExample` alanı ve `npm run verify:local` kullanılabilir (yerelde araç kurulu değilse o örnek yerine açıklama tercih et). M16'dan sonra Atölye 6 (hatalı async toplayıcı; M15'in asyncio döngüsü tarayıcıda çalışır) ve Ara sınav 4 (M1–M16) gelir. M15, `scripts/content-builders/build_m15.py` ile üretilir (bölümler `m15_sections.py`, sorular `m15_questions.py`, görevler `m15_tasks.py`). Bir üreticiyi kopyalarken `module-NN.json` adını, `practiceIds` önekini (`mNN-q`), slug'ı ve açıklamayı değiştir.
 
 Kullanıcı şimdiye kadar her seferinde arayüz işleri yerine bir sonraki içerik modülünü seçti, ama karar onundur. Bekleyen arayüz işleri:
 
 - Görselleştirme 1 (döngü/değişken tablosu, sığ/derin kopya), Görselleştirme 2 (call stack)
-- ~~Atölye 1–3~~ (yapıldı), Atölye 4 (M10 sonrası), Atölye 5 (M12), Atölye 6 (M16)
-- ~~Ara sınav 1–2~~ (yapıldı), Ara sınav 3 (M1–M12), Ara sınav 4 (M1–M16). Yeni bir ara sınav ya da atölye için kod yazmaya gerek yok; `content/milestones.json`'a veri eklenir (bkz. bölüm 12).
+- ~~Atölye 1–5~~ (yapıldı; Atölye 4 `build_workshop4.py`, Atölye 5 `build_workshop5.py`), Atölye 6 (M16)
+- ~~Ara sınav 1–3~~ (yapıldı; Ara Sınav 3 `build_midterm3.py` ile seçilir), Ara sınav 4 (M1–M16). Yeni bir ara sınav ya da atölye için kod yazmaya gerek yok; `content/milestones.json`'a veri eklenir (bkz. bölüm 12).
 - M8 için sanal dosya yükleme/indirme ve hazır örnek dosyalar
 - Aşama 4: yerel geliştirme rehberi ve ortam etiketleri (Tarayıcıda çalışır / yerel Python gerekir)
 
@@ -41,6 +41,7 @@ Aşama 1'den açık kalanlar: A1.5 fonksiyon dönüş değeri testleri (kısmen:
 ```bash
 npm run verify:content   # tüm ders/soru/görev kodlarını Pyodide'de çalıştırıp beklenen çıktıyla karşılaştırır
 npm run test:learning    # regresyon testleri + yazma görevlerinin referans çözüm / başlangıç kodu kontrolleri
+npm run verify:local     # localExample kodlarını yerel CPython'da (3.11+) çalıştırır; thread/süreç örnekleri
 npm run coverage         # kapsam haritası özeti
 npx tsc --noEmit -p .
 npm run build
@@ -53,13 +54,15 @@ npm run build
 ## 5. Mimari — bilinmesi gerekenler
 
 - **İçerik keşfi:** `lib/content.ts`, `import.meta.glob("../content/module-*.json")` ile modülleri otomatik bulur. Yeni modül için yalnızca JSON dosyası eklemek yeter; menüde "hazır" görünür. Modül kimlikleri 1'den ardışık olmalı.
-- **Şema:** `lib/learning-types.ts`. Bölüm alanları: `id, title, eyebrow, objectives, prerequisites, summary, explanation, code, expectedOutput, why, alternatives, traps, realCode, realOutput, lineByLine`. Önkoşul aynı modülde `"bolum-id"`, başka modülde `"m4:dicts"` biçimindedir. Soru alanları: `id (m<n>-qNN), type, topic, sectionId, difficulty (1–3), prompt, code, options, answer, expectedOutput, expectedError, optionFeedback, acceptedAnswers, solutionCode, lines, tests, starterCode, exampleInput, hints, explanation`.
+- **Şema:** `lib/learning-types.ts`. Bölüm alanları: `id, title, eyebrow, objectives, prerequisites, summary, explanation, code, expectedOutput, why, alternatives, traps, realCode, realOutput, lineByLine`; isteğe bağlı `runtime`, `runtimeNote`, `depth` ve `localExample {code, output, note}` (yalnız `runtime: "mixed"` bölümlerde; tarayıcıda çalışmayan kod için). Önkoşul aynı modülde `"bolum-id"`, başka modülde `"m4:dicts"` biçimindedir. Soru alanları: `id (m<n>-qNN), type, topic, sectionId, difficulty (1–3), prompt, code, options, answer, expectedOutput, expectedError, optionFeedback, acceptedAnswers, solutionCode, lines, tests, starterCode, exampleInput, hints, explanation`.
 - **Yazma görevleri:** `content/writing-tasks.json`; kimlik `m<n>-wN`.
 - **Cevap denetimi:** `lib/answer-check.ts`. Boşluk doldurmada `acceptedAnswers`'tan biri kabul edilir. Sıralama soruları çalıştırılıp çıktıyla karşılaştırılır; aynı çıktıyı veren her sıralama doğrudur. Kod soruları `tests` ile değerlendirilir.
 - **Python çalışma zamanı:** `public/python-runtime.js`, hem tarayıcı Worker'ı (`public/py-worker.js`) hem de Node doğrulayıcıları tarafından paylaşılır. Her çalıştırmada:
   - temiz ad alanı ve sahte `input()` (stdin satırları; satır biterse `EOFError`), 20.000 karakter çıktı sınırı;
   - boş bir geçici çalışma klasörü (M8 için eklendi) — çalıştırma sonunda silinir;
   - çalışma klasöründen import edilen modüller `sys.modules`'ten silinir, `sys.path` ve `os.environ` geri yüklenir, başta `importlib.invalidate_caches()` (M9 için eklendi).
+  - `asyncio.run` Pyodide'inki yerine standart koşucuya ve boşta beklemeyi atlayan sade bir döngüye bağlanır (M15 için eklendi): `asyncio.sleep` hemen biter, `loop.time()` gerçek Python'daki gibi ilerler, `time.sleep` gerçekten bekler; hiç bitmeyecek bekleme RuntimeError verir. Çalıştırma sonunda Pyodide'in döngüsü geri yüklenir.
+  - Thread ve süreç başlatılamaz (`RuntimeError: can't start new thread`, `os.fork` yok). Bu tür kod bölümün `localExample` alanına yazılır ve `npm run verify:local` ile doğrulanır.
   - Bu bir güvenlik sandbox'ı değildir.
 - **Doğrulayıcı** (`scripts/verify-content.mjs`): bölüm `code`/`realCode`, çıktı soruları, fill/order/code `solutionCode`'ları, tüm `tests` ve `expectedError` kodlarını çalıştırır. Bug soruları **çalıştırılmaz** (bu yüzden terminal komutu ya da çalıştırılamayan senaryo içerebilir). Hata adı traceback'in son satırından okunur; modül önekli adlar da tanınır (`json.decoder.JSONDecodeError` → `JSONDecodeError`).
 
@@ -70,6 +73,7 @@ npm run build
 - 8 bölüm; her bölümde kazanım, önkoşul, açıklama, çalışan örnek ve çıktı, neden, alternatifler, tuzaklar, gerçek kod örneği ve satır satır açıklama.
 - 40 soru, dağılım: **12 çıktı, 6 hata bulma, 4 boşluk, 4 sıralama, 10 kod, 4 traceback**. Her bölümü en az bir soru ölçmeli.
 - 15 `practiceIds`.
+- **Henüz öğretilmemiş yapı kullanma.** Bir ders, soru ya da görev, öğrencinin o modüle kadar görmediği bir yapıyı (`__name__`, `def`, `class`, `import`, `lambda`, `try`, `with`, `yield`...) kullanmamalı; kaçınılmazsa açıklamada adını koyup hangi modülde öğretileceğini söyle. Öğrenci geri bildirimi bunun üzerineydi (ilk derste `type(x).__name__`). M1–M5 için `test-learning` bunu denetler; yeni bir istisna gerekiyorsa gerekçesiyle izin listesine ekle.
 - Bug ve traceback sorularında her yanlış seçenek için `optionFeedback`.
 - Fill sorularında tam bir `___`; eşdeğer yazımlar `acceptedAnswers`'ta (doğrulayıcı her birini çalıştırır).
 - Kod sorularında en az 3 test: normal, sınır ve uygun olduğunda hatalı girdi.
@@ -92,7 +96,7 @@ npm run build
 
 - M1–M2 mevcuttu; Aşama 1'de şemaya göre işaretlenip düzeltildi.
 - M3–M7 JSON olarak yazıldı.
-- M8 ve M9, `scripts/content-builders/build_m8.py` ve `build_m9.py` betikleriyle üretildi. Kod blokları Python'da `r'''...'''` dizeleri olarak yazılır, betik JSON'u ve ilgili yazma görevlerini (`writing-tasks.json` içindeki o modülün kayıtlarını değiştirerek) yazar. M10 için bu iki betikten biri şablon olarak kopyalanabilir. M11 ise üç parça modül (`m11_sections.py`, `m11_questions.py`, `m11_tasks.py`) ve bunları birleştiren `build_m11.py` olarak yazıldı; tek dev dosyadan daha rahat düzenlenir. `m11_questions.py` içindeki `q()` yardımcısı çıktı sorularının doğru seçeneğini `expectedOutput`'tan türetir, boşluk sorularının `solutionCode`'unu `___`'u cevapla değiştirerek kurar, sıralama sorularının satırlarını `perm` ile karıştırır ve seçenekleri sıraya göre döndürür; yeni modül yazarken bu yardımcıyı kullan. Çalıştırma: `PYTHONIOENCODING=utf-8 python scripts/content-builders/build_m9.py` (yerel Python 3.11 yeterli; doğrulama yine Pyodide'de yapılır).
+- M8 ve M9, `scripts/content-builders/build_m8.py` ve `build_m9.py` betikleriyle üretildi. Kod blokları Python'da `r'''...'''` dizeleri olarak yazılır, betik JSON'u ve ilgili yazma görevlerini (`writing-tasks.json` içindeki o modülün kayıtlarını değiştirerek) yazar. M10 için bu iki betikten biri şablon olarak kopyalanabilir. M11 ise üç parça modül (`m11_sections.py`, `m11_questions.py`, `m11_tasks.py`) ve bunları birleştiren `build_m11.py` olarak yazıldı; tek dev dosyadan daha rahat düzenlenir. `m11_questions.py` içindeki `q()` yardımcısı çıktı sorularının doğru seçeneğini `expectedOutput`'tan türetir, boşluk sorularının `solutionCode`'unu `___`'u cevapla değiştirerek kurar, sıralama sorularının satırlarını `perm` ile karıştırır ve seçenekleri sıraya göre döndürür; yeni modül yazarken bu yardımcıyı kullan. Yardımcı artık `scripts/content-builders/_qhelper.py` içindedir (`questions, q = make_questions("m13")`); M11 ve M12 onu kullanır. Çalıştırma: `PYTHONIOENCODING=utf-8 python scripts/content-builders/build_m9.py` (yerel Python 3.11 yeterli; doğrulama yine Pyodide'de yapılır).
 - Dikkat: Bash heredoc içinde ters bölü (`\n`) kaçışları bozuluyor; kaçış içeren betikleri dosya yazma aracıyla oluştur.
 
 ## 8. Bu çalışmada yapılanlar (kronolojik)

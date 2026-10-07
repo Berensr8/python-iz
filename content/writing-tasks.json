@@ -1325,5 +1325,478 @@
         "expectedOutput": "kalem: 15 x 6 = 90\ntoplam: 90\nkalıtım yok: True"
       }
     ]
+  },
+  {
+    "id": "m12-w1",
+    "moduleId": 12,
+    "sectionId": "abc",
+    "title": "Bildirim kanalları",
+    "level": "Tamamla",
+    "objective": "Soyut bir sınıfın sözleşmesini (format) uygulayan iki alt sınıfı tamamla; ortak deliver metodunu yeniden yazma.",
+    "prompt": "Notifier soyut sınıfı hazır: format(message) soyuttur, deliver(message) ise '-> ' + format(message) döndürür. EmailNotifier hazır. SmsNotifier.format 'SMS: ' ile başlayan metni döndürsün; mesaj 20 karakterden uzunsa yalnızca ilk 17 karakteri alıp '...' eklesin. PushNotifier.format 'PUSH: ' ve büyük harfli mesajı döndürsün. Program 'kanal;mesaj' satırlarını okur (mesajda ';' bulunabilir), bilinmeyen kanalda 'hata: bilinmeyen kanal: ad' yazar ve sonda soyut sınıfın örneklenemediğini gösterir.",
+    "starterCode": "from abc import ABC, abstractmethod\n\nclass Notifier(ABC):\n    @abstractmethod\n    def format(self, message):\n        ...\n\n    def deliver(self, message):\n        return f\"-> {self.format(message)}\"\n\nclass EmailNotifier(Notifier):\n    def format(self, message):\n        return f\"[E-posta] {message}\"\n\nclass SmsNotifier(Notifier):\n    def format(self, message):\n        # 20 karakterden uzunsa ilk 17 karakter + '...'; sonuç 'SMS: ...' ile başlasın\n        pass\n\nclass PushNotifier(Notifier):\n    # format metodunu yaz: 'PUSH: ' + büyük harfli mesaj\n    pass\n\nCHANNELS = {\"email\": EmailNotifier, \"sms\": SmsNotifier, \"push\": PushNotifier}\n\nfor _ in range(int(input())):\n    channel, message = input().split(\";\", 1)\n    if channel not in CHANNELS:\n        print(\"hata: bilinmeyen kanal:\", channel)\n        continue\n    print(CHANNELS[channel]().deliver(message))\ntry:\n    Notifier()\nexcept TypeError:\n    print(\"soyut: True\")",
+    "exampleInput": "3\nemail;Merhaba\nsms;Selam\npush;yedek tamam",
+    "exampleOutput": "-> [E-posta] Merhaba\n-> SMS: Selam\n-> PUSH: YEDEK TAMAM\nsoyut: True",
+    "hints": [
+      "PushNotifier soyut format metodunu yazmadığı için örneklenemez; sınıfın içine def format yaz.",
+      "SMS için: if len(message) > 20: message = message[:17] + '...' ve sonra f'SMS: {message}' döndür. Push için message.upper() kullan."
+    ],
+    "solution": "from abc import ABC, abstractmethod\n\nclass Notifier(ABC):\n    @abstractmethod\n    def format(self, message):\n        ...\n\n    def deliver(self, message):\n        return f\"-> {self.format(message)}\"\n\nclass EmailNotifier(Notifier):\n    def format(self, message):\n        return f\"[E-posta] {message}\"\n\nclass SmsNotifier(Notifier):\n    def format(self, message):\n        if len(message) > 20:\n            message = message[:17] + \"...\"\n        return f\"SMS: {message}\"\n\nclass PushNotifier(Notifier):\n    def format(self, message):\n        return f\"PUSH: {message.upper()}\"\n\nCHANNELS = {\"email\": EmailNotifier, \"sms\": SmsNotifier, \"push\": PushNotifier}\n\nfor _ in range(int(input())):\n    channel, message = input().split(\";\", 1)\n    if channel not in CHANNELS:\n        print(\"hata: bilinmeyen kanal:\", channel)\n        continue\n    print(CHANNELS[channel]().deliver(message))\ntry:\n    Notifier()\nexcept TypeError:\n    print(\"soyut: True\")",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\nemail;Merhaba\nsms;Selam\npush;yedek tamam",
+        "expectedOutput": "-> [E-posta] Merhaba\n-> SMS: Selam\n-> PUSH: YEDEK TAMAM\nsoyut: True"
+      },
+      {
+        "label": "SMS kısaltma sınırı",
+        "stdin": "3\nsms;Bugün toplantı saat üçte başlıyor\nsms;tam yirmi karakter!!\nsms;tam yirmi karakterli!",
+        "expectedOutput": "-> SMS: Bugün toplantı sa...\n-> SMS: tam yirmi karakter!!\n-> SMS: tam yirmi karakte...\nsoyut: True"
+      },
+      {
+        "label": "Bilinmeyen kanal",
+        "stdin": "2\nfax;x\nemail;a",
+        "expectedOutput": "hata: bilinmeyen kanal: fax\n-> [E-posta] a\nsoyut: True"
+      },
+      {
+        "label": "Mesajda noktalı virgül",
+        "stdin": "1\nemail;a;b",
+        "expectedOutput": "-> [E-posta] a;b\nsoyut: True"
+      }
+    ]
+  },
+  {
+    "id": "m12-w2",
+    "moduleId": 12,
+    "sectionId": "operator-overloading",
+    "title": "Para toplama işleçlerini düzelt",
+    "level": "Düzelt",
+    "objective": "Operandları değiştiren __add__, eksik __radd__ ve ters yönlü __lt__ hatalarını bul ve düzelt.",
+    "prompt": "Money sınıfı kuruş tutar. Program kuruş değerlerini okur, sum ile toplar ve sıralar, sonra ilk nesnenin değişmediğini kontrol eder. Beklenen: toplam yeni bir Money olur, operandlar değişmez, sorted küçükten büyüğe sıralar. Kodda üç hata var: toplama soldaki nesneyi değiştiriyor; sum() çalışmıyor; sıralama ters. Üçünü de düzelt (tanımadığı türde NotImplemented döndürmeyi unutma).",
+    "starterCode": "class Money:\n    def __init__(self, cents):\n        self.cents = cents\n\n    def __add__(self, other):\n        self.cents += other.cents\n        return self\n\n    def __lt__(self, other):\n        return self.cents > other.cents\n\n    def __repr__(self):\n        return f\"Money({self.cents // 100},{self.cents % 100:02d})\"\n\namounts = [int(x) for x in input().split()]\nwallet = [Money(a) for a in amounts]\ntotal = sum(wallet)\nprint(\"toplam:\", total)\nprint(\"sıralı:\", sorted(wallet))\nprint(\"ilk değişmedi:\", wallet[0].cents == amounts[0])",
+    "exampleInput": "250 175 5",
+    "exampleOutput": "toplam: Money(4,30)\nsıralı: [Money(0,05), Money(1,75), Money(2,50)]\nilk değişmedi: True",
+    "hints": [
+      "sum() ilk adımda 0 + Money hesaplar. int bunu tanımaz; hangi yansıyan işleç metodu gerekli?",
+      "__add__ içinde return Money(self.cents + other.cents) yaz; __radd__'de other == 0 ise self döndür; __lt__'de < kullan."
+    ],
+    "solution": "class Money:\n    def __init__(self, cents):\n        self.cents = cents\n\n    def __add__(self, other):\n        if not isinstance(other, Money):\n            return NotImplemented\n        return Money(self.cents + other.cents)\n\n    def __radd__(self, other):\n        if other == 0:\n            return self\n        return NotImplemented\n\n    def __lt__(self, other):\n        if not isinstance(other, Money):\n            return NotImplemented\n        return self.cents < other.cents\n\n    def __repr__(self):\n        return f\"Money({self.cents // 100},{self.cents % 100:02d})\"\n\namounts = [int(x) for x in input().split()]\nwallet = [Money(a) for a in amounts]\ntotal = sum(wallet)\nprint(\"toplam:\", total)\nprint(\"sıralı:\", sorted(wallet))\nprint(\"ilk değişmedi:\", wallet[0].cents == amounts[0])",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "250 175 5",
+        "expectedOutput": "toplam: Money(4,30)\nsıralı: [Money(0,05), Money(1,75), Money(2,50)]\nilk değişmedi: True"
+      },
+      {
+        "label": "Tek tutar",
+        "stdin": "100",
+        "expectedOutput": "toplam: Money(1,00)\nsıralı: [Money(1,00)]\nilk değişmedi: True"
+      },
+      {
+        "label": "Ters sıralı girdi",
+        "stdin": "300 100 200",
+        "expectedOutput": "toplam: Money(6,00)\nsıralı: [Money(1,00), Money(2,00), Money(3,00)]\nilk değişmedi: True"
+      },
+      {
+        "label": "Eşit tutarlar",
+        "stdin": "5 5",
+        "expectedOutput": "toplam: Money(0,10)\nsıralı: [Money(0,05), Money(0,05)]\nilk değişmedi: True"
+      }
+    ]
+  },
+  {
+    "id": "m12-w3",
+    "moduleId": 12,
+    "sectionId": "dataclass",
+    "title": "Sipariş modeli",
+    "level": "Sıfırdan yaz",
+    "objective": "Dondurulmuş dataclass, property, dunder metotlar ve değiştirilmiş kopya (replace) ile küçük bir sipariş modeli tasarla.",
+    "prompt": "LineItem ve Order sınıflarını yaz. LineItem dondurulmuş (frozen) bir dataclass'tır: name (str), price (int), qty (int, varsayılan 1); price < 0 ya da qty < 1 ise ValueError(f'geçersiz kalem: {name}'). total property'si price * qty döndürür. Order bir dataclass'tır: items (LineItem listesi, her nesne için ayrı). add(item): aynı adlı kalem varsa adedi toplar ve fiyatı yenisiyle günceller (kalem dondurulmuş olduğundan dataclasses.replace ile yeni kalem üret), yoksa ekler. remove(name): kalem yoksa ValueError(f'bilinmeyen kalem: {name}'). total property'si kalemlerin toplamıdır. report(): kalemleri ada göre sıralı 'ad: adet x fiyat = toplam' satırları ve son satır 'toplam: değer' ile liste olarak döndürür. __len__ kalem sayısını, __contains__(ad) kalemin varlığını söyler. Programın okuma kısmı hazır; sınıfları üstüne yaz.",
+    "starterCode": "from dataclasses import dataclass, field, replace\n\n# LineItem ve Order sınıflarını buraya yaz.\n\n\norder = Order()\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[0] == \"ekle\":\n            order.add(LineItem(parts[1], int(parts[2]), int(parts[3])))\n        elif parts[0] == \"sil\":\n            order.remove(parts[1])\n        elif parts[0] == \"rapor\":\n            print(\"\\n\".join(order.report()))\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"kalem sayısı:\", len(order), \"| elma var:\", \"elma\" in order)\nprint(\"dondurulmuş:\", LineItem.__dataclass_params__.frozen)",
+    "exampleInput": "5\nekle elma 10 5\nekle armut 20 2\nekle elma 12 3\nsil armut\nrapor",
+    "exampleOutput": "elma: 8 x 12 = 96\ntoplam: 96\nkalem sayısı: 1 | elma var: True\ndondurulmuş: True",
+    "hints": [
+      "LineItem için @dataclass(frozen=True) ve __post_init__; Order'daki liste için field(default_factory=list).",
+      "add içinde aynı adlı kalemi bulunca self.items[index] = replace(kalem, price=yeni.price, qty=kalem.qty + yeni.qty) yaz. report'ta sorted(self.items, key=lambda item: item.name) kullan."
+    ],
+    "solution": "from dataclasses import dataclass, field, replace\n\n@dataclass(frozen=True)\nclass LineItem:\n    name: str\n    price: int\n    qty: int = 1\n\n    def __post_init__(self):\n        if self.price < 0 or self.qty < 1:\n            raise ValueError(f\"geçersiz kalem: {self.name}\")\n\n    @property\n    def total(self):\n        return self.price * self.qty\n\n@dataclass\nclass Order:\n    items: list = field(default_factory=list)\n\n    def add(self, item):\n        for index, known in enumerate(self.items):\n            if known.name == item.name:\n                self.items[index] = replace(known, price=item.price, qty=known.qty + item.qty)\n                return\n        self.items.append(item)\n\n    def remove(self, name):\n        for index, known in enumerate(self.items):\n            if known.name == name:\n                del self.items[index]\n                return\n        raise ValueError(f\"bilinmeyen kalem: {name}\")\n\n    @property\n    def total(self):\n        return sum(item.total for item in self.items)\n\n    def report(self):\n        lines = [f\"{item.name}: {item.qty} x {item.price} = {item.total}\" for item in sorted(self.items, key=lambda item: item.name)]\n        lines.append(f\"toplam: {self.total}\")\n        return lines\n\n    def __len__(self):\n        return len(self.items)\n\n    def __contains__(self, name):\n        return any(item.name == name for item in self.items)\n\norder = Order()\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[0] == \"ekle\":\n            order.add(LineItem(parts[1], int(parts[2]), int(parts[3])))\n        elif parts[0] == \"sil\":\n            order.remove(parts[1])\n        elif parts[0] == \"rapor\":\n            print(\"\\n\".join(order.report()))\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"kalem sayısı:\", len(order), \"| elma var:\", \"elma\" in order)\nprint(\"dondurulmuş:\", LineItem.__dataclass_params__.frozen)",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "5\nekle elma 10 5\nekle armut 20 2\nekle elma 12 3\nsil armut\nrapor",
+        "expectedOutput": "elma: 8 x 12 = 96\ntoplam: 96\nkalem sayısı: 1 | elma var: True\ndondurulmuş: True"
+      },
+      {
+        "label": "Hatalar",
+        "stdin": "3\nekle kalem 5 0\nsil süt\nekle kalem -1 2",
+        "expectedOutput": "hata: geçersiz kalem: kalem\nhata: bilinmeyen kalem: süt\nhata: geçersiz kalem: kalem\nkalem sayısı: 0 | elma var: False\ndondurulmuş: True"
+      },
+      {
+        "label": "Boş sipariş",
+        "stdin": "1\nrapor",
+        "expectedOutput": "toplam: 0\nkalem sayısı: 0 | elma var: False\ndondurulmuş: True"
+      },
+      {
+        "label": "Fiyat güncellenir ve sıralanır",
+        "stdin": "4\nekle b 5 1\nekle a 3 2\nekle b 7 1\nrapor",
+        "expectedOutput": "a: 2 x 3 = 6\nb: 2 x 7 = 14\ntoplam: 20\nkalem sayısı: 2 | elma var: False\ndondurulmuş: True"
+      }
+    ]
+  },
+  {
+    "id": "m13-w1",
+    "moduleId": 13,
+    "sectionId": "generator-pipelines",
+    "title": "Kayıtları tembel süz",
+    "level": "Tamamla",
+    "objective": "İki generator'ı tamamlayıp birbirine bağla; sonucu islice ile sınırla ve boru hattını gerektiğinde yeniden kur.",
+    "prompt": "Girdide 'ad,şehir,yaş' satırları var. parse(lines) generator'ını tamamla: alanların uç boşluklarını temizlesin; alan sayısı 3 değilse ya da yaş yalnızca rakamlardan oluşmuyorsa satırı atlasın; geçerli satırlar için {'ad': ..., 'şehir': ..., 'yaş': int} sözlüğü üretsin. adults(records, min_age) yaşı min_age veya üstü olan kayıtları üretsin. İkisi de generator olmalı (program bunu denetler). Program ilk 'limit' yetişkinin adını, toplam yetişkin sayısını ve parse'ın türünü yazar.",
+    "starterCode": "from itertools import islice\n\ndef parse(lines):\n    # Alanları temizle; alan sayısı 3 değilse ya da yaş rakam değilse satırı atla.\n    # Geçerli satır için {\"ad\": ..., \"şehir\": ..., \"yaş\": int} yield et.\n    return []\n\ndef adults(records, min_age):\n    # yaşı min_age veya üstü olan kayıtları yield et\n    return []\n\nlines = [input() for _ in range(int(input()))]\nmin_age, limit = map(int, input().split())\nfirst = islice(adults(parse(lines), min_age), limit)\nprint(\"ilk:\", \", \".join(record[\"ad\"] for record in first) or \"yok\")\nprint(\"toplam:\", sum(1 for _ in adults(parse(lines), min_age)))\nprint(\"tembel:\", type(parse(lines)).__name__)",
+    "exampleInput": "4\nAda,İzmir,30\nCan,Ankara,17\nbozuk satır\nEda,Bursa,45\n18 5",
+    "exampleOutput": "ilk: Ada, Eda\ntoplam: 2\ntembel: generator",
+    "hints": [
+      "parse içinde for line in lines döngüsü kur; parts = [p.strip() for p in line.split(',')] ile alanları al ve geçersizse continue yaz.",
+      "Geçerli satırda yield {'ad': parts[0], 'şehir': parts[1], 'yaş': int(parts[2])}. adults için: for record in records: if record['yaş'] >= min_age: yield record."
+    ],
+    "solution": "from itertools import islice\n\ndef parse(lines):\n    for line in lines:\n        parts = [part.strip() for part in line.split(\",\")]\n        if len(parts) != 3 or not parts[2].isdigit():\n            continue\n        yield {\"ad\": parts[0], \"şehir\": parts[1], \"yaş\": int(parts[2])}\n\ndef adults(records, min_age):\n    for record in records:\n        if record[\"yaş\"] >= min_age:\n            yield record\n\nlines = [input() for _ in range(int(input()))]\nmin_age, limit = map(int, input().split())\nfirst = islice(adults(parse(lines), min_age), limit)\nprint(\"ilk:\", \", \".join(record[\"ad\"] for record in first) or \"yok\")\nprint(\"toplam:\", sum(1 for _ in adults(parse(lines), min_age)))\nprint(\"tembel:\", type(parse(lines)).__name__)",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "4\nAda,İzmir,30\nCan,Ankara,17\nbozuk satır\nEda,Bursa,45\n18 5",
+        "expectedOutput": "ilk: Ada, Eda\ntoplam: 2\ntembel: generator"
+      },
+      {
+        "label": "Sınır islice ile",
+        "stdin": "3\nA,x,20\nB,y,21\nC,z,22\n18 2",
+        "expectedOutput": "ilk: A, B\ntoplam: 3\ntembel: generator"
+      },
+      {
+        "label": "Geçersiz yaş",
+        "stdin": "2\nA,x,abc\nB,y,-5\n18 3",
+        "expectedOutput": "ilk: yok\ntoplam: 0\ntembel: generator"
+      },
+      {
+        "label": "Boşluklar ve sınır yaşı",
+        "stdin": "2\n Ada , İzmir , 30 \nBo,Van,18\n18 1",
+        "expectedOutput": "ilk: Ada\ntoplam: 2\ntembel: generator"
+      }
+    ]
+  },
+  {
+    "id": "m13-w2",
+    "moduleId": 13,
+    "sectionId": "decorators",
+    "title": "Önbellek decorator'ını düzelt",
+    "level": "Düzelt",
+    "objective": "Her çağrıda sıfırlanan önbelleği, kaybolan dönüş değerini ve kaybolan fonksiyon adını bul ve düzelt.",
+    "prompt": "memo decorator'ı bir fonksiyonun sonuçlarını önbelleğe almalı: aynı argümanla ikinci çağrıda fonksiyonu yeniden çalıştırmadan önceki sonucu döndürmeli ve fonksiyonun adını korumalı. Program sayıları okur, slow_square'i her biri için çağırır, sonuçları, gerçek hesaplama sayısını ve fonksiyonun adını yazar. Kodda üç hata var: önbellek her çağrıda sıfırlanıyor; sarmalayıcı sonucu döndürmüyor; fonksiyonun adı kayboluyor. Üçünü de düzelt.",
+    "starterCode": "from functools import wraps\n\ncalls = 0\n\ndef memo(func):\n    def wrapper(n):\n        cache = {}\n        if n not in cache:\n            cache[n] = func(n)\n        cache[n]\n    return wrapper\n\n@memo\ndef slow_square(n):\n    global calls\n    calls += 1\n    return n * n\n\nnumbers = [int(x) for x in input().split()]\nprint([slow_square(n) for n in numbers])\nprint(\"hesaplama:\", calls)\nprint(\"ad:\", slow_square.__name__)",
+    "exampleInput": "3 4 3",
+    "exampleOutput": "[9, 16, 9]\nhesaplama: 2\nad: slow_square",
+    "hints": [
+      "cache her çağrıda yeniden mi oluşuyor? Sarmalayıcının son satırı bir değer döndürüyor mu? wraps içe aktarılmış ama kullanılmıyor.",
+      "cache = {} satırını wrapper'ın dışına (memo'nun içine) taşı; son satıra return yaz; wrapper'ın üstüne @wraps(func) ekle."
+    ],
+    "solution": "from functools import wraps\n\ncalls = 0\n\ndef memo(func):\n    cache = {}\n    @wraps(func)\n    def wrapper(n):\n        if n not in cache:\n            cache[n] = func(n)\n        return cache[n]\n    return wrapper\n\n@memo\ndef slow_square(n):\n    global calls\n    calls += 1\n    return n * n\n\nnumbers = [int(x) for x in input().split()]\nprint([slow_square(n) for n in numbers])\nprint(\"hesaplama:\", calls)\nprint(\"ad:\", slow_square.__name__)",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3 4 3",
+        "expectedOutput": "[9, 16, 9]\nhesaplama: 2\nad: slow_square"
+      },
+      {
+        "label": "Tek sayı",
+        "stdin": "5",
+        "expectedOutput": "[25]\nhesaplama: 1\nad: slow_square"
+      },
+      {
+        "label": "Hep aynı",
+        "stdin": "2 2 2 2",
+        "expectedOutput": "[4, 4, 4, 4]\nhesaplama: 1\nad: slow_square"
+      },
+      {
+        "label": "İşaretleri farklı",
+        "stdin": "7 -7",
+        "expectedOutput": "[49, 49]\nhesaplama: 2\nad: slow_square"
+      }
+    ]
+  },
+  {
+    "id": "m13-w3",
+    "moduleId": 13,
+    "sectionId": "contextlib",
+    "title": "Geri alınabilir toplu güncelleme",
+    "level": "Sıfırdan yaz",
+    "objective": "Bir context manager ile 'ya hepsi ya hiçbiri' kuralı kur: toplu işlemlerden biri başarısız olursa sözlüğü önceki hâline geri döndür.",
+    "prompt": "transaction(store) context manager'ını (sınıf ya da @contextmanager) ve apply(store, op) fonksiyonunu yaz. İlk satır başlangıç değerleri ('a=1 b=2', boş olabilir), ikinci satır toplu işlem sayısı, sonraki her satır ';' ile ayrılmış işlemlerdir. İşlemler: 'k=5' (k'yi tam sayı 5 yap), 'k+=3' (k'yi 3 artır; k yoksa ValueError(f'olmayan anahtar: {k}')), '-k' (k'yi sil; yoksa aynı hata). Değer tam sayı değilse ValueError(f'geçersiz değer: {op}'); bu biçimlerin hiçbirine uymayan işlem ValueError(f'geçersiz işlem: {op}'). transaction, bloğa girerken sözlüğün kopyasını alır; blokta hata olursa sözlüğü yerinde (aynı nesneyi) eski hâline döndürür ve hatayı yutmaz. Program her toplu işlem için 'uygulandı: N işlem' ya da 'geri alındı: mesaj', sonda sıralı sözlüğü yazar. Okuma kısmı hazır; fonksiyonları üstüne yaz.",
+    "starterCode": "# transaction(store) context manager'ını ve apply(store, op) fonksiyonunu buraya yaz.\n\n\nstore = {}\nfor pair in input().split():\n    key, value = pair.split(\"=\")\n    store[key] = int(value)\nfor _ in range(int(input())):\n    batch = input().split(\";\")\n    try:\n        with transaction(store):\n            for op in batch:\n                apply(store, op)\n        print(f\"uygulandı: {len(batch)} işlem\")\n    except ValueError as error:\n        print(f\"geri alındı: {error}\")\nprint(sorted(store.items()))",
+    "exampleInput": "a=1 b=2\n3\na=5;b+=3\nc=1;-z\n-a;b=x",
+    "exampleOutput": "uygulandı: 2 işlem\ngeri alındı: olmayan anahtar: z\ngeri alındı: geçersiz değer: b=x\n[('a', 5), ('b', 5)]",
+    "hints": [
+      "İşlem türünü sırayla denetle: '-' ile başlıyorsa silme, '+=' içeriyorsa artırma, '=' içeriyorsa atama, değilse geçersiz işlem. int dönüşümünü try/except ValueError ile sarıp kendi mesajınla yeniden fırlat.",
+      "@contextmanager ile: snapshot = dict(store); try: yield; except Exception: store.clear(); store.update(snapshot); raise. store = snapshot yazma; program aynı sözlük nesnesini kullanıyor."
+    ],
+    "solution": "from contextlib import contextmanager\n\n@contextmanager\ndef transaction(store):\n    snapshot = dict(store)\n    try:\n        yield store\n    except Exception:\n        store.clear()\n        store.update(snapshot)\n        raise\n\ndef to_int(text, op):\n    try:\n        return int(text)\n    except ValueError:\n        raise ValueError(f\"geçersiz değer: {op}\") from None\n\ndef apply(store, op):\n    if op.startswith(\"-\"):\n        key = op[1:]\n        if key not in store:\n            raise ValueError(f\"olmayan anahtar: {key}\")\n        del store[key]\n    elif \"+=\" in op:\n        key, value = op.split(\"+=\", 1)\n        if key not in store:\n            raise ValueError(f\"olmayan anahtar: {key}\")\n        store[key] += to_int(value, op)\n    elif \"=\" in op:\n        key, value = op.split(\"=\", 1)\n        store[key] = to_int(value, op)\n    else:\n        raise ValueError(f\"geçersiz işlem: {op}\")\n\nstore = {}\nfor pair in input().split():\n    key, value = pair.split(\"=\")\n    store[key] = int(value)\nfor _ in range(int(input())):\n    batch = input().split(\";\")\n    try:\n        with transaction(store):\n            for op in batch:\n                apply(store, op)\n        print(f\"uygulandı: {len(batch)} işlem\")\n    except ValueError as error:\n        print(f\"geri alındı: {error}\")\nprint(sorted(store.items()))",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "a=1 b=2\n3\na=5;b+=3\nc=1;-z\n-a;b=x",
+        "expectedOutput": "uygulandı: 2 işlem\ngeri alındı: olmayan anahtar: z\ngeri alındı: geçersiz değer: b=x\n[('a', 5), ('b', 5)]"
+      },
+      {
+        "label": "Boş başlangıç",
+        "stdin": "\n1\nx=1",
+        "expectedOutput": "uygulandı: 1 işlem\n[('x', 1)]"
+      },
+      {
+        "label": "Artırma ve olmayan anahtar",
+        "stdin": "n=1\n2\nn+=2;n+=3\nm+=1",
+        "expectedOutput": "uygulandı: 2 işlem\ngeri alındı: olmayan anahtar: m\n[('n', 6)]"
+      },
+      {
+        "label": "Sil ve yeniden kur",
+        "stdin": "a=1\n1\n-a;a=2",
+        "expectedOutput": "uygulandı: 2 işlem\n[('a', 2)]"
+      },
+      {
+        "label": "Geçersiz işlemler geri alınır",
+        "stdin": "x=1\n2\nx=9;x+=a\nx=7;?",
+        "expectedOutput": "geri alındı: geçersiz değer: x+=a\ngeri alındı: geçersiz işlem: ?\n[('x', 1)]"
+      }
+    ]
+  },
+  {
+    "id": "m14-w1",
+    "moduleId": 14,
+    "sectionId": "optional-union",
+    "title": "Puan satırlarını tiplendir",
+    "level": "Tamamla",
+    "objective": "None döndürebilen iki fonksiyonun ipuçlarını doğru yaz ve None'ı çağıran tarafta güvenle ele al.",
+    "prompt": "Her girdi satırı 'ad:puan' biçiminde olmalı. parse_score(line) hazır: geçersiz satırda None, geçerlide (ad, puan) döndürür; ona ipuçlarını ekle: line: str, dönüş tuple[str, int] | None. average(scores) fonksiyonunu yaz ve ipuçlarını ekle: scores: list[int], dönüş float | None; liste boşsa None, değilse ortalamayı döndürsün. Yerleşik list/tuple ve | yazımını kullan. Program geçerli satır sayısını, ortalamayı (yoksa 'yok') ve ipuçlarının doğru olup olmadığını yazar.",
+    "starterCode": "from typing import get_type_hints\n\ndef parse_score(line):\n    # ipuçlarını ekle: str -> tuple[str, int] | None\n    name, sep, score = line.partition(\":\")\n    if not sep or not name.strip() or not score.strip().isdigit():\n        return None\n    return name.strip(), int(score)\n\ndef average(scores):\n    # ipuçlarını ekle: list[int] -> float | None; boş listede None döndür\n    pass\n\nvalid = []\nfor _ in range(int(input())):\n    result = parse_score(input())\n    if result is not None:\n        valid.append(result)\navg = average([score for _, score in valid])\nprint(\"geçerli:\", len(valid))\nprint(\"ortalama:\", \"yok\" if avg is None else f\"{avg:.1f}\")\nprint(\"ipuçları doğru:\", get_type_hints(parse_score) == {\"line\": str, \"return\": tuple[str, int] | None}\n      and get_type_hints(average) == {\"scores\": list[int], \"return\": float | None})",
+    "exampleInput": "4\nAda:90\nCan:x\nbozuk\nEda:70",
+    "exampleOutput": "geçerli: 2\nortalama: 80.0\nipuçları doğru: True",
+    "hints": [
+      "İpucu sözdizimi: def parse_score(line: str) -> tuple[str, int] | None:",
+      "average içinde: if not scores: return None, sonra return sum(scores) / len(scores). İpuçları: (scores: list[int]) -> float | None."
+    ],
+    "solution": "from typing import get_type_hints\n\ndef parse_score(line: str) -> tuple[str, int] | None:\n    name, sep, score = line.partition(\":\")\n    if not sep or not name.strip() or not score.strip().isdigit():\n        return None\n    return name.strip(), int(score)\n\ndef average(scores: list[int]) -> float | None:\n    if not scores:\n        return None\n    return sum(scores) / len(scores)\n\nvalid = []\nfor _ in range(int(input())):\n    result = parse_score(input())\n    if result is not None:\n        valid.append(result)\navg = average([score for _, score in valid])\nprint(\"geçerli:\", len(valid))\nprint(\"ortalama:\", \"yok\" if avg is None else f\"{avg:.1f}\")\nprint(\"ipuçları doğru:\", get_type_hints(parse_score) == {\"line\": str, \"return\": tuple[str, int] | None}\n      and get_type_hints(average) == {\"scores\": list[int], \"return\": float | None})",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "4\nAda:90\nCan:x\nbozuk\nEda:70",
+        "expectedOutput": "geçerli: 2\nortalama: 80.0\nipuçları doğru: True"
+      },
+      {
+        "label": "Ad boş",
+        "stdin": "1\n:50",
+        "expectedOutput": "geçerli: 0\nortalama: yok\nipuçları doğru: True"
+      },
+      {
+        "label": "Boşluklu alanlar",
+        "stdin": "2\n Bo : 7 \nAli:8",
+        "expectedOutput": "geçerli: 2\nortalama: 7.5\nipuçları doğru: True"
+      },
+      {
+        "label": "Satır yok",
+        "stdin": "0",
+        "expectedOutput": "geçerli: 0\nortalama: yok\nipuçları doğru: True"
+      }
+    ]
+  },
+  {
+    "id": "m14-w2",
+    "moduleId": 14,
+    "sectionId": "mypy-runtime",
+    "title": "İpuçlarına güvenen kodu onar",
+    "level": "Düzelt",
+    "objective": "Tip ipuçlarının dönüştürme ve doğrulama yapmadığını hesaba katarak dört hatayı düzelt.",
+    "prompt": "Her girdi satırı 'ürün adet'. Bilinmeyen ürün için 'bilinmeyen: ad', adet 1'den küçükse 'geçersiz adet: ad' yazılıp satır atlanır (önce ürün denetlenir); sonda 'toplam: N' ve price_of'un dönüş ipucunun doğru olup olmadığı yazılır. Kodda dört hata var: adet metin olarak kalıyor (qty: int ipucu dönüştürmez); bilinmeyen ürün None döndürüp hesabı çökertiyor; adet doğrulanmıyor; price_of'un dönüş ipucu None dönebildiğini söylemiyor (int | None olmalı). Dördünü de düzelt.",
+    "starterCode": "from typing import get_type_hints\n\nPRICES: dict[str, int] = {\"kalem\": 15, \"defter\": 40, \"silgi\": 5}\n\ndef price_of(name: str) -> int:\n    if name in PRICES:\n        return PRICES[name]\n\ndef line_total(name: str, qty: int) -> int:\n    return price_of(name) * qty\n\ntotal = 0\nfor _ in range(int(input())):\n    name, qty = input().split()\n    total += line_total(name, qty)\nprint(\"toplam:\", total)\nprint(\"dönüş ipucu doğru:\", get_type_hints(price_of)[\"return\"] == (int | None))",
+    "exampleInput": "3\nkalem 2\ndefter 1\nsilgi 4",
+    "exampleOutput": "toplam: 90\ndönüş ipucu doğru: True",
+    "hints": [
+      "input().split() metin verir; qty: int bunu değiştirmez. price_of ad bulunamazsa ne döndürüyor? Adet 0 ya da negatif olunca ne olmalı?",
+      "qty = int(...) ile dönüştür; döngüde önce price_of(name) is None ise 'bilinmeyen' yazıp continue, sonra qty < 1 ise 'geçersiz adet' yazıp continue; price_of'un dönüşünü -> int | None yap."
+    ],
+    "solution": "from typing import get_type_hints\n\nPRICES: dict[str, int] = {\"kalem\": 15, \"defter\": 40, \"silgi\": 5}\n\ndef price_of(name: str) -> int | None:\n    if name in PRICES:\n        return PRICES[name]\n\ndef line_total(name: str, qty: int) -> int:\n    return price_of(name) * qty\n\ntotal = 0\nfor _ in range(int(input())):\n    name, raw = input().split()\n    qty = int(raw)\n    if price_of(name) is None:\n        print(\"bilinmeyen:\", name)\n        continue\n    if qty < 1:\n        print(\"geçersiz adet:\", name)\n        continue\n    total += line_total(name, qty)\nprint(\"toplam:\", total)\nprint(\"dönüş ipucu doğru:\", get_type_hints(price_of)[\"return\"] == (int | None))",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3\nkalem 2\ndefter 1\nsilgi 4",
+        "expectedOutput": "toplam: 90\ndönüş ipucu doğru: True"
+      },
+      {
+        "label": "Bilinmeyen ürün",
+        "stdin": "2\nkalem 1\ncetvel 2",
+        "expectedOutput": "bilinmeyen: cetvel\ntoplam: 15\ndönüş ipucu doğru: True"
+      },
+      {
+        "label": "Geçersiz adet",
+        "stdin": "2\ndefter 0\nsilgi -2",
+        "expectedOutput": "geçersiz adet: defter\ngeçersiz adet: silgi\ntoplam: 0\ndönüş ipucu doğru: True"
+      },
+      {
+        "label": "Önce ürün denetlenir",
+        "stdin": "3\nkalem 3\nxyz 0\ndefter 2",
+        "expectedOutput": "bilinmeyen: xyz\ntoplam: 125\ndönüş ipucu doğru: True"
+      }
+    ]
+  },
+  {
+    "id": "m14-w3",
+    "moduleId": 14,
+    "sectionId": "generics",
+    "title": "Genel depo sınıfı",
+    "level": "Sıfırdan yaz",
+    "objective": "Protocol, sınırlı TypeVar ve Generic ile her kayıt türüne uyan tek bir depo sınıfı tasarla.",
+    "prompt": "Üç şey yaz. 1) HasId adında bir Protocol: id: int özniteliği. 2) T = TypeVar('T', bound=HasId). 3) Repository(Generic[T]) sınıfı: add(item: T) -> None (aynı id varsa ValueError(f'kimlik zaten var: {id}')), get(item_id: int) -> T | None, remove(item_id: int) -> bool (silindiyse True), all() -> list[T] (kimliğe göre sıralı). User ve Product dataclass'ları ve komut okuma kısmı hazır; aynı Repository sınıfı hem kullanıcılar hem ürünler için kullanılır. Komutlar: 'kullanıcı ekle ID AD', 'ürün ekle ID AD FİYAT', 'TÜR getir ID', 'TÜR sil ID', 'TÜR listele'. Son satır tip tanımlarının adlarını ve bağlarını denetler.",
+    "starterCode": "from dataclasses import dataclass\nfrom typing import Generic, Protocol, TypeVar\n\n# HasId Protocol'ünü, T TypeVar'ını (bound=HasId) ve Repository(Generic[T]) sınıfını buraya yaz.\n\n\n@dataclass\nclass User:\n    id: int\n    name: str\n\n@dataclass\nclass Product:\n    id: int\n    title: str\n    price: int\n\nrepos = {\"kullanıcı\": Repository[User](), \"ürün\": Repository[Product]()}\nfor _ in range(int(input())):\n    kind, command, *rest = input().split()\n    repo = repos[kind]\n    try:\n        if command == \"ekle\":\n            item = User(int(rest[0]), rest[1]) if kind == \"kullanıcı\" else Product(int(rest[0]), rest[1], int(rest[2]))\n            repo.add(item)\n            print(\"eklendi\")\n        elif command == \"getir\":\n            print(repo.get(int(rest[0])) or \"yok\")\n        elif command == \"sil\":\n            print(\"silindi\" if repo.remove(int(rest[0])) else \"yok\")\n        elif command == \"listele\":\n            print(\", \".join(str(item.id) for item in repo.all()) or \"boş\")\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"tipler:\", T.__bound__ is HasId, Repository.__parameters__ == (T,))",
+    "exampleInput": "5\nkullanıcı ekle 2 Can\nkullanıcı ekle 1 Ada\nkullanıcı listele\nkullanıcı getir 1\nürün getir 1",
+    "exampleOutput": "eklendi\neklendi\n1, 2\nUser(id=1, name='Ada')\nyok\ntipler: True True",
+    "hints": [
+      "Protocol'de öznitelik ipucu yeterlidir: class HasId(Protocol): id: int. T = TypeVar('T', bound=HasId) yazınca T yalnızca id'si olan türleri temsil eder.",
+      "Repository içinde kayıtları self._items: dict[int, T] sözlüğünde tut; get için dict.get, remove için pop(item_id, None) is not None, all için sorted anahtarlar kullan."
+    ],
+    "solution": "from dataclasses import dataclass\nfrom typing import Generic, Protocol, TypeVar\n\nclass HasId(Protocol):\n    id: int\n\nT = TypeVar(\"T\", bound=HasId)\n\nclass Repository(Generic[T]):\n    def __init__(self) -> None:\n        self._items: dict[int, T] = {}\n\n    def add(self, item: T) -> None:\n        if item.id in self._items:\n            raise ValueError(f\"kimlik zaten var: {item.id}\")\n        self._items[item.id] = item\n\n    def get(self, item_id: int) -> T | None:\n        return self._items.get(item_id)\n\n    def remove(self, item_id: int) -> bool:\n        return self._items.pop(item_id, None) is not None\n\n    def all(self) -> list[T]:\n        return [self._items[key] for key in sorted(self._items)]\n\n@dataclass\nclass User:\n    id: int\n    name: str\n\n@dataclass\nclass Product:\n    id: int\n    title: str\n    price: int\n\nrepos = {\"kullanıcı\": Repository[User](), \"ürün\": Repository[Product]()}\nfor _ in range(int(input())):\n    kind, command, *rest = input().split()\n    repo = repos[kind]\n    try:\n        if command == \"ekle\":\n            item = User(int(rest[0]), rest[1]) if kind == \"kullanıcı\" else Product(int(rest[0]), rest[1], int(rest[2]))\n            repo.add(item)\n            print(\"eklendi\")\n        elif command == \"getir\":\n            print(repo.get(int(rest[0])) or \"yok\")\n        elif command == \"sil\":\n            print(\"silindi\" if repo.remove(int(rest[0])) else \"yok\")\n        elif command == \"listele\":\n            print(\", \".join(str(item.id) for item in repo.all()) or \"boş\")\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"tipler:\", T.__bound__ is HasId, Repository.__parameters__ == (T,))",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "5\nkullanıcı ekle 2 Can\nkullanıcı ekle 1 Ada\nkullanıcı listele\nkullanıcı getir 1\nürün getir 1",
+        "expectedOutput": "eklendi\neklendi\n1, 2\nUser(id=1, name='Ada')\nyok\ntipler: True True"
+      },
+      {
+        "label": "Yinelenen kimlik",
+        "stdin": "3\nürün ekle 7 Kalem 15\nürün ekle 7 Silgi 5\nürün getir 7",
+        "expectedOutput": "eklendi\nhata: kimlik zaten var: 7\nProduct(id=7, title='Kalem', price=15)\ntipler: True True"
+      },
+      {
+        "label": "Silme",
+        "stdin": "4\nkullanıcı ekle 3 Eda\nkullanıcı sil 3\nkullanıcı sil 3\nkullanıcı listele",
+        "expectedOutput": "eklendi\nsilindi\nyok\nboş\ntipler: True True"
+      },
+      {
+        "label": "Depolar ayrı",
+        "stdin": "2\nkullanıcı ekle 1 Ada\nürün listele",
+        "expectedOutput": "eklendi\nboş\ntipler: True True"
+      }
+    ]
+  },
+  {
+    "id": "m15-w1",
+    "moduleId": 15,
+    "sectionId": "blocking-loop",
+    "title": "Nabzı kesmeyen hesap",
+    "level": "Tamamla",
+    "objective": "Uzun bir hesap sırasında await asyncio.sleep(0) ile event loop'a düzenli sıra vererek diğer görevin de çalışmasını sağla.",
+    "prompt": "Girdi 'n step' biçiminde. crunch(n, step, stop) 0'dan n - 1'e kadar sayıların karelerini topluyor ama hesap bitene kadar event loop'a hiç sıra vermiyor; bu yüzden heartbeat görevi yalnızca bir kez çalışabiliyor. crunch'ı tamamla: her step adımda bir (i % step == step - 1 olduğunda) await asyncio.sleep(0) ile sıra ver. Hesap bitince stop kurulmalı (hazır). Program toplamı ve heartbeat'in kaç kez çalıştığını yazar.",
+    "starterCode": "import asyncio\n\nasync def crunch(n, step, stop):\n    total = 0\n    for i in range(n):\n        total += i * i\n        # her step adımda bir event loop'a sıra ver\n    stop.set()\n    return total\n\nasync def heartbeat(stop, beats):\n    while not stop.is_set():\n        beats.append(1)\n        await asyncio.sleep(0)\n\nasync def main():\n    n, step = (int(part) for part in input().split())\n    stop = asyncio.Event()\n    beats = []\n    _, total = await asyncio.gather(heartbeat(stop, beats), crunch(n, step, stop))\n    print(\"toplam:\", total)\n    print(\"nabız:\", len(beats))\n\nasyncio.run(main())",
+    "exampleInput": "3000 1000",
+    "exampleOutput": "toplam: 8995500500\nnabız: 4",
+    "hints": [
+      "Döngü await etmeden dönerse event loop başka görevi çalıştıramaz. Sıra vermenin en kısa yolu await asyncio.sleep(0).",
+      "Döngünün içine: if i % step == step - 1: await asyncio.sleep(0). Nabız sayısı, verilen sıra sayısından bir fazladır (heartbeat ilk kez hesaptan önce çalışır)."
+    ],
+    "solution": "import asyncio\n\nasync def crunch(n, step, stop):\n    total = 0\n    for i in range(n):\n        total += i * i\n        if i % step == step - 1:\n            await asyncio.sleep(0)\n    stop.set()\n    return total\n\nasync def heartbeat(stop, beats):\n    while not stop.is_set():\n        beats.append(1)\n        await asyncio.sleep(0)\n\nasync def main():\n    n, step = (int(part) for part in input().split())\n    stop = asyncio.Event()\n    beats = []\n    _, total = await asyncio.gather(heartbeat(stop, beats), crunch(n, step, stop))\n    print(\"toplam:\", total)\n    print(\"nabız:\", len(beats))\n\nasyncio.run(main())",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "3000 1000",
+        "expectedOutput": "toplam: 8995500500\nnabız: 4"
+      },
+      {
+        "label": "Küçük adım",
+        "stdin": "10 3",
+        "expectedOutput": "toplam: 285\nnabız: 4"
+      },
+      {
+        "label": "Adım hesaptan uzun",
+        "stdin": "5 10",
+        "expectedOutput": "toplam: 30\nnabız: 1"
+      },
+      {
+        "label": "Her adımda",
+        "stdin": "4 1",
+        "expectedOutput": "toplam: 14\nnabız: 5"
+      }
+    ]
+  },
+  {
+    "id": "m15-w2",
+    "moduleId": 15,
+    "sectionId": "cancellation-timeout",
+    "title": "Zaman aşımlı yeniden deneme",
+    "level": "Düzelt",
+    "objective": "İptalin yutulmasını, yanlış yakalanan hatayı, eksik deneme sayısını ve yalnız başarıda kapanan bağlantıyı düzelt.",
+    "prompt": "Girdi: süre sınırı, deneme sayısı ve servisin her denemede yanıt vereceği süreler (denemeler süre sayısını aşarsa son süre kullanılır). call_with_retry her denemeyi wait_for ile sınırlar; aşılan denemede 'deneme N: zaman aşımı' yazar; yanıt gelirse 'sonuç: yanıt (deneme N)', denemeler tükenirse 'sonuç: vazgeçildi' yazılır; sonda açık kalan bağlantı sayısı (0 olmalı) yazılır. Kodda dört hata var: servis iptali yutuyor; çağıran taraf wait_for'un fırlattığı hatayı değil başka bir hatayı yakalıyor; son deneme hiç yapılmıyor; bağlantı yalnızca başarılı yolda kapanıyor (else yerine finally olmalı). Dördünü de düzelt.",
+    "starterCode": "import asyncio\n\nclass Service:\n    def __init__(self, durations):\n        self.durations = durations\n        self.calls = 0\n        self.open = 0\n\n    async def call(self):\n        seconds = self.durations[min(self.calls, len(self.durations) - 1)]\n        self.calls += 1\n        self.open += 1\n        try:\n            await asyncio.sleep(seconds)\n        except asyncio.CancelledError:\n            return None\n        else:\n            self.open -= 1\n        return \"yanıt\"\n\nasync def call_with_retry(service, retries, limit):\n    for attempt in range(1, retries):\n        try:\n            result = await asyncio.wait_for(service.call(), timeout=limit)\n            return f\"{result} (deneme {attempt})\"\n        except asyncio.CancelledError:\n            print(f\"deneme {attempt}: zaman aşımı\")\n    return \"vazgeçildi\"\n\nasync def main():\n    limit = float(input())\n    retries = int(input())\n    service = Service([float(part) for part in input().split()])\n    print(\"sonuç:\", await call_with_retry(service, retries, limit))\n    print(\"açık bağlantı:\", service.open)\n\nasyncio.run(main())",
+    "exampleInput": "0.5\n3\n2 2 0.1",
+    "exampleOutput": "deneme 1: zaman aşımı\ndeneme 2: zaman aşımı\nsonuç: yanıt (deneme 3)\naçık bağlantı: 0",
+    "hints": [
+      "Süre dolunca wait_for görevi iptal eder: görevin içinde CancelledError oluşur, dışarıya ise TimeoutError çıkar. Görev iptali yutarsa wait_for ne döndürür? range(1, retries) kaç deneme yapar? else bloğu hata olunca çalışır mı?",
+      "Servisteki except bloğunda return None yerine raise yaz; call_with_retry'da except TimeoutError yakala; range(1, retries + 1) kullan; bağlantıyı kapatan else'i finally yap."
+    ],
+    "solution": "import asyncio\n\nclass Service:\n    def __init__(self, durations):\n        self.durations = durations\n        self.calls = 0\n        self.open = 0\n\n    async def call(self):\n        seconds = self.durations[min(self.calls, len(self.durations) - 1)]\n        self.calls += 1\n        self.open += 1\n        try:\n            await asyncio.sleep(seconds)\n        finally:\n            self.open -= 1\n        return \"yanıt\"\n\nasync def call_with_retry(service, retries, limit):\n    for attempt in range(1, retries + 1):\n        try:\n            result = await asyncio.wait_for(service.call(), timeout=limit)\n            return f\"{result} (deneme {attempt})\"\n        except TimeoutError:\n            print(f\"deneme {attempt}: zaman aşımı\")\n    return \"vazgeçildi\"\n\nasync def main():\n    limit = float(input())\n    retries = int(input())\n    service = Service([float(part) for part in input().split()])\n    print(\"sonuç:\", await call_with_retry(service, retries, limit))\n    print(\"açık bağlantı:\", service.open)\n\nasyncio.run(main())",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "0.5\n3\n2 2 0.1",
+        "expectedOutput": "deneme 1: zaman aşımı\ndeneme 2: zaman aşımı\nsonuç: yanıt (deneme 3)\naçık bağlantı: 0"
+      },
+      {
+        "label": "İlk denemede yanıt",
+        "stdin": "1\n2\n0.2",
+        "expectedOutput": "sonuç: yanıt (deneme 1)\naçık bağlantı: 0"
+      },
+      {
+        "label": "Vazgeçilir",
+        "stdin": "0.3\n2\n1",
+        "expectedOutput": "deneme 1: zaman aşımı\ndeneme 2: zaman aşımı\nsonuç: vazgeçildi\naçık bağlantı: 0"
+      },
+      {
+        "label": "Son deneme yetişir",
+        "stdin": "0.5\n4\n1 1 1 0.2",
+        "expectedOutput": "deneme 1: zaman aşımı\ndeneme 2: zaman aşımı\ndeneme 3: zaman aşımı\nsonuç: yanıt (deneme 4)\naçık bağlantı: 0"
+      }
+    ]
+  },
+  {
+    "id": "m15-w3",
+    "moduleId": 15,
+    "sectionId": "tasks-gather",
+    "title": "Eşzamanlı indirme raporu",
+    "level": "Sıfırdan yaz",
+    "objective": "Bütün indirmeleri aynı anda yürüt; her birine süre sınırı koy, hataları ve zaman aşımlarını sonuç olarak topla ve girdi sırasıyla raporla.",
+    "prompt": "İlk satır süre sınırı, ikinci satır indirme sayısı, sonraki her satır 'ad süre boyut'. Bir indirme 'süre' saniye bekler; boyut negatifse ValueError('bozuk yanıt') fırlatır, değilse boyutu döndürür. Bütün indirmeleri aynı anda yürüt ve her birini süre sınırıyla çalıştır. Girdi sırasıyla 'ad: 120 bayt', 'ad: zaman aşımı' ya da 'ad: hata (bozuk yanıt)' yaz; sonra 'toplam: N bayt' (yalnız başarılılar) ve loop.time() ile ölçülen 'süre: 0.5 sn'. Bir indirmenin hatası diğerlerini durdurmamalı.",
+    "starterCode": "import asyncio\n\n# download(seconds, size): asyncio.sleep ile bekle; size < 0 ise ValueError(\"bozuk yanıt\"), değilse size döndür.\n# Her indirmeyi asyncio.wait_for ile süre sınırına bağla, hepsini aynı anda yürüt\n# (gather(..., return_exceptions=True) hataları sonuç olarak döndürür) ve raporu girdi sırasıyla yaz.\n\nasync def main():\n    limit = float(input())\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds, size = input().split()\n        jobs.append((name, float(seconds), int(size)))\n\nasyncio.run(main())",
+    "exampleInput": "0.5\n3\nana 0.2 120\nlogo 0.9 40\nveri 0.1 -1",
+    "exampleOutput": "ana: 120 bayt\nlogo: zaman aşımı\nveri: hata (bozuk yanıt)\ntoplam: 120 bayt\nsüre: 0.5 sn",
+    "hints": [
+      "results = await asyncio.gather(*(asyncio.wait_for(download(s, b), timeout=limit) for _, s, b in jobs), return_exceptions=True). return_exceptions=True ile hatalar fırlatılmaz, listede sonuç olarak durur.",
+      "Sonuçları zip(jobs, results) ile dolaş: isinstance(result, TimeoutError) → zaman aşımı, isinstance(result, ValueError) → hata, yoksa boyut. Süreyi gather'dan önce ve sonra loop.time() ile ölç."
+    ],
+    "solution": "import asyncio\n\nasync def download(seconds, size):\n    await asyncio.sleep(seconds)\n    if size < 0:\n        raise ValueError(\"bozuk yanıt\")\n    return size\n\nasync def main():\n    limit = float(input())\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds, size = input().split()\n        jobs.append((name, float(seconds), int(size)))\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    results = await asyncio.gather(\n        *(asyncio.wait_for(download(seconds, size), timeout=limit) for _, seconds, size in jobs),\n        return_exceptions=True,\n    )\n    total = 0\n    for (name, _, _), result in zip(jobs, results):\n        if isinstance(result, TimeoutError):\n            print(f\"{name}: zaman aşımı\")\n        elif isinstance(result, ValueError):\n            print(f\"{name}: hata ({result})\")\n        else:\n            total += result\n            print(f\"{name}: {result} bayt\")\n    print(f\"toplam: {total} bayt\")\n    print(f\"süre: {loop.time() - start:.1f} sn\")\n\nasyncio.run(main())",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "0.5\n3\nana 0.2 120\nlogo 0.9 40\nveri 0.1 -1",
+        "expectedOutput": "ana: 120 bayt\nlogo: zaman aşımı\nveri: hata (bozuk yanıt)\ntoplam: 120 bayt\nsüre: 0.5 sn"
+      },
+      {
+        "label": "Hepsi başarılı",
+        "stdin": "1\n3\na 0.3 10\nb 0.1 20\nc 0.2 30",
+        "expectedOutput": "a: 10 bayt\nb: 20 bayt\nc: 30 bayt\ntoplam: 60 bayt\nsüre: 0.3 sn"
+      },
+      {
+        "label": "Hata diğerlerini durdurmaz",
+        "stdin": "1\n2\nbozuk 0.1 -5\niyi 0.4 7",
+        "expectedOutput": "bozuk: hata (bozuk yanıt)\niyi: 7 bayt\ntoplam: 7 bayt\nsüre: 0.4 sn"
+      },
+      {
+        "label": "Hepsi zaman aşımı",
+        "stdin": "0.2\n2\nx 1 5\ny 2 6",
+        "expectedOutput": "x: zaman aşımı\ny: zaman aşımı\ntoplam: 0 bayt\nsüre: 0.2 sn"
+      }
+    ]
   }
 ]

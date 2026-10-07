@@ -1,0 +1,1557 @@
+{
+  "id": 15,
+  "slug": "concurrency",
+  "title": "Eşzamanlılık",
+  "description": "I/O ve CPU bağımlı işi ayır; threading, thread havuzu, GIL ve multiprocessing'i oku; async/await, görevler, zaman aşımı, iptal ve paylaşılan veri hatalarını asyncio ile tarayıcıda çalıştırarak öğren.",
+  "contentVersion": 1,
+  "estimatedMinutes": 150,
+  "practiceIds": [
+    "m15-q01",
+    "m15-q03",
+    "m15-q05",
+    "m15-q07",
+    "m15-q09",
+    "m15-q10",
+    "m15-q12",
+    "m15-q14",
+    "m15-q17",
+    "m15-q19",
+    "m15-q25",
+    "m15-q30",
+    "m15-q33",
+    "m15-q35",
+    "m15-q38"
+  ],
+  "sections": [
+    {
+      "id": "io-cpu",
+      "title": "Bekleyen iş, hesaplayan iş",
+      "eyebrow": "Eşzamanlılık neden gerekir?",
+      "objectives": [
+        "Bir işin I/O bağımlı (ağ, disk, kullanıcı beklemek) mı yoksa CPU bağımlı (hesaplama) mı olduğunu ayırt eder.",
+        "Eşzamanlılık (concurrency) ile paralelliği (parallelism) ayırır ve sırayla, örtüşerek ve paralel çalışmanın toplam süresini kabaca tahmin eder."
+      ],
+      "prerequisites": [
+        "m10:datetime",
+        "m6:def-return"
+      ],
+      "summary": "Programlar zamanlarının çoğunu ya bir şey beklerken (ağ yanıtı, disk, veritabanı) ya da hesaplarken geçirir. Bekleyen işleri örtüştürmek (eşzamanlılık) toplam süreyi en uzun beklemeye indirir; hesaplamayı hızlandırmak ise birden çok çekirdekte gerçekten aynı anda çalışmayı (paralellik) gerektirir.",
+      "explanation": "Bir program iki tür işte zaman harcar. I/O bağımlı işte (input/output) işlemci çoğunlukla boştadır: bir web sayfasının yanıtını, diskten okunan dosyayı ya da veritabanı sorgusunu bekler. CPU bağımlı işte ise işlemci sürekli çalışır: büyük bir listeyi sıralamak, görüntü küçültmek, asal sayı aramak gibi. Hangisiyle uğraştığını bilmeden doğru aracı seçemezsin; emin değilsen önce ölç (time.perf_counter, M10). Eşzamanlılık (concurrency), birden çok işin aynı zaman aralığında ilerlemesidir; işler sırayla ama iç içe ilerleyebilir. Bir aşçı makarna suyu kaynarken salata doğrar: tek kişi, ama beklemeyi boşa harcamaz. Paralellik (parallelism) ise işlerin gerçekten aynı anda, farklı çekirdeklerde çalışmasıdır: iki aşçı. Üç dosyayı sırayla indirmek 0,8 + 0,3 + 0,6 = 1,7 saniye sürer; beklemeler örtüşürse toplam süre en uzun beklemeye, 0,8 saniyeye iner. Bunun için tek çekirdek yeter, çünkü beklerken hesaplanacak bir şey yoktur. Hesaplama işlerinde ise örtüştürmek işe yaramaz: tek çekirdekte üç adet 0,5 saniyelik hesap yine 1,5 saniye sürer. Hızlanma için ikinci, üçüncü çekirdeğin de çalışması gerekir. Python'da üç araç var: threading (iş parçacıkları; I/O için), multiprocessing (ayrı süreçler; CPU için) ve asyncio (tek iş parçacığında, await noktalarında sırayı değiştiren görevler; çok sayıda I/O için). Bu modül hepsini okuyup ne zaman hangisinin seçildiğini anlayacak kadar tanıtır. Eşzamanlılık karmaşıklık da getirir: hatalar zamanlamaya bağlı olur ve her çalıştırmada görünmeyebilir. İş zaten hızlıysa sıralı kod en iyi seçimdir.",
+      "code": "downloads = [0.8, 0.3, 0.6]   # saniye: çoğunlukla ağdan yanıt bekleniyor (I/O)\nhashes = [0.5, 0.5, 0.5]      # saniye: işlemci sürekli hesaplıyor (CPU)\n\nprint(\"I/O sırayla:\", round(sum(downloads), 1))\nprint(\"I/O örtüşerek:\", max(downloads))\nprint(\"CPU tek çekirdek:\", round(sum(hashes), 1))\nprint(\"CPU üç çekirdek:\", max(hashes))",
+      "expectedOutput": "I/O sırayla: 1.7\nI/O örtüşerek: 0.8\nCPU tek çekirdek: 1.5\nCPU üç çekirdek: 0.5",
+      "why": "Beklemeler örtüşebildiği için I/O işlerinde toplam süre en uzun beklemeye iner ve bunun için tek çekirdek yeter. Hesaplama işleri tek çekirdekte örtüştürülse de toplam yine aynı kalır; süre ancak işler farklı çekirdeklere dağıtılınca düşer.",
+      "alternatives": [
+        "Gerçek süreyi tahmin etmek yerine ölç: start = time.perf_counter() ... print(time.perf_counter() - start).",
+        "İş zaten kısa sürüyorsa eşzamanlılık ekleme; sıralı kod daha kolay okunur ve test edilir."
+      ],
+      "traps": [
+        "Eşzamanlılığın her işi hızlandırdığını sanmak; hesaplama işinde tek çekirdekte kazanç yoktur.",
+        "Eşzamanlılık ile paralelliği aynı şey sanmak: biri işlerin iç içe ilerlemesi, diğeri gerçekten aynı anda çalışmasıdır.",
+        "Ölçmeden 'yavaş olan ağ' ya da 'yavaş olan hesap' diye tahmin edip yanlış aracı seçmek."
+      ],
+      "realCode": "def choose_tool(kind: str, count: int) -> str:\n    if count == 1:\n        return \"sırayla çalıştır\"\n    if kind == \"io\":\n        return \"asyncio ya da thread havuzu\"\n    if kind == \"cpu\":\n        return \"süreç havuzu (multiprocessing)\"\n    return \"önce ölç (time.perf_counter)\"\n\njobs = [(\"100 sayfa indir\", \"io\", 100), (\"tek dosya oku\", \"io\", 1), (\"40 görüntü küçült\", \"cpu\", 40), (\"rapor üret\", \"?\", 5)]\nfor name, kind, count in jobs:\n    print(f\"{name}: {choose_tool(kind, count)}\")",
+      "realOutput": "100 sayfa indir: asyncio ya da thread havuzu\ntek dosya oku: sırayla çalıştır\n40 görüntü küçült: süreç havuzu (multiprocessing)\nrapor üret: önce ölç (time.perf_counter)",
+      "lineByLine": [
+        "Tek bir iş için eşzamanlılık bir şey kazandırmaz; sıralı kod yeterlidir.",
+        "Çok sayıda bekleme (ağ, disk) varsa beklemeleri örtüştüren asyncio ya da thread havuzu seçilir.",
+        "Çok sayıda hesaplama varsa işler ayrı süreçlere, yani ayrı çekirdeklere dağıtılır.",
+        "İşin türü bilinmiyorsa karar vermeden önce süre ölçülür."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Eşzamanlı çalıştırma",
+          "url": "https://docs.python.org/3.12/library/concurrency.html"
+        },
+        {
+          "title": "Python 3.12 · time.perf_counter",
+          "url": "https://docs.python.org/3.12/library/time.html#time.perf_counter"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "threads",
+      "title": "threading ve thread havuzu",
+      "eyebrow": "Beklemeleri iş parçacıklarıyla örtüştür",
+      "depth": "okuma",
+      "objectives": [
+        "threading.Thread(target=..., args=...), start() ve join() ile çalışan kodu okur; join'in neden gerektiğini açıklar.",
+        "concurrent.futures.ThreadPoolExecutor ile submit, map ve Future.result() kullanımını okur; bir thread'deki hatanın result() çağrısında yeniden fırlatıldığını bilir."
+      ],
+      "prerequisites": [
+        "io-cpu",
+        "m6:parameters",
+        "m7:try-except"
+      ],
+      "summary": "Thread (iş parçacığı), aynı program içinde aynı belleği paylaşarak çalışan ayrı bir yürütme yoludur. Bir thread ağ yanıtı beklerken diğerleri çalışır; bu yüzden thread'ler I/O işlerini hızlandırır. Gündelik kodda thread'leri elle yönetmek yerine ThreadPoolExecutor kullanılır.",
+      "explanation": "threading.Thread(target=fetch, args=(3,)) bir iş parçacığı nesnesi oluşturur ama çalıştırmaz. start() onu başlatır ve hemen döner; ana program kendi işine devam eder. join() ise o thread bitene kadar bekler. join çağrılmazsa program, sonuçlar daha hazır değilken onları okumaya çalışabilir. args bir demettir: tek argümanda bile virgül gerekir, (3,). Thread'ler aynı süreçte çalıştığı için aynı değişkenleri, listeleri ve nesneleri görür. Bu kolaylıktır ama tehlikelidir: iki thread aynı veriyi aynı anda değiştirirse sonuç bozulabilir (bu modülün son bölümü). Sonuçları ortak bir listeye yazmak yerine her işin bir değer döndürmesi daha güvenlidir. concurrent.futures.ThreadPoolExecutor bir thread havuzu kurar ve işleri ona dağıtır. executor.submit(fetch, 3) hemen bir Future (ileride hazır olacak sonuç) döndürür; future.result() sonuç hazır olana kadar bekler ve iş hata verdiyse aynı hatayı orada yeniden fırlatır. executor.map(fetch, pages) her öğe için işi başlatır ve sonuçları girdi sırasıyla verir. with bloğu sonunda havuz bütün işlerin bitmesini bekler. as_completed(futures) ise işleri bitme sırasıyla dolaşır. Bu sitede kod tarayıcıda çalışır ve tarayıcıdaki Python thread başlatamaz (RuntimeError: can't start new thread). Bu yüzden editördeki örnek thread nesnelerini kurar ama işi sırayla yapar; gerçek thread'li sürüm aşağıda yerel Python içindir. Gerçek kodda ise aynı Executor arayüzünü sırayla çalıştıran küçük bir sınıfla değiştirmek, thread kullanan kodu test etmenin yaygın bir yoludur.",
+      "code": "import threading\n\nresults = {}\n\ndef fetch(page: int) -> None:\n    # gerçekte burada ağ yanıtı beklenir\n    results[page] = f\"sayfa-{page}\"\n\nworkers = [threading.Thread(target=fetch, args=(n,), name=f\"indirici-{n}\") for n in range(1, 4)]\nprint([worker.name for worker in workers])\nprint(threading.current_thread().name, workers[0].is_alive())\nfor n in range(1, 4):   # tarayıcıda thread başlatılamaz; aynı işi sırayla yapıyoruz\n    fetch(n)\nprint(results)",
+      "expectedOutput": "['indirici-1', 'indirici-2', 'indirici-3']\nMainThread False\n{1: 'sayfa-1', 2: 'sayfa-2', 3: 'sayfa-3'}",
+      "why": "Thread nesneleri kuruldu ama start() çağrılmadığı için hiçbiri çalışmıyor (is_alive False); kod ana iş parçacığında (MainThread) yürüyor. Yerel örnekte aynı fetch dört thread'de çalışınca her biri 0,5 saniye beklediği hâlde toplam süre 2 değil 0,5 saniye olur, çünkü beklemeler örtüşür.",
+      "alternatives": [
+        "Thread'leri elle başlatıp join etmek yerine ThreadPoolExecutor kullan; sonuçları ve hataları Future'lar taşır.",
+        "Çok sayıda ağ isteğinde asyncio daha az kaynakla daha çok bağlantıyı yönetir (sonraki bölümler)."
+      ],
+      "traps": [
+        "start() yerine run() çağırmak: run işi yeni thread'de değil, çağıran thread'de sırayla çalıştırır.",
+        "join() etmeden sonuçları okumak; işler henüz bitmemiş olabilir.",
+        "args=(3) yazmak: bu bir demet değil, 3 sayısıdır; doğrusu args=(3,).",
+        "Thread'de oluşan hatanın kaybolduğunu sanmak: havuzda hata Future'da saklanır ve result() çağrılınca fırlar."
+      ],
+      "localExample": {
+        "note": "Tarayıcıdaki Python thread başlatamaz. Bu kodu kendi bilgisayarında python yerel.py ile çalıştır; süreler küçük farklarla değişebilir.",
+        "code": "import threading\nimport time\nfrom concurrent.futures import ThreadPoolExecutor\n\ndef fetch(page: int) -> str:\n    time.sleep(0.5)          # ağ yanıtını bekliyormuş gibi\n    return f\"sayfa-{page}\"\n\nstart = time.perf_counter()\nworkers = [threading.Thread(target=fetch, args=(n,)) for n in range(1, 5)]\nfor worker in workers:\n    worker.start()\nfor worker in workers:\n    worker.join()\nprint(f\"4 thread: {time.perf_counter() - start:.1f} sn\")\n\nstart = time.perf_counter()\nwith ThreadPoolExecutor(max_workers=4) as pool:\n    pages = list(pool.map(fetch, range(1, 5)))\nprint(pages, f\"{time.perf_counter() - start:.1f} sn\")\n\nstart = time.perf_counter()\npages = [fetch(n) for n in range(1, 5)]\nprint(f\"sırayla: {time.perf_counter() - start:.1f} sn\")",
+        "output": "4 thread: 0.5 sn\n['sayfa-1', 'sayfa-2', 'sayfa-3', 'sayfa-4'] 0.5 sn\nsırayla: 2.0 sn"
+      },
+      "realCode": "from concurrent.futures import Executor, Future\n\nclass InlineExecutor(Executor):\n    \"\"\"ThreadPoolExecutor ile aynı arayüz; işleri sırayla yapar (testler ve tarayıcı için).\"\"\"\n    def submit(self, fn, /, *args, **kwargs):\n        future = Future()\n        try:\n            future.set_result(fn(*args, **kwargs))\n        except Exception as error:\n            future.set_exception(error)\n        return future\n\ndef fetch(page: int) -> str:\n    if page < 1:\n        raise ValueError(f\"geçersiz sayfa: {page}\")\n    return f\"sayfa-{page}\"\n\ndef download(executor: Executor, pages: list[int]) -> None:\n    with executor:\n        futures = {page: executor.submit(fetch, page) for page in pages}\n    for page, future in futures.items():\n        try:\n            print(page, future.result())\n        except ValueError as error:\n            print(page, \"hata:\", error)\n\ndownload(InlineExecutor(), [2, 0, 5])",
+      "realOutput": "2 sayfa-2\n0 hata: geçersiz sayfa: 0\n5 sayfa-5",
+      "lineByLine": [
+        "download hangi executor'la çalışacağını bilmez; yalnızca submit ve with arayüzünü kullanır.",
+        "Yerel Python'da download(ThreadPoolExecutor(max_workers=4), [2, 0, 5]) aynı çıktıyı verir ama işler aynı anda yürür.",
+        "Her submit bir Future döndürür; işte oluşan ValueError Future'da saklanır.",
+        "future.result() sonucu verir ya da saklanan hatayı burada yeniden fırlatır; hata bu yüzden ana kodda yakalanabilir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · threading",
+          "url": "https://docs.python.org/3.12/library/threading.html"
+        },
+        {
+          "title": "Python 3.12 · concurrent.futures",
+          "url": "https://docs.python.org/3.12/library/concurrent.futures.html"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örneği tarayıcıda çalışır ama thread başlatmaz; tarayıcıdaki Python'da thread yoktur. Gerçek thread'li sürüm 'Yerel Python'da çalıştır' bölümünde, yerel Python içindir."
+    },
+    {
+      "id": "gil-processes",
+      "title": "GIL ve multiprocessing",
+      "eyebrow": "Hesaplamayı çekirdeklere dağıt",
+      "depth": "okuma",
+      "objectives": [
+        "GIL'in (Global Interpreter Lock) ne olduğunu, thread'lerin neden I/O'yu hızlandırıp saf Python hesaplamasını hızlandırmadığını ve bunun sürüme/derlemeye bağlı olduğunu açıklar.",
+        "ProcessPoolExecutor ile işi süreçlere dağıtan kodu okur; if __name__ == '__main__' korumasını, modül düzeyinde fonksiyon ve pickle gerekliliğini tanır."
+      ],
+      "prerequisites": [
+        "threads",
+        "m9:main-guard",
+        "m10:collections"
+      ],
+      "summary": "Standart CPython'da GIL, aynı anda yalnızca bir thread'in Python kodu çalıştırmasına izin verir; bekleyen thread kilidi bırakır. Bu yüzden hesaplama işini hızlandırmak için ayrı süreçler kullanılır: her sürecin kendi yorumlayıcısı ve kendi GIL'i vardır, işler gerçekten farklı çekirdeklerde çalışır.",
+      "explanation": "GIL (Global Interpreter Lock), CPython yorumlayıcısının iç verisini korumak için kullandığı tek bir kilittir: bir süreçte aynı anda yalnızca bir thread Python bayt kodu çalıştırabilir. Bir thread ağdan yanıt, diskten veri ya da time.sleep beklerken GIL'i bırakır ve diğerleri çalışır; bu yüzden thread'ler I/O işinde gerçekten kazandırır. Saf Python hesaplamasında ise dört thread, işi sırayla yapmaktan hızlı değildir ve geçişlerin yüzünden biraz daha yavaş bile olabilir. NumPy gibi C ile yazılmış kütüphaneler hesap sırasında GIL'i bırakabildiği için onlarda durum farklıdır. GIL bir dil kuralı değil, bir uygulama ayrıntısıdır ve değişmektedir. Python 3.13 ile GIL'siz, ayrı bir 'free-threaded' derleme (python3.13t) deneysel olarak geldi (PEP 703); 3.14'te bu derleme resmî olarak destekleniyor ama isteğe bağlı. python.org'dan indirilen varsayılan yorumlayıcı hâlâ GIL'lidir. 3.13 ve sonrasında sys._is_gil_enabled() hangisinde çalıştığını söyler. Bu sitedeki Python 3.12'dir ve tek iş parçacığıyla çalışır. Hesaplamayı hızlandırmanın standart yolu süreçlerdir. concurrent.futures.ProcessPoolExecutor, multiprocessing modülünün üstünde thread havuzuyla aynı arayüzü sunar: pool.map(count_primes, chunks) parçaları ayrı süreçlerde hesaplar. Her sürecin kendi belleği olduğundan argümanlar ve sonuçlar pickle ile kopyalanarak taşınır: fonksiyon modül düzeyinde tanımlanmalıdır (lambda ya da iç fonksiyon olmaz), veriler küçük tutulmalıdır ve bir süreçte bir listeyi değiştirmek diğerlerini etkilemez. Windows ve macOS'ta (Python 3.14'ten beri Linux'ta da varsayılan olarak) yeni süreç programı baştan içe aktarır. Süreç başlatan kod if __name__ == '__main__': altında değilse her alt süreç yeniden süreç başlatmaya çalışır ve program hata verir (M9); korumayı her zaman yaz. Süreç başlatmak thread'den pahalıdır; işi birkaç büyük parçaya bölmek, binlerce küçük iş göndermekten iyidir. Bu sitedeki tarayıcı Python'u süreç de başlatamaz; gerçek örnek yerel Python içindir.",
+      "code": "def count_primes(bounds: tuple[int, int]) -> int:\n    low, high = bounds\n    return sum(1 for n in range(max(low, 2), high)\n               if all(n % d for d in range(2, int(n ** 0.5) + 1)))\n\nchunks = [(0, 2500), (2500, 5000), (5000, 7500), (7500, 10000)]\ncounts = list(map(count_primes, chunks))   # yerelde: pool.map(count_primes, chunks)\nprint(counts)\nprint(\"toplam:\", sum(counts))",
+      "expectedOutput": "[367, 302, 281, 279]\ntoplam: 1229",
+      "why": "İş, birbirinden bağımsız dört parçaya bölündü; her parça yalnızca kendi aralığını hesaplıyor ve ortak bir değişkene dokunmuyor. Bu yüzden map'i ProcessPoolExecutor'ın map'iyle değiştirmek sonucu değiştirmez, yalnızca parçaları farklı çekirdeklere dağıtır.",
+      "alternatives": [
+        "Sayısal hesaplamada önce NumPy gibi vektörleştirilmiş kütüphanelere bak; çoğu zaman süreç havuzundan daha basit ve hızlıdır.",
+        "I/O işlerinde süreç değil thread ya da asyncio kullan; süreç başlatmanın bedeli kazancı yer."
+      ],
+      "traps": [
+        "CPU bağımlı saf Python işini thread'lerle hızlandırmaya çalışmak; standart CPython'da GIL buna izin vermez.",
+        "Süreç başlatan kodu if __name__ == '__main__': koruması olmadan yazmak (Windows ve macOS'ta hata).",
+        "pool.map'e lambda ya da iç fonksiyon vermek; pickle edilemedikleri için süreçlere gönderilemezler.",
+        "Alt süreçte değiştirilen bir global listenin ana süreçte de değiştiğini sanmak; her sürecin belleği ayrıdır."
+      ],
+      "localExample": {
+        "note": "Tarayıcıdaki Python süreç başlatamaz. Kendi bilgisayarında python yerel.py ile çalıştır; dosya olarak çalıştırmak gerekir, çünkü alt süreçler bu dosyayı yeniden içe aktarır.",
+        "code": "from concurrent.futures import ProcessPoolExecutor\n\ndef count_primes(bounds: tuple[int, int]) -> int:\n    low, high = bounds\n    return sum(1 for n in range(max(low, 2), high)\n               if all(n % d for d in range(2, int(n ** 0.5) + 1)))\n\nif __name__ == \"__main__\":\n    chunks = [(0, 2500), (2500, 5000), (5000, 7500), (7500, 10000)]\n    with ProcessPoolExecutor(max_workers=4) as pool:\n        counts = list(pool.map(count_primes, chunks))\n    print(counts)\n    print(\"toplam:\", sum(counts))",
+        "output": "[367, 302, 281, 279]\ntoplam: 1229"
+      },
+      "realCode": "from collections import Counter\n\ndef count_words(lines: list[str]) -> Counter[str]:\n    return Counter(word for line in lines for word in line.lower().split())\n\ndef split(items: list[str], parts: int) -> list[list[str]]:\n    size = -(-len(items) // parts)   # yukarı yuvarlanmış bölme\n    return [items[i:i + size] for i in range(0, len(items), size)]\n\nlines = [\"Ada kod yazar\", \"Can kod okur\", \"Ada test yazar\", \"Eda kod\"]\nparts = split(lines, 2)\npartials = list(map(count_words, parts))   # yerelde: pool.map(count_words, parts)\ntotal = sum(partials, Counter())\nprint(len(parts), total.most_common(2))",
+      "realOutput": "2 [('kod', 3), ('ada', 2)]",
+      "lineByLine": [
+        "count_words yalnızca kendisine verilen satırlara bakar; paylaşılan bir duruma dokunmadığı için ayrı süreçte güvenle çalışır.",
+        "split işi çekirdek sayısı kadar büyük parçaya böler; çok sayıda küçük iş göndermek, kopyalama bedeli yüzünden yavaştır.",
+        "map yerine ProcessPoolExecutor().map kullanıldığında her parça ayrı süreçte sayılır ve Counter sonuçları pickle ile geri döner.",
+        "Ara sonuçlar ana süreçte birleştirilir: Counter'lar toplanabilir, sum'a başlangıç olarak boş bir Counter verilir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · multiprocessing",
+          "url": "https://docs.python.org/3.12/library/multiprocessing.html"
+        },
+        {
+          "title": "Python · Free-threaded CPython",
+          "url": "https://docs.python.org/3/howto/free-threading-python.html"
+        },
+        {
+          "title": "PEP 703 · GIL'i isteğe bağlı yapmak",
+          "url": "https://peps.python.org/pep-0703/"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örneği tarayıcıda çalışır ama süreç başlatmaz; tarayıcıdaki Python'da süreç yoktur. ProcessPoolExecutor'lı sürüm 'Yerel Python'da çalıştır' bölümünde, yerel Python içindir."
+    },
+    {
+      "id": "coroutines",
+      "title": "async def, await ve asyncio.run",
+      "eyebrow": "Duraklayıp devam eden fonksiyonlar",
+      "depth": "okuma",
+      "objectives": [
+        "async def ile tanımlanan fonksiyonun çağrılınca çalışmadığını, bir coroutine nesnesi döndürdüğünü ve await ya da asyncio.run ile çalıştırıldığını açıklar.",
+        "Event loop'un tek iş parçacığında görevleri await noktalarında değiştirdiğini ve art arda await'lerin süreleri topladığını okur."
+      ],
+      "prerequisites": [
+        "io-cpu",
+        "m13:generators",
+        "m14:annotations-basics"
+      ],
+      "summary": "async def bir coroutine fonksiyonu tanımlar; çağırmak yalnızca bir coroutine nesnesi üretir. asyncio.run(main()) bir event loop başlatır ve coroutine'i çalıştırır. await, beklenen iş bitene kadar bu coroutine'i duraklatır ve o sırada event loop başka işleri sürdürebilir.",
+      "explanation": "async def ile tanımlanan bir fonksiyon (coroutine fonksiyonu) çağrıldığında gövdesi çalışmaz; M13'teki generator'lar gibi duraklatılabilen bir nesne, coroutine döner. Onu çalıştırmanın iki yolu vardır: başka bir coroutine içinden await ile ya da programın en üstünde asyncio.run(main()) ile. asyncio.run bir event loop (olay döngüsü) kurar, verilen coroutine'i bitene kadar çalıştırır, dönüş değerini verir ve döngüyü kapatır. Bir programda genellikle tek bir asyncio.run çağrısı olur. await yalnızca async def içinde yazılabilir ve 'beklenebilir' (awaitable) bir nesne bekler: coroutine, Task ya da Future. await asyncio.sleep(0.1), bu coroutine'i 0,1 saniye duraklatır ve kontrolü event loop'a geri verir. Event loop tek bir iş parçacığında çalışır; her an yalnızca bir coroutine yürür, ama biri beklerken loop hazır olan başka birine geçer. Geçiş yalnızca await noktalarında olur; iki await arasındaki kod kesintisiz çalışır. Art arda yazılan await'ler sırayla çalışır: first = await greet('Can') bitmeden ikinci satıra geçilmez, bu yüzden iki 0,1 saniyelik bekleme toplam 0,2 saniye sürer. async yazmak tek başına hiçbir şeyi hızlandırmaz; işleri aynı anda yürütmek için onları görev olarak başlatmak gerekir (sonraki bölüm). Süre ölçerken loop.time() kullan: asyncio.get_running_loop() çalışan döngüyü verir ve loop.time() döngünün saatini okur. Gerçek kodda await, ağ istemcilerinde (aiohttp, httpx), veritabanı sürücülerinde ve web çatılarında (FastAPI) görülür; hepsinin ortak fikri beklerken başkasına yer açmaktır.",
+      "code": "import asyncio\n\nasync def greet(name: str) -> str:\n    await asyncio.sleep(0.1)\n    return f\"merhaba {name}\"\n\ncoro = greet(\"Ada\")\nprint(type(coro).__name__)\nprint(asyncio.run(coro))\n\nasync def main() -> None:\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    first = await greet(\"Can\")\n    second = await greet(\"Eda\")\n    print(first, \"|\", second)\n    print(f\"süre: {loop.time() - start:.1f} sn\")\n\nasyncio.run(main())",
+      "expectedOutput": "coroutine\nmerhaba Ada\nmerhaba Can | merhaba Eda\nsüre: 0.2 sn",
+      "why": "greet('Ada') çağrısı gövdeyi çalıştırmadı, bir coroutine nesnesi döndürdü; asyncio.run onu çalıştırıp dönüş değerini verdi. main içindeki iki await sırayla bekledi; ikinci selam birincisi bitmeden başlamadığı için süre 0,1 + 0,1 = 0,2 saniye oldu.",
+      "alternatives": [
+        "İki işin aynı anda beklemesi için asyncio.gather ya da asyncio.create_task kullan (sonraki bölüm).",
+        "Async kütüphanesi olmayan bir işi (eski bir istemci, dosya okuma) await ile beklemek için asyncio.to_thread kullanılır (beşinci bölüm)."
+      ],
+      "traps": [
+        "await'i unutmak: greet('Can') bir coroutine nesnesidir, metin değil; Python 'coroutine ... was never awaited' uyarısı verir.",
+        "await'i async def dışında yazmak (SyntaxError).",
+        "Zaten çalışan bir event loop içinden asyncio.run çağırmak (RuntimeError); async kod içinde await kullanılır.",
+        "async def yazmanın tek başına kodu hızlandıracağını sanmak; art arda await'ler sırayla bekler."
+      ],
+      "realCode": "import asyncio\n\nasync def fetch_user(user_id: int) -> dict[str, object]:\n    await asyncio.sleep(0.05)   # gerçekte: await client.get(f\"/users/{user_id}\")\n    return {\"id\": user_id, \"name\": f\"kullanıcı{user_id}\"}\n\nasync def main() -> None:\n    user = await fetch_user(7)\n    print(user[\"name\"])\n\nif __name__ == \"__main__\":\n    asyncio.run(main())",
+      "realOutput": "kullanıcı7",
+      "lineByLine": [
+        "fetch_user bir ağ isteğini temsil eder; gerçek bir async HTTP istemcisinde bekleme satırı await client.get(...) olurdu.",
+        "main, programın async giriş noktasıdır; diğer coroutine'leri await ile çağırır.",
+        "asyncio.run yalnızca en üstte, bir kez çağrılır ve event loop'u kurup kapatır.",
+        "__main__ koruması, dosya içe aktarıldığında programın kendiliğinden başlamasını engeller (M9)."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Coroutine'ler ve görevler",
+          "url": "https://docs.python.org/3.12/library/asyncio-task.html"
+        },
+        {
+          "title": "Python 3.12 · asyncio.run",
+          "url": "https://docs.python.org/3.12/library/asyncio-runner.html"
+        }
+      ],
+      "runtimeNote": "Tarayıcıda çalışır · Python 3.12. Site boşta beklemeyi atlar: asyncio.sleep hemen biter ama loop.time() gerçek Python'daki gibi ilerler, çıktı yerel Python'la aynıdır.",
+      "runtime": "browser"
+    },
+    {
+      "id": "tasks-gather",
+      "title": "Görevler: create_task, gather ve TaskGroup",
+      "eyebrow": "Beklemeleri aynı anda yürüt",
+      "depth": "okuma",
+      "objectives": [
+        "asyncio.gather ve asyncio.create_task ile coroutine'leri aynı anda yürüten kodu okur; toplam sürenin en uzun beklemeye indiğini gösterir.",
+        "gather'ın sonuçları verilen sırayla döndürdüğünü, create_task'in görevi hemen değil ilk beklemede başlattığını ve TaskGroup'un hata durumunda diğer görevleri iptal ettiğini bilir."
+      ],
+      "prerequisites": [
+        "coroutines"
+      ],
+      "summary": "asyncio.gather(a(), b(), c()) üç coroutine'i görev olarak aynı anda başlatır ve hepsi bitince sonuçlarını verilen sırayla bir liste olarak döndürür; toplam süre en uzun işin süresi olur. create_task tek bir görevi arka planda başlatır, TaskGroup ise bir grup görevi birlikte yönetir.",
+      "explanation": "Bir coroutine'i Task (görev) olarak sarmak, onu event loop'a 'fırsat bulunca bunu da yürüt' diye teslim etmektir. asyncio.create_task(fetch('d')) görevi planlar ve hemen döner; görev, çağıran kod bir await'te duraklayınca çalışmaya başlar. Sonucu almak için görev await edilir: result = await task. Oluşturulan görevlere bir referans tutulmalıdır; aksi hâlde görev bitmeden çöp toplayıcı tarafından silinebilir. asyncio.gather(*coroutineler) verilen coroutine'leri görev olarak başlatır, hepsinin bitmesini bekler ve sonuçları verilen sırayla döndürür; bitiş sırası farklı olsa bile. Üç bekleme 0,3, 0,1 ve 0,2 saniye sürüyorsa toplam süre 0,6 değil 0,3 saniyedir. Görevlerden biri hata verirse gather o hatayı fırlatır ama diğer görevler çalışmaya devam eder; return_exceptions=True verilirse hatalar da listede sonuç olarak döner. Python 3.11'den beri asyncio.TaskGroup daha güvenli bir yol sunar: async with asyncio.TaskGroup() as group: bloğunda group.create_task(...) ile başlatılan bütün görevler blok sonunda beklenir. Görevlerden biri hata verirse diğerleri iptal edilir ve hatalar bir ExceptionGroup içinde fırlatılır; böylece hiçbir görev sahipsiz kalmaz. Sonuçlar görev nesnelerinden task.result() ile okunur. Çıktının sırasına dikkat: önce bütün görevler 'başladı' yazar (her biri ilk await'te duraklar), sonra bitenler bitiş sırasıyla yazar. Bu düzen zamanlamaya bağlıdır; gerçek ağ isteklerinde bitiş sırası her çalıştırmada değişebilir, bu yüzden sonuçları bitiş sırasına değil gather'ın döndürdüğü listeye göre kullan.",
+      "code": "import asyncio\n\nasync def fetch(name: str, delay: float) -> str:\n    print(\"başladı\", name)\n    await asyncio.sleep(delay)\n    print(\"bitti\", name)\n    return name.upper()\n\nasync def main() -> None:\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    results = await asyncio.gather(fetch(\"a\", 0.3), fetch(\"b\", 0.1), fetch(\"c\", 0.2))\n    print(results, f\"{loop.time() - start:.1f} sn\")\n    task = asyncio.create_task(fetch(\"d\", 0.1))\n    print(\"görev oluşturuldu\")\n    print(await task)\n\nasyncio.run(main())",
+      "expectedOutput": "başladı a\nbaşladı b\nbaşladı c\nbitti b\nbitti c\nbitti a\n['A', 'B', 'C'] 0.3 sn\ngörev oluşturuldu\nbaşladı d\nbitti d\nD",
+      "why": "gather üç görevi birlikte başlattı; her biri ilk await'te duraklayınca sıradaki başladı. Bitiş sırası bekleme sürelerine göre (b, c, a) oldu ama sonuç listesi verilen sırayla ['A', 'B', 'C'] döndü ve toplam süre en uzun bekleme kadar, 0,3 saniye sürdü. create_task görevi planladı ama main await'e gelene kadar görev başlamadı; bu yüzden önce 'görev oluşturuldu' yazıldı.",
+      "alternatives": [
+        "Yeni kodda görev gruplarını asyncio.TaskGroup ile yönet; bir görev hata verirse diğerlerini iptal eder.",
+        "Sonuçları bitiş sırasıyla işlemek için asyncio.as_completed kullan."
+      ],
+      "traps": [
+        "Coroutine'leri listeye koyup await etmeden bırakmak; görev olmayan coroutine hiç çalışmaz.",
+        "Sonuç listesinin bitiş sırasıyla geldiğini sanmak; gather verilen sırayı korur.",
+        "create_task ile başlatılan görevin referansını tutmamak; görev bitmeden kaybolabilir.",
+        "gather'da bir görev hata verince diğerlerinin durduğunu sanmak; durmazlar (TaskGroup durdurur)."
+      ],
+      "realCode": "import asyncio\n\nPRICES = {\"USD\": 32.5, \"EUR\": 35.25}\n\nasync def fetch_price(code: str) -> float:\n    await asyncio.sleep(0.1)   # gerçekte: kur servisine istek\n    return PRICES[code]\n\nasync def main() -> None:\n    async with asyncio.TaskGroup() as group:\n        tasks = {code: group.create_task(fetch_price(code)) for code in (\"USD\", \"EUR\")}\n    for code, task in tasks.items():\n        print(code, task.result())\n\nasyncio.run(main())",
+      "realOutput": "USD 32.5\nEUR 35.25",
+      "lineByLine": [
+        "fetch_price bir kur servisine yapılan isteği temsil eder.",
+        "TaskGroup bloğunda iki görev aynı anda başlatılır; blok, ikisi de bitmeden kapanmaz.",
+        "Görevlerden biri hata verseydi diğeri iptal edilir ve hata bloğun sonunda fırlatılırdı.",
+        "Blok bittikten sonra her görevin sonucu task.result() ile güvenle okunur."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · gather ve create_task",
+          "url": "https://docs.python.org/3.12/library/asyncio-task.html#running-tasks-concurrently"
+        },
+        {
+          "title": "Python 3.12 · TaskGroup",
+          "url": "https://docs.python.org/3.12/library/asyncio-task.html#task-groups"
+        }
+      ],
+      "runtimeNote": "Tarayıcıda çalışır · Python 3.12. Site boşta beklemeyi atlar: asyncio.sleep hemen biter ama loop.time() gerçek Python'daki gibi ilerler, çıktı yerel Python'la aynıdır.",
+      "runtime": "browser"
+    },
+    {
+      "id": "blocking-loop",
+      "title": "Event loop'u bloklamak",
+      "eyebrow": "time.sleep ile asyncio.sleep aynı şey değil",
+      "depth": "okuma",
+      "objectives": [
+        "Bir coroutine içindeki bloklayan çağrının (time.sleep, uzun hesap, async olmayan kütüphane) bütün event loop'u durdurduğunu çıktıdan ve süreden gösterir.",
+        "Bloklayan işi asyncio.to_thread ile bir thread'e aktarmayı ve uzun hesaplamada ara ara await asyncio.sleep(0) ile döngüye sıra vermeyi okur."
+      ],
+      "prerequisites": [
+        "tasks-gather",
+        "threads"
+      ],
+      "summary": "Event loop tek iş parçacığında çalıştığı için, bir coroutine await etmeden uzun süre çalışırsa diğer bütün görevler bekler. time.sleep, döngüye haber vermeden bütün programı durdurur; asyncio.sleep ise yalnızca o görevi duraklatır. Async olmayan bloklayan çağrılar asyncio.to_thread ile bir thread'e aktarılır.",
+      "explanation": "Event loop yalnızca await noktalarında görev değiştirebilir. Bir coroutine içinde time.sleep(0.2) çağırmak, döngüye 'başkası çalışsın' demeden bütün iş parçacığını 0,2 saniye durdurur: o sırada hiçbir görev ilerlemez. Üç görev aynı anda başlatılsa bile her biri sırayla 0,2 saniye bloklayınca toplam süre 0,6 saniye olur. await asyncio.sleep(0.2) ise yalnızca o görevi duraklatır; üç görev 0,2 saniyede biter. Aynı sorun her bloklayan çağrıda vardır: async olmayan bir HTTP kütüphanesiyle (requests) istek atmak, büyük bir dosyayı open ile okumak, uzun bir döngüde hesap yapmak. Async kodda bunlar web sunucusunun bütün kullanıcılara yanıt vermeyi kesmesi gibi görünür. Kural: async kodda bekleyen her şey await edilmelidir; await edilemeyen bekleme ya da hesap döngünün dışına taşınmalıdır. asyncio.to_thread(func, *args) bloklayan bir fonksiyonu ayrı bir thread'de çalıştırır ve onu await edilebilir yapar; event loop bu sırada diğer görevleri sürdürür. Hesaplama işlerinde (GIL yüzünden) thread yerine loop.run_in_executor ile bir ProcessPoolExecutor kullanılır. Kısa süren ama uzun döngülü hesaplarda bir ara yol, döngüde ara ara await asyncio.sleep(0) yazarak diğer görevlere sıra vermektir. Tarayıcıdaki Python thread başlatamadığı için asyncio.to_thread burada çalışmaz; örneği aşağıda yerel Python için. asyncio'nun hata ayıklama modu (asyncio.run(main(), debug=True)) 0,1 saniyeden uzun bloklayan adımları uyarı olarak yazar ve bu tür sorunları bulmanın kolay yoludur.",
+      "code": "import asyncio\nimport time\n\nasync def blocking(name: str) -> None:\n    time.sleep(0.2)            # bütün döngüyü durdurur\n    print(\"bitti\", name)\n\nasync def polite(name: str) -> None:\n    await asyncio.sleep(0.2)   # yalnızca bu görevi duraklatır\n    print(\"bitti\", name)\n\nasync def measure(job) -> None:\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    await asyncio.gather(job(\"a\"), job(\"b\"), job(\"c\"))\n    print(job.__name__, f\"{loop.time() - start:.1f} sn\")\n\nasyncio.run(measure(blocking))\nasyncio.run(measure(polite))",
+      "expectedOutput": "bitti a\nbitti b\nbitti c\nblocking 0.6 sn\nbitti a\nbitti b\nbitti c\npolite 0.2 sn",
+      "why": "Çıktı satırları iki durumda da aynı sırada; fark süredir. blocking içindeki time.sleep döngüye kontrolü vermediği için görevler birbirini bekledi ve süreler toplandı (0,6 sn). polite'te üç bekleme örtüştü ve toplam süre tek bir beklemeye (0,2 sn) indi.",
+      "alternatives": [
+        "Bloklayan bir kütüphane çağrısını await asyncio.to_thread(func, ...) ile thread'e aktar (yerel örnek).",
+        "Async sürümü olan kütüphaneyi seç: requests yerine httpx.AsyncClient ya da aiohttp gibi."
+      ],
+      "traps": [
+        "async def içinde time.sleep kullanmak; kod çalışır ama eşzamanlılık kaybolur.",
+        "Bloklama hatasının hata mesajı vermediğini unutmak: program yalnızca yavaşlar, bu yüzden süre ölçülmeden fark edilmez.",
+        "Hesaplama ağırlıklı işi asyncio.to_thread ile hızlandırmayı beklemek; GIL yüzünden döngüyü serbest bırakır ama hesabı hızlandırmaz."
+      ],
+      "localExample": {
+        "note": "asyncio.to_thread bir thread kullandığı için tarayıcıda çalışmaz. Kendi bilgisayarında python yerel.py ile çalıştır.",
+        "code": "import asyncio\nimport time\n\ndef blocking_read(name: str) -> str:\n    time.sleep(0.3)      # async olmayan eski bir kütüphane çağrısı gibi\n    return name.upper()\n\nasync def main() -> None:\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    results = await asyncio.gather(*(asyncio.to_thread(blocking_read, n) for n in (\"a\", \"b\", \"c\")))\n    print(results, f\"{loop.time() - start:.1f} sn\")\n\nasyncio.run(main())",
+        "output": "['A', 'B', 'C'] 0.3 sn"
+      },
+      "realCode": "import asyncio\n\nasync def heartbeat(stop: asyncio.Event, beats: list[int]) -> None:\n    while not stop.is_set():\n        beats.append(1)\n        await asyncio.sleep(0)\n\nasync def crunch(n: int, stop: asyncio.Event) -> int:\n    total = 0\n    for i in range(n):\n        total += i * i\n        if i % 1000 == 999:\n            await asyncio.sleep(0)   # uzun hesapta ara ara döngüye sıra ver\n    stop.set()\n    return total\n\nasync def main() -> None:\n    stop = asyncio.Event()\n    beats: list[int] = []\n    _, total = await asyncio.gather(heartbeat(stop, beats), crunch(3000, stop))\n    print(\"sonuç:\", total, \"nabız:\", len(beats))\n\nasyncio.run(main())",
+      "realOutput": "sonuç: 8995500500 nabız: 4",
+      "lineByLine": [
+        "heartbeat, bir web sunucusunun öbür kullanıcılara yanıt vermesi gibi sürekli sıra bekleyen bir görevi temsil eder.",
+        "crunch uzun bir hesap yapar ama her 1000 adımda await asyncio.sleep(0) ile döngüye sıra verir.",
+        "Bu sayede heartbeat hesap sürerken de çalışır; await olmasaydı hesap bitene kadar yalnızca bir kez çalışabilirdi.",
+        "Hesap bitince Event kurulur ve heartbeat döngüden çıkar; gather iki sonucu birlikte döndürür."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · asyncio ile geliştirme (bloklayan kod)",
+          "url": "https://docs.python.org/3.12/library/asyncio-dev.html#running-blocking-code"
+        },
+        {
+          "title": "Python 3.12 · asyncio.to_thread",
+          "url": "https://docs.python.org/3.12/library/asyncio-task.html#running-in-threads"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır (site boşta beklemeyi atlar, time.sleep ise gerçekten bekler). asyncio.to_thread thread kullandığı için onun örneği yerel Python içindir."
+    },
+    {
+      "id": "cancellation-timeout",
+      "title": "İptal ve zaman aşımı",
+      "eyebrow": "Sonsuza dek bekleme",
+      "depth": "okuma",
+      "objectives": [
+        "asyncio.wait_for ve async with asyncio.timeout(...) ile bir beklemeye süre sınırı koyar; aşımda TimeoutError yakalar.",
+        "task.cancel()'ın görevde CancelledError fırlattığını, finally ile kaynakların kapatıldığını ve CancelledError'ın yakalanıp yutulmaması gerektiğini açıklar."
+      ],
+      "prerequisites": [
+        "tasks-gather",
+        "m7:else-finally"
+      ],
+      "summary": "Ağ çağrıları takılabilir; her beklemeye bir üst süre koymak gerekir. wait_for ve asyncio.timeout süre dolunca işi iptal edip TimeoutError fırlatır. İptal, görevin içinde bir CancelledError olarak görünür; finally blokları kaynakları kapatır ve hata yeniden fırlatılarak iptal tamamlanır.",
+      "explanation": "Bir görev iptal edildiğinde (task.cancel()), görevin beklediği await noktasında asyncio.CancelledError fırlatılır. Bu hata görevin içinden yukarı doğru yayılır: try/finally blokları çalışır, bağlantılar ve dosyalar kapatılır, görev 'iptal edildi' durumunda biter. Görevi await eden kod da CancelledError alır; task.cancelled() True döner. CancelledError, Exception'dan değil BaseException'dan türer; bu yüzden except Exception onu yanlışlıkla yutmaz. İptali yakalayıp temizlik yapmak meşrudur ama sonunda raise ile yeniden fırlatılmalıdır; yutulursa görev iptal edilmemiş gibi devam eder ve iptal isteyen kod (zaman aşımı, TaskGroup) bozulur. Temizlik için çoğu zaman finally yeterlidir. Zaman aşımı, iptalin otomatik hâlidir. asyncio.wait_for(coro, timeout=0.5) işi başlatır; 0,5 saniyede bitmezse işi iptal eder, iptalin bitmesini bekler ve TimeoutError fırlatır. Python 3.11'den beri async with asyncio.timeout(0.5): bloğu aynı işi birden çok satır için yapar. Python 3.11'den beri asyncio.TimeoutError yerleşik TimeoutError ile aynıdır. Gerçek kodda zaman aşımı çoğu zaman yeniden denemeyle birlikte kullanılır: birkaç deneme, her denemede bir süre sınırı, sonunda vazgeçip None ya da açık bir hata döndürmek. Hiç süre sınırı olmayan bir ağ çağrısı, karşı taraf yanıt vermediğinde programı sonsuza dek bekletebilir.",
+      "code": "import asyncio\n\nasync def download(name: str, seconds: float) -> str:\n    try:\n        await asyncio.sleep(seconds)\n        return f\"{name} indi\"\n    except asyncio.CancelledError:\n        print(name, \"iptal edildi, temizleniyor\")\n        raise\n    finally:\n        print(name, \"bağlantı kapandı\")\n\nasync def main() -> None:\n    try:\n        print(await asyncio.wait_for(download(\"küçük\", 0.1), timeout=1))\n        print(await asyncio.wait_for(download(\"büyük\", 5), timeout=0.5))\n    except TimeoutError:\n        print(\"zaman aşımı\")\n    task = asyncio.create_task(download(\"yedek\", 5))\n    await asyncio.sleep(0.1)\n    task.cancel()\n    try:\n        await task\n    except asyncio.CancelledError:\n        print(\"iptal edildi mi?\", task.cancelled())\n\nasyncio.run(main())",
+      "expectedOutput": "küçük bağlantı kapandı\nküçük indi\nbüyük iptal edildi, temizleniyor\nbüyük bağlantı kapandı\nzaman aşımı\nyedek iptal edildi, temizleniyor\nyedek bağlantı kapandı\niptal edildi mi? True",
+      "why": "Küçük indirme süre sınırından önce bitti; finally yine de çalıştı. Büyük indirme 0,5 saniyede bitmeyince wait_for onu iptal etti: görevde CancelledError oluştu, temizlik yapıldı, hata yeniden fırlatıldı ve main'e TimeoutError olarak ulaştı. Yedek görevi elle iptal edildi; await eden kod CancelledError aldı ve görev 'iptal edildi' durumunda bitti.",
+      "alternatives": [
+        "Birden çok satırı aynı süre sınırına almak için async with asyncio.timeout(0.5): kullan (Python 3.11+).",
+        "Ağ kütüphanelerinin kendi timeout parametrelerini de ayarla (httpx.AsyncClient(timeout=5) gibi)."
+      ],
+      "traps": [
+        "except asyncio.CancelledError: içinde raise yazmayıp iptali yutmak.",
+        "Ağ çağrılarını hiç süre sınırı koymadan beklemek.",
+        "TimeoutError yakalandığında işin arka planda sürdüğünü sanmak; wait_for işi iptal etmiştir.",
+        "Temizliği yalnızca başarılı yolda yapmak; iptal ve hata yollarında da çalışması için finally kullan."
+      ],
+      "realCode": "import asyncio\n\nclass FlakyService:\n    def __init__(self) -> None:\n        self.calls = 0\n\n    async def call(self) -> str:\n        self.calls += 1\n        await asyncio.sleep(2 if self.calls < 3 else 0.1)   # ilk iki çağrı takılıyor\n        return \"yanıt\"\n\nasync def call_with_retry(service: FlakyService, retries: int, limit: float) -> str | None:\n    for attempt in range(1, retries + 1):\n        try:\n            async with asyncio.timeout(limit):\n                return await service.call()\n        except TimeoutError:\n            print(f\"deneme {attempt}: zaman aşımı\")\n    return None\n\nprint(asyncio.run(call_with_retry(FlakyService(), 3, 0.5)))",
+      "realOutput": "deneme 1: zaman aşımı\ndeneme 2: zaman aşımı\nyanıt",
+      "lineByLine": [
+        "FlakyService, bazen yanıt vermeyen bir dış servisi temsil eder.",
+        "Her denemede async with asyncio.timeout(limit) bloğu bekleme süresini sınırlar; süre dolunca çağrı iptal edilir ve TimeoutError fırlar.",
+        "Zaman aşımı yakalanıp yazdırılır ve döngü sonraki denemeye geçer; üçüncü deneme zamanında yanıt alır.",
+        "Bütün denemeler tükenirse fonksiyon None döndürür; dönüş tipi str | None bunu belgeler."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Zaman aşımları",
+          "url": "https://docs.python.org/3.12/library/asyncio-task.html#timeouts"
+        },
+        {
+          "title": "Python 3.12 · Görev iptali",
+          "url": "https://docs.python.org/3.12/library/asyncio-task.html#task-cancellation"
+        }
+      ],
+      "runtimeNote": "Tarayıcıda çalışır · Python 3.12. Site boşta beklemeyi atlar: asyncio.sleep hemen biter ama loop.time() gerçek Python'daki gibi ilerler, çıktı yerel Python'la aynıdır.",
+      "runtime": "browser"
+    },
+    {
+      "id": "shared-state",
+      "title": "Paylaşılan veri: yarış durumu ve kilit",
+      "eyebrow": "Oku, bekle, yaz: arada ne oldu?",
+      "depth": "okuma",
+      "objectives": [
+        "Oku-bekle-yaz adımları arasında başka bir görevin veriyi değiştirmesiyle oluşan yarış durumunu (race condition) çıktıdan bulur.",
+        "asyncio.Lock ve threading.Lock ile kritik bölgeyi tek parça yapar; paylaşılan veri yerine Queue ile iş dağıtmayı okur."
+      ],
+      "prerequisites": [
+        "tasks-gather",
+        "threads",
+        "m11:methods-state"
+      ],
+      "summary": "İki görev aynı veriyi okuyup bir süre bekledikten sonra eski değere göre yazarsa, birinin güncellemesi kaybolur: buna yarış durumu denir. Kilit (Lock), oku-denetle-yaz adımlarını tek parça yapar; asyncio.Queue ise veriyi paylaşmak yerine işleri sırayla dağıtır.",
+      "explanation": "Yarış durumu (race condition), sonucun işlerin hangi sırayla ilerlediğine bağlı olmasıdır. Tipik desen oku-bekle-yaz'dır: bir görev bakiyeyi okur, bir ağ çağrısını bekler, sonra okuduğu eski değere göre yeni bakiyeyi yazar. Beklerken başka bir görev aynı bakiyeyi okuyup değiştirirse, iki görev de 'yeterli para var' sonucuna varır ve birinin yazdığı değer diğerininkini ezer. asyncio'da görev değişimi yalnızca await noktalarında olur, bu yüzden iki await arasındaki kod güvendedir ve yarışlar await'in olduğu yerde aranır. Thread'lerde ise geçiş hemen her bayt kodu arasında olabilir: count += 1 bile oku, topla, yaz adımlarından oluşur ve iki thread arasında kesilebilir. Bu hatalar zamanlamaya bağlıdır; kodu yüz kez çalıştırıp hiç görmeyebilir, üretimde bir gün karşılaşabilirsin. Çözüm, kritik bölgeyi (oku-denetle-yaz) bir kilitle korumaktır. asyncio.Lock async with lock: ile, threading.Lock ise with lock: ile kullanılır (M13'teki context manager'lar); kilidi aynı anda yalnızca bir görev tutar, diğerleri bekler. Kilidi gereğinden geniş tutmak eşzamanlılığı yok eder, kilitleri farklı sıralarla almak ise iki görevin birbirini sonsuza dek beklemesine (deadlock) yol açar. Çoğu zaman en iyi kilit, hiç paylaşmamaktır: her görev kendi sonucunu döndürür ve sonuçlar sonunda birleştirilir (gather, pool.map), ya da işler bir kuyruktan (asyncio.Queue, queue.Queue) alınır. Kuyruk, birden çok üreticinin ve tüketicinin veriyi kilitsiz ve sırayla paylaşmasını sağlar; queue.join() bütün işlerin task_done ile bitirilmesini bekler.",
+      "code": "import asyncio\n\nclass Account:\n    def __init__(self, balance: int) -> None:\n        self.balance = balance\n        self.lock = asyncio.Lock()\n\n    async def withdraw_unsafe(self, amount: int) -> None:\n        current = self.balance              # oku\n        await asyncio.sleep(0.1)            # bu arada öbür görev çalışır\n        if current >= amount:\n            self.balance = current - amount  # eski değere göre yaz\n            print(\"çekildi\", amount)\n\n    async def withdraw(self, amount: int) -> None:\n        async with self.lock:               # oku-denetle-yaz tek parça\n            if self.balance >= amount:\n                await asyncio.sleep(0.1)\n                self.balance -= amount\n                print(\"çekildi\", amount)\n            else:\n                print(\"yetersiz\", amount)\n\nasync def main() -> None:\n    first = Account(100)\n    await asyncio.gather(first.withdraw_unsafe(80), first.withdraw_unsafe(70))\n    print(\"kilitsiz bakiye:\", first.balance)\n    second = Account(100)\n    await asyncio.gather(second.withdraw(80), second.withdraw(70))\n    print(\"kilitli bakiye:\", second.balance)\n\nasyncio.run(main())",
+      "expectedOutput": "çekildi 80\nçekildi 70\nkilitsiz bakiye: 30\nçekildi 80\nyetersiz 70\nkilitli bakiye: 20",
+      "why": "Kilitsiz sürümde iki görev de bakiyeyi 100 olarak okudu, ikisi de beklerken öbürü değişmedi sandı ve ikisi de para çekti; son yazan (100 - 70) kazandı ve 80 liralık çekiş kayboldu. Kilitli sürümde ikinci görev, birincisi işini bitirene kadar bekledi ve güncel bakiyeyi (20) görerek çekişi reddetti.",
+      "alternatives": [
+        "Paylaşılan durumu hiç kullanma: her görev kendi sonucunu döndürsün, sonuçlar en sonda birleştirilsin.",
+        "Üretici-tüketici işlerinde asyncio.Queue ya da thread'ler için queue.Queue kullan."
+      ],
+      "traps": [
+        "Bir kez doğru çalıştı diye eşzamanlı kodun güvenli olduğunu sanmak; yarış hataları zamanlamaya bağlıdır.",
+        "Kilidi yalnızca yazma satırına koyup okumayı dışarıda bırakmak; denetim ile yazma arasında yine yarış olur.",
+        "İki kilidi farklı yerlerde farklı sırayla almak (deadlock).",
+        "asyncio kodunda threading.Lock kullanmak; await sırasında tutulan thread kilidi bütün döngüyü kilitleyebilir."
+      ],
+      "localExample": {
+        "note": "Tarayıcıdaki Python thread başlatamaz. Kendi bilgisayarında python yerel.py ile çalıştır. Kilidi kaldırırsan sonuç bazı çalıştırmalarda 400000'den az çıkabilir; güncel CPython'da bu kısa döngüde nadiren görülür ama nadir olması güvenli olduğu anlamına gelmez.",
+        "code": "import threading\n\ncount = 0\nlock = threading.Lock()\n\ndef add_many(n: int) -> None:\n    global count\n    for _ in range(n):\n        with lock:          # count += 1 oku-topla-yaz adımlarından oluşur\n            count += 1\n\nthreads = [threading.Thread(target=add_many, args=(100_000,)) for _ in range(4)]\nfor thread in threads:\n    thread.start()\nfor thread in threads:\n    thread.join()\nprint(count)",
+        "output": "400000"
+      },
+      "realCode": "import asyncio\n\nasync def worker(wid: int, queue: asyncio.Queue[str], done: list[str]) -> None:\n    while True:\n        job = await queue.get()\n        await asyncio.sleep(0.1 * len(job))   # işin süresi adının uzunluğu kadar\n        done.append(f\"{job}@{wid}\")\n        queue.task_done()\n\nasync def main() -> None:\n    queue: asyncio.Queue[str] = asyncio.Queue()\n    for job in [\"ab\", \"c\", \"def\", \"g\"]:\n        queue.put_nowait(job)\n    done: list[str] = []\n    workers = [asyncio.create_task(worker(wid, queue, done)) for wid in (1, 2)]\n    await queue.join()\n    for task in workers:\n        task.cancel()\n    print(done)\n\nasyncio.run(main())",
+      "realOutput": "['c@2', 'ab@1', 'g@1', 'def@2']",
+      "lineByLine": [
+        "İşler kuyruğa konur; iki çalışan görev işleri kuyruktan sırayla alır ve aynı işi iki kez almaz.",
+        "Çalışan 2 kısa 'c' işini önce bitirip 'def'i alır; çalışan 1 'ab'yi bitirince 'g'yi alır.",
+        "queue.join(), konan her iş için task_done çağrılana kadar bekler.",
+        "Çalışanlar sonsuz döngüdedir; işler bitince iptal edilerek kapatılırlar."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · asyncio senkronizasyon (Lock)",
+          "url": "https://docs.python.org/3.12/library/asyncio-sync.html"
+        },
+        {
+          "title": "Python 3.12 · asyncio.Queue",
+          "url": "https://docs.python.org/3.12/library/asyncio-queue.html"
+        },
+        {
+          "title": "Python 3.12 · threading.Lock",
+          "url": "https://docs.python.org/3.12/library/threading.html#lock-objects"
+        }
+      ],
+      "runtime": "mixed",
+      "runtimeNote": "Editör örnekleri tarayıcıda çalışır (site boşta beklemeyi atlar). threading.Lock'lu thread örneği thread başlattığı için yerel Python içindir."
+    }
+  ],
+  "questions": [
+    {
+      "id": "m15-q01",
+      "type": "output",
+      "topic": "io-sure",
+      "sectionId": "io-cpu",
+      "difficulty": 1,
+      "prompt": "Üç indirme sırayla ve beklemeleri örtüşerek yapılıyor. Toplam süreler ne olur?",
+      "code": "waits = [0.4, 0.2, 0.4]\nprint(round(sum(waits), 1), max(waits))",
+      "expectedOutput": "1.0 0.4",
+      "options": [
+        "1.0 0.4",
+        "1.0 1.0",
+        "0.4 1.0",
+        "1.0 0.2"
+      ],
+      "hints": [
+        "Sırayla çalışınca süreler toplanır.",
+        "Beklemeler örtüşünce en uzun bekleme belirleyicidir."
+      ],
+      "explanation": "Sırayla 0,4 + 0,2 + 0,4 = 1,0 saniye sürer; beklemeler örtüşürse toplam süre en uzun beklemeye, 0,4 saniyeye iner.",
+      "answer": "1.0 0.4"
+    },
+    {
+      "id": "m15-q02",
+      "type": "output",
+      "topic": "run-start",
+      "sectionId": "threads",
+      "difficulty": 3,
+      "prompt": "Thread nesnesinde start() yerine run() çağrılıyor. Çıktı ne olur?",
+      "code": "import threading\n\ndef work():\n    print(\"çalışan:\", threading.current_thread().name)\n\nt = threading.Thread(target=work, name=\"yardımcı\")\nt.run()\nprint(t.name, t.is_alive())",
+      "expectedOutput": "çalışan: MainThread\nyardımcı False",
+      "options": [
+        "çalışan: MainThread / yardımcı True",
+        "çalışan: MainThread / yardımcı False",
+        "çalışan: yardımcı / yardımcı False",
+        "çalışan: yardımcı / yardımcı True"
+      ],
+      "optionFeedback": {
+        "çalışan: yardımcı / yardımcı False": "Yeni thread'i başlatan start()'tır; run() hedefi çağıran thread'de çalıştırır.",
+        "çalışan: yardımcı / yardımcı True": "Hiçbir thread başlatılmadı; iş ana thread'de yapıldı ve t hiç canlı olmadı.",
+        "çalışan: MainThread / yardımcı True": "t.start() hiç çağrılmadığı için t hiç canlı olmaz."
+      },
+      "hints": [
+        "Yeni iş parçacığını hangi metot başlatır?",
+        "run() yalnızca target'ı olduğu yerde çağırır."
+      ],
+      "explanation": "run() işi yeni bir thread'de değil, onu çağıran ana thread'de (MainThread) sırayla yapar; t hiç başlatılmadığı için is_alive() False döner. Eşzamanlı çalıştırmak için start() çağrılır.",
+      "answer": "çalışan: MainThread / yardımcı False"
+    },
+    {
+      "id": "m15-q03",
+      "type": "output",
+      "topic": "future-hata",
+      "sectionId": "threads",
+      "difficulty": 2,
+      "prompt": "Bir Future'a hata konuyor ve sonucu isteniyor. Çıktı ne olur?",
+      "code": "from concurrent.futures import Future\n\nfuture = Future()\nfuture.set_exception(ValueError(\"bozuk satır\"))\nprint(future.done())\ntry:\n    print(future.result())\nexcept ValueError as error:\n    print(\"yakalandı:\", error)",
+      "expectedOutput": "True\nyakalandı: bozuk satır",
+      "options": [
+        "True / None",
+        "True / bozuk satır",
+        "True / yakalandı: bozuk satır",
+        "False / yakalandı: bozuk satır"
+      ],
+      "hints": [
+        "Hata da bir sonuçtur: Future hata ile tamamlanmış sayılır mı?",
+        "result() saklanan hatayla ne yapar?"
+      ],
+      "explanation": "Future hata ile tamamlanınca done() True döner. result() sonucu vermek yerine saklanan ValueError'ı yeniden fırlatır; bu yüzden havuzdaki bir işin hatası ana kodda yakalanabilir.",
+      "answer": "True / yakalandı: bozuk satır"
+    },
+    {
+      "id": "m15-q04",
+      "type": "output",
+      "topic": "parcalama",
+      "sectionId": "gil-processes",
+      "difficulty": 2,
+      "prompt": "İş, süreçlere dağıtmak için parçalanıyor. Parça boyutları ne olur?",
+      "code": "def split(items, parts):\n    size = -(-len(items) // parts)\n    return [items[i:i + size] for i in range(0, len(items), size)]\n\nprint([len(part) for part in split(list(range(10)), 3)])",
+      "expectedOutput": "[4, 4, 2]",
+      "options": [
+        "[3, 3, 4]",
+        "[3, 3, 3, 1]",
+        "[4, 4, 4]",
+        "[4, 4, 2]"
+      ],
+      "hints": [
+        "-(-a // b) yukarı yuvarlanmış bölmedir: 10 / 3 → 4.",
+        "Son parça kalan öğeleri alır."
+      ],
+      "explanation": "Parça boyutu yukarı yuvarlanır: -(-10 // 3) = 4. Dilimler 0–4, 4–8 ve 8–10 olur: 4, 4 ve 2 öğe.",
+      "answer": "[4, 4, 2]"
+    },
+    {
+      "id": "m15-q05",
+      "type": "output",
+      "topic": "coroutine-nesnesi",
+      "sectionId": "coroutines",
+      "difficulty": 1,
+      "prompt": "Bir async fonksiyon çağrılıyor ama hemen çalıştırılmıyor. Çıktı ne olur?",
+      "code": "import asyncio\n\nasync def load():\n    print(\"içeride\")\n    return 1\n\njob = load()\nprint(\"dışarıda\")\nprint(asyncio.run(job))",
+      "expectedOutput": "dışarıda\niçeride\n1",
+      "options": [
+        "dışarıda / içeride / 1",
+        "içeride / dışarıda / 1",
+        "dışarıda / 1",
+        "içeride / 1 / dışarıda"
+      ],
+      "optionFeedback": {
+        "içeride / dışarıda / 1": "load() çağrısı gövdeyi çalıştırmaz; yalnızca bir coroutine nesnesi üretir.",
+        "dışarıda / 1": "asyncio.run coroutine'i çalıştırır; gövdedeki print de çalışır.",
+        "içeride / 1 / dışarıda": "'dışarıda', coroutine çalıştırılmadan önce yazdırılıyor."
+      },
+      "hints": [
+        "async fonksiyonu çağırmak gövdeyi çalıştırır mı?",
+        "Gövde ne zaman çalışır?"
+      ],
+      "explanation": "load() yalnızca bir coroutine nesnesi döndürür; gövde, asyncio.run onu çalıştırınca yürür. Bu yüzden önce 'dışarıda', sonra 'içeride' ve dönüş değeri 1 yazılır.",
+      "answer": "dışarıda / içeride / 1"
+    },
+    {
+      "id": "m15-q06",
+      "type": "output",
+      "topic": "ardisik-await",
+      "sectionId": "coroutines",
+      "difficulty": 2,
+      "prompt": "Üç bekleme art arda await ediliyor. Ölçülen süre ne olur?",
+      "code": "import asyncio\n\nasync def wait(seconds):\n    await asyncio.sleep(seconds)\n\nasync def main():\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    await wait(0.1)\n    await wait(0.2)\n    await wait(0.3)\n    print(f\"{loop.time() - start:.1f}\")\n\nasyncio.run(main())",
+      "expectedOutput": "0.6",
+      "options": [
+        "0.0",
+        "0.6",
+        "0.3",
+        "0.1"
+      ],
+      "optionFeedback": {
+        "0.3": "Bu, beklemeler aynı anda yürüseydi doğru olurdu; art arda await'ler birbirini bekler.",
+        "0.1": "En kısa bekleme belirleyici değil; her await bir öncekinin bitmesini bekler.",
+        "0.0": "asyncio.sleep görevi gerçekten duraklatır; loop.time() bu süre kadar ilerler."
+      },
+      "hints": [
+        "İkinci await, birincisi bitmeden başlar mı?",
+        "Art arda beklemelerde süreler toplanır mı?"
+      ],
+      "explanation": "Her await, beklediği iş bitene kadar main'i duraklatır; üç bekleme sırayla yapılır ve süreler toplanır: 0,1 + 0,2 + 0,3 = 0,6 saniye. Aynı anda yürütmek için gather gerekir.",
+      "answer": "0.6"
+    },
+    {
+      "id": "m15-q07",
+      "type": "output",
+      "topic": "gather-sira",
+      "sectionId": "tasks-gather",
+      "difficulty": 1,
+      "prompt": "gather ile iki görev yürütülüyor. Çıktı ne olur?",
+      "code": "import asyncio\n\nasync def job(name, delay):\n    await asyncio.sleep(delay)\n    print(name)\n    return name\n\nasync def main():\n    print(await asyncio.gather(job(\"x\", 0.3), job(\"y\", 0.1)))\n\nasyncio.run(main())",
+      "expectedOutput": "y\nx\n['x', 'y']",
+      "options": [
+        "y / x / ['y', 'x']",
+        "x / y / ['y', 'x']",
+        "y / x / ['x', 'y']",
+        "x / y / ['x', 'y']"
+      ],
+      "optionFeedback": {
+        "x / y / ['x', 'y']": "Görevler aynı anda bekler; kısa bekleyen y önce biter ve önce yazar.",
+        "y / x / ['y', 'x']": "Bitiş sırası y, x olsa da gather sonuçları verilen sırayla döndürür.",
+        "x / y / ['y', 'x']": "Hem yazdırma sırası hem liste sırası ters."
+      },
+      "hints": [
+        "Hangi görev önce uyanır?",
+        "gather sonuç listesini hangi sıraya göre kurar?"
+      ],
+      "explanation": "İki görev birlikte bekler; 0,1 saniyelik y önce biter ve önce yazar. gather ise sonuçları bitiş sırasına değil, verilen sıraya göre döndürür: ['x', 'y'].",
+      "answer": "y / x / ['x', 'y']"
+    },
+    {
+      "id": "m15-q08",
+      "type": "output",
+      "topic": "create-task-zaman",
+      "sectionId": "tasks-gather",
+      "difficulty": 3,
+      "prompt": "create_task ile başlatılan görev ne zaman çalışır? Çıktı ne olur?",
+      "code": "import asyncio\n\nasync def child():\n    print(\"çocuk\")\n\nasync def main():\n    task = asyncio.create_task(child())\n    print(\"ana 1\")\n    await asyncio.sleep(0)\n    print(\"ana 2\")\n    await task\n\nasyncio.run(main())",
+      "expectedOutput": "ana 1\nçocuk\nana 2",
+      "options": [
+        "çocuk / ana 1 / ana 2",
+        "ana 1 / ana 2 / çocuk",
+        "çocuk / ana 2",
+        "ana 1 / çocuk / ana 2"
+      ],
+      "optionFeedback": {
+        "çocuk / ana 1 / ana 2": "create_task görevi planlar ama hemen çalıştırmaz; main önce kendi satırına devam eder.",
+        "ana 1 / ana 2 / çocuk": "await asyncio.sleep(0) main'i bir tur duraklatır ve sıradaki hazır görev, child, çalışır.",
+        "çocuk / ana 2": "'ana 1' await'ten önce, hiçbir duraklama olmadan yazılır."
+      },
+      "hints": [
+        "create_task görevi hemen mi çalıştırır, yoksa planlar mı?",
+        "main ilk kez nerede duraklıyor?"
+      ],
+      "explanation": "create_task görevi event loop'a planlar ve hemen döner; main 'ana 1' yazar. await asyncio.sleep(0) main'i bir tur duraklatınca sıradaki hazır görev olan child çalışır ve 'çocuk' yazar; sonra main 'ana 2' ile devam eder.",
+      "answer": "ana 1 / çocuk / ana 2"
+    },
+    {
+      "id": "m15-q09",
+      "type": "output",
+      "topic": "bloklama-sira",
+      "sectionId": "blocking-loop",
+      "difficulty": 2,
+      "prompt": "İki görevden biri time.sleep ile bekliyor. Çıktı ne olur?",
+      "code": "import asyncio\nimport time\n\nasync def slow():\n    time.sleep(0.1)\n    print(\"yavaş\")\n\nasync def quick():\n    print(\"hızlı\")\n\nasync def main():\n    await asyncio.gather(slow(), quick())\n\nasyncio.run(main())",
+      "expectedOutput": "yavaş\nhızlı",
+      "options": [
+        "yavaş / hızlı",
+        "hızlı / yavaş",
+        "hızlı",
+        "yavaş"
+      ],
+      "optionFeedback": {
+        "hızlı / yavaş": "Bu, slow await asyncio.sleep kullansaydı doğru olurdu; time.sleep döngüye sıra vermez.",
+        "hızlı": "slow görevi de tamamlanır; yalnızca diğerlerini bekletir.",
+        "yavaş": "quick görevi de çalışır; slow bittikten sonra sıra ona gelir."
+      },
+      "hints": [
+        "slow içinde hiç await var mı?",
+        "time.sleep sırasında event loop başka bir görevi çalıştırabilir mi?"
+      ],
+      "explanation": "gather önce slow'u başlatır. slow'da hiç await olmadığı için time.sleep bütün döngüyü durdurur ve slow bitene kadar quick çalışamaz. await asyncio.sleep(0.1) kullanılsaydı önce 'hızlı' yazılırdı.",
+      "answer": "yavaş / hızlı"
+    },
+    {
+      "id": "m15-q10",
+      "type": "output",
+      "topic": "wait-for-finally",
+      "sectionId": "cancellation-timeout",
+      "difficulty": 2,
+      "prompt": "Süre sınırı aşılan bir işin finally bloğu var. Çıktı ne olur?",
+      "code": "import asyncio\n\nasync def slow():\n    try:\n        await asyncio.sleep(1)\n    finally:\n        print(\"temizlik\")\n\nasync def main():\n    try:\n        await asyncio.wait_for(slow(), timeout=0.1)\n    except TimeoutError:\n        print(\"zaman aşımı\")\n\nasyncio.run(main())",
+      "expectedOutput": "temizlik\nzaman aşımı",
+      "options": [
+        "temizlik",
+        "temizlik / zaman aşımı",
+        "zaman aşımı / temizlik",
+        "zaman aşımı"
+      ],
+      "optionFeedback": {
+        "zaman aşımı / temizlik": "wait_for, iptal edilen işin bitmesini (finally dahil) bekledikten sonra TimeoutError fırlatır.",
+        "zaman aşımı": "İptal görevde CancelledError olarak görünür ve finally çalışır.",
+        "temizlik": "İş süresinde bitmediği için wait_for TimeoutError fırlatır ve except çalışır."
+      },
+      "hints": [
+        "Süre dolunca wait_for slow'a ne yapar?",
+        "İptal edilen görevde finally çalışır mı, ne zaman?"
+      ],
+      "explanation": "0,1 saniye dolunca wait_for slow'u iptal eder: slow'da CancelledError oluşur ve finally 'temizlik' yazar. wait_for iptalin bitmesini bekler, sonra TimeoutError fırlatır ve main 'zaman aşımı' yazar.",
+      "answer": "temizlik / zaman aşımı"
+    },
+    {
+      "id": "m15-q11",
+      "type": "output",
+      "topic": "iptal-yutma",
+      "sectionId": "cancellation-timeout",
+      "difficulty": 3,
+      "prompt": "Görev iptal ediliyor ama CancelledError yakalanıp yutuluyor. Çıktı ne olur?",
+      "code": "import asyncio\n\nasync def stubborn():\n    try:\n        await asyncio.sleep(1)\n    except asyncio.CancelledError:\n        print(\"yuttum\")\n    return \"bitti\"\n\nasync def main():\n    task = asyncio.create_task(stubborn())\n    await asyncio.sleep(0)\n    task.cancel()\n    print(await task, task.cancelled())\n\nasyncio.run(main())",
+      "expectedOutput": "yuttum\nbitti False",
+      "options": [
+        "CancelledError verir",
+        "bitti False",
+        "yuttum / bitti False",
+        "yuttum / bitti True"
+      ],
+      "optionFeedback": {
+        "yuttum / bitti True": "Görev hatayı yeniden fırlatmadığı için normal biçimde değer döndürerek bitti; iptal edilmiş sayılmaz.",
+        "CancelledError verir": "Hata görevin içinde yakalandı ve yeniden fırlatılmadı; await task normal sonucu alır.",
+        "bitti False": "cancel() görevin beklediği yerde CancelledError fırlatır ve except bloğu çalışır."
+      },
+      "hints": [
+        "cancel() görevin içinde ne fırlatır?",
+        "Hata yeniden fırlatılmazsa görev nasıl biter?"
+      ],
+      "explanation": "cancel() görevin beklediği await'te CancelledError fırlatır; görev onu yakalayıp yutar ve 'bitti' döndürür. İptal tamamlanmadığı için cancelled() False olur. Bu yüzden CancelledError yakalanırsa sonunda raise ile yeniden fırlatılmalıdır.",
+      "answer": "yuttum / bitti False"
+    },
+    {
+      "id": "m15-q12",
+      "type": "output",
+      "topic": "yaris",
+      "sectionId": "shared-state",
+      "difficulty": 2,
+      "prompt": "Beş görev aynı sayacı okuyup bir tur bekledikten sonra artırıyor. Çıktı ne olur?",
+      "code": "import asyncio\n\ncounter = {\"n\": 0}\n\nasync def increment():\n    value = counter[\"n\"]\n    await asyncio.sleep(0)\n    counter[\"n\"] = value + 1\n\nasync def main():\n    await asyncio.gather(*(increment() for _ in range(5)))\n    print(counter[\"n\"])\n\nasyncio.run(main())",
+      "expectedOutput": "1",
+      "options": [
+        "5",
+        "0",
+        "6",
+        "1"
+      ],
+      "optionFeedback": {
+        "5": "Her görev okuduktan sonra bekliyor; beşi de 0 okuduktan sonra yazma başlıyor.",
+        "0": "Her görev 0 + 1 = 1 yazar; sayaç 0'da kalmaz.",
+        "6": "Başlangıç 0 ve en fazla beş artış var; üstelik artışlar birbirini eziyor."
+      },
+      "hints": [
+        "Görevler okuma ile yazma arasında duraklıyor; o sırada diğerleri ne okur?",
+        "Her görev hangi değere 1 ekleyip yazıyor?"
+      ],
+      "explanation": "Beş görevin hepsi önce 0'ı okur ve await'te duraklar; sonra her biri kendi okuduğu eski değere göre 1 yazar. Dört güncelleme kaybolur ve sonuç 1 olur: klasik yarış durumu. Okuma ve yazma bir asyncio.Lock ile korunmalıdır.",
+      "answer": "1"
+    },
+    {
+      "id": "m15-q13",
+      "type": "bug",
+      "topic": "args-demet",
+      "sectionId": "threads",
+      "difficulty": 1,
+      "prompt": "Thread başlatılınca iş hiç yapılmıyor ve thread içinde TypeError görülüyor. Hata nerede?",
+      "code": "import threading\n\ndef report(page):\n    print(\"sayfa\", page)\n\nworker = threading.Thread(target=report, args=(5))\nworker.start()\nworker.join()",
+      "answer": "args bir demet olmalı: (5) yalnızca 5 sayısıdır, doğrusu args=(5,)",
+      "options": [
+        "args bir demet olmalı: (5) yalnızca 5 sayısıdır, doğrusu args=(5,)",
+        "target'a fonksiyon değil çağrısı verilmeli: target=report(5)",
+        "join() start()'tan önce çağrılmalı",
+        "Thread içinde print kullanılamaz"
+      ],
+      "optionFeedback": {
+        "target'a fonksiyon değil çağrısı verilmeli: target=report(5)": "report(5) fonksiyonu hemen ana thread'de çalıştırır ve target'a None verir.",
+        "join() start()'tan önce çağrılmalı": "Başlamamış bir thread join edilemez (RuntimeError); sıra start sonra join'dir.",
+        "Thread içinde print kullanılamaz": "print thread'lerde de çalışır; sorun argümanların veriliş biçiminde."
+      },
+      "hints": [
+        "(5) ile (5,) arasındaki fark nedir?",
+        "Thread, target'ı target(*args) diye çağırır."
+      ],
+      "explanation": "Parantez tek başına demet oluşturmaz: (5) bir int'tir. Thread report(*args) çağırırken int'i açamaz ve TypeError oluşur. Tek öğeli demet virgülle yazılır: args=(5,)."
+    },
+    {
+      "id": "m15-q14",
+      "type": "bug",
+      "topic": "join-yok",
+      "sectionId": "threads",
+      "difficulty": 2,
+      "prompt": "Program bazen boş liste, bazen eksik sonuç yazdırıyor. Hata nerede?",
+      "code": "import threading\nimport time\n\nresults = []\n\ndef fetch(page):\n    time.sleep(0.2)\n    results.append(page)\n\nfor page in range(3):\n    threading.Thread(target=fetch, args=(page,)).start()\nprint(results)",
+      "answer": "Thread'ler join edilmeden sonuç okunuyor; thread'leri listede tutup print'ten önce join() çağrılmalı",
+      "options": [
+        "range(3) yerine üç ayrı Thread sınıfı yazılmalı",
+        "Thread'ler join edilmeden sonuç okunuyor; thread'leri listede tutup print'ten önce join() çağrılmalı",
+        "results listesine thread'lerden eleman eklenemez",
+        "time.sleep thread'lerde çalışmaz"
+      ],
+      "optionFeedback": {
+        "results listesine thread'lerden eleman eklenemez": "Thread'ler aynı belleği paylaşır; append çalışır, ama print'e yetişmez.",
+        "time.sleep thread'lerde çalışmaz": "time.sleep yalnızca o thread'i bekletir; sorun ana thread'in beklememesi.",
+        "range(3) yerine üç ayrı Thread sınıfı yazılmalı": "Aynı sınıftan üç nesne oluşturmak doğrudur."
+      },
+      "hints": [
+        "start() thread bitene kadar bekler mi?",
+        "Ana thread print'e geldiğinde fetch'ler bitmiş midir?"
+      ],
+      "explanation": "start() hemen döner; ana thread 0,2 saniyelik beklemeler bitmeden print'e ulaşır. Thread'leri bir listeye koyup her biri için join() çağırmak, sonuçlar hazır olmadan okunmasını önler. Daha iyisi ThreadPoolExecutor ile sonuçları Future'lardan almaktır."
+    },
+    {
+      "id": "m15-q15",
+      "type": "bug",
+      "topic": "main-korumasi",
+      "sectionId": "gil-processes",
+      "difficulty": 2,
+      "prompt": "Bu kod bazı Linux kurulumlarında çalışıyor ama Windows'ta alt süreçler RuntimeError verip havuz çöküyor. Hata nerede?",
+      "code": "from concurrent.futures import ProcessPoolExecutor\n\ndef square(n):\n    return n * n\n\nwith ProcessPoolExecutor() as pool:\n    print(list(pool.map(square, range(5))))",
+      "answer": "Süreç başlatan kod if __name__ == '__main__': koruması altında değil; Windows'ta her alt süreç dosyayı yeniden içe aktarıp yine süreç başlatmaya çalışır",
+      "options": [
+        "ProcessPoolExecutor with ile kullanılamaz",
+        "pool.map yalnızca listeler kabul eder, range verilemez",
+        "Süreç başlatan kod if __name__ == '__main__': koruması altında değil; Windows'ta her alt süreç dosyayı yeniden içe aktarıp yine süreç başlatmaya çalışır",
+        "square bir lambda olmalı"
+      ],
+      "optionFeedback": {
+        "square bir lambda olmalı": "Tersine: lambda pickle edilemez; süreçlere modül düzeyindeki fonksiyonlar gönderilir.",
+        "ProcessPoolExecutor with ile kullanılamaz": "with doğru kullanımdır; blok sonunda havuz kapatılır.",
+        "pool.map yalnızca listeler kabul eder, range verilemez": "map her dolaşılabilir nesneyi kabul eder."
+      },
+      "hints": [
+        "Windows'ta yeni süreç programı nasıl başlatır?",
+        "M9'daki __main__ korumasını hatırla."
+      ],
+      "explanation": "Windows ve macOS'ta (Python 3.14'ten beri Linux'ta da varsayılan olarak) alt süreç ana dosyayı baştan içe aktarır. Havuzu kuran kod korumasızsa her alt süreç yeniden süreç başlatmaya çalışır; multiprocessing bunu RuntimeError ile durdurur ve havuz BrokenProcessPool ile çöker. with bloğu if __name__ == '__main__': altına alınmalıdır."
+    },
+    {
+      "id": "m15-q16",
+      "type": "bug",
+      "topic": "gil-cpu",
+      "sectionId": "gil-processes",
+      "difficulty": 3,
+      "prompt": "Saf Python asal sayı hesabı 4 thread'e bölündü ama hiç hızlanmadı. Neden?",
+      "code": "from concurrent.futures import ThreadPoolExecutor\n\ndef count_primes(bounds):\n    low, high = bounds\n    return sum(1 for n in range(max(low, 2), high)\n               if all(n % d for d in range(2, int(n ** 0.5) + 1)))\n\nchunks = [(0, 50_000), (50_000, 100_000), (100_000, 150_000), (150_000, 200_000)]\nwith ThreadPoolExecutor(max_workers=4) as pool:\n    print(sum(pool.map(count_primes, chunks)))",
+      "answer": "İş CPU bağımlı; standart CPython'da GIL aynı anda tek thread'in Python kodu çalıştırmasına izin verir, ProcessPoolExecutor kullanılmalı",
+      "options": [
+        "max_workers 4 yerine 400 olmalı",
+        "pool.map sonuçları sırayla verdiği için işler de sırayla çalışıyor",
+        "Parçalar eşit olmadığı için hızlanma olmuyor",
+        "İş CPU bağımlı; standart CPython'da GIL aynı anda tek thread'in Python kodu çalıştırmasına izin verir, ProcessPoolExecutor kullanılmalı"
+      ],
+      "optionFeedback": {
+        "max_workers 4 yerine 400 olmalı": "Daha çok thread GIL'i aşmaz; geçiş maliyeti yüzünden daha da yavaşlatır.",
+        "pool.map sonuçları sırayla verdiği için işler de sırayla çalışıyor": "map sonuçları sırayla verir ama işleri birlikte başlatır; engel GIL'dir.",
+        "Parçalar eşit olmadığı için hızlanma olmuyor": "Parçalar aynı genişlikte; eşit olsalar da thread'lerle hızlanmazdı."
+      },
+      "hints": [
+        "Bu iş bekliyor mu, hesaplıyor mu?",
+        "CPython'da aynı anda kaç thread Python bayt kodu çalıştırabilir?"
+      ],
+      "explanation": "Thread'ler yalnızca beklerken GIL'i bırakır; saf Python hesabında dört thread sırayla ilerler. Hesabı çekirdeklere dağıtmak için ProcessPoolExecutor (ve if __name__ == '__main__' koruması) kullanılır. Free-threaded derlemelerde (3.13t, 3.14t) bu durum değişebilir."
+    },
+    {
+      "id": "m15-q17",
+      "type": "bug",
+      "topic": "time-sleep-async",
+      "sectionId": "blocking-loop",
+      "difficulty": 2,
+      "prompt": "Üç indirme gather ile 'aynı anda' başlatıldı ama toplam süre 0,5 değil 1,5 saniye. Hata nerede?",
+      "code": "import asyncio\nimport time\n\nasync def download(name):\n    time.sleep(0.5)\n    return name\n\nasync def main():\n    print(await asyncio.gather(download(\"a\"), download(\"b\"), download(\"c\")))\n\nasyncio.run(main())",
+      "answer": "time.sleep event loop'u blokluyor; coroutine içinde await asyncio.sleep(0.5) kullanılmalı",
+      "options": [
+        "time.sleep event loop'u blokluyor; coroutine içinde await asyncio.sleep(0.5) kullanılmalı",
+        "gather görevleri sırayla çalıştırır; create_task kullanılmalı",
+        "asyncio.run birden çok görev çalıştıramaz",
+        "download async def değil def olmalı"
+      ],
+      "optionFeedback": {
+        "gather görevleri sırayla çalıştırır; create_task kullanılmalı": "gather görevleri birlikte başlatır; ama hiçbiri await etmediği için birbirini bekliyorlar.",
+        "asyncio.run birden çok görev çalıştıramaz": "asyncio.run tek bir giriş coroutine'i alır; onun içinde istenildiği kadar görev çalışır.",
+        "download async def değil def olmalı": "Sıradan fonksiyon gather'a verilemez; doğru olan beklemeyi await edilebilir yapmaktır."
+      },
+      "hints": [
+        "download içinde hiç await var mı?",
+        "time.sleep sırasında event loop başka görevi çalıştırabilir mi?"
+      ],
+      "explanation": "time.sleep, döngüye sıra vermeden bütün iş parçacığını durdurur; görevler birbirini bekler ve süreler toplanır. await asyncio.sleep(0.5) yalnızca o görevi duraklatır ve üç bekleme örtüşür. Async olmayan gerçek bir çağrı ise asyncio.to_thread ile thread'e aktarılır."
+    },
+    {
+      "id": "m15-q18",
+      "type": "bug",
+      "topic": "iptal-yutma",
+      "sectionId": "cancellation-timeout",
+      "difficulty": 3,
+      "prompt": "Servis yanıt vermediğinde 'zaman aşımı' yazılması bekleniyor ama ekranda None görülüyor. Hata nerede?",
+      "code": "import asyncio\n\nasync def fetch():\n    try:\n        await asyncio.sleep(5)\n        return \"veri\"\n    except asyncio.CancelledError:\n        return None\n\nasync def main():\n    try:\n        print(await asyncio.wait_for(fetch(), timeout=0.5))\n    except TimeoutError:\n        print(\"zaman aşımı\")\n\nasyncio.run(main())",
+      "answer": "fetch CancelledError'ı yakalayıp yutuyor; iptal tamamlanmadığı için wait_for TimeoutError fırlatamıyor, except bloğunda raise yazılmalı",
+      "options": [
+        "wait_for yalnızca görevlerle çalışır, coroutine verilemez",
+        "fetch CancelledError'ı yakalayıp yutuyor; iptal tamamlanmadığı için wait_for TimeoutError fırlatamıyor, except bloğunda raise yazılmalı",
+        "timeout 0.5 yerine 5 olmalı",
+        "asyncio.CancelledError yerine TimeoutError yakalanmalı"
+      ],
+      "optionFeedback": {
+        "timeout 0.5 yerine 5 olmalı": "Süre sınırını büyütmek zaman aşımını gizler; sorun iptalin yutulması.",
+        "asyncio.CancelledError yerine TimeoutError yakalanmalı": "Görevin içine TimeoutError değil CancelledError ulaşır; TimeoutError'ı wait_for dışarıda fırlatır.",
+        "wait_for yalnızca görevlerle çalışır, coroutine verilemez": "wait_for coroutine'i kendisi göreve çevirir."
+      },
+      "hints": [
+        "Süre dolunca wait_for fetch'e ne gönderir?",
+        "Görev iptali yutup değer döndürürse wait_for neyi görür?"
+      ],
+      "explanation": "Süre dolunca wait_for görevi iptal eder; görevde CancelledError oluşur. fetch onu yakalayıp None döndürünce iptal 'başarısız' olur ve wait_for TimeoutError yerine None'ı döndürür. İptali yakalayan kod temizlikten sonra raise ile yeniden fırlatmalı ya da yalnızca finally kullanmalıdır."
+    },
+    {
+      "id": "m15-q19",
+      "type": "fill",
+      "topic": "async-def",
+      "sectionId": "coroutines",
+      "difficulty": 1,
+      "prompt": "Coroutine fonksiyonu tanımlayan anahtar kelimeyi yaz.",
+      "code": "import asyncio\n\n___ def greet(name):\n    await asyncio.sleep(0.1)\n    return f\"merhaba {name}\"\n\nprint(asyncio.run(greet(\"Ada\")))",
+      "answer": "async",
+      "expectedOutput": "merhaba Ada",
+      "hints": [
+        "await yalnızca bu tür fonksiyonların içinde yazılabilir.",
+        "def'in önüne gelen kelime."
+      ],
+      "explanation": "async def bir coroutine fonksiyonu tanımlar; içinde await kullanılabilir ve asyncio.run onu çalıştırır.",
+      "acceptedAnswers": [
+        "async"
+      ],
+      "solutionCode": "import asyncio\n\nasync def greet(name):\n    await asyncio.sleep(0.1)\n    return f\"merhaba {name}\"\n\nprint(asyncio.run(greet(\"Ada\")))"
+    },
+    {
+      "id": "m15-q20",
+      "type": "fill",
+      "topic": "gather",
+      "sectionId": "tasks-gather",
+      "difficulty": 1,
+      "prompt": "Coroutine'leri aynı anda yürütüp sonuçlarını sırayla toplayan fonksiyonu yaz.",
+      "code": "import asyncio\n\nasync def square(n):\n    await asyncio.sleep(0.1)\n    return n * n\n\nasync def main():\n    results = await asyncio.___(square(2), square(3), square(4))\n    print(results)\n\nasyncio.run(main())",
+      "answer": "gather",
+      "expectedOutput": "[4, 9, 16]",
+      "hints": [
+        "Adı 'toplamak' demektir.",
+        "Sonuçları verilen sırayla bir liste olarak döndürür."
+      ],
+      "explanation": "asyncio.gather verilen coroutine'leri görev olarak birlikte başlatır, hepsini bekler ve sonuçları verilen sırayla döndürür.",
+      "acceptedAnswers": [
+        "gather"
+      ],
+      "solutionCode": "import asyncio\n\nasync def square(n):\n    await asyncio.sleep(0.1)\n    return n * n\n\nasync def main():\n    results = await asyncio.gather(square(2), square(3), square(4))\n    print(results)\n\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q21",
+      "type": "fill",
+      "topic": "timeout-hatasi",
+      "sectionId": "cancellation-timeout",
+      "difficulty": 2,
+      "prompt": "wait_for süre sınırı aşılınca fırlatılan hatayı yakala.",
+      "code": "import asyncio\n\nasync def main():\n    try:\n        await asyncio.wait_for(asyncio.sleep(10), timeout=0.2)\n    except ___:\n        print(\"süre doldu\")\n\nasyncio.run(main())",
+      "answer": "TimeoutError",
+      "acceptedAnswers": [
+        "TimeoutError",
+        "asyncio.TimeoutError"
+      ],
+      "expectedOutput": "süre doldu",
+      "hints": [
+        "Yerleşik bir hata türü; adı 'zaman aşımı hatası' demektir.",
+        "Python 3.11'den beri asyncio'daki aynı adlı hata bununla aynıdır."
+      ],
+      "explanation": "Süre dolunca wait_for işi iptal eder ve TimeoutError fırlatır. Python 3.11'den beri asyncio.TimeoutError yerleşik TimeoutError'ın takma adıdır; ikisi de çalışır.",
+      "solutionCode": "import asyncio\n\nasync def main():\n    try:\n        await asyncio.wait_for(asyncio.sleep(10), timeout=0.2)\n    except TimeoutError:\n        print(\"süre doldu\")\n\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q22",
+      "type": "fill",
+      "topic": "async-with-lock",
+      "sectionId": "shared-state",
+      "difficulty": 2,
+      "prompt": "asyncio kilidini async bağlam yöneticisi olarak kullanan kelimeyi yaz.",
+      "code": "import asyncio\n\nlock = asyncio.Lock()\nlog = []\n\nasync def write(line):\n    async ___ lock:\n        log.append(line)\n        await asyncio.sleep(0.1)\n        log.append(line.upper())\n\nasync def main():\n    await asyncio.gather(write(\"a\"), write(\"b\"))\n    print(log)\n\nasyncio.run(main())",
+      "answer": "with",
+      "expectedOutput": "['a', 'A', 'b', 'B']",
+      "hints": [
+        "Dosyaları kapatan bloğun adı (M8).",
+        "async ile birlikte bir bağlam yöneticisi bloğu açar."
+      ],
+      "explanation": "async with lock: kilidi alır ve blok bitince bırakır. İkinci görev kilidi bekler; bu yüzden her görevin iki satırı bölünmeden yan yana yazılır.",
+      "acceptedAnswers": [
+        "with"
+      ],
+      "solutionCode": "import asyncio\n\nlock = asyncio.Lock()\nlog = []\n\nasync def write(line):\n    async with lock:\n        log.append(line)\n        await asyncio.sleep(0.1)\n        log.append(line.upper())\n\nasync def main():\n    await asyncio.gather(write(\"a\"), write(\"b\"))\n    print(log)\n\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q23",
+      "type": "order",
+      "topic": "async-iskelet",
+      "sectionId": "coroutines",
+      "difficulty": 1,
+      "prompt": "Bir coroutine tanımlayıp asyncio.run ile çalıştıran sırayı kur.",
+      "expectedOutput": "hazır",
+      "hints": [
+        "İçe aktarma en üstte olur.",
+        "asyncio.run, main tanımlandıktan sonra çağrılır."
+      ],
+      "explanation": "asyncio içe aktarılır, main coroutine'i tanımlanır, içinde await ile beklenir ve en sonda asyncio.run(main()) ile çalıştırılır.",
+      "answer": "import asyncio\nasync def main():\n    await asyncio.sleep(0.1)\n    print(\"hazır\")\nasyncio.run(main())",
+      "lines": [
+        "    print(\"hazır\")",
+        "import asyncio",
+        "asyncio.run(main())",
+        "    await asyncio.sleep(0.1)",
+        "async def main():"
+      ],
+      "solutionCode": "import asyncio\nasync def main():\n    await asyncio.sleep(0.1)\n    print(\"hazır\")\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q24",
+      "type": "order",
+      "topic": "taskgroup",
+      "sectionId": "tasks-gather",
+      "difficulty": 2,
+      "prompt": "İki görevi TaskGroup ile çalıştırıp sonuçlarını yazdıran sırayı kur.",
+      "expectedOutput": "16",
+      "hints": [
+        "Görevler TaskGroup bloğunun içinde oluşturulur.",
+        "Sonuçlar blok bittikten sonra okunur; print, with ile aynı hizadadır."
+      ],
+      "explanation": "TaskGroup bloğu iki görevin de bitmesini bekler; blok kapandıktan sonra sonuçlar güvenle okunur: 6 + 10 = 16.",
+      "answer": "import asyncio\nasync def double(n):\n    await asyncio.sleep(0.1)\n    return n * 2\nasync def main():\n    async with asyncio.TaskGroup() as group:\n        first = group.create_task(double(3))\n        second = group.create_task(double(5))\n    print(first.result() + second.result())\nasyncio.run(main())",
+      "lines": [
+        "    async with asyncio.TaskGroup() as group:",
+        "asyncio.run(main())",
+        "async def double(n):",
+        "        second = group.create_task(double(5))",
+        "    return n * 2",
+        "import asyncio",
+        "    print(first.result() + second.result())",
+        "    await asyncio.sleep(0.1)",
+        "        first = group.create_task(double(3))",
+        "async def main():"
+      ],
+      "solutionCode": "import asyncio\nasync def double(n):\n    await asyncio.sleep(0.1)\n    return n * 2\nasync def main():\n    async with asyncio.TaskGroup() as group:\n        first = group.create_task(double(3))\n        second = group.create_task(double(5))\n    print(first.result() + second.result())\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q25",
+      "type": "order",
+      "topic": "parcala-birlestir",
+      "sectionId": "gil-processes",
+      "difficulty": 2,
+      "prompt": "İşi parçalara bölüp her parçayı ayrı hesaplayan ve sonuçları birleştiren sırayı kur.",
+      "expectedOutput": "[14, 77] 91",
+      "hints": [
+        "Fonksiyon, map'e verilmeden önce tanımlanmalı.",
+        "Parçalar, sayılar oluşturulduktan sonra kesilir."
+      ],
+      "explanation": "Her parça bağımsız hesaplanır: 1 + 4 + 9 = 14 ve 16 + 25 + 36 = 77; sonra ana kodda birleştirilir. Yerelde map yerine ProcessPoolExecutor().map yazmak her parçayı ayrı süreçte hesaplar.",
+      "answer": "def total_squares(part):\n    return sum(n * n for n in part)\nnumbers = list(range(1, 7))\nparts = [numbers[:3], numbers[3:]]\npartials = list(map(total_squares, parts))\nprint(partials, sum(partials))",
+      "lines": [
+        "partials = list(map(total_squares, parts))",
+        "numbers = list(range(1, 7))",
+        "def total_squares(part):",
+        "print(partials, sum(partials))",
+        "parts = [numbers[:3], numbers[3:]]",
+        "    return sum(n * n for n in part)"
+      ],
+      "solutionCode": "def total_squares(part):\n    return sum(n * n for n in part)\nnumbers = list(range(1, 7))\nparts = [numbers[:3], numbers[3:]]\npartials = list(map(total_squares, parts))\nprint(partials, sum(partials))"
+    },
+    {
+      "id": "m15-q26",
+      "type": "order",
+      "topic": "kilitli-cekim",
+      "sectionId": "shared-state",
+      "difficulty": 3,
+      "prompt": "Kilitle korunan bir para çekme coroutine'inin gövdesini sırala.",
+      "expectedOutput": "20",
+      "hints": [
+        "Denetim de yazma da kilidin içinde olmalı.",
+        "Bekleme, denetimden sonra ve düşmeden önce gelir."
+      ],
+      "explanation": "Kilit, denetle-bekle-yaz adımlarını tek parça yapar: ilk görev 80 çeker, ikinci görev kilidi aldığında bakiye 20'dir ve 70 çekilemez.",
+      "answer": "import asyncio\nbalance = {'tl': 100}\nlock = asyncio.Lock()\nasync def withdraw(amount):\n    async with lock:\n        if balance['tl'] >= amount:\n            await asyncio.sleep(0.1)\n            balance['tl'] -= amount\nasync def main():\n    await asyncio.gather(withdraw(80), withdraw(70))\n    print(balance['tl'])\nasyncio.run(main())",
+      "lines": [
+        "            await asyncio.sleep(0.1)",
+        "    print(balance['tl'])",
+        "async def withdraw(amount):",
+        "import asyncio",
+        "async def main():",
+        "        if balance['tl'] >= amount:",
+        "asyncio.run(main())",
+        "balance = {'tl': 100}",
+        "            balance['tl'] -= amount",
+        "    async with lock:",
+        "    await asyncio.gather(withdraw(80), withdraw(70))",
+        "lock = asyncio.Lock()"
+      ],
+      "solutionCode": "import asyncio\nbalance = {'tl': 100}\nlock = asyncio.Lock()\nasync def withdraw(amount):\n    async with lock:\n        if balance['tl'] >= amount:\n            await asyncio.sleep(0.1)\n            balance['tl'] -= amount\nasync def main():\n    await asyncio.gather(withdraw(80), withdraw(70))\n    print(balance['tl'])\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q27",
+      "type": "code",
+      "topic": "io-sure",
+      "sectionId": "io-cpu",
+      "difficulty": 1,
+      "prompt": "İlk satırda boşlukla ayrılmış bekleme süreleri (saniye) var. Sırayla yapılınca toplam süreyi, beklemeler örtüşünce süreyi ve aradaki kazancı birer ondalıkla yaz: 'sırayla: 1.7', 'örtüşerek: 0.8', 'kazanç: 0.9'.",
+      "starterCode": "waits = [float(part) for part in input().split()]\nprint(f\"sırayla: {sum(waits):.1f}\")\n# örtüşerek ve kazanç satırlarını ekle",
+      "answer": "waits = [float(part) for part in input().split()]\nsequential = sum(waits)\noverlapped = max(waits)\nprint(f\"sırayla: {sequential:.1f}\")\nprint(f\"örtüşerek: {overlapped:.1f}\")\nprint(f\"kazanç: {sequential - overlapped:.1f}\")",
+      "exampleInput": "0.8 0.3 0.6",
+      "expectedOutput": "sırayla: 1.7\nörtüşerek: 0.8\nkazanç: 0.9",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "0.8 0.3 0.6",
+          "expectedOutput": "sırayla: 1.7\nörtüşerek: 0.8\nkazanç: 0.9"
+        },
+        {
+          "label": "Eşit beklemeler",
+          "stdin": "1 1 1 1",
+          "expectedOutput": "sırayla: 4.0\nörtüşerek: 1.0\nkazanç: 3.0"
+        },
+        {
+          "label": "Tek iş",
+          "stdin": "0.5",
+          "expectedOutput": "sırayla: 0.5\nörtüşerek: 0.5\nkazanç: 0.0"
+        }
+      ],
+      "hints": [
+        "Örtüşen beklemelerde toplam süre en uzun beklemedir: max.",
+        "Kazanç, sıralı süre ile örtüşen süre arasındaki farktır."
+      ],
+      "explanation": "Sırayla yapılan işlerde süreler toplanır; beklemeler örtüşünce en uzun bekleme belirleyicidir. Tek iş varken eşzamanlılık bir şey kazandırmaz.",
+      "solutionCode": "waits = [float(part) for part in input().split()]\nsequential = sum(waits)\noverlapped = max(waits)\nprint(f\"sırayla: {sequential:.1f}\")\nprint(f\"örtüşerek: {overlapped:.1f}\")\nprint(f\"kazanç: {sequential - overlapped:.1f}\")"
+    },
+    {
+      "id": "m15-q28",
+      "type": "code",
+      "topic": "executor-future",
+      "sectionId": "threads",
+      "difficulty": 2,
+      "prompt": "run_all(executor, func, items) fonksiyonunu yaz: her öğe için executor.submit ile iş başlatsın, sonra Future'ların sonucunu girdi sırasıyla okuyup 'öğe -> sonuç' ya da hata olursa 'öğe -> hata: HataAdı' satırlarının listesini döndürsün. InlineExecutor (ThreadPoolExecutor ile aynı arayüz) ve program hazır; double geçersiz sayıda ValueError verir.",
+      "starterCode": "from concurrent.futures import Executor, Future\n\nclass InlineExecutor(Executor):\n    def submit(self, fn, /, *args, **kwargs):\n        future = Future()\n        try:\n            future.set_result(fn(*args, **kwargs))\n        except Exception as error:\n            future.set_exception(error)\n        return future\n\ndef double(text):\n    return int(text) * 2\n\ndef run_all(executor, func, items):\n    # submit ile işleri başlat, result() ile sonuçları topla; hataları yakala\n    return [f\"{item} -> {func(item)}\" for item in items]\n\nlines = run_all(InlineExecutor(), double, input().split())\nprint(\"\\n\".join(lines))\nprint(\"hata sayısı:\", sum(\"hata\" in line for line in lines))",
+      "answer": "from concurrent.futures import Executor, Future\n\nclass InlineExecutor(Executor):\n    def submit(self, fn, /, *args, **kwargs):\n        future = Future()\n        try:\n            future.set_result(fn(*args, **kwargs))\n        except Exception as error:\n            future.set_exception(error)\n        return future\n\ndef double(text):\n    return int(text) * 2\n\ndef run_all(executor, func, items):\n    with executor:\n        futures = [executor.submit(func, item) for item in items]\n    lines = []\n    for item, future in zip(items, futures):\n        try:\n            lines.append(f\"{item} -> {future.result()}\")\n        except Exception as error:\n            lines.append(f\"{item} -> hata: {type(error).__name__}\")\n    return lines\n\nlines = run_all(InlineExecutor(), double, input().split())\nprint(\"\\n\".join(lines))\nprint(\"hata sayısı:\", sum(\"hata\" in line for line in lines))",
+      "exampleInput": "3 x 10",
+      "expectedOutput": "3 -> 6\nx -> hata: ValueError\n10 -> 20\nhata sayısı: 1",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "3 x 10",
+          "expectedOutput": "3 -> 6\nx -> hata: ValueError\n10 -> 20\nhata sayısı: 1"
+        },
+        {
+          "label": "Hatasız",
+          "stdin": "7 -2",
+          "expectedOutput": "7 -> 14\n-2 -> -4\nhata sayısı: 0"
+        },
+        {
+          "label": "Hepsi hatalı",
+          "stdin": "a 1.5",
+          "expectedOutput": "a -> hata: ValueError\n1.5 -> hata: ValueError\nhata sayısı: 2"
+        }
+      ],
+      "hints": [
+        "futures = [executor.submit(func, item) for item in items] işleri başlatır; with executor: bloğu havuzu kapatır.",
+        "Her future.result() çağrısını try/except Exception içine al; hata adı type(error).__name__ ile alınır."
+      ],
+      "explanation": "submit hemen bir Future döndürür; iş hata verirse hata Future'da saklanır ve result() çağrısında yeniden fırlar. Aynı run_all, yerel Python'da ThreadPoolExecutor(max_workers=4) ile çalıştırıldığında işler aynı anda yürür ama sonuç ve hata satırları değişmez.",
+      "solutionCode": "from concurrent.futures import Executor, Future\n\nclass InlineExecutor(Executor):\n    def submit(self, fn, /, *args, **kwargs):\n        future = Future()\n        try:\n            future.set_result(fn(*args, **kwargs))\n        except Exception as error:\n            future.set_exception(error)\n        return future\n\ndef double(text):\n    return int(text) * 2\n\ndef run_all(executor, func, items):\n    with executor:\n        futures = [executor.submit(func, item) for item in items]\n    lines = []\n    for item, future in zip(items, futures):\n        try:\n            lines.append(f\"{item} -> {future.result()}\")\n        except Exception as error:\n            lines.append(f\"{item} -> hata: {type(error).__name__}\")\n    return lines\n\nlines = run_all(InlineExecutor(), double, input().split())\nprint(\"\\n\".join(lines))\nprint(\"hata sayısı:\", sum(\"hata\" in line for line in lines))"
+    },
+    {
+      "id": "m15-q29",
+      "type": "code",
+      "topic": "parcalama",
+      "sectionId": "gil-processes",
+      "difficulty": 2,
+      "prompt": "split(items, parts) fonksiyonunu yaz: listeyi en fazla parts parçaya, parça boyutu yukarı yuvarlanmış len(items) / parts olacak şekilde sırayla böl. Program ilk satırdaki sayıları ikinci satırdaki parça sayısına böler, parça boyutlarını ve her parçanın kareler toplamının genel toplamını yazar.",
+      "starterCode": "def split(items, parts):\n    # parça boyutu: yukarı yuvarlanmış len(items) / parts\n    return [items]\n\ndef total_squares(part):\n    return sum(n * n for n in part)\n\nnumbers = [int(part) for part in input().split()]\nparts = split(numbers, int(input()))\nprint(\"parçalar:\", [len(part) for part in parts])\nprint(\"toplam:\", sum(map(total_squares, parts)))",
+      "answer": "def split(items, parts):\n    size = -(-len(items) // parts)\n    return [items[i:i + size] for i in range(0, len(items), size)]\n\ndef total_squares(part):\n    return sum(n * n for n in part)\n\nnumbers = [int(part) for part in input().split()]\nparts = split(numbers, int(input()))\nprint(\"parçalar:\", [len(part) for part in parts])\nprint(\"toplam:\", sum(map(total_squares, parts)))",
+      "exampleInput": "1 2 3 4 5 6 7\n3",
+      "expectedOutput": "parçalar: [3, 3, 1]\ntoplam: 140",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "1 2 3 4 5 6 7\n3",
+          "expectedOutput": "parçalar: [3, 3, 1]\ntoplam: 140"
+        },
+        {
+          "label": "Parçadan az öğe",
+          "stdin": "1 2\n4",
+          "expectedOutput": "parçalar: [1, 1]\ntoplam: 5"
+        },
+        {
+          "label": "Tam bölünür",
+          "stdin": "5 5 5 5\n2",
+          "expectedOutput": "parçalar: [2, 2]\ntoplam: 100"
+        }
+      ],
+      "hints": [
+        "Yukarı yuvarlanmış bölme: size = -(-len(items) // parts) ya da math.ceil(len(items) / parts).",
+        "Dilimler: [items[i:i + size] for i in range(0, len(items), size)]."
+      ],
+      "explanation": "Bağımsız parçalar ayrı süreçlerde hesaplanabilir; sonuçlar ana süreçte birleştirilir. Yerelde map yerine ProcessPoolExecutor().map kullanmak sonucu değiştirmez, yalnızca parçaları çekirdeklere dağıtır.",
+      "solutionCode": "def split(items, parts):\n    size = -(-len(items) // parts)\n    return [items[i:i + size] for i in range(0, len(items), size)]\n\ndef total_squares(part):\n    return sum(n * n for n in part)\n\nnumbers = [int(part) for part in input().split()]\nparts = split(numbers, int(input()))\nprint(\"parçalar:\", [len(part) for part in parts])\nprint(\"toplam:\", sum(map(total_squares, parts)))"
+    },
+    {
+      "id": "m15-q30",
+      "type": "code",
+      "topic": "await-unutma",
+      "sectionId": "coroutines",
+      "difficulty": 1,
+      "prompt": "main içinde double coroutine'i await edilmeden çağrılıyor ve listeye coroutine nesneleri giriyor. Düzelt: her sayı için double'ın sonucunu bekleyip listeye ekle ve listeyi yazdır.",
+      "starterCode": "import asyncio\n\nasync def double(n):\n    await asyncio.sleep(0.1)\n    return n * 2\n\nasync def main():\n    results = []\n    for n in [int(part) for part in input().split()]:\n        results.append(double(n))\n    print(results)\n\nasyncio.run(main())",
+      "answer": "import asyncio\n\nasync def double(n):\n    await asyncio.sleep(0.1)\n    return n * 2\n\nasync def main():\n    results = []\n    for n in [int(part) for part in input().split()]:\n        results.append(await double(n))\n    print(results)\n\nasyncio.run(main())",
+      "exampleInput": "1 2 3",
+      "expectedOutput": "[2, 4, 6]",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "1 2 3",
+          "expectedOutput": "[2, 4, 6]"
+        },
+        {
+          "label": "Tek sayı",
+          "stdin": "5",
+          "expectedOutput": "[10]"
+        },
+        {
+          "label": "Sıfır ve negatif",
+          "stdin": "0 -4",
+          "expectedOutput": "[0, -8]"
+        }
+      ],
+      "hints": [
+        "double(n) çağrısı ne döndürür: sayı mı, coroutine mi?",
+        "Sonucu almak için çağrının önüne await yaz."
+      ],
+      "explanation": "double(n) yalnızca bir coroutine nesnesi üretir; await double(n) onu çalıştırır ve dönüş değerini verir. await'siz sürüm listeye coroutine nesneleri koyar ve Python 'never awaited' uyarısı verir.",
+      "solutionCode": "import asyncio\n\nasync def double(n):\n    await asyncio.sleep(0.1)\n    return n * 2\n\nasync def main():\n    results = []\n    for n in [int(part) for part in input().split()]:\n        results.append(await double(n))\n    print(results)\n\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q31",
+      "type": "code",
+      "topic": "gather-sure",
+      "sectionId": "tasks-gather",
+      "difficulty": 2,
+      "prompt": "İlk satır iş sayısı, sonraki her satır 'ad süre'. Kod işleri art arda await ediyor. Hepsini asyncio.gather ile aynı anda yürüt: sonuçları girdi sırasıyla yazdır ve toplam süreyi loop.time() ile 'toplam: 0.3 sn' biçiminde yaz.",
+      "starterCode": "import asyncio\n\nasync def fetch(name, seconds):\n    await asyncio.sleep(seconds)\n    return f\"{name} tamam\"\n\nasync def main():\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds = input().split()\n        jobs.append((name, float(seconds)))\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    results = []\n    for name, seconds in jobs:          # işleri aynı anda yürüt\n        results.append(await fetch(name, seconds))\n    print(\"\\n\".join(results))\n    print(f\"toplam: {loop.time() - start:.1f} sn\")\n\nasyncio.run(main())",
+      "answer": "import asyncio\n\nasync def fetch(name, seconds):\n    await asyncio.sleep(seconds)\n    return f\"{name} tamam\"\n\nasync def main():\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds = input().split()\n        jobs.append((name, float(seconds)))\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    results = await asyncio.gather(*(fetch(name, seconds) for name, seconds in jobs))\n    print(\"\\n\".join(results))\n    print(f\"toplam: {loop.time() - start:.1f} sn\")\n\nasyncio.run(main())",
+      "exampleInput": "3\na 0.3\nb 0.1\nc 0.2",
+      "expectedOutput": "a tamam\nb tamam\nc tamam\ntoplam: 0.3 sn",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "3\na 0.3\nb 0.1\nc 0.2",
+          "expectedOutput": "a tamam\nb tamam\nc tamam\ntoplam: 0.3 sn"
+        },
+        {
+          "label": "Eşit süreler",
+          "stdin": "2\nx 0.5\ny 0.5",
+          "expectedOutput": "x tamam\ny tamam\ntoplam: 0.5 sn"
+        },
+        {
+          "label": "Tek iş",
+          "stdin": "1\nsolo 0.4",
+          "expectedOutput": "solo tamam\ntoplam: 0.4 sn"
+        }
+      ],
+      "hints": [
+        "gather'a coroutine'leri yıldızla açarak ver: asyncio.gather(*coroutineler).",
+        "gather sonuçları verilen sırayla döndürür; toplam süre en uzun iş kadar olur."
+      ],
+      "explanation": "gather işleri birlikte başlatır; beklemeler örtüştüğü için toplam süre en uzun iş kadardır ve sonuçlar girdi sırasıyla gelir.",
+      "solutionCode": "import asyncio\n\nasync def fetch(name, seconds):\n    await asyncio.sleep(seconds)\n    return f\"{name} tamam\"\n\nasync def main():\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds = input().split()\n        jobs.append((name, float(seconds)))\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    results = await asyncio.gather(*(fetch(name, seconds) for name, seconds in jobs))\n    print(\"\\n\".join(results))\n    print(f\"toplam: {loop.time() - start:.1f} sn\")\n\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q32",
+      "type": "code",
+      "topic": "as-completed",
+      "sectionId": "tasks-gather",
+      "difficulty": 3,
+      "prompt": "İlk satır iş sayısı, sonraki her satır 'ad süre'. İşleri aynı anda yürüt ve bitiş sırasıyla '1. ad', '2. ad' ... yazdır. asyncio.as_completed kullan; fetch adını döndürüyor.",
+      "starterCode": "import asyncio\n\nasync def fetch(name, seconds):\n    await asyncio.sleep(seconds)\n    return name\n\nasync def main():\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds = input().split()\n        jobs.append(fetch(name, float(seconds)))\n    # bitiş sırasıyla yazdır\n    for number, name in enumerate(await asyncio.gather(*jobs), start=1):\n        print(f\"{number}. {name}\")\n\nasyncio.run(main())",
+      "answer": "import asyncio\n\nasync def fetch(name, seconds):\n    await asyncio.sleep(seconds)\n    return name\n\nasync def main():\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds = input().split()\n        jobs.append(fetch(name, float(seconds)))\n    for number, next_done in enumerate(asyncio.as_completed(jobs), start=1):\n        print(f\"{number}. {await next_done}\")\n\nasyncio.run(main())",
+      "exampleInput": "3\nyavaş 0.3\nhızlı 0.1\norta 0.2",
+      "expectedOutput": "1. hızlı\n2. orta\n3. yavaş",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "3\nyavaş 0.3\nhızlı 0.1\norta 0.2",
+          "expectedOutput": "1. hızlı\n2. orta\n3. yavaş"
+        },
+        {
+          "label": "Zaten sıralı",
+          "stdin": "2\na 0.1\nb 0.2",
+          "expectedOutput": "1. a\n2. b"
+        },
+        {
+          "label": "Ters sıra",
+          "stdin": "4\nd 0.4\nc 0.3\nb 0.2\na 0.1",
+          "expectedOutput": "1. a\n2. b\n3. c\n4. d"
+        }
+      ],
+      "hints": [
+        "gather verilen sırayı korur; bitiş sırası için as_completed gerekir.",
+        "for next_done in asyncio.as_completed(jobs): name = await next_done."
+      ],
+      "explanation": "as_completed işleri birlikte başlatır ve her adımda ilk biten işin sonucunu verir; await next_done o sonucu alır. gather ise sonuçları verilen sırayla döndürür.",
+      "solutionCode": "import asyncio\n\nasync def fetch(name, seconds):\n    await asyncio.sleep(seconds)\n    return name\n\nasync def main():\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds = input().split()\n        jobs.append(fetch(name, float(seconds)))\n    for number, next_done in enumerate(asyncio.as_completed(jobs), start=1):\n        print(f\"{number}. {await next_done}\")\n\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q33",
+      "type": "code",
+      "topic": "bloklama",
+      "sectionId": "blocking-loop",
+      "difficulty": 2,
+      "prompt": "İlk satır iş sayısı, sonraki her satır 'ad süre'. İşler gather ile başlatılıyor ama job içindeki time.sleep event loop'u blokluyor ve toplam süre işlerin toplamı kadar çıkıyor. Düzelt: toplam süre en uzun iş kadar olsun.",
+      "starterCode": "import asyncio\nimport time\n\nasync def job(name, seconds):\n    time.sleep(seconds)\n    return name\n\nasync def main():\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds = input().split()\n        jobs.append(job(name, float(seconds)))\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    print(\" \".join(await asyncio.gather(*jobs)))\n    print(f\"toplam: {loop.time() - start:.1f} sn\")\n\nasyncio.run(main())",
+      "answer": "import asyncio\n\nasync def job(name, seconds):\n    await asyncio.sleep(seconds)\n    return name\n\nasync def main():\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds = input().split()\n        jobs.append(job(name, float(seconds)))\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    print(\" \".join(await asyncio.gather(*jobs)))\n    print(f\"toplam: {loop.time() - start:.1f} sn\")\n\nasyncio.run(main())",
+      "exampleInput": "3\na 0.2\nb 0.1\nc 0.2",
+      "expectedOutput": "a b c\ntoplam: 0.2 sn",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "3\na 0.2\nb 0.1\nc 0.2",
+          "expectedOutput": "a b c\ntoplam: 0.2 sn"
+        },
+        {
+          "label": "İki iş",
+          "stdin": "2\nx 0.1\ny 0.3",
+          "expectedOutput": "x y\ntoplam: 0.3 sn"
+        },
+        {
+          "label": "Tek iş",
+          "stdin": "1\nz 0.2",
+          "expectedOutput": "z\ntoplam: 0.2 sn"
+        }
+      ],
+      "hints": [
+        "job içinde hiç await var mı?",
+        "time.sleep(seconds) yerine await asyncio.sleep(seconds) yaz."
+      ],
+      "explanation": "time.sleep bütün iş parçacığını durdurur; görevler birbirini bekler ve süreler toplanır. await asyncio.sleep yalnızca o görevi duraklatır, beklemeler örtüşür ve toplam süre en uzun iş kadar olur.",
+      "solutionCode": "import asyncio\n\nasync def job(name, seconds):\n    await asyncio.sleep(seconds)\n    return name\n\nasync def main():\n    jobs = []\n    for _ in range(int(input())):\n        name, seconds = input().split()\n        jobs.append(job(name, float(seconds)))\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    print(\" \".join(await asyncio.gather(*jobs)))\n    print(f\"toplam: {loop.time() - start:.1f} sn\")\n\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q34",
+      "type": "code",
+      "topic": "wait-for",
+      "sectionId": "cancellation-timeout",
+      "difficulty": 2,
+      "prompt": "İlk satır süre sınırı (saniye), ikinci satır iş sayısı, sonraki her satır 'ad süre'. Her indirmeyi sırayla asyncio.wait_for ile süre sınırı koyarak çalıştır: bitenler için 'ad: tamam', sınırı aşanlar için 'ad: zaman aşımı' yaz; sonda 'tamamlanan: 2/3' yaz.",
+      "starterCode": "import asyncio\n\nasync def download(seconds):\n    await asyncio.sleep(seconds)\n\nasync def main():\n    limit = float(input())\n    jobs = [input().split() for _ in range(int(input()))]\n    done = 0\n    for name, seconds in jobs:\n        # süre sınırı koy; aşılırsa 'zaman aşımı' yaz\n        await download(float(seconds))\n        print(f\"{name}: tamam\")\n        done += 1\n    print(f\"tamamlanan: {done}/{len(jobs)}\")\n\nasyncio.run(main())",
+      "answer": "import asyncio\n\nasync def download(seconds):\n    await asyncio.sleep(seconds)\n\nasync def main():\n    limit = float(input())\n    jobs = [input().split() for _ in range(int(input()))]\n    done = 0\n    for name, seconds in jobs:\n        try:\n            await asyncio.wait_for(download(float(seconds)), timeout=limit)\n        except TimeoutError:\n            print(f\"{name}: zaman aşımı\")\n        else:\n            print(f\"{name}: tamam\")\n            done += 1\n    print(f\"tamamlanan: {done}/{len(jobs)}\")\n\nasyncio.run(main())",
+      "exampleInput": "0.5\n3\na 0.2\nb 0.9\nc 0.4",
+      "expectedOutput": "a: tamam\nb: zaman aşımı\nc: tamam\ntamamlanan: 2/3",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "0.5\n3\na 0.2\nb 0.9\nc 0.4",
+          "expectedOutput": "a: tamam\nb: zaman aşımı\nc: tamam\ntamamlanan: 2/3"
+        },
+        {
+          "label": "Hepsi yetişir",
+          "stdin": "1\n2\nx 0.1\ny 0.3",
+          "expectedOutput": "x: tamam\ny: tamam\ntamamlanan: 2/2"
+        },
+        {
+          "label": "Hiçbiri yetişmez",
+          "stdin": "0.1\n2\np 2\nq 5",
+          "expectedOutput": "p: zaman aşımı\nq: zaman aşımı\ntamamlanan: 0/2"
+        }
+      ],
+      "hints": [
+        "await asyncio.wait_for(download(...), timeout=limit) süre sınırı koyar.",
+        "try/except TimeoutError/else: başarı satırı ve sayaç else bloğuna gider."
+      ],
+      "explanation": "wait_for süre dolunca işi iptal eder ve TimeoutError fırlatır; else bloğu yalnızca iş zamanında bittiğinde çalışır.",
+      "solutionCode": "import asyncio\n\nasync def download(seconds):\n    await asyncio.sleep(seconds)\n\nasync def main():\n    limit = float(input())\n    jobs = [input().split() for _ in range(int(input()))]\n    done = 0\n    for name, seconds in jobs:\n        try:\n            await asyncio.wait_for(download(float(seconds)), timeout=limit)\n        except TimeoutError:\n            print(f\"{name}: zaman aşımı\")\n        else:\n            print(f\"{name}: tamam\")\n            done += 1\n    print(f\"tamamlanan: {done}/{len(jobs)}\")\n\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q35",
+      "type": "code",
+      "topic": "kilit",
+      "sectionId": "shared-state",
+      "difficulty": 2,
+      "prompt": "İlk satır başlangıç bakiyesi, ikinci satır çekilecek tutarlar. Bütün çekişler gather ile aynı anda başlatılıyor; withdraw bakiyeyi denetleyip bir süre bekledikten sonra düşüyor ve bakiye eksiye inebiliyor. asyncio.Lock ile düzelt: her çekiş 'çekildi X' ya da 'yetersiz X' yazsın, sonda 'bakiye: B'.",
+      "starterCode": "import asyncio\n\nclass Account:\n    def __init__(self, balance):\n        self.balance = balance\n\n    async def withdraw(self, amount):\n        if self.balance >= amount:\n            await asyncio.sleep(0.1)     # banka onayı bekleniyor\n            self.balance -= amount\n            print(\"çekildi\", amount)\n        else:\n            print(\"yetersiz\", amount)\n\nasync def main():\n    account = Account(int(input()))\n    amounts = [int(part) for part in input().split()]\n    await asyncio.gather(*(account.withdraw(amount) for amount in amounts))\n    print(\"bakiye:\", account.balance)\n\nasyncio.run(main())",
+      "answer": "import asyncio\n\nclass Account:\n    def __init__(self, balance):\n        self.balance = balance\n        self.lock = asyncio.Lock()\n\n    async def withdraw(self, amount):\n        async with self.lock:\n            if self.balance >= amount:\n                await asyncio.sleep(0.1)     # banka onayı bekleniyor\n                self.balance -= amount\n                print(\"çekildi\", amount)\n            else:\n                print(\"yetersiz\", amount)\n\nasync def main():\n    account = Account(int(input()))\n    amounts = [int(part) for part in input().split()]\n    await asyncio.gather(*(account.withdraw(amount) for amount in amounts))\n    print(\"bakiye:\", account.balance)\n\nasyncio.run(main())",
+      "exampleInput": "100\n80 70",
+      "expectedOutput": "çekildi 80\nyetersiz 70\nbakiye: 20",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "100\n80 70",
+          "expectedOutput": "çekildi 80\nyetersiz 70\nbakiye: 20"
+        },
+        {
+          "label": "Üçüncüsü yetmez",
+          "stdin": "50\n20 20 20",
+          "expectedOutput": "çekildi 20\nçekildi 20\nyetersiz 20\nbakiye: 10"
+        },
+        {
+          "label": "Hepsi yeter",
+          "stdin": "100\n30 30 30",
+          "expectedOutput": "çekildi 30\nçekildi 30\nçekildi 30\nbakiye: 10"
+        }
+      ],
+      "hints": [
+        "Kilidi __init__ içinde self.lock = asyncio.Lock() ile oluştur.",
+        "Denetim, bekleme ve düşme async with self.lock: bloğunun içinde olmalı."
+      ],
+      "explanation": "Kilit olmadan bütün görevler denetimi aynı eski bakiyeyle yapar. async with self.lock denetle-bekle-düş adımlarını tek parça yapar; asyncio.Lock bekleyenleri geliş sırasıyla aldığı için çekişler girdi sırasıyla işlenir.",
+      "solutionCode": "import asyncio\n\nclass Account:\n    def __init__(self, balance):\n        self.balance = balance\n        self.lock = asyncio.Lock()\n\n    async def withdraw(self, amount):\n        async with self.lock:\n            if self.balance >= amount:\n                await asyncio.sleep(0.1)     # banka onayı bekleniyor\n                self.balance -= amount\n                print(\"çekildi\", amount)\n            else:\n                print(\"yetersiz\", amount)\n\nasync def main():\n    account = Account(int(input()))\n    amounts = [int(part) for part in input().split()]\n    await asyncio.gather(*(account.withdraw(amount) for amount in amounts))\n    print(\"bakiye:\", account.balance)\n\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q36",
+      "type": "code",
+      "topic": "kuyruk",
+      "sectionId": "shared-state",
+      "difficulty": 3,
+      "prompt": "İlk satır çalışan sayısı, ikinci satır 'ad:süre' biçiminde işler. worker hazır. main'i tamamla: işleri kuyruğa koy, çalışan sayısı kadar worker görevi başlat (kimlikleri 1'den), queue.join() ile bütün işlerin bitmesini bekle, sonra worker'ları iptal et ve tamamlananları 'ad@kimlik' biçiminde, bitiş sırasıyla, virgülle ayırarak yaz.",
+      "starterCode": "import asyncio\n\nasync def worker(wid, queue, done):\n    while True:\n        name, seconds = await queue.get()\n        await asyncio.sleep(seconds)\n        done.append(f\"{name}@{wid}\")\n        queue.task_done()\n\nasync def main():\n    count = int(input())\n    queue = asyncio.Queue()\n    for token in input().split():\n        name, seconds = token.split(\":\")\n        queue.put_nowait((name, float(seconds)))\n    done = []\n    # worker görevlerini başlat, kuyruğun boşalmasını bekle, worker'ları iptal et\n    print(\", \".join(done))\n\nasyncio.run(main())",
+      "answer": "import asyncio\n\nasync def worker(wid, queue, done):\n    while True:\n        name, seconds = await queue.get()\n        await asyncio.sleep(seconds)\n        done.append(f\"{name}@{wid}\")\n        queue.task_done()\n\nasync def main():\n    count = int(input())\n    queue = asyncio.Queue()\n    for token in input().split():\n        name, seconds = token.split(\":\")\n        queue.put_nowait((name, float(seconds)))\n    done = []\n    workers = [asyncio.create_task(worker(wid, queue, done)) for wid in range(1, count + 1)]\n    await queue.join()\n    for task in workers:\n        task.cancel()\n    print(\", \".join(done))\n\nasyncio.run(main())",
+      "exampleInput": "2\nab:0.2 c:0.1 def:0.3 g:0.1",
+      "expectedOutput": "c@2, ab@1, g@1, def@2",
+      "tests": [
+        {
+          "label": "Örnek",
+          "stdin": "2\nab:0.2 c:0.1 def:0.3 g:0.1",
+          "expectedOutput": "c@2, ab@1, g@1, def@2"
+        },
+        {
+          "label": "Tek çalışan",
+          "stdin": "1\na:0.1 b:0.1",
+          "expectedOutput": "a@1, b@1"
+        },
+        {
+          "label": "Üç çalışan",
+          "stdin": "3\nx:0.3 y:0.1 z:0.2",
+          "expectedOutput": "y@2, z@3, x@1"
+        }
+      ],
+      "hints": [
+        "workers = [asyncio.create_task(worker(wid, queue, done)) for wid in range(1, count + 1)].",
+        "await queue.join() her iş için task_done çağrılana kadar bekler; sonra her görevde task.cancel()."
+      ],
+      "explanation": "Kuyruk, işleri çalışanlar arasında kilitsiz ve sırayla paylaştırır: boşta kalan çalışan sıradaki işi alır. queue.join() bütün işler bitene kadar bekler; sonsuz döngüdeki çalışanlar ardından iptal edilerek kapatılır.",
+      "solutionCode": "import asyncio\n\nasync def worker(wid, queue, done):\n    while True:\n        name, seconds = await queue.get()\n        await asyncio.sleep(seconds)\n        done.append(f\"{name}@{wid}\")\n        queue.task_done()\n\nasync def main():\n    count = int(input())\n    queue = asyncio.Queue()\n    for token in input().split():\n        name, seconds = token.split(\":\")\n        queue.put_nowait((name, float(seconds)))\n    done = []\n    workers = [asyncio.create_task(worker(wid, queue, done)) for wid in range(1, count + 1)]\n    await queue.join()\n    for task in workers:\n        task.cancel()\n    print(\", \".join(done))\n\nasyncio.run(main())"
+    },
+    {
+      "id": "m15-q37",
+      "type": "traceback",
+      "topic": "await-disarida",
+      "sectionId": "coroutines",
+      "difficulty": 1,
+      "prompt": "await sıradan bir fonksiyonun içinde kullanılıyor. Hangi hata oluşur?",
+      "code": "import asyncio\n\ndef main():\n    await asyncio.sleep(0.1)\n    print(\"bitti\")\n\nmain()",
+      "expectedError": "SyntaxError",
+      "options": [
+        "SyntaxError",
+        "RuntimeError",
+        "TypeError",
+        "NameError"
+      ],
+      "optionFeedback": {
+        "RuntimeError": "Kod hiç çalışmaz; hata, dosya derlenirken bulunur.",
+        "TypeError": "Bir değerin türü değil, await'in yazıldığı yer yanlış.",
+        "NameError": "asyncio içe aktarıldı ve tanımlı."
+      },
+      "hints": [
+        "await nerede yazılabilir?",
+        "Hata program çalışmadan mı bulunuyor?"
+      ],
+      "explanation": "await yalnızca async def içinde yazılabilir; Python dosyayı derlerken SyntaxError: 'await' outside async function verir. main async def ile tanımlanıp asyncio.run(main()) ile çalıştırılmalıdır.",
+      "answer": "SyntaxError"
+    },
+    {
+      "id": "m15-q38",
+      "type": "traceback",
+      "topic": "await-unutma",
+      "sectionId": "coroutines",
+      "difficulty": 2,
+      "prompt": "Coroutine await edilmeden sonucu kullanılıyor. Hangi hata oluşur?",
+      "code": "import asyncio\n\nasync def fetch_name():\n    await asyncio.sleep(0.1)\n    return \"ada\"\n\nasync def main():\n    name = fetch_name()\n    print(name.upper())\n\nasyncio.run(main())",
+      "expectedError": "AttributeError",
+      "options": [
+        "NameError",
+        "AttributeError",
+        "TypeError",
+        "RuntimeError"
+      ],
+      "optionFeedback": {
+        "TypeError": "Bir işlem değil, coroutine nesnesinde olmayan bir metot aranıyor.",
+        "RuntimeError": "Event loop doğru çalışıyor; sorun name'in bir metin olmaması.",
+        "NameError": "fetch_name ve name tanımlı adlardır."
+      },
+      "hints": [
+        "fetch_name() await'siz ne döndürür?",
+        "Bir coroutine nesnesinin upper metodu var mı?"
+      ],
+      "explanation": "fetch_name() await edilmeden çağrıldığı için name bir coroutine nesnesidir, metin değil: AttributeError: 'coroutine' object has no attribute 'upper'. Doğrusu name = await fetch_name().",
+      "answer": "AttributeError"
+    },
+    {
+      "id": "m15-q39",
+      "type": "traceback",
+      "topic": "yakalanmayan-timeout",
+      "sectionId": "cancellation-timeout",
+      "difficulty": 2,
+      "prompt": "Süre sınırı aşılıyor ve hata yakalanmıyor. Hangi hata oluşur?",
+      "code": "import asyncio\n\nasync def main():\n    await asyncio.wait_for(asyncio.sleep(3), timeout=0.2)\n    print(\"bitti\")\n\nasyncio.run(main())",
+      "expectedError": "TimeoutError",
+      "options": [
+        "RuntimeError",
+        "ValueError",
+        "TimeoutError",
+        "CancelledError"
+      ],
+      "optionFeedback": {
+        "CancelledError": "CancelledError iptal edilen iç işte oluşur; wait_for onu dışarıya TimeoutError olarak iletir.",
+        "RuntimeError": "Event loop doğru çalışıyor; süre sınırı aşıldı.",
+        "ValueError": "timeout geçerli bir sayı."
+      },
+      "hints": [
+        "sleep(3) 0,2 saniyede biter mi?",
+        "wait_for süre dolunca hangi hatayı fırlatır?"
+      ],
+      "explanation": "İş 0,2 saniyede bitmez; wait_for onu iptal eder ve TimeoutError fırlatır. Yakalanmadığı için program durur ve 'bitti' yazılmaz.",
+      "answer": "TimeoutError"
+    },
+    {
+      "id": "m15-q40",
+      "type": "traceback",
+      "topic": "bos-kuyruk",
+      "sectionId": "shared-state",
+      "difficulty": 2,
+      "prompt": "Boş bir asyncio kuyruğundan beklemeden öğe alınıyor. Hangi hata oluşur?",
+      "code": "import asyncio\n\nasync def main():\n    queue = asyncio.Queue()\n    queue.put_nowait(\"ilk\")\n    print(queue.get_nowait())\n    print(queue.get_nowait())\n\nasyncio.run(main())",
+      "expectedError": "QueueEmpty",
+      "options": [
+        "IndexError",
+        "KeyError",
+        "TimeoutError",
+        "QueueEmpty"
+      ],
+      "optionFeedback": {
+        "IndexError": "Kuyruk bir liste değil; asyncio kendi hatasını fırlatır.",
+        "KeyError": "Anahtar aranmıyor; kuyruk boş.",
+        "TimeoutError": "get_nowait hiç beklemez, süre sınırı da yoktur."
+      },
+      "hints": [
+        "Kuyrukta kaç öğe var?",
+        "_nowait sürümleri boş kuyrukta bekler mi?"
+      ],
+      "explanation": "İlk get_nowait 'ilk'i alır; ikinci çağrıda kuyruk boştur ve beklemeyen sürüm asyncio.QueueEmpty fırlatır. Öğe gelene kadar beklemek için await queue.get() kullanılır.",
+      "answer": "QueueEmpty"
+    }
+  ]
+}

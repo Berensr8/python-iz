@@ -3,7 +3,7 @@
   "slug": "temeller",
   "title": "Temeller",
   "description": "Python kodunun yapı taşlarını okuyup takip etmeyi öğren.",
-  "contentVersion": 3,
+  "contentVersion": 4,
   "estimatedMinutes": 95,
   "practiceIds": [
     "m1-q01",
@@ -75,10 +75,10 @@
         "repl-syntax"
       ],
       "summary": "Bir değişken kutu değildir; bir nesneye bağlanan isimdir. Python tip bilgisini isimde değil değerde taşır.",
-      "explanation": "Atamada sağdaki değer önce hesaplanır, soldaki isim o değere bağlanır: user_count = 12. int tam sayıları, float yaklaşık ondalık sayıları, str tırnaklı metni, bool True/False değerlerini taşır; None ise değerin henüz bulunmadığını anlatır. Aynı isim sonradan başka değere bağlanabilir; bu, önceki nesneyi değiştirmek değildir. İsimler büyük/küçük harfe duyarlıdır: score ile Score farklıdır. Rakamla başlatma, araya boşluk koyma ve print gibi hazır adları kendi değişkeninle gölgeleme. type(value) tip bilgisi verir; örnekteki .__name__ bu tipin yalnız adını gösterir, şimdilik bir tanılama kalıbı olarak oku. is None yokluk denetimidir; 0 ve boş metin de gerçek değerlerdir, None ile aynı değildir. Örnekte user_count değerini tırnaklı \"12\" yapıp tipi yeniden incele.",
-      "code": "user_count = 12\naverage_score = 8.5\ncourse_name = \"Python\"\nis_active = True\nlast_error = None\n\nprint(type(user_count).__name__)\nprint(last_error is None)",
-      "expectedOutput": "int\nTrue",
-      "why": "12 bir int nesnesidir. None tekil bir nesne olduğu için yokluk kontrolü is None biçiminde yapılır.",
+      "explanation": "Atamada sağdaki değer önce hesaplanır, soldaki isim o değere bağlanır: user_count = 12. int tam sayıları, float yaklaşık ondalık sayıları, str tırnaklı metni, bool True/False değerlerini taşır; None ise değerin henüz bulunmadığını anlatır. Aynı isim sonradan başka değere bağlanabilir; bu, önceki nesneyi değiştirmek değildir. İsimler büyük/küçük harfe duyarlıdır: score ile Score farklıdır. Rakamla başlatma, araya boşluk koyma ve print gibi hazır adları kendi değişkeninle gölgeleme. type(value) değerin tipini gösterir: çıktıdaki <class 'int'> 'bu değer int tipinde' demektir; class kelimesini şimdilik 'tip' diye oku (sınıfları M11'de göreceksin). is None yokluk denetimidir; 0 ve boş metin de gerçek değerlerdir, None ile aynı değildir. Örnekte user_count değerini tırnaklı \"12\" yapıp tipi yeniden incele.",
+      "code": "user_count = 12\naverage_score = 8.5\ncourse_name = \"Python\"\nis_active = True\nlast_error = None\n\nprint(type(user_count))\nprint(last_error is None)",
+      "expectedOutput": "<class 'int'>\nTrue",
+      "why": "12 bir int nesnesidir; type() bunu <class 'int'> olarak gösterir. None tekil bir nesne olduğu için yokluk kontrolü is None biçiminde yapılır.",
       "alternatives": [
         "Tipi type(value) ile inceleyebilir, isinstance(value, int) ile belirli bir tipe uyup uymadığını sorabilirsin.",
         "None yerine boş metin veya 0 kullanmak farklı anlam taşır; gerçek yokluk için None seçilir."
@@ -117,8 +117,8 @@
       ],
       "summary": "input() sonucunun tipi str'dir. Sayısal işlemden önce uygun dönüşümü açıkça yapmalısın.",
       "explanation": "input() program girdisinden bir satır okur ve str döndürür; kullanıcı 21 yazsa da elde edilen şey önce metindir. Hesap yapmak için int(raw) veya float(raw) ile dönüştür. int('12') geçerliyken int('12.5') ValueError verir; float ondalık ayırıcı olarak nokta bekler. int(12.9) kesirli kısmı atar; negatifte de sıfıra doğru gider, // ile karıştırma. str(12) sayıyı metin olarak sunar. bool metindeki kelimenin anlamını yorumlamaz: bool('False') True, bool('') False olur. Editörün Program girdisi alanına her input() için bir satır yazmalısın; eksik satır EOFError üretir. Alttaki sabit ham değer, input() sonucunun tipini dönüşümden ayrı görmen içindir. Gerçek deneme için raw_age = input() yazıp girdi alanına 21 koy; otomatik testlerde ekstra soru metni yazdırma. Geçersiz girdiyi yakalamayı M7'de öğreneceksin.",
-      "code": "raw_age = \"21\"\nage = int(raw_age)\nnext_age = age + 1\n\nprint(next_age)\nprint(type(next_age).__name__)",
-      "expectedOutput": "22\nint",
+      "code": "raw_age = \"21\"\nage = int(raw_age)\nnext_age = age + 1\n\nprint(next_age)\nprint(type(next_age))",
+      "expectedOutput": "22\n<class 'int'>",
       "why": "int() metni sayıya dönüştürdüğü için + işlemi toplama yapar; metin birleştirme yapmaz.",
       "alternatives": [
         "Ondalıklı giriş için float(), para gibi kesin değerler için ileride Decimal kullanılır.",
@@ -129,12 +129,12 @@
         "bool('False') sonucunun False olacağını sanmak.",
         "Virgüllü ondalık metni float'a doğrudan vermek."
       ],
-      "realCode": "raw_limit = \"25\"\nlimit = int(raw_limit)\nprint(limit)\nprint(type(raw_limit).__name__)\nprint(type(limit).__name__)",
-      "realOutput": "25\nstr\nint",
+      "realCode": "raw_limit = \"25\"\nlimit = int(raw_limit)\nprint(limit)\nprint(type(raw_limit))\nprint(type(limit))",
+      "realOutput": "25\n<class 'str'>\n<class 'int'>",
       "lineByLine": [
         "Ham değer metindir; sayı gibi görünmesi tipini değiştirmez.",
         "int sonucu limit adına bağlanır.",
-        "İki tipin str ve int olduğu gösterilir."
+        "type() ham değerin str, dönüştürülmüş değerin int olduğunu gösterir."
       ],
       "sources": [
         {
@@ -271,31 +271,32 @@
       "eyebrow": "Ondalık görünen sayı ikilikte yaklaşık tutulur",
       "objectives": [
         "Float değerlerinin yaklaşık saklandığını açıklar.",
-        "math.isclose ve Decimal kullanım yerini seçer."
+        "Float değerleri toleransla karşılaştırır; kesin tutarları kuruş cinsinden tam sayıyla hesaplar."
       ],
       "prerequisites": [
         "arithmetic"
       ],
       "summary": "0.1 gibi bazı değerler ikilik sistemde tam temsil edilemez. Bu yüzden float değerleri doğrudan eşitlikle karşılaştırmak risklidir.",
-      "explanation": "float sayıları sınırlı sayıda ikilik basamakla temsil eder; bazı ondalık değerler bu sistemde ancak yaklaşık saklanabilir. 0.1 + 0.2 bu nedenle 0.30000000000000004 görünür. Bu her float karşılaştırmasının yanlış olduğu anlamına gelmez; örneğin tam temsil edilen 0.5 güvenlidir. Ancak hesaplanmış yaklaşık değerlerde toleransı düşünmek gerekir. import math hazır matematik araçlarını kullanıma açar; math.isclose iki değerin yeterince yakın olup olmadığını sorar. rel_tol göreli, abs_tol mutlak fark eşiğidir; sıfıra yakın değerlerde yalnız göreli tolerans yetmeyebilir. round veya .2f gösterimi yuvarlar ama önceki hesap hatasını sihirli biçimde yok etmez. decimal.Decimal metinden kurulunca ondalık veriyi daha uygun temsil eder; yine hassasiyet ve yuvarlama kuralı seçmek gerekir. Aşağıdaki örnekte import satırını hazır araç yükleme kalıbı olarak oku; modül sistemi M9'da ayrıntılanacak.",
-      "code": "import math\n\nresult = 0.1 + 0.2\nprint(result)\nprint(math.isclose(result, 0.3))",
-      "expectedOutput": "0.30000000000000004\nTrue",
-      "why": "İlk satır yaklaşık temsil farkını gösterir. isclose küçük farkı tolerans içinde kabul eder.",
+      "explanation": "float sayıları sınırlı sayıda ikilik basamakla temsil eder; bazı ondalık değerler bu sistemde ancak yaklaşık saklanabilir. 0.1 + 0.2 bu nedenle 0.30000000000000004 görünür ve 0.3 ile == karşılaştırması False verir. Bu her float karşılaştırmasının yanlış olduğu anlamına gelmez; örneğin tam temsil edilen 0.5 güvenlidir. Ancak hesaplanmış yaklaşık değerlerde eşitlik yerine farkın yeterince küçük olup olmadığını sor: abs(a - b) < 0.000001. abs() bir sayının mutlak değerini (işaretsiz büyüklüğünü) veren hazır bir fonksiyondur. round veya .2f gösterimi yalnızca sonucu yuvarlayarak gösterir; önceki hesap hatasını yok etmez. Para gibi kesin olması gereken tutarlarda en basit güvenli yol, tutarı kuruş cinsinden tam sayı olarak tutmaktır: tam sayılarda yuvarlama hatası olmaz. İleride hazır araçlarla tanışacaksın: math.isclose toleranslı karşılaştırmayı, decimal.Decimal ise kesin ondalık hesabı yapar (modülleri içe aktarmayı M9'da, standart kütüphaneyi M10'da göreceksin).",
+      "code": "result = 0.1 + 0.2\nprint(result)\nprint(result == 0.3)\nprint(abs(result - 0.3) < 0.000001)\nprint(round(result, 2))",
+      "expectedOutput": "0.30000000000000004\nFalse\nTrue\n0.3",
+      "why": "İlk satır yaklaşık temsil farkını, ikincisi bu yüzden == karşılaştırmasının False olduğunu gösterir. Fark çok küçük olduğu için toleranslı karşılaştırma True verir. round yalnızca gösterimi yuvarlar; result'ın kendisi değişmez.",
       "alternatives": [
-        "Ölçüm ve bilimsel hesaplarda math.isclose kullan.",
-        "Para ve kesin ondalık kuralları için decimal.Decimal kullan."
+        "Ölçüm ve bilimsel hesaplarda ileride math.isclose kullanacaksın; aynı toleranslı karşılaştırmayı hazır sunar.",
+        "Para ve kesin ondalık kuralları için kuruşla tam sayı hesap yap; ileride decimal.Decimal da bir seçenek olacak."
       ],
       "traps": [
         "round() kullanımını her hassasiyet sorununa kalıcı çözüm sanmak.",
         "Hesaplanmış yaklaşık sonuçlarda tolerans gereksinimini unutmak.",
-        "Decimal(0.1) ile önce float yaklaşımını içeri taşımak; Decimal('0.1') tercih edilir."
+        "Para tutarlarını float olarak toplayıp karşılaştırmak; kuruş cinsinden tam sayı tut."
       ],
-      "realCode": "from decimal import Decimal\nprice = Decimal(\"0.10\")\nfee = Decimal(\"0.20\")\nprint(price + fee)",
-      "realOutput": "0.30",
+      "realCode": "price_kurus = 10\nfee_kurus = 20\ntotal_kurus = price_kurus + fee_kurus\nprint(total_kurus)\nprint(total_kurus == 30)\nprint(total_kurus / 100, \"TL\")",
+      "realOutput": "30\nTrue\n0.3 TL",
       "lineByLine": [
-        "Decimal hazır ondalık sayı aracını içe aktarır.",
-        "Değerler float değil tırnaklı metinden oluşturulur.",
-        "Toplam ondalık olarak 0.30 görünür; finansal uygulamalarda yuvarlama kuralı ayrıca belirlenir."
+        "Tutarlar kuruş cinsinden tam sayı olarak tutulur: 0,10 TL yerine 10 kuruş.",
+        "Tam sayı toplamında yuvarlama hatası olmaz; sonuç tam olarak 30'dur.",
+        "Eşitlik karşılaştırması bu yüzden güvenle True verir.",
+        "Lira değeri yalnızca gösterirken 100'e bölünerek üretilir."
       ],
       "sources": [
         {

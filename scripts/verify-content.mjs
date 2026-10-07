@@ -30,8 +30,10 @@ async function execute(code, stdin = "") {
     return { output: result.output.trimEnd(), error: null };
   } catch (error) {
     const text = String(error);
-    // Library errors carry a module prefix in the traceback, e.g. json.decoder.JSONDecodeError.
-    const name = text.match(/\n(?:[a-z_]+\.)*([A-Za-z]+(?:Error|Exception)):/)?.[1] ?? text.match(/^([A-Za-z]+(?:Error|Exception)):/)?.[1] ?? "PythonError";
+    // The raised exception is the traceback's last line. Library errors carry a module prefix
+    // (json.decoder.JSONDecodeError); some exceptions have no message and no colon (StopIteration).
+    const last = text.trimEnd().split("\n").at(-1);
+    const name = last.match(/^(?:[a-z_]\w*\.)*([A-Z]\w*)(?::|$)/)?.[1] ?? text.match(/\n(?:[a-z_]+\.)*([A-Za-z]+(?:Error|Exception)):/)?.[1] ?? text.match(/^([A-Za-z]+(?:Error|Exception)):/)?.[1] ?? "PythonError";
     return { output: [...stdout, ...stderr].join("\n").trimEnd(), error: name };
   }
 }

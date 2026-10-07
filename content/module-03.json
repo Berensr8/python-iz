@@ -3,7 +3,7 @@
   "slug": "akis-kontrolu",
   "title": "Akış kontrolü",
   "description": "Koşulların ve döngülerin hangi satırı kaç kez çalıştırdığını izle, kendi akışını kur.",
-  "contentVersion": 2,
+  "contentVersion": 3,
   "estimatedMinutes": 110,
   "practiceIds": [
     "m3-q01",
@@ -49,13 +49,13 @@
         "elif yerine ayrı if yazıp birden çok dalın çalışmasına şaşırmak.",
         "Koşulda = (atama) ile == (karşılaştırma) işaretini karıştırmak."
       ],
-      "realCode": "def validate_age(age):\n    if age < 0:\n        return \"geçersiz\"\n    if age < 18:\n        return \"reşit değil\"\n    return \"yetişkin\"\n\nprint(validate_age(15))",
+      "realCode": "age = 15\nif age < 0:\n    status = \"geçersiz\"\nelif age < 18:\n    status = \"reşit değil\"\nelse:\n    status = \"yetişkin\"\nprint(status)",
       "realOutput": "reşit değil",
       "lineByLine": [
-        "Fonksiyon bir yaş değeri alır.",
-        "Önce geçersiz değer elenir; return fonksiyonu hemen bitirir (erken dönüş).",
-        "İkinci kontrole yalnızca ilk koşul yanlışsa gelinir; return sayesinde elif gerekmez.",
-        "Hiçbir erken dönüş olmazsa son satır çalışır."
+        "Yaş bir isme bağlanır; gerçek programda input() ile gelir.",
+        "Önce geçersiz değer elenir; koşullar yukarıdan aşağı sırayla denenir.",
+        "İlk doğru koşulun bloğu çalışır, kalanlar atlanır: 15 < 18 olduğu için 'reşit değil' seçilir.",
+        "Sonuç tek bir değişkende toplanıp bir kez yazdırılır."
       ],
       "sources": [
         {
@@ -90,13 +90,13 @@
         "_ desenini ilk sıraya koymak; sonraki case'lere hiç sıra gelmez.",
         "match-case'in Python 3.10'dan eski sürümlerde çalışmadığını unutmak."
       ],
-      "realCode": "def describe(point):\n    match point:\n        case (0, 0):\n            return \"başlangıç\"\n        case (0, y):\n            return f\"y ekseni, y={y}\"\n        case (x, y):\n            return f\"nokta ({x}, {y})\"\n\nprint(describe((0, 5)))",
+      "realCode": "point = (0, 5)\nmatch point:\n    case (0, 0):\n        label = \"başlangıç\"\n    case (0, y):\n        label = f\"y ekseni, y={y}\"\n    case (x, y):\n        label = f\"nokta ({x}, {y})\"\nprint(label)",
       "realOutput": "y ekseni, y=5",
       "lineByLine": [
         "point iki elemanlı bir demettir (tuple; ayrıntısı M4'te).",
         "(0, 0) deseni yalnızca tam başlangıç noktasıyla eşleşir.",
         "(0, y) ilk eleman 0 ise eşleşir ve ikinci elemanı y adına bağlar.",
-        "(0, 5) ikinci desenle eşleşir; y=5 metne yerleşir."
+        "(0, 5) ikinci desenle eşleşir; y=5 metne yerleşir ve sonuç yazdırılır."
       ],
       "sources": [
         {
@@ -131,10 +131,10 @@
         "Koşulun tur ortasında değil yalnızca tur başında kontrol edildiğini unutmak.",
         "Bir eksik/bir fazla tur hatası: < ile <= farkını izlememek."
       ],
-      "realCode": "def retry_delays(max_attempts):\n    attempt = 1\n    delay = 1\n    while attempt <= max_attempts:\n        print(f\"Deneme {attempt}: {delay} sn bekle\")\n        delay *= 2\n        attempt += 1\n\nretry_delays(3)",
+      "realCode": "max_attempts = 3\nattempt = 1\ndelay = 1\nwhile attempt <= max_attempts:\n    print(f\"Deneme {attempt}: {delay} sn bekle\")\n    delay *= 2\n    attempt += 1",
       "realOutput": "Deneme 1: 1 sn bekle\nDeneme 2: 2 sn bekle\nDeneme 3: 4 sn bekle",
       "lineByLine": [
-        "Sayaç ve ilk bekleme süresi hazırlanır.",
+        "En çok deneme sayısı, sayaç ve ilk bekleme süresi hazırlanır.",
         "Koşul, deneme sayısı sınırı aşılana kadar doğru kalır.",
         "Her turda bekleme süresi ikiye katlanır (üstel geri çekilme).",
         "attempt += 1 olmasaydı döngü hiç bitmezdi."
@@ -173,13 +173,13 @@
         "Biriktiriciyi (total = 0) döngünün içinde başlatıp her turda sıfırlamak.",
         "Negatif adımda başlangıcın bitişten büyük olması gerektiğini unutmak; range(0, 5, -1) boştur."
       ],
-      "realCode": "def count_vowels(text):\n    count = 0\n    for char in text.lower():\n        if char in \"aeıioöuü\":\n            count += 1\n    return count\n\nprint(count_vowels(\"Python Programı\"))",
+      "realCode": "text = \"Python Programı\"\ncount = 0\nfor char in text.lower():\n    if char in \"aeıioöuü\":\n        count += 1\nprint(count)",
       "realOutput": "4",
       "lineByLine": [
         "Sayaç döngüden önce sıfırlanır.",
         "lower() büyük harfleri de saymak için metni küçültür; for her karakteri sırayla verir.",
         "in, karakterin ünlü harfler metninde olup olmadığını sınar.",
-        "Döngü bitince toplam sayı döndürülür: o, o, a, ı."
+        "Döngü bitince toplam yazdırılır: o, o, a, ı."
       ],
       "sources": [
         {
@@ -214,13 +214,13 @@
         "while döngüsünde continue'dan önce sayacı güncellememek; döngü aynı değerde takılır.",
         "pass'in turu atladığını sanmak; o iş continue'nundur."
       ],
-      "realCode": "def first_error(lines):\n    for line in lines:\n        if not line.strip():\n            continue\n        if line.startswith(\"ERROR\"):\n            return line\n    return None\n\nprint(first_error([\"\", \"INFO başladı\", \"ERROR disk dolu\", \"ERROR ağ\"]))",
+      "realCode": "lines = [\"\", \"INFO başladı\", \"ERROR disk dolu\", \"ERROR ağ\"]\nfirst_error = None\nfor line in lines:\n    if not line.strip():\n        continue\n    if line.startswith(\"ERROR\"):\n        first_error = line\n        break\nprint(first_error)",
       "realOutput": "ERROR disk dolu",
       "lineByLine": [
-        "Fonksiyon bir satır listesi alır (köşeli parantezli liste; ayrıntısı M4'te).",
+        "Satırlar köşeli parantezli bir listede durur (ayrıntısı M4'te); sonuç başlangıçta None'dır.",
         "Boş satırlar continue ile atlanır.",
-        "ERROR ile başlayan ilk satır bulununca return hem döngüyü hem fonksiyonu bitirir; break gerekmez.",
-        "Hiç hata satırı yoksa döngü biter ve None döner."
+        "ERROR ile başlayan ilk satır kaydedilir ve break döngüyü bitirir; sonraki hata satırına bakılmaz.",
+        "Hiç hata satırı olmasaydı first_error None kalırdı."
       ],
       "sources": [
         {
@@ -248,20 +248,20 @@
       "why": "2'den 6'ya kadar hiçbir sayı 49'u tam bölmez, bu yüzden break hiç çalışmaz. Döngü normal biter ve else bloğu \"Bölen yok\" yazar. 7, range(2, 7) içinde olmadığı için denenmez.",
       "alternatives": [
         "Bir bayrak değişkeniyle (found = False) aynı mantık daha uzun ama daha tanıdık biçimde yazılabilir.",
-        "Ekibin çoğu bu yapıyı tanımıyorsa fonksiyon içinden erken return daha okunur olabilir."
+        "Ekibin çoğu bu yapıyı tanımıyorsa bayrak değişkeni daha okunur olabilir; fonksiyonları öğrenince (M6) erken return da bir seçenek olacak."
       ],
       "traps": [
         "Döngü else'ini \"döngü hiç dönmezse\" veya \"koşul yanlışsa\" sanmak.",
         "else'i içerideki if'e ait sanmak; girintisi for ile aynı hizadaysa döngüye aittir.",
-        "Döngüden return ile çıkıldığında da else'in çalışmadığını unutmak."
+        "break ile çıkıldığında else'in çalışmadığını unutmak (ileride fonksiyon içinden return ile çıkmak da aynı etkiyi yapar)."
       ],
-      "realCode": "def is_prime(n):\n    if n < 2:\n        return False\n    for divisor in range(2, n):\n        if n % divisor == 0:\n            break\n    else:\n        return True\n    return False\n\nprint(is_prime(13), is_prime(15))",
-      "realOutput": "True False",
+      "realCode": "n = 15\nif n < 2:\n    print(n, \"asal değil\")\nelse:\n    for divisor in range(2, n):\n        if n % divisor == 0:\n            print(n, \"asal değil:\", divisor, \"ile bölünür\")\n            break\n    else:\n        print(n, \"asal\")",
+      "realOutput": "15 asal değil: 3 ile bölünür",
       "lineByLine": [
-        "2'den küçük sayılar asal değildir.",
+        "2'den küçük sayılar asal değildir; bu durum döngüden önce ayrılır.",
         "2'den n - 1'e kadar her bölen denenir.",
-        "Bölen bulunursa break döngüyü keser; else atlanır ve son satırdaki return False çalışır.",
-        "Hiç bölen yoksa döngü normal biter, else çalışır ve True döner."
+        "15'i 3 böldüğü için mesaj yazılır ve break döngüyü keser; döngünün else bloğu atlanır.",
+        "n = 13 olsaydı hiç bölen bulunmaz, döngü normal biter ve else '13 asal' yazardı."
       ],
       "sources": [
         {
@@ -296,10 +296,10 @@
         "zip'in kısa diziyi None ile doldurduğunu sanmak; fazlalığı atar.",
         "for name, rank yazıp sırayı karıştırmak; enumerate önce sayıyı verir."
       ],
-      "realCode": "def report(headers, values):\n    for position, (header, value) in enumerate(zip(headers, values), start=1):\n        print(f\"{position}. {header} = {value}\")\n\nreport([\"ad\", \"şehir\"], [\"Ada\", \"İzmir\"])",
+      "realCode": "headers = [\"ad\", \"şehir\"]\nvalues = [\"Ada\", \"İzmir\"]\nfor position, (header, value) in enumerate(zip(headers, values), start=1):\n    print(f\"{position}. {header} = {value}\")",
       "realOutput": "1. ad = Ada\n2. şehir = İzmir",
       "lineByLine": [
-        "Başlıklar ve değerler iki ayrı liste olarak gelir.",
+        "Başlıklar ve değerler iki ayrı listede durur.",
         "zip her başlığı kendi değeriyle eşleştirir.",
         "enumerate bu ikililere 1'den başlayan sıra numarası ekler; (header, value) ikiliyi açar.",
         "Her satır numara, başlık ve değerle yazdırılır."
@@ -338,13 +338,13 @@
         "Satır biriktiricisini dış döngünün dışında başlatıp satırları birbirine eklemek.",
         "Tur sayısını toplamla (3 + 4) hesaplamak; doğrusu çarpımdır (3 × 4)."
       ],
-      "realCode": "def find_pair(numbers, target):\n    for i in range(len(numbers)):\n        for j in range(i + 1, len(numbers)):\n            if numbers[i] + numbers[j] == target:\n                return i, j\n    return None\n\nprint(find_pair([3, 8, 5, 2], 7))",
+      "realCode": "numbers = [3, 8, 5, 2]\ntarget = 7\npair = None\nfor i in range(len(numbers)):\n    for j in range(i + 1, len(numbers)):\n        if pair is None and numbers[i] + numbers[j] == target:\n            pair = (i, j)\nprint(pair)",
       "realOutput": "(2, 3)",
       "lineByLine": [
         "Dış döngü her indeksi sırayla seçer.",
         "İç döngü i'den sonraki indekslerden başlar; aynı çift iki kez denenmez.",
-        "Toplam hedefe eşitse indeks ikilisi hemen döndürülür: 5 + 2 = 7.",
-        "Hiç çift yoksa None döner; bu yöntem yaklaşık n² karşılaştırma yapar."
+        "Toplamı hedefe eşit ilk çift kaydedilir: 5 + 2 = 7. break yalnızca iç döngüyü bitireceği için ilk çift pair is None denetimiyle korunur.",
+        "Hiç çift olmasaydı pair None kalırdı; bu yöntem yaklaşık n² karşılaştırma yapar."
       ],
       "sources": [
         {

@@ -3,7 +3,7 @@
   "slug": "veri-yapilari",
   "title": "Veri yapıları",
   "description": "Liste, tuple, küme ve sözlükle veriyi tut, iç içe yapıları oku ve istediğin ölçüte göre sırala.",
-  "contentVersion": 2,
+  "contentVersion": 3,
   "estimatedMinutes": 120,
   "practiceIds": [
     "m4-q01",
@@ -49,11 +49,11 @@
         "Boş listede items[0] kullanıp IndexError almak.",
         "len(items) değerini son indeks sanmak; son indeks len(items) - 1'dir."
       ],
-      "realCode": "def latest(events, count):\n    if count <= 0:\n        return []\n    return events[-count:]\n\nprint(latest([\"giriş\", \"arama\", \"sepet\", \"ödeme\"], 2))",
-      "realOutput": "['sepet', 'ödeme']",
+      "realCode": "events = [\"giriş\", \"arama\", \"sepet\", \"ödeme\"]\ncount = 2\nlatest = events[-count:] if count > 0 else []\nprint(latest)\nprint(events)",
+      "realOutput": "['sepet', 'ödeme']\n['giriş', 'arama', 'sepet', 'ödeme']",
       "lineByLine": [
-        "Fonksiyon olay listesini ve istenen öğe sayısını alır.",
-        "count 0 iken events[-0:] bütün listeyi verirdi; bu yüzden ayrıca ele alınır.",
+        "Olay listesi ve istenen öğe sayısı hazırlanır.",
+        "count 0 olsaydı events[-0:] bütün listeyi verirdi; bu yüzden koşullu ifadeyle ayrıca ele alınır.",
         "Negatif başlangıçlı dilim son count öğeyi alır.",
         "Orijinal liste değişmez; dilim yeni bir liste üretir."
       ],
@@ -90,7 +90,7 @@
         "append ile extend'i karıştırıp istemeden iç içe liste oluşturmak.",
         "remove'un bütün eşleşmeleri sildiğini sanmak; yalnızca ilkini siler."
       ],
-      "realCode": "def parse_numbers(line):\n    numbers = []\n    for part in line.split():\n        numbers.append(int(part))\n    return numbers\n\nprint(parse_numbers(\"4 15 8\"))",
+      "realCode": "line = \"4 15 8\"\nnumbers = []\nfor part in line.split():\n    numbers.append(int(part))\nprint(numbers)",
       "realOutput": "[4, 15, 8]",
       "lineByLine": [
         "Boş bir liste biriktirici olarak başlatılır.",
@@ -118,9 +118,9 @@
         "lists"
       ],
       "summary": "Tuple parantezle (veya yalnızca virgülle) yazılan, sıralı ama değiştirilemez bir koleksiyondur. Tuple'ı tuple yapan virgüldür.",
-      "explanation": "point = (3, 4) iki elemanlı bir tuple'dır; point[0] = 5 TypeError üretir. Tek elemanlı tuple için virgül şarttır: (5,) bir tuple, (5) ise yalnızca parantez içindeki 5 sayısıdır. return a, b yazan bir fonksiyon aslında tek bir tuple döndürür; x, y = point ile parçalar isimlere açılır (unpacking; ayrıntısı M5'te). Değişmediği için tuple sözlük anahtarı veya küme öğesi olabilir; liste olamaz.",
-      "code": "point = (3, 4)\nx, y = point\nprint(x + y)\nsingle = (5,)\nnot_tuple = (5)\nprint(type(single).__name__, type(not_tuple).__name__)",
-      "expectedOutput": "7\ntuple int",
+      "explanation": "point = (3, 4) iki elemanlı bir tuple'dır; point[0] = 5 TypeError üretir. Tek elemanlı tuple için virgül şarttır: (5,) bir tuple, (5) ise yalnızca parantez içindeki 5 sayısıdır. x, y = point ile parçalar isimlere açılır (unpacking; ayrıntısı M5'te). İleride (M6) bir fonksiyondan birden çok değer döndürürken de aslında tek bir tuple döndürülür. Değişmediği için tuple sözlük anahtarı veya küme öğesi olabilir; liste olamaz.",
+      "code": "point = (3, 4)\nx, y = point\nprint(x + y)\nsingle = (5,)\nnot_tuple = (5)\nprint(type(single), type(not_tuple))",
+      "expectedOutput": "7\n<class 'tuple'> <class 'int'>",
       "why": "x, y = point tuple'ın iki elemanını sırayla x ve y'ye bağlar. (5,) içindeki virgül tuple oluşturur; (5) yalnızca gruplama parantezidir ve int kalır.",
       "alternatives": [
         "Alanlara isimle erişmek gerekiyorsa namedtuple (M10) veya dataclass (M12) daha okunur olur.",
@@ -131,13 +131,13 @@
         "Tuple'ın değişmezliğini içindeki listeye de genellemek; (1, [2]) içindeki liste yine değiştirilebilir.",
         "Açma sırasında isim sayısını eleman sayısından farklı yazıp ValueError almak."
       ],
-      "realCode": "def min_max(values):\n    low = values[0]\n    high = values[0]\n    for value in values:\n        if value < low:\n            low = value\n        if value > high:\n            high = value\n    return low, high\n\nsmallest, largest = min_max([7, 2, 9, 4])\nprint(smallest, largest)",
+      "realCode": "values = [7, 2, 9, 4]\nlow = values[0]\nhigh = values[0]\nfor value in values:\n    if value < low:\n        low = value\n    if value > high:\n        high = value\nresult = (low, high)\nsmallest, largest = result\nprint(smallest, largest)",
       "realOutput": "2 9",
       "lineByLine": [
         "İlk eleman hem en küçük hem en büyük aday olarak alınır.",
         "Her değer iki adayla ayrı ayrı karşılaştırılır.",
-        "return low, high iki değeri tek bir tuple olarak döndürür.",
-        "Çağıran taraf tuple'ı iki isme açar."
+        "İki sonuç tek bir tuple içinde paketlenir.",
+        "Tuple iki isme açılır (unpacking); fonksiyonlar birden çok değeri de böyle döndürür (M6)."
       ],
       "sources": [
         {
@@ -172,7 +172,7 @@
         "Kümenin yazdırma sırasına güvenmek.",
         "set(\"hello\") çağrısının kelimeyi değil harfleri kümelediğini unutmak."
       ],
-      "realCode": "def unique_visitors(log_lines):\n    seen = set()\n    for line in log_lines:\n        user = line.split()[0]\n        seen.add(user)\n    return len(seen)\n\nprint(unique_visitors([\"ada /home\", \"can /cart\", \"ada /pay\"]))",
+      "realCode": "log_lines = [\"ada /home\", \"can /cart\", \"ada /pay\"]\nseen = set()\nfor line in log_lines:\n    user = line.split()[0]\n    seen.add(user)\nprint(len(seen))",
       "realOutput": "2",
       "lineByLine": [
         "Boş küme set() ile oluşturulur.",
@@ -214,13 +214,13 @@
         "in operatörünün değerlerde aradığını sanmak.",
         "Liste gibi değiştirilebilir bir değeri anahtar yapmaya çalışmak; TypeError verir."
       ],
-      "realCode": "DEFAULTS = {\"theme\": \"light\", \"page_size\": 20}\n\ndef load_settings(user_settings):\n    settings = DEFAULTS.copy()\n    settings.update(user_settings)\n    return settings\n\nprint(load_settings({\"theme\": \"dark\"}))",
-      "realOutput": "{'theme': 'dark', 'page_size': 20}",
+      "realCode": "DEFAULTS = {\"theme\": \"light\", \"page_size\": 20}\nuser_settings = {\"theme\": \"dark\"}\nsettings = DEFAULTS.copy()\nsettings.update(user_settings)\nprint(settings)\nprint(DEFAULTS)",
+      "realOutput": "{'theme': 'dark', 'page_size': 20}\n{'theme': 'light', 'page_size': 20}",
       "lineByLine": [
         "Varsayılan ayarlar büyük harfli sabit bir sözlükte tutulur.",
         "copy() varsayılanlar değişmesin diye ayrı bir sözlük üretir.",
-        "update, kullanıcının verdiği anahtarları üzerine yazar.",
-        "Kullanıcının vermediği page_size varsayılan değerinde kalır."
+        "update, kullanıcının verdiği anahtarları üzerine yazar; vermediği page_size varsayılanda kalır.",
+        "DEFAULTS değişmeden kalır; copy() olmasaydı update onu da değiştirirdi."
       ],
       "sources": [
         {
@@ -256,10 +256,10 @@
         "Gezme sırasında sözlüğe anahtar eklemek veya silmek.",
         "counts[word] += 1 yazıp ilk görülen kelimede KeyError almak."
       ],
-      "realCode": "def group_by_status(orders):\n    groups = {}\n    for order_id, status in orders.items():\n        groups.setdefault(status, []).append(order_id)\n    return groups\n\nprint(group_by_status({\"A1\": \"kargoda\", \"A2\": \"hazır\", \"A3\": \"kargoda\"}))",
+      "realCode": "orders = {\"A1\": \"kargoda\", \"A2\": \"hazır\", \"A3\": \"kargoda\"}\ngroups = {}\nfor order_id, status in orders.items():\n    groups.setdefault(status, []).append(order_id)\nprint(groups)",
       "realOutput": "{'kargoda': ['A1', 'A3'], 'hazır': ['A2']}",
       "lineByLine": [
-        "Sipariş kimliğinden duruma giden bir sözlük gelir.",
+        "Sipariş kimliğinden duruma giden bir sözlük hazırlanır.",
         "items() her siparişin kimliğini ve durumunu birlikte verir.",
         "setdefault, durum ilk kez görülüyorsa boş liste ekler ve o listeyi döndürür; append kimliği ekler.",
         "Sonuç, durumdan sipariş listesine bir gruplamadır."
@@ -475,15 +475,15 @@
       "sectionId": "tuples",
       "difficulty": 2,
       "prompt": "Parantez ve virgül farkı neyi değiştirir?",
-      "code": "x = (7)\ny = (7,)\nprint(type(x).__name__, len(y))",
+      "code": "x = (7)\ny = (7,)\nprint(type(x), len(y))",
       "options": [
-        "int 1",
-        "tuple 1",
-        "int 7",
-        "tuple 7"
+        "<class 'int'> 1",
+        "<class 'tuple'> 1",
+        "<class 'int'> 7",
+        "<class 'tuple'> 7"
       ],
-      "answer": "int 1",
-      "expectedOutput": "int 1",
+      "answer": "<class 'int'> 1",
+      "expectedOutput": "<class 'int'> 1",
       "hints": [
         "Tuple'ı virgül oluşturur.",
         "(7) yalnızca gruplama parantezidir."

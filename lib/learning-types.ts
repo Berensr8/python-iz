@@ -19,6 +19,8 @@ export type LessonSection = {
   sources?: { title: string; url: string }[];
   runtime?: "browser" | "mixed";
   runtimeNote?: string;
+  /** Code that cannot run in the browser (threads, processes); verified with CPython by `npm run verify:local`. */
+  localExample?: { code: string; output: string; note: string };
   depth?: "temel" | "okuma";
   summary: string;
   explanation: string;

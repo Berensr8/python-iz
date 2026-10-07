@@ -3,54 +3,9 @@
 Order: 12 output, 6 bug, 4 fill, 4 order, 10 code, 4 traceback (ids m11-q01 ... m11-q40).
 """
 
-questions = []
+from _qhelper import make_questions
 
-
-def c(text):
-    return text.strip("\n")
-
-
-def flat(text):
-    """Multi-line output as one option line (options are single-line buttons)."""
-    return " / ".join(text.split("\n"))
-
-
-def q(**fields):
-    for key in ("code", "expectedOutput", "answer", "solutionCode", "starterCode"):
-        if key in fields and isinstance(fields[key], str):
-            fields[key] = c(fields[key])
-    kind = fields["type"]
-    if "tests" in fields:
-        for test in fields["tests"]:
-            test["expectedOutput"] = c(test["expectedOutput"])
-    if kind == "output":
-        # The right option is the real output, so the answer can never drift from what the code prints.
-        fields["answer"] = flat(fields["expectedOutput"])
-    if kind == "fill":
-        fields["acceptedAnswers"] = fields.get("acceptedAnswers", [fields["answer"]])
-        fields["solutionCode"] = fields["code"].replace("___", fields["answer"], 1)
-    if kind == "order":
-        lines = fields.pop("answer_lines")
-        perm = fields.pop("perm")
-        fields["answer"] = "\n".join(lines)
-        fields["lines"] = [lines[i] for i in perm]
-        assert fields["lines"] != lines and sorted(fields["lines"]) == sorted(lines)
-    if kind in ("code", "order") and "solutionCode" not in fields:
-        fields["solutionCode"] = fields["answer"]
-    if kind in ("bug", "traceback"):
-        if kind == "traceback":
-            fields["answer"] = fields["expectedError"]
-    if fields.get("options"):
-        options = list(fields["options"])
-        assert fields["answer"] in options, (len(questions) + 1, "answer not in options")
-        assert len(set(options)) == len(options), (len(questions) + 1, "duplicate options")
-        shift = len(questions) % len(options)
-        fields["options"] = options[-shift:] + options[:-shift] if shift else options
-    if fields.get("optionFeedback"):
-        wrong = {option for option in fields["options"] if option != fields["answer"]}
-        assert set(fields["optionFeedback"]) == wrong, (len(questions) + 1, "optionFeedback keys")
-    fields = {"id": f"m11-q{len(questions) + 1:02d}", **fields}
-    questions.append(fields)
+questions, q = make_questions("m11")
 
 
 # ------------------------------------------------------------------ output (12)

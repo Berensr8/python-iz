@@ -1,0 +1,1504 @@
+{
+  "id": 12,
+  "slug": "oop-2",
+  "title": "OOP 2",
+  "description": "Polimorfizm ve soyut sınıflarla arayüz kur, dunder metotlarla nesnelerini Python'un yerleşik davranışlarına bağla, MRO'yu oku, dataclass ve slots ile veri sınıfları yaz; descriptor ve metaclass'ı tanı.",
+  "contentVersion": 1,
+  "estimatedMinutes": 160,
+  "practiceIds": [
+    "m12-q02",
+    "m12-q03",
+    "m12-q05",
+    "m12-q07",
+    "m12-q09",
+    "m12-q10",
+    "m12-q12",
+    "m12-q14",
+    "m12-q15",
+    "m12-q18",
+    "m12-q22",
+    "m12-q26",
+    "m12-q28",
+    "m12-q33",
+    "m12-q36"
+  ],
+  "sections": [
+    {
+      "id": "polymorphism",
+      "title": "Polimorfizm ve duck typing",
+      "eyebrow": "Aynı çağrı, farklı nesne",
+      "objectives": [
+        "Aynı metot adını farklı sınıflarda uygulayıp ortak kodun hepsiyle çalıştığını gösterir.",
+        "Kalıtımla polimorfizmi (override) ve ortak üst sınıf gerektirmeyen duck typing'i ayırır; isinstance zincirleri yerine polimorfizmi seçer."
+      ],
+      "prerequisites": [
+        "m11:inheritance-super",
+        "m11:composition"
+      ],
+      "summary": "Polimorfizm, aynı çağrının (shape.area()) nesnenin sınıfına göre farklı iş yapmasıdır. Python'da çağıran kod yalnızca nesnenin ilgili metoda sahip olup olmadığına bakar; ortak bir üst sınıf şart değildir (duck typing).",
+      "explanation": "Polimorfizm 'çok biçimlilik' demektir: çağıran kod nesnenin hangi sınıftan olduğunu bilmeden aynı metodu çağırır ve her nesne kendi işini yapar. M11'de bunun bir biçimini gördün: üst sınıftaki self.role() çağrısı alt sınıfın sürümünü çalıştırıyordu. Python'da bunun için ortak üst sınıf gerekmez. for shape in shapes: shape.area() satırı, area metodu olan her nesneyle çalışır; buna duck typing denir ('ördek gibi yürüyor ve ötüyorsa ördektir'). len() de böyledir: list, str ve dict'in ortak bir sınıfı yoktur ama hepsi len ile çalışır. Alternatif, çağıran tarafta tür sormaktır: if isinstance(shape, Square): ... elif isinstance(shape, Rectangle): .... Bu zincir her yeni tür eklendiğinde bütün çağıran yerlerin değişmesini ister. Polimorfizmde yeni bir sınıf yazarsın ve mevcut çağıran kodun hiçbir satırı değişmez. Bedeli: arayüz dilde yazılı olmadığı için eksik bir metot ancak çalışma anında AttributeError olarak ortaya çıkar. Arayüzü açıkça belirtip hatayı erkene çekmek için sonraki bölümdeki abc (ve M14'teki Protocol) kullanılır. Python'da önce çalıştırmayı deneyip hatayı yakalama tarzına (EAFP) uygun olarak, tür sormak yerine metodu çağırmak çoğu zaman en sade çözümdür.",
+      "code": "class Square:\n    def __init__(self, side):\n        self.side = side\n\n    def area(self):\n        return self.side ** 2\n\nclass Rectangle:\n    def __init__(self, width, height):\n        self.width, self.height = width, height\n\n    def area(self):\n        return self.width * self.height\n\nclass Triangle:\n    def __init__(self, base, height):\n        self.base, self.height = base, height\n\n    def area(self):\n        return self.base * self.height / 2\n\nshapes = [Square(3), Rectangle(2, 5), Triangle(4, 5)]\nfor shape in shapes:\n    print(type(shape).__name__, shape.area())\nprint(sum(shape.area() for shape in shapes))\nprint(len(\"abc\"), len([1, 2]), len({\"a\": 1}))\n\nclass Robot:\n    pass\n\ntry:\n    Robot().area()\nexcept AttributeError:\n    print(\"Robot'ta area yok\")",
+      "expectedOutput": "Square 9\nRectangle 10\nTriangle 10.0\n29.0\n3 2 1\nRobot'ta area yok",
+      "why": "Üç sınıfın ortak bir üst sınıfı yok; hepsi area metodunu sunduğu için aynı döngüde kullanıldı. sum de aynı arayüzden yararlandı. Robot area sunmadığı için çağrı çalışma anında AttributeError verdi: duck typing arayüzü denetlemez, yalnızca kullanır.",
+      "alternatives": [
+        "Ortak davranışı ve zorunlu metotları belirtmek istiyorsan ortak bir soyut üst sınıf yaz (sonraki bölüm).",
+        "Tür bazlı farklı davranışı bir sözlükle (tür → işlev) ya da metot olarak sınıfa koymak, isinstance zincirinden daha kolay genişler."
+      ],
+      "traps": [
+        "Her yeni türde isinstance zincirine yeni bir elif eklemek; polimorfizm bu zinciri gereksiz kılar.",
+        "Arayüzü yarım uygulayan bir sınıfı listeye koymak: hata ancak o nesneye sıra geldiğinde, çalışma anında çıkar.",
+        "Metot adını farklı yazmak (area / surface): duck typing adlara bakar, anlama değil.",
+        "Polimorfizm için kalıtımın şart olduğunu sanmak; Python'da gerekmez."
+      ],
+      "realCode": "import json\n\nclass JsonExporter:\n    def export(self, rows):\n        return json.dumps(rows, ensure_ascii=False)\n\nclass CsvExporter:\n    def export(self, rows):\n        header = \",\".join(rows[0])\n        lines = [\",\".join(str(value) for value in row.values()) for row in rows]\n        return \"\\n\".join([header, *lines])\n\ndef save(exporter, rows):\n    return exporter.export(rows)\n\nrows = [{\"ad\": \"Ada\", \"puan\": 90}, {\"ad\": \"Can\", \"puan\": 75}]\nfor exporter in (JsonExporter(), CsvExporter()):\n    print(save(exporter, rows))",
+      "realOutput": "[{\"ad\": \"Ada\", \"puan\": 90}, {\"ad\": \"Can\", \"puan\": 75}]\nad,puan\nAda,90\nCan,75",
+      "lineByLine": [
+        "İki dışa aktarıcı sınıf aynı export metodunu sunar; ortak üst sınıfları yoktur.",
+        "save fonksiyonu hangi dışa aktarıcıyı aldığını bilmez, yalnızca export çağırır.",
+        "Yeni bir biçim (XML gibi) eklemek yalnızca yeni bir sınıf yazmaktır; save değişmez.",
+        "Döngü aynı rows verisini iki farklı biçimde yazdırır."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Sınıflar (duck typing ve çok biçimlilik)",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html"
+        },
+        {
+          "title": "Python sözlüğü · duck-typing",
+          "url": "https://docs.python.org/3.12/glossary.html#term-duck-typing"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "abc",
+      "title": "Soyut sınıflar (abc)",
+      "eyebrow": "Alt sınıflara sözleşme dayat",
+      "objectives": [
+        "ABC ve @abstractmethod ile alt sınıfların uygulaması gereken metotları belirler.",
+        "Soyut sınıfın ve soyut metodu eksik bırakan alt sınıfın örneklenemediğini (TypeError) gösterir; soyut sınıfta somut ortak metotla soyut metodu birlikte kullanır."
+      ],
+      "prerequisites": [
+        "polymorphism",
+        "m11:inheritance-super"
+      ],
+      "summary": "class Report(ABC) içindeki @abstractmethod ile işaretlenen metotlar alt sınıflarda yazılmak zorundadır. Eksik bırakan alt sınıf, nesne kurulurken TypeError verir; hata çalışma anının ortasına kadar beklemez.",
+      "explanation": "abc modülü (Abstract Base Classes) arayüzü açıkça yazmanı sağlar. class Report(ABC): ile soyut bir sınıf tanımlar, uygulanması şart metotları @abstractmethod ile işaretlersin. Soyut metotları olan sınıftan doğrudan nesne üretilemez, soyut metodunu yazmayan alt sınıftan da üretilemez: Report() ve BrokenReport() çağrıları TypeError verir. Duck typing'in geç gelen AttributeError'ına karşı bu hata erkendir: nesne kurulurken, yani eksik metoda hiç sıra gelmeden. Hangi metotların eksik olduğunu SınıfAdı.__abstractmethods__ gösterir. Soyut sınıf yalnızca zorunluluk koymaz, ortak davranışı da taşır: somut render() metodu soyut rows()'u çağırır, alt sınıf yalnızca rows()'u yazar. Bu şablon metot (template method) kalıbıdır. abc yalnızca metodun adının var olduğunu denetler; imzayı, dönüş türünü ya da doğru çalıştığını denetlemez. Her arayüz için abc şart değildir: küçük, tek dosyalık kodda duck typing yeter. Eklenti sistemleri, çok sayıda alt sınıfı olan çerçeveler ve kütüphane sınıfları için sözleşmeyi açık yazmak değerlidir. Tip ipuçlarıyla yapısal arayüz tanımlamak (Protocol) M14'te gelecek.",
+      "code": "from abc import ABC, abstractmethod\n\nclass Report(ABC):\n    @abstractmethod\n    def rows(self):\n        ...\n\n    def render(self):\n        lines = [f\"- {row}\" for row in self.rows()]\n        return \"\\n\".join(lines) or \"(boş)\"\n\nclass SalesReport(Report):\n    def rows(self):\n        return [\"elma: 5\", \"armut: 3\"]\n\nclass BrokenReport(Report):\n    pass\n\nprint(SalesReport().render())\nfor cls in (Report, BrokenReport):\n    try:\n        cls()\n    except TypeError:\n        print(cls.__name__, \"örneklenemez\")\nprint(isinstance(SalesReport(), Report), issubclass(BrokenReport, Report))\nprint(sorted(Report.__abstractmethods__))",
+      "expectedOutput": "- elma: 5\n- armut: 3\nReport örneklenemez\nBrokenReport örneklenemez\nTrue True\n['rows']",
+      "why": "SalesReport soyut rows metodunu yazdığı için nesnesi kurulabildi ve ortak render metodunu kullandı. Report soyut olduğu, BrokenReport ise rows'u yazmadığı için ikisi de kurulurken TypeError verdi. BrokenReport yine de Report'un alt sınıfıdır (True); örneklenemez olması soyut kalmasından gelir.",
+      "alternatives": [
+        "Sözleşme küçük ve tek yerdeyse duck typing ile başla; yanlış kullanım görüldükçe soyut sınıfa geç.",
+        "Yalnızca davranış paylaşımı istiyorsan ve zorunluluk gerekmiyorsa soyut metotsuz normal bir üst sınıf yeterlidir."
+      ],
+      "traps": [
+        "Soyut metodu alt sınıfta başka bir adla yazmak (send / send_message): sınıf soyut kalır ve örneklenemez.",
+        "ABC'den türetmeyi unutup yalnızca @abstractmethod kullanmak: denetim çalışmaz.",
+        "abc'nin imzayı ya da dönüş değerini denetlediğini sanmak; yalnızca adın varlığına bakar.",
+        "Her küçük sınıf için soyut üst sınıf yazıp kodu gereksiz karmaşıklaştırmak."
+      ],
+      "realCode": "from abc import ABC, abstractmethod\n\nclass Validator(ABC):\n    @abstractmethod\n    def check(self, value):\n        ...\n\n    def validate(self, values):\n        return [value for value in values if not self.check(value)]\n\nclass Positive(Validator):\n    def check(self, value):\n        return value > 0\n\nclass Even(Validator):\n    def check(self, value):\n        return value % 2 == 0\n\nfor validator in (Positive(), Even()):\n    print(type(validator).__name__, validator.validate([-2, 3, 4]))",
+      "realOutput": "Positive [-2]\nEven [3]",
+      "lineByLine": [
+        "Validator sözleşmeyi koyar: her doğrulayıcı check yazmak zorundadır.",
+        "validate ortak somut metottur; check'i çağırıp kuralı geçemeyen değerleri toplar.",
+        "Positive ve Even yalnızca check'i yazar; liste süzme kodu bir kez yazılmıştır.",
+        "Aynı validate çağrısı, doğrulayıcıya göre farklı sonuç verir (polimorfizm)."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · abc modülü",
+          "url": "https://docs.python.org/3.12/library/abc.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "dunder-basics",
+      "title": "Dunder metotlar ve veri modeli",
+      "eyebrow": "Python yerleşik işlevleri nesnene bağlar",
+      "objectives": [
+        "len(), bool(), in, [] ve () gibi işlevlerin ve sözdiziminin arkasında özel metotlar (__len__, __bool__, __contains__, __getitem__, __call__) olduğunu açıklar ve kendi sınıfında uygular.",
+        "__eq__ tanımlanınca __hash__'in None olduğunu bilir; desteklenmeyen türde NotImplemented döndürmenin amacını açıklar."
+      ],
+      "prerequisites": [
+        "m11:methods-state"
+      ],
+      "summary": "Adı iki alt çizgiyle başlayıp biten (dunder) metotları sen çağırmazsın; Python çağırır. len(x) x.__len__()'i, x[i] x.__getitem__(i)'yi, a == b a.__eq__(b)'yi çalıştırır. Bunları yazarak nesneni yerleşik türler gibi kullanılır yaparsın.",
+      "explanation": "Dunder ('double underscore') metotlar Python'un veri modelidir: dil, belirli sözdizimini ve yerleşik işlevleri nesnenin özel metotlarına bağlar. __init__, __repr__ ve __str__'i M11'de gördün. Bu bölümde: len(x) için __len__, x[i] için __getitem__, 'a' in x için __contains__, x(...) için __call__, bool(x) ve if x: için __bool__ ve a == b için __eq__. Bu metotları doğrudan çağırma (x.__len__() yerine len(x) yaz); onlar Python'un çağırması içindir. Kendi dunder adını da uydurma: çift alt çizgili adlar dile ayrılmıştır. Doğruluk değeri sırası: __bool__ varsa o, yoksa __len__ (0 ise yanlış), ikisi de yoksa nesne her zaman doğrudur. Bu yüzden len'i olan bir sınıfta boş nesne if nesne: koşulunda yanlış sayılır. __getitem__ yazarsan sınıf indekslemeyi ve eski bir kural gereği for döngüsü ile list() dönüşümünü de kazanır (IndexError gelene kadar 0, 1, 2... dener); iterator protokolünün doğru yolunu M13'te göreceksin. Varsayılan == nesnenin kimliğine bakar. __eq__ yazarak değere göre eşitlik tanımlarsın. Dikkat: __eq__ tanımlı ve __hash__ yazılmamış bir sınıfta Python __hash__'i None yapar; nesne artık set öğesi ya da sözlük anahtarı olamaz (eşit nesneler aynı hash'i vermeli, değiştirilebilir nesne için güvenli hash yazmak zordur). Tanımadığı türle karşılaşan __eq__ ve işleç metotları NotImplemented döndürmelidir: Python bunun üzerine karşı tarafı dener, ikisi de reddederse == için kimlik karşılaştırmasına düşer, aritmetik işleçlerde TypeError verir.",
+      "code": "class Playlist:\n    def __init__(self, name, songs):\n        self.name = name\n        self._songs = list(songs)\n\n    def __len__(self):\n        return len(self._songs)\n\n    def __getitem__(self, index):\n        return self._songs[index]\n\n    def __contains__(self, song):\n        return song.lower() in (s.lower() for s in self._songs)\n\n    def __call__(self, index):\n        return f\"{self.name}: {self._songs[index]}\"\n\n    def __eq__(self, other):\n        if not isinstance(other, Playlist):\n            return NotImplemented\n        return self.name == other.name and self._songs == other._songs\n\nmix = Playlist(\"Yol\", [\"Ezgi\", \"Rüzgar\", \"Deniz\"])\nprint(len(mix), mix[0], mix[-1])\nprint(\"rüzgar\" in mix, \"Dağ\" in mix)\nprint(list(mix))\nprint(mix(1))\nprint(bool(Playlist(\"Boş\", [])), bool(mix))\nprint(mix == Playlist(\"Yol\", [\"Ezgi\", \"Rüzgar\", \"Deniz\"]), mix == \"Yol\")\nprint(Playlist.__hash__)",
+      "expectedOutput": "3 Ezgi Deniz\nTrue False\n['Ezgi', 'Rüzgar', 'Deniz']\nYol: Rüzgar\nFalse True\nTrue False\nNone",
+      "why": "Tek tek dunder'lar tek tek yerleşik davranışa bağlandı: len, indeks, in, çağırma, doğruluk (boş çalma listesi __len__ 0 olduğu için False) ve ==. __getitem__ sayesinde list(mix) de çalıştı. mix == 'Yol' karşılaştırmasında __eq__ NotImplemented döndürdü, str de reddetti ve sonuç False oldu. Son satır, __eq__ yazıldığı için __hash__'in None olduğunu gösterir.",
+      "alternatives": [
+        "Yalnızca listeye benzeyen bir kap yazıyorsan listeden türemek yerine list'i içeride tutup bu dunder'ları yazmak (composition) arayüzü senin elinde bırakır.",
+        "Bir kapsayıcıyı tam bir koleksiyon yapmak istiyorsan collections.abc sınıfları (Sequence, Mapping) eksik dunder'ları tamamlar."
+      ],
+      "traps": [
+        "__eq__ yazıp nesneyi set ya da sözlük anahtarı olarak kullanmaya çalışmak (TypeError: unhashable type).",
+        "Dunder metotları doğrudan çağırmak (x.__len__()) ya da kendi çift alt çizgili adını uydurmak.",
+        "__eq__ içinde other'ın türünü denetlemeyip başka türle karşılaştırınca AttributeError almak; NotImplemented döndür.",
+        "__len__ yazıp boş nesnenin if koşulunda yanlış sayıldığını unutmak."
+      ],
+      "realCode": "class Settings:\n    def __init__(self, **values):\n        self._values = values\n\n    def __getitem__(self, key):\n        return self._values[key]\n\n    def __contains__(self, key):\n        return key in self._values\n\n    def __len__(self):\n        return len(self._values)\n\nsettings = Settings(debug=True, port=8000)\nprint(settings[\"port\"], \"debug\" in settings, \"host\" in settings, len(settings))\ntry:\n    settings[\"host\"]\nexcept KeyError as error:\n    print(\"KeyError:\", error)",
+      "realOutput": "8000 True False 2\nKeyError: 'host'",
+      "lineByLine": [
+        "Settings, sözlüğü içeride saklar ve yalnızca gereken dunder'ları dışarı açar.",
+        "settings['port'] __getitem__'e, 'debug' in settings __contains__'e, len(settings) __len__'e gider.",
+        "Olmayan anahtarda iç sözlüğün KeyError'ı olduğu gibi yükselir; çağıran bunu sözlükteki gibi yakalayabilir.",
+        "Sınıf sözlükten türemediği için update ya da pop gibi istenmeyen metotlar açılmaz."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Veri modeli: özel metot adları",
+          "url": "https://docs.python.org/3.12/reference/datamodel.html#special-method-names"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "operator-overloading",
+      "title": "Operatör aşırı yükleme",
+      "eyebrow": "+, == ve < kendi nesnelerinle çalışsın",
+      "objectives": [
+        "__add__, __mul__, __eq__ ve __lt__ ile işleçleri kendi sınıfı için tanımlar; toplama gibi işleçlerin yeni nesne döndürmesi gerektiğini bilir.",
+        "Yansıyan __radd__ ile sum() kullanımını açıklar, functools.total_ordering ile karşılaştırma işleçlerini tamamlar ve desteklenmeyen türde NotImplemented döndürür."
+      ],
+      "prerequisites": [
+        "dunder-basics",
+        "m10:itertools-functools"
+      ],
+      "summary": "a + b, Python'da type(a).__add__(a, b) çağrısıdır. Metot NotImplemented döndürürse Python b.__radd__(a)'yı dener; ikisi de reddederse TypeError çıkar. İşleç metotları operandları değiştirmez, yeni nesne döndürür.",
+      "explanation": "İşleçler dunder metotlarla tanımlanır: + için __add__, - için __sub__, * için __mul__, == için __eq__, < için __lt__. Amaç, doğal bir anlamı olan türlerde (para, vektör, sürüm numarası) kodu okunur kılmaktır; Person + Person gibi anlamsız bir işleç tanımlama. a + b yazınca önce a.__add__(b) denenir. Tanımadığı bir tür görürse metot NotImplemented döndürmelidir (hata fırlatma, return NotImplemented): Python bunun üzerine sağ operandın yansıyan metodunu, yani b.__radd__(a)'yı dener. Hiçbiri çözemezse TypeError: unsupported operand çıkar. Bu yüzden sum() kendi türünde çalışır: sum başlangıç değeri olarak 0 kullanır, yani ilk adım 0 + nesne'dir. int, nesneyi tanımaz; Python nesne.__radd__(0)'ı çağırır. __radd__ içinde other == 0 ise self döndürmek sum([...]) çağrısını mümkün kılar. İşleç metotları yeni nesne döndürmeli, operandları değiştirmemeli: c = a + b yazınca a'nın değişmesi şaşırtıcıdır. += için ayrı bir __iadd__ yazılmazsa Python a = a + b yapar. Karşılaştırmada Python gerekirse yansıyanı kullanır: yalnızca __lt__ varsa a > b, b < a'ya çevrilir; ama <= ve >= için tanımlı bir yol yoktur (TypeError). Dört karşılaştırmayı elle yazmamak için __eq__ ve bir sıralama metodu yaz, sınıfa @functools.total_ordering ekle (M10'daki functools). __eq__ yazdığında __hash__'in None olacağını unutma.",
+      "code": "from functools import total_ordering\n\n@total_ordering\nclass Money:\n    def __init__(self, cents):\n        self.cents = cents\n\n    def __add__(self, other):\n        if not isinstance(other, Money):\n            return NotImplemented\n        return Money(self.cents + other.cents)\n\n    def __radd__(self, other):\n        if other == 0:\n            return self\n        return NotImplemented\n\n    def __mul__(self, factor):\n        if not isinstance(factor, int):\n            return NotImplemented\n        return Money(self.cents * factor)\n\n    def __eq__(self, other):\n        if not isinstance(other, Money):\n            return NotImplemented\n        return self.cents == other.cents\n\n    def __lt__(self, other):\n        if not isinstance(other, Money):\n            return NotImplemented\n        return self.cents < other.cents\n\n    def __repr__(self):\n        return f\"Money({self.cents // 100},{self.cents % 100:02d})\"\n\na, b = Money(250), Money(175)\nprint(a + b, a * 3)\nprint(sum([a, b, Money(5)]))\nprint(a > b, a <= b, a == Money(250))\nprint(sorted([a, b, Money(5)]))\ntry:\n    a + 10\nexcept TypeError:\n    print(\"TypeError\")",
+      "expectedOutput": "Money(4,25) Money(7,50)\nMoney(4,30)\nTrue False True\n[Money(0,05), Money(1,75), Money(2,50)]\nTypeError",
+      "why": "a + b ve a * 3 yeni Money nesneleri döndürdü; a ve b değişmedi. sum 0 + Money adımını __radd__ ile çözdü. total_ordering, __eq__ ve __lt__'dan >, <= ve >='yi türetti; sorted yalnızca __lt__ kullandı. a + 10'da __add__ NotImplemented verdi, int de reddetti ve TypeError çıktı.",
+      "alternatives": [
+        "Para gibi değerleri tam sayı kuruş ya da decimal.Decimal ile tut; float ile hesap yuvarlama hatası getirir (M1).",
+        "Yalnızca sıralama anahtarı lazımsa işleç yazmak yerine sorted(..., key=...) kullan."
+      ],
+      "traps": [
+        "__add__ içinde self'i değiştirip döndürmek: a + b operandı bozar.",
+        "Tanımadığı türde TypeError fırlatmak: return NotImplemented ile Python'a diğer tarafı denetme şansı ver.",
+        "sum() kullanacağın sınıfta __radd__ yazmamak (0 + nesne TypeError verir).",
+        "Yalnız __lt__ yazıp <= beklemek: total_ordering ya da elle tanımlama gerekir."
+      ],
+      "realCode": "class Vector:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\n    def __add__(self, other):\n        return Vector(self.x + other.x, self.y + other.y)\n\n    def __mul__(self, k):\n        return Vector(self.x * k, self.y * k)\n\n    __rmul__ = __mul__\n\n    def __abs__(self):\n        return (self.x ** 2 + self.y ** 2) ** 0.5\n\n    def __repr__(self):\n        return f\"Vector({self.x}, {self.y})\"\n\nv = Vector(3, 4)\nprint(v + Vector(1, 1), v * 2, 2 * v, abs(v))",
+      "realOutput": "Vector(4, 5) Vector(6, 8) Vector(6, 8) 5.0",
+      "lineByLine": [
+        "__add__ ve __mul__ yeni Vector döndürür; v değişmez.",
+        "__rmul__ = __mul__ atamasıyla 2 * v ifadesi de çalışır: int, Vector'u tanımadığı için Python v.__rmul__(2)'yi dener.",
+        "__abs__ abs(v) çağrısına bağlıdır; 3-4-5 üçgeninden 5.0 döner.",
+        "__repr__ sonucu okunur gösterir; yazdırılan her değer yeni bir Vector'dur."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Veri modeli: sayısal tür emülasyonu",
+          "url": "https://docs.python.org/3.12/reference/datamodel.html#emulating-numeric-types"
+        },
+        {
+          "title": "Python 3.12 · functools.total_ordering",
+          "url": "https://docs.python.org/3.12/library/functools.html#functools.total_ordering"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "mro",
+      "title": "Çoklu kalıtım ve MRO",
+      "eyebrow": "Hangi metot önce bulunur?",
+      "objectives": [
+        "class D(B, C) ile çoklu kalıtımı kurar ve metot arama sırasını (__mro__) okur.",
+        "super()'in 'üst sınıf' değil MRO'daki bir sonraki sınıf olduğunu, elmas yapıda her sınıfın bir kez çalıştığını ve mixin'in ne işe yaradığını açıklar."
+      ],
+      "prerequisites": [
+        "m11:inheritance-super",
+        "polymorphism"
+      ],
+      "summary": "Python metodu sınıfın MRO'sundaki (Method Resolution Order) sırayla arar: sınıfın kendisi, sonra tutarlı bir sırayla üst sınıfları. super(), MRO'da bir sonraki sınıfı çağırır; elmas yapıda ortak üst sınıf bir kez çalışır.",
+      "explanation": "class D(B, C): bir sınıfın birden çok üst sınıfı olabilir. Bir ad aranırken Python D.__mro__ listesini soldan sağa gezer ve ilk bulduğunu kullanır. Sıra C3 doğrusallaştırması ile hesaplanır; temel kurallar: bir sınıf kendi üst sınıflarından önce gelir ve sınıf başlığında yazdığın sıra korunur. D(B, C) için sonuç D, B, C, A, object olur (B ve C'nin ortak üst sınıfı A en sona gider). super() 'üst sınıf' demek değildir: 'bu nesnenin MRO'sunda, bu sınıftan sonra gelen sınıf' demektir. D'deki super().hello() B'ye gider, B'deki super().hello() ise A'ya değil C'ye gider; çünkü D nesnesinin MRO'sunda B'den sonra C vardır. Elmas yapıda her sınıf yalnızca bir kez çalışır, ortak üst sınıf (A) bir kez kurulur. Bunun işlemesi için zincirdeki her sınıf super()'i çağırmalıdır (işbirlikçi kalıtım); biri çağırmazsa zincir orada kopar ve sonrasındaki sınıflar hiç çalışmaz. Çelişen bir sıra istersen (class Bad(A, B) iken B zaten A'dan türüyorsa) sınıf tanımı TypeError verir: tutarlı bir MRO kurulamaz. Çoklu kalıtımın yaygın ve güvenli kullanımı mixin'dir: tek bir işe odaklı, kendi başına örneklenmesi beklenmeyen küçük sınıf (JsonMixin.to_json gibi) bir ya da birkaç sınıfa eklenir. Karmaşık çoklu kalıtım hiyerarşilerinden kaçın: çoğu zaman composition daha okunurdur. Bu bölümün amacı yazmaktan çok, başkasının kodunda gördüğünde sırayı doğru okumandır.",
+      "code": "import json\n\nclass A:\n    def hello(self):\n        return [\"A\"]\n\nclass B(A):\n    def hello(self):\n        return [\"B\"] + super().hello()\n\nclass C(A):\n    def hello(self):\n        return [\"C\"] + super().hello()\n\nclass D(B, C):\n    def hello(self):\n        return [\"D\"] + super().hello()\n\nprint([cls.__name__ for cls in D.__mro__])\nprint(D().hello())\nprint([cls.__name__ for cls in B.__mro__])\n\nclass JsonMixin:\n    def to_json(self):\n        return json.dumps(vars(self), sort_keys=True)\n\nclass Pet(JsonMixin):\n    def __init__(self, name, age):\n        self.name, self.age = name, age\n\nprint(Pet(\"Pamuk\", 3).to_json())\n\ntry:\n    class Bad(A, B):\n        pass\nexcept TypeError:\n    print(\"tutarsız MRO\")",
+      "expectedOutput": "['D', 'B', 'C', 'A', 'object']\n['D', 'B', 'C', 'A']\n['B', 'A', 'object']\n{\"age\": 3, \"name\": \"Pamuk\"}\ntutarsız MRO",
+      "why": "D'nin MRO'su B'yi C'den önce, A'yı ikisinden sonra sıralar. D().hello() zinciri bu sırayı izledi: B'deki super() A'ya değil C'ye gitti, A yalnızca bir kez göründü. B tek başına incelenince MRO'su B, A, object'tir; yani aynı sınıfta super()'in kime gittiği nesnenin gerçek sınıfına bağlıdır. JsonMixin tek işli bir yardımcıdır. Bad(A, B) tanımı A'yı B'den önce istediği için tutarsızdır.",
+      "alternatives": [
+        "Çoklu kalıtım yerine composition ve açık işlev çağrıları çoğu zaman daha anlaşılır olur.",
+        "Mixin kullanacaksan durumsuz (öznitelik tanımlamayan) ve tek işli tut; adını Mixin ile bitir."
+      ],
+      "traps": [
+        "super()'i 'tek üst sınıf' sanmak: çoklu kalıtımda sıradaki sınıf sana bilinmeyen bir kardeş olabilir.",
+        "Zincirdeki bir sınıfta super().__init__()'i çağırmayı unutmak; MRO'daki sonraki sınıflar kurulmaz.",
+        "Sınıf başlığındaki sırayı önemsiz saymak: class D(B, C) ile class D(C, B) farklı davranır.",
+        "Aynı adlı metotları çok sayıda üst sınıfa dağıtıp hangisinin çalıştığını izleyemez hâle gelmek."
+      ],
+      "realCode": "class Base:\n    def __init__(self, **kwargs):\n        print(\"Base\")\n\nclass Timestamped(Base):\n    def __init__(self, **kwargs):\n        print(\"Timestamped\")\n        super().__init__(**kwargs)\n\nclass Named(Base):\n    def __init__(self, name, **kwargs):\n        print(\"Named\", name)\n        super().__init__(**kwargs)\n\nclass Record(Timestamped, Named):\n    def __init__(self, **kwargs):\n        print(\"Record\")\n        super().__init__(**kwargs)\n\nRecord(name=\"Ada\")",
+      "realOutput": "Record\nTimestamped\nNamed Ada\nBase",
+      "lineByLine": [
+        "Record'un MRO'su Record, Timestamped, Named, Base, object'tir.",
+        "Her __init__ kendi işini yapıp **kwargs ile geri kalanı super()'e iletir (işbirlikçi kalıtım).",
+        "Timestamped, name'i tanımaz ama kwargs içinde Named'e iletir; Named bu argümanı alır.",
+        "Base her kurulum zincirinde yalnızca bir kez, en sonda çalışır."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Çoklu kalıtım",
+          "url": "https://docs.python.org/3.12/tutorial/classes.html#multiple-inheritance"
+        },
+        {
+          "title": "Python 3.12 · Python 2.3 Method Resolution Order (C3)",
+          "url": "https://docs.python.org/3.12/howto/mro.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "dataclass",
+      "title": "dataclass",
+      "eyebrow": "Veri sınıfını birkaç satırda kur",
+      "objectives": [
+        "@dataclass ile __init__, __repr__ ve __eq__'in alan tanımlarından üretildiğini gösterir; varsayılan değer, field(default_factory=...) ve değiştirilebilir varsayılan hatasını açıklar.",
+        "frozen=True, order=True ve __post_init__ ile değiştirilemez, sıralanabilir ve doğrulamalı veri sınıfı kurar; anotasyonun çalışma anında tür denetlemediğini bilir."
+      ],
+      "prerequisites": [
+        "m11:class-object",
+        "m6:mutable-default"
+      ],
+      "summary": "@dataclass, sınıf gövdesindeki alan anotasyonlarından __init__, __repr__ ve __eq__ üretir. field(default_factory=list), order=True, frozen=True ve __post_init__ ile veri sınıfı ihtiyaca göre ayarlanır. Anotasyonlar alanları belirler, değerleri denetlemez.",
+      "explanation": "Yalnızca veri taşıyan sınıfta __init__, __repr__ ve __eq__ yazmak sıkıcı ve hataya açıktır. from dataclasses import dataclass ile sınıfa @dataclass eklersen ad: tür biçimindeki her anotasyon bir alan olur ve Python bu üç metodu senin yerine yazar: Task(2, 'rapor') kurulur, print Task(priority=2, title='rapor', ...) gösterir, == alan alan karşılaştırır (yalnızca aynı sınıfın nesneleri eşit olabilir). Anotasyondaki tür yalnızca belgedir: Task('x', 5) hata vermez; türleri denetlemek için ayrı araçlar gerekir (M14). Varsayılan değer yazılır (done: bool = False); varsayılanlı alan varsayılansızdan sonra gelmelidir. Liste, sözlük, küme gibi değiştirilebilir varsayılan değer yasaktır: tags: list = [] sınıf tanımı sırasında ValueError verir, çünkü bütün nesneler aynı listeyi paylaşırdı (M6'daki varsayılan argüman tuzağı). Çözüm field(default_factory=list): her nesne için yeni bir liste kurulur. field(compare=False) bir alanı karşılaştırmadan çıkarır, field(init=False) onu __init__'in dışında tutar. @dataclass(order=True) alanların tanım sırasıyla <, <=, >, >= üretir (sorted çalışır). @dataclass(frozen=True) alanlara atamayı yasaklar (FrozenInstanceError) ve __hash__ üretir; değiştirilemez nesne sözlük anahtarı olabilir. frozen olmayan, eq'su açık dataclass'ta __hash__ None olur. __post_init__, __init__ alanları atadıktan sonra çalışır: doğrulama ve türetilmiş değerler için kullanılır. dataclasses.replace(nesne, alan=yeni) değiştirilmiş bir kopya üretir (frozen nesnelerde değişim yolu), asdict sözlüğe çevirir. Davranışı çok, kuralı sıkı sınıflarda normal sınıf, değişmez demet gibi kullanılacak küçük kayıtlarda namedtuple (M10) da seçenektir.",
+      "code": "from dataclasses import dataclass, field, replace, asdict\n\n@dataclass(order=True)\nclass Task:\n    priority: int\n    title: str\n    tags: list = field(default_factory=list, compare=False)\n    done: bool = field(default=False, compare=False)\n\n    def __post_init__(self):\n        if self.priority < 1:\n            raise ValueError(\"öncelik 1 veya daha büyük olmalı\")\n\nt1 = Task(2, \"rapor\")\nt2 = Task(1, \"test\", [\"acil\"])\nprint(t1)\nprint(t1 == Task(2, \"rapor\"), t1 == Task(2, \"rapor\", [\"x\"]))\nprint(sorted([t1, t2])[0].title)\nt1.tags.append(\"haftalık\")\nprint(Task(3, \"yeni\").tags, t1.tags)\nprint(asdict(replace(t2, done=True)))\ntry:\n    Task(0, \"hatalı\")\nexcept ValueError as error:\n    print(error)",
+      "expectedOutput": "Task(priority=2, title='rapor', tags=[], done=False)\nTrue True\ntest\n[] ['haftalık']\n{'priority': 1, 'title': 'test', 'tags': ['acil'], 'done': True}\nöncelik 1 veya daha büyük olmalı",
+      "why": "Tek dekoratör __init__, __repr__, __eq__ ve sıralama metotlarını üretti. tags ve done compare=False olduğu için karşılaştırmaya ve sıralamaya girmedi (üçüncü satırda tags farklı olsa da eşit çıktı). default_factory her nesneye ayrı bir liste verdi: t1.tags değişince yeni Task'ın listesi etkilenmedi. replace değiştirilmiş bir kopya üretti ve __post_init__ hatalı önceliği reddetti.",
+      "alternatives": [
+        "Değişmez, demet gibi küçük kayıtlar için collections.namedtuple (M10) ya da typing.NamedTuple de olur.",
+        "Kuralları sıkı, davranışı çok olan bir sınıfı dataclass yapmak yerine normal sınıf ve property ile yaz (M11)."
+      ],
+      "traps": [
+        "tags: list = [] yazmak: ValueError verir; field(default_factory=list) gerekir.",
+        "Anotasyonun türü denetlediğini sanmak: Task('x', 'y') hata vermeden kurulur.",
+        "Varsayılanlı alanı varsayılansızdan önce yazmak (TypeError).",
+        "frozen=True nesnenin içindeki listenin de değişmez olduğunu sanmak; yalnızca alana atama engellenir."
+      ],
+      "realCode": "from dataclasses import dataclass, FrozenInstanceError\n\n@dataclass(frozen=True)\nclass Point:\n    x: int\n    y: int\n\np = Point(1, 2)\ntry:\n    p.x = 5\nexcept FrozenInstanceError:\n    print(\"değiştirilemez\")\nprint({p: \"başlangıç\"}[Point(1, 2)], hash(p) == hash(Point(1, 2)))\nprint(Point(1, 2) == (1, 2))",
+      "realOutput": "değiştirilemez\nbaşlangıç True\nFalse",
+      "lineByLine": [
+        "frozen=True alanlara atamayı engeller; p.x = 5 FrozenInstanceError verir.",
+        "Dondurulmuş dataclass hash üretir, bu yüzden Point sözlük anahtarı olabilir; eşit iki Point aynı hash'e sahiptir.",
+        "Point(1, 2) == (1, 2) yanlıştır: dataclass'ın eşitliği yalnızca aynı sınıfın nesnelerini karşılaştırır.",
+        "Alan değeri değiştirmek gerekirse dataclasses.replace ile yeni nesne üretilir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · dataclasses",
+          "url": "https://docs.python.org/3.12/library/dataclasses.html"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "slots",
+      "title": "__slots__ ve slots=True",
+      "eyebrow": "Bellek ve öznitelik denetimi",
+      "objectives": [
+        "__slots__ ile örnek sözlüğünün (__dict__) yerine sabit öznitelik listesi kurar ve slotlu nesneye yeni öznitelik eklenemediğini (AttributeError) gösterir.",
+        "@dataclass(slots=True) kullanır ve kalıtımda __slots__'un alt sınıfta tekrarlanmazsa __dict__'in geri geldiğini bilir; bellek kazancını varsaymak yerine ölçmek gerektiğini açıklar."
+      ],
+      "prerequisites": [
+        "dataclass",
+        "m11:instance-class-vars"
+      ],
+      "summary": "Normalde her nesne özniteliklerini kendi __dict__ sözlüğünde tutar. __slots__ = ('x', 'y') yalnızca bu adlara yer ayırır ve sözlüğü kaldırır: milyonlarca küçük nesnede bellek azalır, yazım hatasıyla yeni öznitelik eklemek ise hata verir.",
+      "explanation": "Sıradan bir nesnenin öznitelikleri __dict__ adlı sözlükte durur; bu esnektir (p.z = 3 yeni öznitelik ekler) ama her nesne için bir sözlük demektir. Sınıfa __slots__ = ('x', 'y') yazarsan Python yalnızca bu iki öznitelik için yer ayırır, nesnenin __dict__'i olmaz. Sonuçlar: bellek kullanımı genelde azalır (özellikle çok sayıda küçük nesnede), nesne yalnızca tanımlı öznitelikleri alır ve p.spead = 5 gibi yazım hataları AttributeError ile hemen yakalanır. Kalıtımda dikkat: alt sınıf kendi __slots__'unu yazmazsa __dict__ geri gelir ve kazanç kaybolur. Slotlu sınıflarda vars(nesne) çalışmaz (nesnede __dict__ yok), zayıf referans için __weakref__ ayrıca eklenmelidir ve varsayılan değerli sınıf düzeyi öznitelikle aynı adlı slot çakışır. dataclass bunu kolaylaştırır: @dataclass(slots=True) (Python 3.10+) alanlardan slotları üretir ve varsayılan değerlerle de sorunsuz çalışır. Bellek kazancını tahmin etme, ölç: tracemalloc ya da sys.getsizeof ile gerçek veride karşılaştır. Bayt değerleri Python sürümüne ve platforma bağlı olduğu için bu sitede kesin bayt sayısı göstermiyoruz. Çoğu sınıfta fark küçüktür; asıl yarar çok nesne üretilen yerlerde ve öznitelik kümesini sabitlemek istediğinde ortaya çıkar.",
+      "code": "from dataclasses import dataclass\n\nclass Plain:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\nclass Slotted:\n    __slots__ = (\"x\", \"y\")\n\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\n@dataclass(slots=True)\nclass Compact:\n    x: int\n    y: int = 0\n\np, s, c = Plain(1, 2), Slotted(1, 2), Compact(1)\nprint(hasattr(p, \"__dict__\"), hasattr(s, \"__dict__\"), hasattr(c, \"__dict__\"))\np.z = 3\nprint(p.z)\nfor obj in (s, c):\n    try:\n        obj.z = 3\n    except AttributeError:\n        print(type(obj).__name__, \"yeni öznitelik eklenemez\")\nprint(c, Compact.__slots__)\n\nclass Child(Slotted):\n    pass\n\nprint(hasattr(Child(1, 2), \"__dict__\"))",
+      "expectedOutput": "True False False\n3\nSlotted yeni öznitelik eklenemez\nCompact yeni öznitelik eklenemez\nCompact(x=1, y=0) ('x', 'y')\nTrue",
+      "why": "Plain nesnesinin __dict__'i olduğu için p.z = 3 çalıştı; Slotted ve Compact nesnelerinde __dict__ yoktur ve yeni öznitelik AttributeError verdi. dataclass(slots=True) slotları alanlardan üretti, varsayılan değer de çalıştı. Child kendi __slots__'unu yazmadığı için __dict__ geri geldi: kazanç kalıtımda tekrar tanımlama ister.",
+      "alternatives": [
+        "Bellek sorunu yoksa __slots__ yazma; okunabilirlik ve esneklik çoğu zaman daha değerlidir.",
+        "Çok sayıda kayıt tutacaksan tuple, namedtuple ya da kolonlu yapılar (NumPy gibi) daha da az yer kaplayabilir."
+      ],
+      "traps": [
+        "Alt sınıfta __slots__ yazmayıp __dict__'in geri geldiğini fark etmemek.",
+        "Slotlu nesnede vars() ya da keyfi öznitelik atamayı denemek.",
+        "Kazancı ölçmeden varsaymak; küçük veride fark ihmal edilebilir.",
+        "Elle yazılmış __slots__ ile aynı adlı varsayılan değerli sınıf özniteliğini birlikte kullanmak (ValueError); dataclass(slots=True) bunu çözer."
+      ],
+      "realCode": "class Particle:\n    __slots__ = (\"x\", \"y\", \"speed\")\n\n    def __init__(self, x, y, speed=1):\n        self.x, self.y, self.speed = x, y, speed\n\n    def move(self):\n        self.x += self.speed\n\ndot = Particle(0, 0, 2)\ndot.move()\nprint(dot.x, dot.speed)\ntry:\n    dot.spead = 5\nexcept AttributeError:\n    print(\"yazım hatası yakalandı\")",
+      "realOutput": "2 2\nyazım hatası yakalandı",
+      "lineByLine": [
+        "__slots__ nesnenin taşıyabileceği üç özniteliği sabitler; nesne başına sözlük yoktur.",
+        "move tanımlı özniteliği değiştirir; hareket sonrası x iki olur.",
+        "dot.spead yazımı tanımlı bir slot olmadığı için AttributeError verir.",
+        "Aynı hata sıradan bir sınıfta sessizce yeni bir öznitelik yaratırdı ve hata daha geç ortaya çıkardı."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · __slots__",
+          "url": "https://docs.python.org/3.12/reference/datamodel.html#slots"
+        },
+        {
+          "title": "Python 3.12 · dataclass(slots=True)",
+          "url": "https://docs.python.org/3.12/library/dataclasses.html#dataclasses.dataclass"
+        }
+      ],
+      "runtime": "browser"
+    },
+    {
+      "id": "descriptor-metaclass",
+      "title": "Descriptor ve metaclass (tanıma)",
+      "eyebrow": "Sihrin arkasındaki mekanizmaları tanı",
+      "objectives": [
+        "property, classmethod ve fonksiyon metotlarının descriptor protokolünü (__get__ / __set__) kullandığını söyler ve kısa bir descriptor sınıfını okuyup ne yaptığını açıklar.",
+        "Her sınıfın bir metaclass'ı olduğunu (varsayılan type), __init_subclass__'in çoğu metaclass ihtiyacını karşıladığını ve bu araçların ne zaman kaçınılması gerektiğini tanır."
+      ],
+      "prerequisites": [
+        "m11:property",
+        "dunder-basics"
+      ],
+      "summary": "Descriptor, __get__/__set__ metotları olan ve sınıf özniteliği olarak duran bir nesnedir; öznitelik erişimini yakalar (property de budur). Metaclass sınıfı yaratan sınıftır; varsayılanı type'tır. İkisini de çerçeve kodunda tanımak yeterlidir, günlük kodda gerekmez.",
+      "explanation": "Bu bölüm tanıma düzeyindedir: yazmak yerine gördüğünde ne olduğunu anlamak hedeflenir. Descriptor: bir sınıfın gövdesinde, __get__, __set__ ya da __delete__ metotları olan bir nesneyi sınıf özniteliği olarak tutarsan, o ada her erişimde (nesne.ad, nesne.ad = değer) Python bu metodu çağırır. M11'deki property aslında yerleşik bir descriptor'dır; classmethod, staticmethod ve sıradan fonksiyonlar da (nesneye bağlı metot oluşturmak için) descriptor protokolünü kullanır. Kendi descriptor'ünü, aynı doğrulama kuralını birçok alanda tekrar etmek istediğinde yazarsın: Positive() ile hem price hem qty doğrulanır. __set_name__(self, owner, name) sınıf kurulurken descriptor'a hangi adla bağlandığını söyler. Önemli ayrıntı: descriptor nesnesi sınıfta tek durur, bu yüzden nesneye özel değeri descriptor'ün içinde değil, nesnenin kendisinde (_price gibi başka bir adda) saklamalıdır; aksi hâlde tüm nesneler aynı değeri paylaşır. __set__ tanımlı descriptor'a veri descriptor'ü denir ve nesnenin kendi __dict__'inden önceliklidir. Metaclass: Python'da sınıfların kendisi de nesnedir ve bir sınıftan üretilirler; bu sınıfa metaclass denir, varsayılanı type'tır (type(Item) type verir). class Base(metaclass=Registry): ile sınıf yaratılışını özelleştirebilirsin; Django modelleri, ORM'ler, enum ve abc bu mekanizmayı kullanır. type('Dog', (), {...}) ile çalışma anında sınıf da yaratılabilir. Günlük kodda bunlara gerek yok: alt sınıf kaydı gibi işlerin çoğunu __init_subclass__ (bir sınıf türetildiğinde çağrılır) ya da sınıf dekoratörü çok daha sade yapar. Karşılaştığında tanı, anla, ama kendi kodunda yalnızca gerçekten bu kadar gerekli olduğunda kullan.",
+      "code": "class Positive:\n    def __set_name__(self, owner, name):\n        self.name = \"_\" + name\n\n    def __get__(self, obj, owner=None):\n        if obj is None:\n            return self\n        return getattr(obj, self.name)\n\n    def __set__(self, obj, value):\n        if value <= 0:\n            raise ValueError(f\"{self.name[1:]} pozitif olmalı\")\n        setattr(obj, self.name, value)\n\nclass Item:\n    price = Positive()\n    qty = Positive()\n\n    def __init__(self, price, qty):\n        self.price = price\n        self.qty = qty\n\nitem = Item(10, 3)\nprint(item.price * item.qty, vars(item))\ntry:\n    item.qty = 0\nexcept ValueError as error:\n    print(error)\nprint(type(Item.price).__name__, type(item).__name__, type(Item).__name__)",
+      "expectedOutput": "30 {'_price': 10, '_qty': 3}\nqty pozitif olmalı\nPositive Item type",
+      "why": "price ve qty aynı Positive descriptor sınıfının iki örneğidir. self.price = price satırı Positive.__set__'e gitti, doğruladı ve değeri nesnenin _price özniteliğinde sakladı (vars bunu gösterir). item.price okuması __get__'e gitti. Sınıf özniteliği Item.price bir Positive nesnesidir; Item'ın kendisinin türü ise type'tır, yani metaclass'ı varsayılandır.",
+      "alternatives": [
+        "Tek bir alan için doğrulama gerekiyorsa descriptor yerine property yeterlidir (M11).",
+        "Birçok alanda aynı doğrulama gerekiyorsa descriptor yerine dataclass'ta __post_init__ ya da pydantic gibi bir doğrulama kütüphanesi düşünülebilir (M18'de tanıyacaksın)."
+      ],
+      "traps": [
+        "Descriptor içinde nesneye özel değeri self.value gibi descriptor'ün kendisinde saklamak: bütün nesneler aynı değeri görür.",
+        "Descriptor'ü __init__ içinde self.x = Positive() ile oluşturmak: descriptor yalnızca sınıf özniteliği olarak çalışır.",
+        "Metaclass yazmak için acele etmek: önce __init_subclass__ ya da sınıf dekoratörü yeter mi diye bak.",
+        "type(x) ile x.__class__ ya da metaclass kavramlarını karıştırmak; her sınıfın bir metaclass'ı vardır, çoğunlukla type."
+      ],
+      "realCode": "class Registry(type):\n    names = []\n\n    def __new__(mcs, name, bases, namespace):\n        cls = super().__new__(mcs, name, bases, namespace)\n        Registry.names.append(name)\n        return cls\n\nclass Base(metaclass=Registry):\n    pass\n\nclass Plugin(Base):\n    pass\n\nclass Easy:\n    names = []\n\n    def __init_subclass__(cls, **kwargs):\n        super().__init_subclass__(**kwargs)\n        Easy.names.append(cls.__name__)\n\nclass First(Easy):\n    pass\n\nclass Second(Easy):\n    pass\n\nDog = type(\"Dog\", (), {\"sound\": lambda self: \"hav\"})\nprint(Registry.names, Easy.names)\nprint(Dog().sound(), type(Dog).__name__)",
+      "realOutput": "['Base', 'Plugin'] ['First', 'Second']\nhav type",
+      "lineByLine": [
+        "Registry metaclass'ı her sınıf yaratıldığında adını listeye ekler; Base ve Plugin kaydolur.",
+        "Easy aynı işi __init_subclass__ ile yapar: yalnızca alt sınıflar (First, Second) kaydolur, çok daha az kodla.",
+        "type('Dog', (), {...}) çalışma anında sınıf yaratır: yazılmış bir class bloğunun yaptığı iş budur.",
+        "Dog sınıfının türü type'tır; yani Dog, type'ın bir örneğidir."
+      ],
+      "sources": [
+        {
+          "title": "Python 3.12 · Descriptor nasıl kullanılır",
+          "url": "https://docs.python.org/3.12/howto/descriptor.html"
+        },
+        {
+          "title": "Python 3.12 · Veri modeli: metaclass'lar",
+          "url": "https://docs.python.org/3.12/reference/datamodel.html#metaclasses"
+        }
+      ],
+      "runtime": "browser"
+    }
+  ],
+  "questions": [
+    {
+      "id": "m12-q01",
+      "type": "output",
+      "topic": "duck-typing",
+      "sectionId": "polymorphism",
+      "difficulty": 1,
+      "prompt": "İki ilgisiz sınıfın nesneleri aynı ifadede kullanılıyor. Çıktı ne olur?",
+      "code": "class Cat:\n    def speak(self):\n        return \"miyav\"\n\nclass Robot:\n    def speak(self):\n        return \"bip\"\n\nprint(\" \".join(thing.speak() for thing in (Cat(), Robot())))",
+      "expectedOutput": "miyav bip",
+      "options": [
+        "miyav bip",
+        "bip miyav",
+        "miyav miyav",
+        "AttributeError verir"
+      ],
+      "hints": [
+        "Cat ve Robot'un ortak üst sınıfı var mı? Gerekli mi?",
+        "Her nesne kendi speak metodunu çalıştırır."
+      ],
+      "explanation": "Çağıran kod yalnızca speak metodunun var olmasına bakar (duck typing). Cat 'miyav', Robot 'bip' döndürür ve join bunları sırayla birleştirir.",
+      "answer": "miyav bip"
+    },
+    {
+      "id": "m12-q02",
+      "type": "output",
+      "topic": "override",
+      "sectionId": "polymorphism",
+      "difficulty": 2,
+      "prompt": "Üst sınıftaki show, alt sınıfın geçersiz kıldığı name'i çağırıyor. Çıktı ne olur?",
+      "code": "class Base:\n    def name(self):\n        return \"base\"\n\n    def show(self):\n        return \"Ben \" + self.name()\n\nclass Child(Base):\n    def name(self):\n        return \"child\"\n\nprint(Base().show(), Child().show(), sep=\" | \")",
+      "expectedOutput": "Ben base | Ben child",
+      "options": [
+        "Ben base | child",
+        "Ben base | Ben child",
+        "Ben base | Ben base",
+        "Ben child | Ben child"
+      ],
+      "hints": [
+        "show Child'da yazılmadı; kimden devralınıyor?",
+        "show içindeki self, Child nesnesi olunca self.name() hangi sürümü çağırır?"
+      ],
+      "explanation": "Child, show'u Base'ten devralır ama self bir Child nesnesidir; bu yüzden self.name() Child'ın sürümünü çalıştırır. Aynı metot nesnenin sınıfına göre farklı sonuç verir.",
+      "answer": "Ben base | Ben child"
+    },
+    {
+      "id": "m12-q03",
+      "type": "output",
+      "topic": "abc",
+      "sectionId": "abc",
+      "difficulty": 2,
+      "prompt": "Soyut sınıf ve somut alt sınıf örneklenmeye çalışılıyor. shapes listesi ne olur?",
+      "code": "from abc import ABC, abstractmethod\n\nclass Shape(ABC):\n    @abstractmethod\n    def area(self):\n        ...\n\nclass Sq(Shape):\n    def __init__(self, side):\n        self.side = side\n\n    def area(self):\n        return self.side ** 2\n\nshapes = []\nfor cls, args in ((Shape, ()), (Sq, (3,))):\n    try:\n        shapes.append(cls(*args).area())\n    except TypeError:\n        shapes.append(\"hata\")\nprint(shapes)",
+      "expectedOutput": "['hata', 9]",
+      "options": [
+        "[9]",
+        "TypeError ile program durur",
+        "['hata', 9]",
+        "[None, 9]"
+      ],
+      "hints": [
+        "Shape() soyut sınıfı doğrudan kurar; ne olur?",
+        "TypeError except bloğunda yakalanıyor."
+      ],
+      "explanation": "Shape soyut metodu olduğu için örneklenemez ve TypeError verir; except bunu yakalayıp 'hata' ekler. Sq soyut metodu yazdığı için kurulur ve 3 ** 2 = 9 döner.",
+      "answer": "['hata', 9]"
+    },
+    {
+      "id": "m12-q04",
+      "type": "output",
+      "topic": "len-bool",
+      "sectionId": "dunder-basics",
+      "difficulty": 1,
+      "prompt": "Yalnızca __len__ tanımlı bir sınıfta doğruluk değeri nedir?",
+      "code": "class Bag:\n    def __init__(self, items):\n        self.items = items\n\n    def __len__(self):\n        return len(self.items)\n\nprint(bool(Bag([])), bool(Bag([0])), len(Bag(\"abc\")))",
+      "expectedOutput": "False True 3",
+      "options": [
+        "True True 3",
+        "False False 3",
+        "TypeError verir",
+        "False True 3"
+      ],
+      "hints": [
+        "__bool__ yoksa Python doğruluk için __len__'e bakar.",
+        "Bag([0]) listesinde bir öğe var (değeri 0 olsa da)."
+      ],
+      "explanation": "__bool__ tanımlı değilse __len__ kullanılır: 0 yanlış, diğerleri doğrudur. Bag([]) uzunluğu 0 olduğu için False, Bag([0]) uzunluğu 1 olduğu için True'dur.",
+      "answer": "False True 3"
+    },
+    {
+      "id": "m12-q05",
+      "type": "output",
+      "topic": "eq-hash",
+      "sectionId": "dunder-basics",
+      "difficulty": 3,
+      "prompt": "__eq__ tanımlı, __hash__ yazılmamış bir sınıf set içinde kullanılıyor. Çıktı ne olur?",
+      "code": "class Tag:\n    def __init__(self, name):\n        self.name = name\n\n    def __eq__(self, other):\n        return self.name == other.name\n\na, b = Tag(\"x\"), Tag(\"x\")\nprint(a == b, a != b)\ntry:\n    print(len({a, b}))\nexcept TypeError:\n    print(\"unhashable\")",
+      "expectedOutput": "True False\nunhashable",
+      "options": [
+        "True False / unhashable",
+        "True False / 1",
+        "True False / 2",
+        "False True / unhashable"
+      ],
+      "hints": [
+        "!= varsayılan olarak == sonucunu tersler.",
+        "__eq__ yazılınca __hash__'e ne olur?"
+      ],
+      "explanation": "a == b True, a != b False'tır. __eq__ tanımlı ve __hash__ yazılmamış olduğu için Python __hash__'i None yapar; set kurulurken nesneleri hashlemeye çalışınca TypeError (unhashable) oluşur.",
+      "answer": "True False / unhashable"
+    },
+    {
+      "id": "m12-q06",
+      "type": "output",
+      "topic": "radd",
+      "sectionId": "operator-overloading",
+      "difficulty": 2,
+      "prompt": "__add__ ve __radd__ ile sum() birlikte kullanılıyor. Çıktı ne olur?",
+      "code": "class N:\n    def __init__(self, v):\n        self.v = v\n\n    def __add__(self, other):\n        return N(self.v + (other.v if isinstance(other, N) else other))\n\n    def __radd__(self, other):\n        return self + other\n\n    def __repr__(self):\n        return f\"N({self.v})\"\n\nprint(N(1) + 2, 3 + N(4), sum([N(1), N(2)]))",
+      "expectedOutput": "N(3) N(7) N(3)",
+      "options": [
+        "TypeError verir",
+        "N(3) N(7) N(3)",
+        "N(3) 7 N(3)",
+        "N(3) N(7) N(2)"
+      ],
+      "hints": [
+        "3 + N(4) önce int'in __add__'ini dener; sonra ne olur?",
+        "sum(...) 0 + N(1) ile başlar."
+      ],
+      "explanation": "N(1) + 2 doğrudan __add__ ile N(3) verir. 3 + N(4)'te int tanımadığı için N(4).__radd__(3) çalışır ve N(7) olur. sum, 0 + N(1)'i __radd__ ile N(1)'e, sonra N(1) + N(2)'yi N(3)'e çevirir.",
+      "answer": "N(3) N(7) N(3)"
+    },
+    {
+      "id": "m12-q07",
+      "type": "output",
+      "topic": "karsilastirma",
+      "sectionId": "operator-overloading",
+      "difficulty": 3,
+      "prompt": "Yalnızca __lt__ tanımlı bir sınıf sıralanıp karşılaştırılıyor. Çıktı ne olur?",
+      "code": "class V:\n    def __init__(self, n):\n        self.n = n\n\n    def __lt__(self, other):\n        return self.n < other.n\n\n    def __repr__(self):\n        return f\"V{self.n}\"\n\nitems = [V(3), V(1), V(2)]\nprint(sorted(items), max(items), V(2) > V(1))\ntry:\n    print(V(1) <= V(2))\nexcept TypeError:\n    print(\"TypeError\")",
+      "expectedOutput": "[V1, V2, V3] V3 True\nTypeError",
+      "options": [
+        "[V1, V2, V3] V3 True / True",
+        "TypeError / TypeError",
+        "[V1, V2, V3] V3 True / TypeError",
+        "[V3, V2, V1] V3 True / TypeError"
+      ],
+      "hints": [
+        "V(2) > V(1) için V.__gt__ yoksa Python karşı tarafı dener: V(1) < V(2).",
+        "<= için ne __le__ ne de yansıyan bir karşılığı var."
+      ],
+      "explanation": "sorted yalnızca < kullanır. a > b, b < a'ya çevrilebildiği için V(2) > V(1) True verir ve max çalışır. <= ise ne __le__ ne de yansıyan __ge__ olduğu için TypeError üretir.",
+      "answer": "[V1, V2, V3] V3 True / TypeError"
+    },
+    {
+      "id": "m12-q08",
+      "type": "output",
+      "topic": "mro",
+      "sectionId": "mro",
+      "difficulty": 2,
+      "prompt": "Elmas biçimli çoklu kalıtımda MRO listesi nedir?",
+      "code": "class A:\n    pass\n\nclass B(A):\n    pass\n\nclass C(A):\n    pass\n\nclass D(B, C):\n    pass\n\nprint([cls.__name__ for cls in D.__mro__])",
+      "expectedOutput": "['D', 'B', 'C', 'A', 'object']",
+      "options": [
+        "['D', 'B', 'A', 'C', 'object']",
+        "['D', 'C', 'B', 'A', 'object']",
+        "['D', 'A', 'B', 'C', 'object']",
+        "['D', 'B', 'C', 'A', 'object']"
+      ],
+      "hints": [
+        "Sınıf başlığındaki sıra (B, C) korunur.",
+        "Ortak üst sınıf A, hem B'den hem C'den sonra gelmeli."
+      ],
+      "explanation": "C3 doğrusallaştırması önce D'yi, sonra başlıktaki sırayla B ve C'yi, ortak üst sınıf A'yı ikisinden sonra ve en sona object'i koyar.",
+      "answer": "['D', 'B', 'C', 'A', 'object']"
+    },
+    {
+      "id": "m12-q09",
+      "type": "output",
+      "topic": "super-mro",
+      "sectionId": "mro",
+      "difficulty": 3,
+      "prompt": "Her sınıf super()'i çağırıyor. D().go() çıktısı nedir?",
+      "code": "class A:\n    def go(self):\n        print(\"A\")\n\nclass B(A):\n    def go(self):\n        print(\"B\")\n        super().go()\n\nclass C(A):\n    def go(self):\n        print(\"C\")\n        super().go()\n\nclass D(B, C):\n    def go(self):\n        print(\"D\")\n        super().go()\n\nD().go()",
+      "expectedOutput": "D\nB\nC\nA",
+      "options": [
+        "D / B / C / A",
+        "D / B / A",
+        "D / B / A / C",
+        "D / C / B / A"
+      ],
+      "hints": [
+        "super(), MRO'da bir sonraki sınıfa gider; üst sınıfa değil.",
+        "D nesnesinin MRO'su: D, B, C, A."
+      ],
+      "explanation": "D nesnesinin MRO'su D, B, C, A, object'tir. B'deki super() A'ya değil MRO'daki sonraki sınıf olan C'ye gider; A en sonda bir kez çalışır.",
+      "answer": "D / B / C / A"
+    },
+    {
+      "id": "m12-q10",
+      "type": "output",
+      "topic": "dataclass-repr",
+      "sectionId": "dataclass",
+      "difficulty": 1,
+      "prompt": "Varsayılan değerli bir dataclass yazdırılıyor ve karşılaştırılıyor. Çıktı ne olur?",
+      "code": "from dataclasses import dataclass\n\n@dataclass\nclass P:\n    x: int\n    y: int = 0\n\nprint(P(1), P(1) == P(1, 0))",
+      "expectedOutput": "P(x=1, y=0) True",
+      "options": [
+        "P(x=1) True",
+        "P(x=1, y=0) True",
+        "P(1, 0) True",
+        "P(x=1, y=0) False"
+      ],
+      "hints": [
+        "dataclass __repr__'i alan adlarıyla üretir.",
+        "__eq__ alan alan karşılaştırır."
+      ],
+      "explanation": "@dataclass, alan adlarını gösteren bir __repr__ ve alanlara bakan bir __eq__ üretir. P(1)'in y'si varsayılan 0 olduğu için P(1, 0)'a eşittir.",
+      "answer": "P(x=1, y=0) True"
+    },
+    {
+      "id": "m12-q11",
+      "type": "output",
+      "topic": "frozen-replace",
+      "sectionId": "dataclass",
+      "difficulty": 2,
+      "prompt": "Dondurulmuş dataclass'tan replace ile kopya üretiliyor. Çıktı ne olur?",
+      "code": "from dataclasses import dataclass, replace\n\n@dataclass(frozen=True)\nclass P:\n    x: int\n\nq = P(1)\nr = replace(q, x=5)\nprint(q.x, r.x, q == r)",
+      "expectedOutput": "1 5 False",
+      "options": [
+        "1 5 True",
+        "FrozenInstanceError verir",
+        "1 5 False",
+        "5 5 True"
+      ],
+      "hints": [
+        "replace yeni bir nesne üretir; mevcut nesneyi değiştirmez.",
+        "Alan değerleri farklı olan nesneler eşit değildir."
+      ],
+      "explanation": "replace, q'ya dokunmadan x=5 ile yeni bir P üretir. q.x 1 kalır, r.x 5 olur ve alanlar farklı olduğu için q == r False'tır.",
+      "answer": "1 5 False"
+    },
+    {
+      "id": "m12-q12",
+      "type": "output",
+      "topic": "slots",
+      "sectionId": "slots",
+      "difficulty": 2,
+      "prompt": "__slots__ tanımlı bir nesnede öznitelik denetleniyor. Çıktı ne olur?",
+      "code": "class S:\n    __slots__ = (\"a\",)\n\ns = S()\ns.a = 1\nprint(hasattr(s, \"__dict__\"), hasattr(s, \"a\"), hasattr(s, \"b\"))",
+      "expectedOutput": "False True False",
+      "options": [
+        "True True False",
+        "False True True",
+        "False False False",
+        "False True False"
+      ],
+      "hints": [
+        "__slots__ nesne başına __dict__'i kaldırır.",
+        "b adlı bir slot yok ve hiç atanmadı."
+      ],
+      "explanation": "Slotlu nesnenin __dict__'i olmaz (False). a slotuna 1 atandığı için hasattr(s, 'a') True'dur. b hiç tanımlanmadığı için False döner.",
+      "answer": "False True False"
+    },
+    {
+      "id": "m12-q13",
+      "type": "bug",
+      "topic": "duck-typing",
+      "sectionId": "polymorphism",
+      "difficulty": 1,
+      "prompt": "Bu döngü neden ikinci nesnede hata verir?",
+      "code": "class Circle:\n    def area(self):\n        return 3\n\nclass Square:\n    def surface(self):\n        return 4\n\nfor shape in [Circle(), Square()]:\n    print(shape.area())",
+      "answer": "Square aynı arayüzü uygulamıyor: area yerine surface tanımlı",
+      "options": [
+        "Square aynı arayüzü uygulamıyor: area yerine surface tanımlı",
+        "Listede farklı sınıflar bulunamaz",
+        "area yalnızca Circle gibi ortak üst sınıfı olan nesnelerde çağrılabilir",
+        "for döngüsü nesnelerin metotlarını çağıramaz"
+      ],
+      "optionFeedback": {
+        "Listede farklı sınıflar bulunamaz": "Python listeleri her türden nesne taşıyabilir.",
+        "area yalnızca Circle gibi ortak üst sınıfı olan nesnelerde çağrılabilir": "Duck typing ortak üst sınıf gerektirmez; metodun adı yeter.",
+        "for döngüsü nesnelerin metotlarını çağıramaz": "Döngü içinde metot çağırmak sorunsuzdur; ilk nesne çalışıyor."
+      },
+      "hints": [
+        "İlk nesne için çıktı geliyor mu?",
+        "Square'de hangi adlı metot var?"
+      ],
+      "explanation": "Duck typing metot adına bakar. Square, area yerine surface tanımladığı için shape.area() çalışma anında AttributeError verir. Doğru ad area olmalı ya da arayüz soyut bir sınıfla zorunlu kılınmalıdır."
+    },
+    {
+      "id": "m12-q14",
+      "type": "bug",
+      "topic": "abstractmethod",
+      "sectionId": "abc",
+      "difficulty": 2,
+      "prompt": "Email().send_message('selam') neden TypeError verir?",
+      "code": "from abc import ABC, abstractmethod\n\nclass Notifier(ABC):\n    @abstractmethod\n    def send(self, message):\n        ...\n\nclass Email(Notifier):\n    def send_message(self, message):\n        print(\"gönder:\", message)\n\nEmail().send_message(\"selam\")",
+      "answer": "Email soyut send metodunu uygulamıyor (adı send_message); nesne kurulamıyor",
+      "options": [
+        "print soyut sınıf içinde çalışmaz",
+        "Email soyut send metodunu uygulamıyor (adı send_message); nesne kurulamıyor",
+        "send_message adında alt çizgi kullanılamaz",
+        "Soyut sınıfın alt sınıfı kendi yeni metotlarını tanımlayamaz"
+      ],
+      "optionFeedback": {
+        "send_message adında alt çizgi kullanılamaz": "Alt çizgili metot adları geçerlidir.",
+        "Soyut sınıfın alt sınıfı kendi yeni metotlarını tanımlayamaz": "Alt sınıf ek metot tanımlayabilir; asıl sorun zorunlu send'in eksik olması.",
+        "print soyut sınıf içinde çalışmaz": "print normal çalışır; hata nesne kurulurken, print'ten önce oluşur."
+      },
+      "hints": [
+        "Hata satırı hangisi: Email() mi, send_message mı?",
+        "Notifier'ın zorunlu kıldığı metot hangi ad?"
+      ],
+      "explanation": "Notifier send'i soyut kıldığı halde Email onu yazmadı, bu yüzden Email soyut kalır ve Email() TypeError verir. Metot send adıyla yazılmalıdır."
+    },
+    {
+      "id": "m12-q15",
+      "type": "bug",
+      "topic": "eq-hash",
+      "sectionId": "dunder-basics",
+      "difficulty": 2,
+      "prompt": "Bu kod neden TypeError verir?",
+      "code": "class Point:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\n    def __eq__(self, other):\n        return (self.x, self.y) == (other.x, other.y)\n\nvisited = {Point(1, 2)}",
+      "answer": "__eq__ tanımlanınca __hash__ None olur; nesne set öğesi olamaz",
+      "options": [
+        "__init__ içinde iki öznitelik atanamaz",
+        "Küme parantezi yalnızca sözlük oluşturur",
+        "__eq__ tanımlanınca __hash__ None olur; nesne set öğesi olamaz",
+        "Set içine yalnızca sayılar konabilir"
+      ],
+      "optionFeedback": {
+        "Set içine yalnızca sayılar konabilir": "Set, hashlenebilir her türü (str, tuple, uygun nesneler) alır.",
+        "__init__ içinde iki öznitelik atanamaz": "Çoklu atama geçerlidir; bu satırda hata yok.",
+        "Küme parantezi yalnızca sözlük oluşturur": "Boş küme parantezi sözlüktür; içinde öğe varsa küme oluşur."
+      },
+      "hints": [
+        "Hata hangi satırda ortaya çıkıyor?",
+        "__eq__ yazınca __hash__'e ne olur?"
+      ],
+      "explanation": "Eşit nesnelerin aynı hash'i vermesi gerektiği için Python, __eq__ yazılıp __hash__ yazılmamış sınıflarda __hash__'i None yapar. Nesne set öğesi ya da sözlük anahtarı olamaz; değişmez bir sınıf için __hash__ yazılabilir (örneğin dataclass(frozen=True))."
+    },
+    {
+      "id": "m12-q16",
+      "type": "bug",
+      "topic": "islec-mutasyon",
+      "sectionId": "operator-overloading",
+      "difficulty": 2,
+      "prompt": "a + b neden a'yı da değiştiriyor?",
+      "code": "class Money:\n    def __init__(self, cents):\n        self.cents = cents\n\n    def __add__(self, other):\n        self.cents += other.cents\n        return self\n\na = Money(100)\nb = Money(50)\ntotal = a + b\nprint(a.cents, total.cents)",
+      "answer": "__add__ yeni nesne döndürmek yerine self'i değiştirip döndürüyor; toplama operandları bozmamalı",
+      "options": [
+        "Python + işleciyle her zaman soldaki nesneyi günceller",
+        "cents özniteliği başka bir sınıfla paylaşılıyor",
+        "other.cents okunurken b değiştirilir",
+        "__add__ yeni nesne döndürmek yerine self'i değiştirip döndürüyor; toplama operandları bozmamalı"
+      ],
+      "optionFeedback": {
+        "Python + işleciyle her zaman soldaki nesneyi günceller": "Bu davranış __add__ içindeki += satırından gelir, işlecin kendisinden değil.",
+        "cents özniteliği başka bir sınıfla paylaşılıyor": "cents nesneye özgü bir özniteliktir; paylaşım yok.",
+        "other.cents okunurken b değiştirilir": "Okumak değiştirmez; asıl değişiklik self.cents += ... satırında."
+      },
+      "hints": [
+        "a.cents çıktıda kaç yazıyor?",
+        "__add__ içinde self'e ne yapılıyor?"
+      ],
+      "explanation": "self.cents += other.cents soldaki operandı değiştirir ve self döndürülür; total ile a aynı nesnedir (ikisi de 150). Doğrusu return Money(self.cents + other.cents) olmalı."
+    },
+    {
+      "id": "m12-q17",
+      "type": "bug",
+      "topic": "mixin-super",
+      "sectionId": "mro",
+      "difficulty": 3,
+      "prompt": "s.ready neden AttributeError verir?",
+      "code": "class Base:\n    def __init__(self):\n        self.ready = True\n\nclass LogMixin:\n    def __init__(self):\n        self.logs = []\n\nclass Service(LogMixin, Base):\n    pass\n\ns = Service()\nprint(s.ready)",
+      "answer": "LogMixin.__init__ super().__init__() çağırmıyor; MRO'daki Base kurulumu hiç çalışmıyor",
+      "options": [
+        "LogMixin.__init__ super().__init__() çağırmıyor; MRO'daki Base kurulumu hiç çalışmıyor",
+        "Service iki üst sınıftan türeyemez",
+        "ready özniteliği yalnızca sınıf düzeyinde tanımlanabilir",
+        "Base, MRO'da Service'ten önce gelir"
+      ],
+      "optionFeedback": {
+        "Service iki üst sınıftan türeyemez": "Python çoklu kalıtımı destekler; sorun zincirin kopması.",
+        "ready özniteliği yalnızca sınıf düzeyinde tanımlanabilir": "ready bir instance özniteliği; __init__ içinde atanabilir.",
+        "Base, MRO'da Service'ten önce gelir": "MRO'da önce Service, sonra LogMixin, sonra Base gelir."
+      },
+      "hints": [
+        "Service'in MRO'su: Service, LogMixin, Base. Service.__init__ yok; hangisi çalışıyor?",
+        "LogMixin.__init__ zincirin devamını çağırıyor mu?"
+      ],
+      "explanation": "Service() ilk bulunan __init__'i, yani LogMixin'inkini çalıştırır. O super().__init__() çağırmadığı için zincir kopar ve Base.__init__ hiç çalışmaz; ready kurulmaz. İşbirlikçi kalıtımda zincirdeki her sınıf super()'i çağırmalıdır."
+    },
+    {
+      "id": "m12-q18",
+      "type": "bug",
+      "topic": "dataclass-default",
+      "sectionId": "dataclass",
+      "difficulty": 2,
+      "prompt": "Bu sınıf tanımı neden ValueError verir?",
+      "code": "from dataclasses import dataclass\n\n@dataclass\nclass Playlist:\n    name: str\n    songs: list = []",
+      "answer": "dataclass değiştirilebilir varsayılan değere izin vermez; field(default_factory=list) kullanılmalı",
+      "options": [
+        "dataclass yalnızca int ve str alanlarını destekler",
+        "dataclass değiştirilebilir varsayılan değere izin vermez; field(default_factory=list) kullanılmalı",
+        "list bir tür olarak anotasyonda kullanılamaz",
+        "name alanından sonra başka alan gelemez"
+      ],
+      "optionFeedback": {
+        "list bir tür olarak anotasyonda kullanılamaz": "Anotasyonlarda list kullanılabilir; sorun varsayılan değer.",
+        "name alanından sonra başka alan gelemez": "İstenen kadar alan tanımlanabilir.",
+        "dataclass yalnızca int ve str alanlarını destekler": "Her türde alan tanımlanabilir."
+      },
+      "hints": [
+        "Hata sınıf tanımı sırasında, nesne kurulmadan çıkıyor.",
+        "songs: list = [] tüm nesnelerde aynı listeyi paylaştırırdı."
+      ],
+      "explanation": "Liste gibi değiştirilebilir bir varsayılan, bütün nesnelerce paylaşılan tek bir nesne olurdu; dataclass bunu sınıf tanımı sırasında ValueError ile reddeder. Çözüm: songs: list = field(default_factory=list)."
+    },
+    {
+      "id": "m12-q19",
+      "type": "fill",
+      "topic": "abstractmethod",
+      "sectionId": "abc",
+      "difficulty": 1,
+      "prompt": "Alt sınıfların yazması zorunlu olan metodu işaretleyen decorator'ı tamamla.",
+      "code": "from abc import ABC, abstractmethod\n\nclass Shape(ABC):\n    @___\n    def area(self):\n        ...\n\nclass Sq(Shape):\n    def area(self):\n        return 4\n\nprint(Sq().area())",
+      "answer": "abstractmethod",
+      "expectedOutput": "4",
+      "hints": [
+        "abc modülünden içe aktarılan ikinci ad.",
+        "İngilizce 'soyut metot' demektir."
+      ],
+      "explanation": "@abstractmethod, alt sınıfların bu metodu yazmasını zorunlu kılar. Sq area'yı yazdığı için nesnesi kurulabilir.",
+      "acceptedAnswers": [
+        "abstractmethod"
+      ],
+      "solutionCode": "from abc import ABC, abstractmethod\n\nclass Shape(ABC):\n    @abstractmethod\n    def area(self):\n        ...\n\nclass Sq(Shape):\n    def area(self):\n        return 4\n\nprint(Sq().area())"
+    },
+    {
+      "id": "m12-q20",
+      "type": "fill",
+      "topic": "eq",
+      "sectionId": "dunder-basics",
+      "difficulty": 2,
+      "prompt": "== işleciyle çağrılan özel metodun adını yaz.",
+      "code": "class P:\n    def __init__(self, x):\n        self.x = x\n\n    def ___(self, other):\n        return self.x == other.x\n\nprint(P(1) == P(1))",
+      "answer": "__eq__",
+      "expectedOutput": "True",
+      "hints": [
+        "Eşitlik, 'equal' sözcüğünün kısaltmasıdır.",
+        "Adı iki alt çizgiyle başlayıp biter."
+      ],
+      "explanation": "a == b ifadesi a.__eq__(b)'yi çağırır. Varsayılan sürüm kimliğe bakar; kendi __eq__'in değere göre eşitlik tanımlar.",
+      "acceptedAnswers": [
+        "__eq__"
+      ],
+      "solutionCode": "class P:\n    def __init__(self, x):\n        self.x = x\n\n    def __eq__(self, other):\n        return self.x == other.x\n\nprint(P(1) == P(1))"
+    },
+    {
+      "id": "m12-q21",
+      "type": "fill",
+      "topic": "dataclass-field",
+      "sectionId": "dataclass",
+      "difficulty": 2,
+      "prompt": "Her nesne için yeni bir liste kuran alan tanımını tamamla.",
+      "code": "from dataclasses import dataclass, field\n\n@dataclass\nclass Box:\n    tags: list = ___(default_factory=list)\n\nprint(Box().tags, Box().tags is Box().tags)",
+      "answer": "field",
+      "expectedOutput": "[] False",
+      "hints": [
+        "dataclasses modülünden içe aktarılan ikinci ad.",
+        "default_factory bu işlevin bir parametresidir."
+      ],
+      "explanation": "field(default_factory=list) her nesne için yeni bir liste üretir; bu yüzden iki Box aynı listeyi paylaşmaz (is False).",
+      "acceptedAnswers": [
+        "field"
+      ],
+      "solutionCode": "from dataclasses import dataclass, field\n\n@dataclass\nclass Box:\n    tags: list = field(default_factory=list)\n\nprint(Box().tags, Box().tags is Box().tags)"
+    },
+    {
+      "id": "m12-q22",
+      "type": "fill",
+      "topic": "descriptor",
+      "sectionId": "descriptor-metaclass",
+      "difficulty": 3,
+      "prompt": "Descriptor'ün öznitelik okunurken çağrılan metodunun adını yaz.",
+      "code": "class Upper:\n    def ___(self, obj, owner=None):\n        return \"HAV\"\n\nclass Dog:\n    sound = Upper()\n\nprint(Dog().sound)",
+      "answer": "__get__",
+      "expectedOutput": "HAV",
+      "hints": [
+        "Descriptor protokolünün okuma metodu.",
+        "Adı 'get' sözcüğünü içerir."
+      ],
+      "explanation": "Sınıf özniteliği olan nesne __get__ tanımlıyorsa Dog().sound okunurken Python bu metodu çağırır ve dönen değeri verir; property'nin çalışma biçimi de budur.",
+      "acceptedAnswers": [
+        "__get__"
+      ],
+      "solutionCode": "class Upper:\n    def __get__(self, obj, owner=None):\n        return \"HAV\"\n\nclass Dog:\n    sound = Upper()\n\nprint(Dog().sound)"
+    },
+    {
+      "id": "m12-q23",
+      "type": "order",
+      "topic": "duck-typing",
+      "sectionId": "polymorphism",
+      "difficulty": 1,
+      "prompt": "İki ilgisiz sınıfı aynı döngüde konuşturacak sırayı kur.",
+      "expectedOutput": "hav\nmiyav",
+      "hints": [
+        "Sınıflar döngüden önce tanımlanır.",
+        "Her metot gövdesi tanım başlığının altında girintilidir."
+      ],
+      "explanation": "Dog ve Cat aynı adlı speak metodunu sunar; döngü hangisi olduğunu sormadan çağırır (duck typing).",
+      "answer": "class Dog:\n    def speak(self):\n        return 'hav'\nclass Cat:\n    def speak(self):\n        return 'miyav'\nfor pet in (Dog(), Cat()):\n    print(pet.speak())",
+      "lines": [
+        "for pet in (Dog(), Cat()):",
+        "class Cat:",
+        "    def speak(self):",
+        "    print(pet.speak())",
+        "class Dog:",
+        "    def speak(self):",
+        "        return 'hav'",
+        "        return 'miyav'"
+      ],
+      "solutionCode": "class Dog:\n    def speak(self):\n        return 'hav'\nclass Cat:\n    def speak(self):\n        return 'miyav'\nfor pet in (Dog(), Cat()):\n    print(pet.speak())"
+    },
+    {
+      "id": "m12-q24",
+      "type": "order",
+      "topic": "abstractmethod",
+      "sectionId": "abc",
+      "difficulty": 2,
+      "prompt": "Soyut sınıfı ve onu uygulayan alt sınıfı kullanacak sırayı kur.",
+      "expectedOutput": "bitti",
+      "hints": [
+        "İçe aktarma en üstte olmalı.",
+        "Decorator, uyguladığı metodun hemen üstünde durur."
+      ],
+      "explanation": "abc içe aktarılır, soyut Base tanımlanır, Job soyut metodu yazar ve nesne en sonda kurulup çağrılır.",
+      "answer": "from abc import ABC, abstractmethod\nclass Base(ABC):\n    @abstractmethod\n    def run(self):\n        ...\nclass Job(Base):\n    def run(self):\n        return 'bitti'\nprint(Job().run())",
+      "lines": [
+        "    def run(self):",
+        "    @abstractmethod",
+        "print(Job().run())",
+        "from abc import ABC, abstractmethod",
+        "        ...",
+        "        return 'bitti'",
+        "class Base(ABC):",
+        "class Job(Base):",
+        "    def run(self):"
+      ],
+      "solutionCode": "from abc import ABC, abstractmethod\nclass Base(ABC):\n    @abstractmethod\n    def run(self):\n        ...\nclass Job(Base):\n    def run(self):\n        return 'bitti'\nprint(Job().run())"
+    },
+    {
+      "id": "m12-q25",
+      "type": "order",
+      "topic": "dataclass",
+      "sectionId": "dataclass",
+      "difficulty": 2,
+      "prompt": "Bir dataclass tanımlayıp yazdıracak sırayı kur.",
+      "expectedOutput": "Point(x=1, y=2)",
+      "hints": [
+        "Decorator, class satırının hemen üstündedir.",
+        "Alanlar sınıf başlığından sonra gelir."
+      ],
+      "explanation": "Önce dataclass içe aktarılır, sonra @dataclass ile işaretlenen sınıf iki alanla tanımlanır; nesne yazdırılınca üretilen __repr__ alan adlarını gösterir.",
+      "answer": "from dataclasses import dataclass\n@dataclass\nclass Point:\n    x: int\n    y: int\nprint(Point(1, 2))",
+      "lines": [
+        "    y: int",
+        "@dataclass",
+        "print(Point(1, 2))",
+        "from dataclasses import dataclass",
+        "    x: int",
+        "class Point:"
+      ],
+      "solutionCode": "from dataclasses import dataclass\n@dataclass\nclass Point:\n    x: int\n    y: int\nprint(Point(1, 2))"
+    },
+    {
+      "id": "m12-q26",
+      "type": "order",
+      "topic": "mixin",
+      "sectionId": "mro",
+      "difficulty": 3,
+      "prompt": "Mixin'in super() ile Animal'a ulaştığı sırayı kur.",
+      "expectedOutput": "HAV",
+      "hints": [
+        "Dog'un MRO'su: Dog, Loud, Animal.",
+        "Loud içindeki super() Animal'a gider; Animal ve Loud, Dog'dan önce tanımlanmalı."
+      ],
+      "explanation": "Dog(Loud, Animal) için MRO Dog, Loud, Animal'dır. Loud.speak, super() ile Animal.speak'i çağırır ve sonucu büyük harfe çevirir.",
+      "answer": "class Animal:\n    def speak(self):\n        return 'hav'\nclass Loud:\n    def speak(self):\n        return super().speak().upper()\nclass Dog(Loud, Animal):\n    pass\nprint(Dog().speak())",
+      "lines": [
+        "print(Dog().speak())",
+        "class Loud:",
+        "class Dog(Loud, Animal):",
+        "    def speak(self):",
+        "class Animal:",
+        "        return super().speak().upper()",
+        "    pass",
+        "        return 'hav'",
+        "    def speak(self):"
+      ],
+      "solutionCode": "class Animal:\n    def speak(self):\n        return 'hav'\nclass Loud:\n    def speak(self):\n        return super().speak().upper()\nclass Dog(Loud, Animal):\n    pass\nprint(Dog().speak())"
+    },
+    {
+      "id": "m12-q27",
+      "type": "code",
+      "topic": "duck-typing",
+      "sectionId": "polymorphism",
+      "difficulty": 1,
+      "prompt": "Square hazır. Rectangle (genişlik, yükseklik) ve Triangle (taban, yükseklik) sınıflarının area() metotlarını yaz; ikisinin de ortak üst sınıfı olması gerekmez. Program şekilleri okuyup her birinin alanını ve toplamı yazdırır.",
+      "starterCode": "class Square:\n    def __init__(self, side):\n        self.side = side\n\n    def area(self):\n        return self.side ** 2\n\nclass Rectangle:\n    def __init__(self, width, height):\n        self.width, self.height = width, height\n\n    def area(self):\n        pass\n\nclass Triangle:\n    def __init__(self, base, height):\n        self.base, self.height = base, height\n\n    def area(self):\n        pass\n\nshapes = []\nfor _ in range(int(input())):\n    kind, *numbers = input().split()\n    numbers = [int(n) for n in numbers]\n    if kind == \"kare\":\n        shapes.append(Square(*numbers))\n    elif kind == \"dikdörtgen\":\n        shapes.append(Rectangle(*numbers))\n    else:\n        shapes.append(Triangle(*numbers))\nfor shape in shapes:\n    print(f\"{type(shape).__name__}: {shape.area():.1f}\")\nprint(f\"toplam: {sum(shape.area() for shape in shapes):.1f}\")",
+      "answer": "class Square:\n    def __init__(self, side):\n        self.side = side\n\n    def area(self):\n        return self.side ** 2\n\nclass Rectangle:\n    def __init__(self, width, height):\n        self.width, self.height = width, height\n\n    def area(self):\n        return self.width * self.height\n\nclass Triangle:\n    def __init__(self, base, height):\n        self.base, self.height = base, height\n\n    def area(self):\n        return self.base * self.height / 2\n\nshapes = []\nfor _ in range(int(input())):\n    kind, *numbers = input().split()\n    numbers = [int(n) for n in numbers]\n    if kind == \"kare\":\n        shapes.append(Square(*numbers))\n    elif kind == \"dikdörtgen\":\n        shapes.append(Rectangle(*numbers))\n    else:\n        shapes.append(Triangle(*numbers))\nfor shape in shapes:\n    print(f\"{type(shape).__name__}: {shape.area():.1f}\")\nprint(f\"toplam: {sum(shape.area() for shape in shapes):.1f}\")",
+      "exampleInput": "3\nkare 3\ndikdörtgen 2 5\nüçgen 4 5",
+      "expectedOutput": "Square: 9.0\nRectangle: 10.0\nTriangle: 10.0\ntoplam: 29.0",
+      "tests": [
+        {
+          "label": "Üç şekil",
+          "stdin": "3\nkare 3\ndikdörtgen 2 5\nüçgen 4 5",
+          "expectedOutput": "Square: 9.0\nRectangle: 10.0\nTriangle: 10.0\ntoplam: 29.0"
+        },
+        {
+          "label": "Şekil yok",
+          "stdin": "0",
+          "expectedOutput": "toplam: 0.0"
+        },
+        {
+          "label": "Yalnız üçgen",
+          "stdin": "1\nüçgen 3 3",
+          "expectedOutput": "Triangle: 4.5\ntoplam: 4.5"
+        },
+        {
+          "label": "Aynı tür tekrar",
+          "stdin": "2\nkare 1\nkare 2",
+          "expectedOutput": "Square: 1.0\nSquare: 4.0\ntoplam: 5.0"
+        }
+      ],
+      "hints": [
+        "Dikdörtgenin alanı genişlik çarpı yükseklik, üçgeninki taban çarpı yükseklik bölü iki.",
+        "Metotlar değeri return ile döndürmeli; ortak üst sınıf yazma."
+      ],
+      "explanation": "Her sınıf aynı area adını sunduğu için döngü ve sum nesnenin türünü bilmeden çalışır (duck typing).",
+      "solutionCode": "class Square:\n    def __init__(self, side):\n        self.side = side\n\n    def area(self):\n        return self.side ** 2\n\nclass Rectangle:\n    def __init__(self, width, height):\n        self.width, self.height = width, height\n\n    def area(self):\n        return self.width * self.height\n\nclass Triangle:\n    def __init__(self, base, height):\n        self.base, self.height = base, height\n\n    def area(self):\n        return self.base * self.height / 2\n\nshapes = []\nfor _ in range(int(input())):\n    kind, *numbers = input().split()\n    numbers = [int(n) for n in numbers]\n    if kind == \"kare\":\n        shapes.append(Square(*numbers))\n    elif kind == \"dikdörtgen\":\n        shapes.append(Rectangle(*numbers))\n    else:\n        shapes.append(Triangle(*numbers))\nfor shape in shapes:\n    print(f\"{type(shape).__name__}: {shape.area():.1f}\")\nprint(f\"toplam: {sum(shape.area() for shape in shapes):.1f}\")"
+    },
+    {
+      "id": "m12-q28",
+      "type": "code",
+      "topic": "abc",
+      "sectionId": "abc",
+      "difficulty": 2,
+      "prompt": "PriceRule soyut sınıfı hazır: apply(price) soyuttur, final(price) ise apply sonucunu 0'ın altına düşürmez. Percent(yüzde) ve Fixed(tutar) alt sınıflarını yaz: Percent price * (100 - yüzde) // 100, Fixed price - tutar hesaplar. Program 'yüzde N' ya da 'sabit N' kuralını ve fiyatı okur.",
+      "starterCode": "from abc import ABC, abstractmethod\n\nclass PriceRule(ABC):\n    @abstractmethod\n    def apply(self, price):\n        ...\n\n    def final(self, price):\n        return max(0, self.apply(price))\n\nclass Percent(PriceRule):\n    pass\n\nclass Fixed(PriceRule):\n    pass\n\nkind, value = input().split()\nprice = int(input())\nrule = Percent(int(value)) if kind == \"yüzde\" else Fixed(int(value))\nprint(rule.final(price))\ntry:\n    PriceRule()\nexcept TypeError:\n    print(\"soyut: True\")",
+      "answer": "from abc import ABC, abstractmethod\n\nclass PriceRule(ABC):\n    @abstractmethod\n    def apply(self, price):\n        ...\n\n    def final(self, price):\n        return max(0, self.apply(price))\n\nclass Percent(PriceRule):\n    def __init__(self, percent):\n        self.percent = percent\n\n    def apply(self, price):\n        return price * (100 - self.percent) // 100\n\nclass Fixed(PriceRule):\n    def __init__(self, amount):\n        self.amount = amount\n\n    def apply(self, price):\n        return price - self.amount\n\nkind, value = input().split()\nprice = int(input())\nrule = Percent(int(value)) if kind == \"yüzde\" else Fixed(int(value))\nprint(rule.final(price))\ntry:\n    PriceRule()\nexcept TypeError:\n    print(\"soyut: True\")",
+      "exampleInput": "yüzde 10\n200",
+      "expectedOutput": "180\nsoyut: True",
+      "tests": [
+        {
+          "label": "Yüzde",
+          "stdin": "yüzde 10\n200",
+          "expectedOutput": "180\nsoyut: True"
+        },
+        {
+          "label": "Sabit",
+          "stdin": "sabit 50\n200",
+          "expectedOutput": "150\nsoyut: True"
+        },
+        {
+          "label": "Negatif sonuç sıfırlanır",
+          "stdin": "sabit 500\n200",
+          "expectedOutput": "0\nsoyut: True"
+        },
+        {
+          "label": "Yüzde yüz",
+          "stdin": "yüzde 100\n80",
+          "expectedOutput": "0\nsoyut: True"
+        }
+      ],
+      "hints": [
+        "Her alt sınıfın __init__'i indirim değerini saklamalı.",
+        "final'ı yeniden yazma; yalnızca apply'ı yaz."
+      ],
+      "explanation": "Alt sınıflar yalnızca soyut apply'ı yazar; ortak final metodu hepsinde aynı kuralı (0'ın altına düşme) uygular.",
+      "solutionCode": "from abc import ABC, abstractmethod\n\nclass PriceRule(ABC):\n    @abstractmethod\n    def apply(self, price):\n        ...\n\n    def final(self, price):\n        return max(0, self.apply(price))\n\nclass Percent(PriceRule):\n    def __init__(self, percent):\n        self.percent = percent\n\n    def apply(self, price):\n        return price * (100 - self.percent) // 100\n\nclass Fixed(PriceRule):\n    def __init__(self, amount):\n        self.amount = amount\n\n    def apply(self, price):\n        return price - self.amount\n\nkind, value = input().split()\nprice = int(input())\nrule = Percent(int(value)) if kind == \"yüzde\" else Fixed(int(value))\nprint(rule.final(price))\ntry:\n    PriceRule()\nexcept TypeError:\n    print(\"soyut: True\")"
+    },
+    {
+      "id": "m12-q29",
+      "type": "code",
+      "topic": "dunder",
+      "sectionId": "dunder-basics",
+      "difficulty": 2,
+      "prompt": "Library sınıfına __len__, __getitem__ ve __contains__ ekle (contains büyük/küçük harfe bakmasın). Program kitapları ve bir sorgu adını okur; kitaplık boşsa 'boş kitaplık', değilse sayıyı, ilk ve son kitabı yazar; ardından sorgu kitaplıkta varsa 'var' yoksa 'yok' der.",
+      "starterCode": "class Library:\n    def __init__(self, titles):\n        self._titles = list(titles)\n\n    # __len__, __getitem__ ve __contains__ yaz\n\ntitles = [input() for _ in range(int(input()))]\nquery = input()\nlibrary = Library(titles)\nif not library:\n    print(\"boş kitaplık\")\nelse:\n    print(len(library), library[0], library[-1])\nprint(\"var\" if query in library else \"yok\")",
+      "answer": "class Library:\n    def __init__(self, titles):\n        self._titles = list(titles)\n\n    def __len__(self):\n        return len(self._titles)\n\n    def __getitem__(self, index):\n        return self._titles[index]\n\n    def __contains__(self, title):\n        return title.lower() in (t.lower() for t in self._titles)\n\ntitles = [input() for _ in range(int(input()))]\nquery = input()\nlibrary = Library(titles)\nif not library:\n    print(\"boş kitaplık\")\nelse:\n    print(len(library), library[0], library[-1])\nprint(\"var\" if query in library else \"yok\")",
+      "exampleInput": "3\nDune\nEmma\nUlysses\nemma",
+      "expectedOutput": "3 Dune Ulysses\nvar",
+      "tests": [
+        {
+          "label": "Büyük/küçük harf",
+          "stdin": "3\nDune\nEmma\nUlysses\nemma",
+          "expectedOutput": "3 Dune Ulysses\nvar"
+        },
+        {
+          "label": "Olmayan kitap",
+          "stdin": "2\nA\nB\nC",
+          "expectedOutput": "2 A B\nyok"
+        },
+        {
+          "label": "Boş kitaplık",
+          "stdin": "0\nX",
+          "expectedOutput": "boş kitaplık\nyok"
+        },
+        {
+          "label": "Tek kitap",
+          "stdin": "1\nDune\nDUNE",
+          "expectedOutput": "1 Dune Dune\nvar"
+        }
+      ],
+      "hints": [
+        "if not library koşulu __len__'e dayanır; ayrıca __bool__ yazmana gerek yok.",
+        "__contains__ içinde her iki tarafı da lower() ile karşılaştır."
+      ],
+      "explanation": "__len__ hem len()'i hem boşluk denetimini (if not library) sağlar; __getitem__ indekslemeyi, __contains__ in işlecini tanımlar.",
+      "solutionCode": "class Library:\n    def __init__(self, titles):\n        self._titles = list(titles)\n\n    def __len__(self):\n        return len(self._titles)\n\n    def __getitem__(self, index):\n        return self._titles[index]\n\n    def __contains__(self, title):\n        return title.lower() in (t.lower() for t in self._titles)\n\ntitles = [input() for _ in range(int(input()))]\nquery = input()\nlibrary = Library(titles)\nif not library:\n    print(\"boş kitaplık\")\nelse:\n    print(len(library), library[0], library[-1])\nprint(\"var\" if query in library else \"yok\")"
+    },
+    {
+      "id": "m12-q30",
+      "type": "code",
+      "topic": "islec",
+      "sectionId": "operator-overloading",
+      "difficulty": 2,
+      "prompt": "Vec sınıfına __add__, __sub__, __mul__ (sayıyla çarpma) ve __eq__ ekle; işleçler yeni Vec döndürsün. __repr__ hazır. Program iki vektörü ve bir sayıyı okur; toplam, fark, ilk vektörün sayıyla çarpımı ve eşitlik sonucunu yazdırır.",
+      "starterCode": "class Vec:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\n    def __repr__(self):\n        return f\"Vec({self.x}, {self.y})\"\n\n    # __add__, __sub__, __mul__ ve __eq__ yaz\n\nx1, y1 = map(int, input().split())\nx2, y2 = map(int, input().split())\nk = int(input())\na, b = Vec(x1, y1), Vec(x2, y2)\nprint(a + b)\nprint(a - b)\nprint(a * k)\nprint(a == b)",
+      "answer": "class Vec:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\n    def __repr__(self):\n        return f\"Vec({self.x}, {self.y})\"\n\n    def __add__(self, other):\n        return Vec(self.x + other.x, self.y + other.y)\n\n    def __sub__(self, other):\n        return Vec(self.x - other.x, self.y - other.y)\n\n    def __mul__(self, k):\n        return Vec(self.x * k, self.y * k)\n\n    def __eq__(self, other):\n        if not isinstance(other, Vec):\n            return NotImplemented\n        return (self.x, self.y) == (other.x, other.y)\n\nx1, y1 = map(int, input().split())\nx2, y2 = map(int, input().split())\nk = int(input())\na, b = Vec(x1, y1), Vec(x2, y2)\nprint(a + b)\nprint(a - b)\nprint(a * k)\nprint(a == b)",
+      "exampleInput": "3 4\n1 1\n2",
+      "expectedOutput": "Vec(4, 5)\nVec(2, 3)\nVec(6, 8)\nFalse",
+      "tests": [
+        {
+          "label": "Normal",
+          "stdin": "3 4\n1 1\n2",
+          "expectedOutput": "Vec(4, 5)\nVec(2, 3)\nVec(6, 8)\nFalse"
+        },
+        {
+          "label": "Eşit vektörler",
+          "stdin": "2 2\n2 2\n3",
+          "expectedOutput": "Vec(4, 4)\nVec(0, 0)\nVec(6, 6)\nTrue"
+        },
+        {
+          "label": "Negatif",
+          "stdin": "-1 5\n4 -2\n-1",
+          "expectedOutput": "Vec(3, 3)\nVec(-5, 7)\nVec(1, -5)\nFalse"
+        },
+        {
+          "label": "Sıfırla çarpma",
+          "stdin": "7 8\n0 0\n0",
+          "expectedOutput": "Vec(7, 8)\nVec(7, 8)\nVec(0, 0)\nFalse"
+        }
+      ],
+      "hints": [
+        "Her işleç yeni bir Vec döndürmeli; self'i değiştirme.",
+        "__eq__ için koordinat çiftlerini karşılaştır."
+      ],
+      "explanation": "İşleç metotları operandları değiştirmeden yeni nesne üretir; __eq__ değere göre eşitlik tanımlar.",
+      "solutionCode": "class Vec:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\n    def __repr__(self):\n        return f\"Vec({self.x}, {self.y})\"\n\n    def __add__(self, other):\n        return Vec(self.x + other.x, self.y + other.y)\n\n    def __sub__(self, other):\n        return Vec(self.x - other.x, self.y - other.y)\n\n    def __mul__(self, k):\n        return Vec(self.x * k, self.y * k)\n\n    def __eq__(self, other):\n        if not isinstance(other, Vec):\n            return NotImplemented\n        return (self.x, self.y) == (other.x, other.y)\n\nx1, y1 = map(int, input().split())\nx2, y2 = map(int, input().split())\nk = int(input())\na, b = Vec(x1, y1), Vec(x2, y2)\nprint(a + b)\nprint(a - b)\nprint(a * k)\nprint(a == b)"
+    },
+    {
+      "id": "m12-q31",
+      "type": "code",
+      "topic": "total-ordering",
+      "sectionId": "operator-overloading",
+      "difficulty": 3,
+      "prompt": "Version sınıfı sürüm metnini ('1.10.2') tam sayı demetine çevirir. total_ordering ile sıralanabilmesi için __eq__ ve __lt__ yaz (demetleri karşılaştır). __str__ hazır. Program sürümleri okuyup sıralar, en yenisini yazar ve <=, >= denemesinin sonucunu gösterir.",
+      "starterCode": "from functools import total_ordering\n\n@total_ordering\nclass Version:\n    def __init__(self, text):\n        self.text = text\n        self.parts = tuple(int(part) for part in text.split(\".\"))\n\n    def __str__(self):\n        return self.text\n\n    # __eq__ ve __lt__ yaz\n\nversions = [Version(input()) for _ in range(int(input()))]\nprint(\" < \".join(str(v) for v in sorted(versions)))\nprint(\"en yeni:\", max(versions))\nprint(Version(\"1.0\") <= Version(\"1.0\"), Version(\"1.0\") >= Version(\"2.0\"))",
+      "answer": "from functools import total_ordering\n\n@total_ordering\nclass Version:\n    def __init__(self, text):\n        self.text = text\n        self.parts = tuple(int(part) for part in text.split(\".\"))\n\n    def __str__(self):\n        return self.text\n\n    def __eq__(self, other):\n        if not isinstance(other, Version):\n            return NotImplemented\n        return self.parts == other.parts\n\n    def __lt__(self, other):\n        if not isinstance(other, Version):\n            return NotImplemented\n        return self.parts < other.parts\n\nversions = [Version(input()) for _ in range(int(input()))]\nprint(\" < \".join(str(v) for v in sorted(versions)))\nprint(\"en yeni:\", max(versions))\nprint(Version(\"1.0\") <= Version(\"1.0\"), Version(\"1.0\") >= Version(\"2.0\"))",
+      "exampleInput": "3\n1.2.0\n1.10.0\n1.9.5",
+      "expectedOutput": "1.2.0 < 1.9.5 < 1.10.0\nen yeni: 1.10.0\nTrue False",
+      "tests": [
+        {
+          "label": "Sayısal sıralama",
+          "stdin": "3\n1.2.0\n1.10.0\n1.9.5",
+          "expectedOutput": "1.2.0 < 1.9.5 < 1.10.0\nen yeni: 1.10.0\nTrue False"
+        },
+        {
+          "label": "Tek sürüm",
+          "stdin": "1\n3.1",
+          "expectedOutput": "3.1\nen yeni: 3.1\nTrue False"
+        },
+        {
+          "label": "Farklı uzunluk",
+          "stdin": "2\n2.0.0\n2.0",
+          "expectedOutput": "2.0 < 2.0.0\nen yeni: 2.0.0\nTrue False"
+        },
+        {
+          "label": "Ters girdi",
+          "stdin": "3\n10.0\n9.9\n9.10",
+          "expectedOutput": "9.9 < 9.10 < 10.0\nen yeni: 10.0\nTrue False"
+        }
+      ],
+      "hints": [
+        "Metin yerine self.parts demetlerini karşılaştır: '1.10' metin olarak '1.9'dan küçüktür, sayı olarak büyüktür.",
+        "total_ordering, yalnızca __eq__ ve bir sıralama metodundan diğerlerini türetir."
+      ],
+      "explanation": "Sürümleri metin olarak karşılaştırmak '1.10' < '1.9' sonucunu verirdi. Tam sayı demetleri doğru sıralar; total_ordering eksik karşılaştırma işleçlerini tamamlar.",
+      "solutionCode": "from functools import total_ordering\n\n@total_ordering\nclass Version:\n    def __init__(self, text):\n        self.text = text\n        self.parts = tuple(int(part) for part in text.split(\".\"))\n\n    def __str__(self):\n        return self.text\n\n    def __eq__(self, other):\n        if not isinstance(other, Version):\n            return NotImplemented\n        return self.parts == other.parts\n\n    def __lt__(self, other):\n        if not isinstance(other, Version):\n            return NotImplemented\n        return self.parts < other.parts\n\nversions = [Version(input()) for _ in range(int(input()))]\nprint(\" < \".join(str(v) for v in sorted(versions)))\nprint(\"en yeni:\", max(versions))\nprint(Version(\"1.0\") <= Version(\"1.0\"), Version(\"1.0\") >= Version(\"2.0\"))"
+    },
+    {
+      "id": "m12-q32",
+      "type": "code",
+      "topic": "mixin",
+      "sectionId": "mro",
+      "difficulty": 2,
+      "prompt": "JsonMixin'e to_json() (vars(self)'i anahtarlara göre sıralı ve ensure_ascii=False ile JSON'a çevirir) ve from_json(text) classmethod'unu (JSON'u çözüp cls(**veri) kurar) yaz. User ve Product mixin'i kullanır. Program bir nesne kurar, JSON'a çevirir, geri kurar ve eşitliği gösterir.",
+      "starterCode": "import json\n\nclass JsonMixin:\n    def to_json(self):\n        # vars(self)'i anahtarları sıralı, ensure_ascii=False ile JSON'a çevir\n        return \"\"\n\n    @classmethod\n    def from_json(cls, text):\n        # JSON'u çöz ve cls(**veri) ile nesne kur\n        return None\n\nclass User(JsonMixin):\n    def __init__(self, name, age):\n        self.name, self.age = name, age\n\nclass Product(JsonMixin):\n    def __init__(self, title, price):\n        self.title, self.price = title, price\n\nkind = input()\nfirst = input()\nsecond = int(input())\nmodel = User if kind == \"user\" else Product\nobj = model(first, second)\ntext = obj.to_json()\nprint(text)\ncopy = model.from_json(text)\nprint(type(copy).__name__, vars(copy) == vars(obj))",
+      "answer": "import json\n\nclass JsonMixin:\n    def to_json(self):\n        return json.dumps(vars(self), sort_keys=True, ensure_ascii=False)\n\n    @classmethod\n    def from_json(cls, text):\n        return cls(**json.loads(text))\n\nclass User(JsonMixin):\n    def __init__(self, name, age):\n        self.name, self.age = name, age\n\nclass Product(JsonMixin):\n    def __init__(self, title, price):\n        self.title, self.price = title, price\n\nkind = input()\nfirst = input()\nsecond = int(input())\nmodel = User if kind == \"user\" else Product\nobj = model(first, second)\ntext = obj.to_json()\nprint(text)\ncopy = model.from_json(text)\nprint(type(copy).__name__, vars(copy) == vars(obj))",
+      "exampleInput": "user\nAda\n30",
+      "expectedOutput": "{\"age\": 30, \"name\": \"Ada\"}\nUser True",
+      "tests": [
+        {
+          "label": "Kullanıcı",
+          "stdin": "user\nAda\n30",
+          "expectedOutput": "{\"age\": 30, \"name\": \"Ada\"}\nUser True"
+        },
+        {
+          "label": "Ürün",
+          "stdin": "product\nKalem\n12",
+          "expectedOutput": "{\"price\": 12, \"title\": \"Kalem\"}\nProduct True"
+        },
+        {
+          "label": "Türkçe karakter",
+          "stdin": "user\nÇağrı\n5",
+          "expectedOutput": "{\"age\": 5, \"name\": \"Çağrı\"}\nUser True"
+        },
+        {
+          "label": "Sıfır fiyat",
+          "stdin": "product\nDefter\n0",
+          "expectedOutput": "{\"price\": 0, \"title\": \"Defter\"}\nProduct True"
+        }
+      ],
+      "hints": [
+        "json.dumps için sort_keys=True ve ensure_ascii=False ver.",
+        "from_json'da cls(**json.loads(text)) yaz; sınıf adını sabit yazma."
+      ],
+      "explanation": "Mixin, kendi başına örneklenmeyen ama her sınıfa aynı davranışı ekleyen küçük bir sınıftır. from_json'daki cls sayesinde User.from_json User, Product.from_json Product üretir.",
+      "solutionCode": "import json\n\nclass JsonMixin:\n    def to_json(self):\n        return json.dumps(vars(self), sort_keys=True, ensure_ascii=False)\n\n    @classmethod\n    def from_json(cls, text):\n        return cls(**json.loads(text))\n\nclass User(JsonMixin):\n    def __init__(self, name, age):\n        self.name, self.age = name, age\n\nclass Product(JsonMixin):\n    def __init__(self, title, price):\n        self.title, self.price = title, price\n\nkind = input()\nfirst = input()\nsecond = int(input())\nmodel = User if kind == \"user\" else Product\nobj = model(first, second)\ntext = obj.to_json()\nprint(text)\ncopy = model.from_json(text)\nprint(type(copy).__name__, vars(copy) == vars(obj))"
+    },
+    {
+      "id": "m12-q33",
+      "type": "code",
+      "topic": "dataclass",
+      "sectionId": "dataclass",
+      "difficulty": 2,
+      "prompt": "Student adında bir dataclass yaz: name (str) ve grades (liste; her nesne için ayrı, varsayılan boş). average() notların ortalamasını, not yoksa 0.0 döndürsün. Program öğrencileri okur, ortalamaları yazar ve iki öğrencinin not listesini paylaşmadığını gösterir.",
+      "starterCode": "from dataclasses import dataclass, field\n\n# Student dataclass'ını yaz\n\nfor _ in range(int(input())):\n    name, *grades = input().split()\n    student = Student(name, [int(g) for g in grades])\n    print(f\"{student.name}: {student.average():.1f}\")\nprint(\"liste paylaşılmıyor:\", Student(\"a\").grades is not Student(\"b\").grades)",
+      "answer": "from dataclasses import dataclass, field\n\n@dataclass\nclass Student:\n    name: str\n    grades: list = field(default_factory=list)\n\n    def average(self):\n        return sum(self.grades) / len(self.grades) if self.grades else 0.0\n\nfor _ in range(int(input())):\n    name, *grades = input().split()\n    student = Student(name, [int(g) for g in grades])\n    print(f\"{student.name}: {student.average():.1f}\")\nprint(\"liste paylaşılmıyor:\", Student(\"a\").grades is not Student(\"b\").grades)",
+      "exampleInput": "2\nAda 90 80\nCan 70",
+      "expectedOutput": "Ada: 85.0\nCan: 70.0\nliste paylaşılmıyor: True",
+      "tests": [
+        {
+          "label": "İki öğrenci",
+          "stdin": "2\nAda 90 80\nCan 70",
+          "expectedOutput": "Ada: 85.0\nCan: 70.0\nliste paylaşılmıyor: True"
+        },
+        {
+          "label": "Notu olmayan",
+          "stdin": "1\nEda",
+          "expectedOutput": "Eda: 0.0\nliste paylaşılmıyor: True"
+        },
+        {
+          "label": "Öğrenci yok",
+          "stdin": "0",
+          "expectedOutput": "liste paylaşılmıyor: True"
+        },
+        {
+          "label": "Ondalık ortalama",
+          "stdin": "1\nBo 1 2",
+          "expectedOutput": "Bo: 1.5\nliste paylaşılmıyor: True"
+        }
+      ],
+      "hints": [
+        "grades için field(default_factory=list) kullan.",
+        "average içinde boş listeyi ayrı karşıla."
+      ],
+      "explanation": "@dataclass __init__ ve __repr__'i üretir; default_factory her öğrenciye ayrı bir liste verir. Boş listede ortalama 0.0 olarak ayrıca ele alınır.",
+      "solutionCode": "from dataclasses import dataclass, field\n\n@dataclass\nclass Student:\n    name: str\n    grades: list = field(default_factory=list)\n\n    def average(self):\n        return sum(self.grades) / len(self.grades) if self.grades else 0.0\n\nfor _ in range(int(input())):\n    name, *grades = input().split()\n    student = Student(name, [int(g) for g in grades])\n    print(f\"{student.name}: {student.average():.1f}\")\nprint(\"liste paylaşılmıyor:\", Student(\"a\").grades is not Student(\"b\").grades)"
+    },
+    {
+      "id": "m12-q34",
+      "type": "code",
+      "topic": "frozen-order",
+      "sectionId": "dataclass",
+      "difficulty": 3,
+      "prompt": "Task'ı sıralanabilir (order=True) ve değiştirilemez (frozen=True) bir dataclass yap: priority (int) ve title (str). priority 1'den küçükse __post_init__ ValueError('öncelik 1 veya daha büyük olmalı') fırlatsın. Program görevleri okur, geçersizleri 'hata: ...' ile bildirir, geçerlileri sıralı yazar ve ilk görevi değiştirmeyi dener.",
+      "starterCode": "from dataclasses import dataclass, FrozenInstanceError\n\n@dataclass\nclass Task:\n    priority: int\n    title: str\n\ntasks = []\nfor _ in range(int(input())):\n    priority, title = input().split(maxsplit=1)\n    try:\n        tasks.append(Task(int(priority), title))\n    except ValueError as error:\n        print(\"hata:\", error)\nfor task in sorted(tasks):\n    print(f\"{task.priority}: {task.title}\")\nif tasks:\n    try:\n        tasks[0].priority = 99\n    except FrozenInstanceError:\n        print(\"değiştirilemez\")",
+      "answer": "from dataclasses import dataclass, FrozenInstanceError\n\n@dataclass(order=True, frozen=True)\nclass Task:\n    priority: int\n    title: str\n\n    def __post_init__(self):\n        if self.priority < 1:\n            raise ValueError(\"öncelik 1 veya daha büyük olmalı\")\n\ntasks = []\nfor _ in range(int(input())):\n    priority, title = input().split(maxsplit=1)\n    try:\n        tasks.append(Task(int(priority), title))\n    except ValueError as error:\n        print(\"hata:\", error)\nfor task in sorted(tasks):\n    print(f\"{task.priority}: {task.title}\")\nif tasks:\n    try:\n        tasks[0].priority = 99\n    except FrozenInstanceError:\n        print(\"değiştirilemez\")",
+      "exampleInput": "3\n2 rapor\n1 test\n3 yayın",
+      "expectedOutput": "1: test\n2: rapor\n3: yayın\ndeğiştirilemez",
+      "tests": [
+        {
+          "label": "Sıralama",
+          "stdin": "3\n2 rapor\n1 test\n3 yayın",
+          "expectedOutput": "1: test\n2: rapor\n3: yayın\ndeğiştirilemez"
+        },
+        {
+          "label": "Geçersiz öncelik",
+          "stdin": "2\n0 hatalı\n1 iyi",
+          "expectedOutput": "hata: öncelik 1 veya daha büyük olmalı\n1: iyi\ndeğiştirilemez"
+        },
+        {
+          "label": "Tek görev",
+          "stdin": "1\n5 tek",
+          "expectedOutput": "5: tek\ndeğiştirilemez"
+        },
+        {
+          "label": "Aynı öncelik başlığa göre",
+          "stdin": "2\n1 b\n1 a",
+          "expectedOutput": "1: a\n1: b\ndeğiştirilemez"
+        }
+      ],
+      "hints": [
+        "@dataclass(order=True, frozen=True) yaz.",
+        "Doğrulama __post_init__ içinde; frozen sınıfta bile alan atamadan yalnızca denetleyebilirsin."
+      ],
+      "explanation": "order=True alanların sırasıyla karşılaştırma üretir, frozen=True alan atamayı yasaklar. __post_init__ nesne kurulurken doğrulama yapar.",
+      "solutionCode": "from dataclasses import dataclass, FrozenInstanceError\n\n@dataclass(order=True, frozen=True)\nclass Task:\n    priority: int\n    title: str\n\n    def __post_init__(self):\n        if self.priority < 1:\n            raise ValueError(\"öncelik 1 veya daha büyük olmalı\")\n\ntasks = []\nfor _ in range(int(input())):\n    priority, title = input().split(maxsplit=1)\n    try:\n        tasks.append(Task(int(priority), title))\n    except ValueError as error:\n        print(\"hata:\", error)\nfor task in sorted(tasks):\n    print(f\"{task.priority}: {task.title}\")\nif tasks:\n    try:\n        tasks[0].priority = 99\n    except FrozenInstanceError:\n        print(\"değiştirilemez\")"
+    },
+    {
+      "id": "m12-q35",
+      "type": "code",
+      "topic": "slots",
+      "sectionId": "slots",
+      "difficulty": 2,
+      "prompt": "Particle sınıfına __slots__ ekle (x, y, vx, vy) ve move() metodunu yaz: x vx kadar, y vy kadar artsın. Program başlangıç konumunu, hızı ve adım sayısını okur, parçacığı hareket ettirir ve olmayan bir öznitelik atamanın hata verdiğini gösterir.",
+      "starterCode": "class Particle:\n    # __slots__ ekle\n\n    def __init__(self, x, y, vx, vy):\n        self.x, self.y, self.vx, self.vy = x, y, vx, vy\n\n    def move(self):\n        # x ve y'yi hız kadar artır\n        pass\n\nx, y, vx, vy, steps = (int(input()) for _ in range(5))\nparticle = Particle(x, y, vx, vy)\nfor _ in range(steps):\n    particle.move()\nprint(particle.x, particle.y)\ntry:\n    particle.z = 1\nexcept AttributeError:\n    print(\"yeni öznitelik eklenemez\")",
+      "answer": "class Particle:\n    __slots__ = (\"x\", \"y\", \"vx\", \"vy\")\n\n    def __init__(self, x, y, vx, vy):\n        self.x, self.y, self.vx, self.vy = x, y, vx, vy\n\n    def move(self):\n        self.x += self.vx\n        self.y += self.vy\n\nx, y, vx, vy, steps = (int(input()) for _ in range(5))\nparticle = Particle(x, y, vx, vy)\nfor _ in range(steps):\n    particle.move()\nprint(particle.x, particle.y)\ntry:\n    particle.z = 1\nexcept AttributeError:\n    print(\"yeni öznitelik eklenemez\")",
+      "exampleInput": "0\n0\n1\n2\n3",
+      "expectedOutput": "3 6\nyeni öznitelik eklenemez",
+      "tests": [
+        {
+          "label": "Üç adım",
+          "stdin": "0\n0\n1\n2\n3",
+          "expectedOutput": "3 6\nyeni öznitelik eklenemez"
+        },
+        {
+          "label": "Negatif hız",
+          "stdin": "5\n5\n-1\n0\n5",
+          "expectedOutput": "0 5\nyeni öznitelik eklenemez"
+        },
+        {
+          "label": "Hiç adım yok",
+          "stdin": "2\n3\n9\n9\n0",
+          "expectedOutput": "2 3\nyeni öznitelik eklenemez"
+        },
+        {
+          "label": "Çok adım",
+          "stdin": "1\n1\n2\n-3\n10",
+          "expectedOutput": "21 -29\nyeni öznitelik eklenemez"
+        }
+      ],
+      "hints": [
+        "__slots__ bir demet olmalı: dört adı yaz.",
+        "move içinde self.x += self.vx ve self.y += self.vy kullan."
+      ],
+      "explanation": "__slots__ nesnenin taşıyabileceği öznitelikleri sabitler; tanımsız bir adı atamak AttributeError verir ve yazım hatalarını erkenden yakalar.",
+      "solutionCode": "class Particle:\n    __slots__ = (\"x\", \"y\", \"vx\", \"vy\")\n\n    def __init__(self, x, y, vx, vy):\n        self.x, self.y, self.vx, self.vy = x, y, vx, vy\n\n    def move(self):\n        self.x += self.vx\n        self.y += self.vy\n\nx, y, vx, vy, steps = (int(input()) for _ in range(5))\nparticle = Particle(x, y, vx, vy)\nfor _ in range(steps):\n    particle.move()\nprint(particle.x, particle.y)\ntry:\n    particle.z = 1\nexcept AttributeError:\n    print(\"yeni öznitelik eklenemez\")"
+    },
+    {
+      "id": "m12-q36",
+      "type": "code",
+      "topic": "descriptor",
+      "sectionId": "descriptor-metaclass",
+      "difficulty": 3,
+      "prompt": "Bounded(alt, üst) adında bir descriptor yaz: __set_name__ ile alan adını ve saklama adını (_ad) öğrensin, __get__ değeri nesneden okusun, __set__ değer [alt, üst] aralığı dışındaysa ValueError(f'{ad} {alt} ile {üst} arasında olmalı') fırlatsın. Player sınıfı bunu iki alanda kullanıyor.",
+      "starterCode": "class Bounded:\n    pass\n\nclass Player:\n    health = Bounded(0, 100)\n    level = Bounded(1, 50)\n\n    def __init__(self, health, level):\n        self.health = health\n        self.level = level\n\ntry:\n    player = Player(int(input()), int(input()))\n    print(player.health, player.level)\nexcept ValueError as error:\n    print(\"hata:\", error)",
+      "answer": "class Bounded:\n    def __init__(self, low, high):\n        self.low, self.high = low, high\n\n    def __set_name__(self, owner, name):\n        self.name = name\n        self.storage = \"_\" + name\n\n    def __get__(self, obj, owner=None):\n        if obj is None:\n            return self\n        return getattr(obj, self.storage)\n\n    def __set__(self, obj, value):\n        if not self.low <= value <= self.high:\n            raise ValueError(f\"{self.name} {self.low} ile {self.high} arasında olmalı\")\n        setattr(obj, self.storage, value)\n\nclass Player:\n    health = Bounded(0, 100)\n    level = Bounded(1, 50)\n\n    def __init__(self, health, level):\n        self.health = health\n        self.level = level\n\ntry:\n    player = Player(int(input()), int(input()))\n    print(player.health, player.level)\nexcept ValueError as error:\n    print(\"hata:\", error)",
+      "exampleInput": "80\n5",
+      "expectedOutput": "80 5",
+      "tests": [
+        {
+          "label": "Geçerli",
+          "stdin": "80\n5",
+          "expectedOutput": "80 5"
+        },
+        {
+          "label": "Can aralık dışı",
+          "stdin": "120\n5",
+          "expectedOutput": "hata: health 0 ile 100 arasında olmalı"
+        },
+        {
+          "label": "Seviye aralık dışı",
+          "stdin": "50\n0",
+          "expectedOutput": "hata: level 1 ile 50 arasında olmalı"
+        },
+        {
+          "label": "Sınır değerler",
+          "stdin": "0\n50",
+          "expectedOutput": "0 50"
+        }
+      ],
+      "hints": [
+        "Nesneye özel değeri descriptor'de değil, nesnede (_health gibi) sakla.",
+        "Alan adını __set_name__ içinde öğren; mesajda ve saklama adında kullan."
+      ],
+      "explanation": "Aynı Bounded sınıfı iki alanda farklı sınırlarla kullanıldı. Değer descriptor'ün içinde değil nesnenin _health ve _level özniteliklerinde saklandığı için nesneler birbirinden bağımsızdır.",
+      "solutionCode": "class Bounded:\n    def __init__(self, low, high):\n        self.low, self.high = low, high\n\n    def __set_name__(self, owner, name):\n        self.name = name\n        self.storage = \"_\" + name\n\n    def __get__(self, obj, owner=None):\n        if obj is None:\n            return self\n        return getattr(obj, self.storage)\n\n    def __set__(self, obj, value):\n        if not self.low <= value <= self.high:\n            raise ValueError(f\"{self.name} {self.low} ile {self.high} arasında olmalı\")\n        setattr(obj, self.storage, value)\n\nclass Player:\n    health = Bounded(0, 100)\n    level = Bounded(1, 50)\n\n    def __init__(self, health, level):\n        self.health = health\n        self.level = level\n\ntry:\n    player = Player(int(input()), int(input()))\n    print(player.health, player.level)\nexcept ValueError as error:\n    print(\"hata:\", error)"
+    },
+    {
+      "id": "m12-q37",
+      "type": "traceback",
+      "topic": "abstractmethod",
+      "sectionId": "abc",
+      "difficulty": 1,
+      "prompt": "Soyut metodu olan bir sınıf doğrudan kuruluyor. Hangi hata oluşur?",
+      "code": "from abc import ABC, abstractmethod\n\nclass Shape(ABC):\n    @abstractmethod\n    def area(self):\n        ...\n\nshape = Shape()",
+      "expectedError": "TypeError",
+      "options": [
+        "TypeError",
+        "NotImplementedError",
+        "AttributeError",
+        "ValueError"
+      ],
+      "optionFeedback": {
+        "NotImplementedError": "abc, metot gövdesinin içinde hata fırlatmaz; nesne kurulmadan önce TypeError ile engeller.",
+        "AttributeError": "Hiçbir öznitelik aranmıyor; hata nesne kurulurken çıkıyor.",
+        "ValueError": "Argüman değeri geçersiz değil; sınıfın kendisi soyut."
+      },
+      "hints": [
+        "Hata hangi satırda, nesne kurulurken mi, metot çağrılırken mi?",
+        "Soyut sınıftan nesne üretmek hangi hatayı verir?"
+      ],
+      "explanation": "Soyut metodu olan sınıf örneklenemez: Can't instantiate abstract class Shape ... TypeError ile bildirilir.",
+      "answer": "TypeError"
+    },
+    {
+      "id": "m12-q38",
+      "type": "traceback",
+      "topic": "slots",
+      "sectionId": "slots",
+      "difficulty": 2,
+      "prompt": "Slotlu bir nesneye tanımsız öznitelik atanıyor. Hangi hata oluşur?",
+      "code": "class Point:\n    __slots__ = (\"x\", \"y\")\n\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\np = Point(1, 2)\np.z = 3",
+      "expectedError": "AttributeError",
+      "options": [
+        "NameError",
+        "AttributeError",
+        "TypeError",
+        "KeyError"
+      ],
+      "optionFeedback": {
+        "TypeError": "Atama biçimi geçerli; sorun, z adında bir slot olmaması.",
+        "KeyError": "Sözlük araması yok; nesnenin __dict__'i bile yok.",
+        "NameError": "p tanımlı; hata, nesne üzerindeki öznitelik atamasından geliyor."
+      },
+      "hints": [
+        "Point'in __dict__'i var mı?",
+        "z, __slots__ listesinde mi?"
+      ],
+      "explanation": "__slots__ yalnızca x ve y için yer ayırır, nesnenin __dict__'i yoktur. z için slot bulunmadığından atama AttributeError verir.",
+      "answer": "AttributeError"
+    },
+    {
+      "id": "m12-q39",
+      "type": "traceback",
+      "topic": "frozen",
+      "sectionId": "dataclass",
+      "difficulty": 2,
+      "prompt": "Dondurulmuş bir dataclass'ın alanına atama yapılıyor. Hangi hata oluşur?",
+      "code": "from dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Point:\n    x: int\n    y: int\n\np = Point(1, 2)\np.x = 5",
+      "expectedError": "FrozenInstanceError",
+      "options": [
+        "TypeError",
+        "ValueError",
+        "FrozenInstanceError",
+        "AttributeError"
+      ],
+      "optionFeedback": {
+        "AttributeError": "FrozenInstanceError, AttributeError'ın alt sınıfıdır; ama tracebackte görünen ve doğru olan özel ad FrozenInstanceError'dır.",
+        "TypeError": "Atama türü ile ilgili bir sorun yok; alan donmuş.",
+        "ValueError": "Değer geçerli; yasak olan atamanın kendisi."
+      },
+      "hints": [
+        "frozen=True neyi yasaklar?",
+        "dataclasses modülünün özel bir hata sınıfı var."
+      ],
+      "explanation": "frozen=True alan atamasını engeller ve dataclasses.FrozenInstanceError fırlatır (AttributeError'ın alt sınıfı). Değiştirilmiş kopya için dataclasses.replace kullanılır.",
+      "answer": "FrozenInstanceError"
+    },
+    {
+      "id": "m12-q40",
+      "type": "traceback",
+      "topic": "mro",
+      "sectionId": "mro",
+      "difficulty": 3,
+      "prompt": "Sınıf başlığındaki sıra MRO ile çelişiyor. Hangi hata oluşur?",
+      "code": "class A:\n    pass\n\nclass B(A):\n    pass\n\nclass Bad(A, B):\n    pass",
+      "expectedError": "TypeError",
+      "options": [
+        "NameError",
+        "RecursionError",
+        "AttributeError",
+        "TypeError"
+      ],
+      "optionFeedback": {
+        "NameError": "A ve B tanımlı; hata sınıf başlığındaki sıradan geliyor.",
+        "RecursionError": "Sonsuz özyineleme yok; MRO hesaplanırken tutarsızlık bulunuyor.",
+        "AttributeError": "Hiçbir öznitelik aranmıyor; sorun sınıfın tanımında."
+      },
+      "hints": [
+        "Bad(A, B) A'nın B'den önce gelmesini istiyor.",
+        "Ama B zaten A'dan türüyor; MRO'da B, A'dan önce gelmek zorunda."
+      ],
+      "explanation": "Bad(A, B) hem A'nın B'den önce gelmesini hem de B'nin A'nın alt sınıfı olduğu için A'dan önce gelmesini ister. Tutarlı bir MRO kurulamaz: TypeError: Cannot create a consistent method resolution order.",
+      "answer": "TypeError"
+    }
+  ]
+}

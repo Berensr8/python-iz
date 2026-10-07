@@ -35,22 +35,61 @@ for (const [label, partial] of [
   const results = await runtime.assess(py, partial, durationTask.tests);
   check(label, () => assert.ok(results.some(result => !result.passed)));
 }
-// M11 "Düzelt" görevinin üç hatası: her biri tek başına ya da ikili kombinasyonla düzeltilince en az bir test kalmalı.
-const playerTask = tasks.find(task => task.id === "m11-w2");
-assert.ok(playerTask);
-const playerFixes = {
+// "Düzelt" görevlerinde her hata tek başına ya da kombinasyonla düzeltilince en az bir test kalmalı (tam düzeltme hariç tüm alt kümeler).
+async function checkPartialFixes(taskId, fixes) {
+  const target = tasks.find(task => task.id === taskId);
+  assert.ok(target, taskId);
+  const names = Object.keys(fixes);
+  for (let mask = 1; mask < (1 << names.length) - 1; mask++) {
+    let partial = target.starterCode;
+    const applied = names.filter((_, index) => mask & (1 << index));
+    for (const name of applied) { const [from, to] = fixes[name]; assert.ok(partial.includes(from), `${taskId}: ${name}`); partial = partial.replace(from, to); }
+    const results = await runtime.assess(py, partial, target.tests);
+    check(`${taskId}: yalnız ${applied.join(" + ")} düzeltilirse testlerde kalır`, () => assert.ok(results.some(result => !result.passed)));
+  }
+  let everything = target.starterCode;
+  for (const [from, to] of Object.values(fixes)) everything = everything.replace(from, to);
+  const full = await runtime.assess(py, everything, target.tests);
+  check(`${taskId}: tüm hatalar düzeltilince testler geçer`, () => assert.ok(full.every(result => result.passed), JSON.stringify(full.filter(result => !result.passed))));
+}
+await checkPartialFixes("m11-w2", {
   "paylaşılan puan listesi": ["class Player:\n    scores = []\n\n    def __init__(self, name):\n        self.name = name\n", "class Player:\n    def __init__(self, name):\n        self.name = name\n        self.scores = []\n"],
   "Captain'da super().__init__": ["    def __init__(self, name, team):\n        self.team = team", "    def __init__(self, name, team):\n        super().__init__(name)\n        self.team = team"],
   "boş listede best": ["return max(self.scores)", "return max(self.scores, default=0)"],
-};
-const fixNames = Object.keys(playerFixes);
-for (let mask = 1; mask < 7; mask++) {
-  let partial = playerTask.starterCode;
-  const applied = fixNames.filter((_, index) => mask & (1 << index));
-  for (const name of applied) { const [from, to] = playerFixes[name]; assert.ok(partial.includes(from), name); partial = partial.replace(from, to); }
-  const results = await runtime.assess(py, partial, playerTask.tests);
-  check(`m11-w2: yalnız ${applied.join(" + ")} düzeltilirse testlerde kalır`, () => assert.ok(results.some(result => !result.passed)));
-}
+});
+// Order matters: "bilinmeyen ürün" and "adet denetimi" both insert before the same line; the unknown-product check must come first.
+await checkPartialFixes("m14-w2", {
+  "adet dönüşümü": ["    name, qty = input().split()\n", "    name, raw = input().split()\n    qty = int(raw)\n"],
+  "bilinmeyen ürün": ["    total += line_total(name, qty)", "    if price_of(name) is None:\n        print(\"bilinmeyen:\", name)\n        continue\n    total += line_total(name, qty)"],
+  "adet denetimi": ["    total += line_total(name, qty)", "    if qty < 1:\n        print(\"geçersiz adet:\", name)\n        continue\n    total += line_total(name, qty)"],
+  "dönüş ipucu": ["def price_of(name: str) -> int:", "def price_of(name: str) -> int | None:"],
+});
+await checkPartialFixes("m15-w2", {
+  "iptal yutuluyor": ["        except asyncio.CancelledError:\n            return None\n", "        except asyncio.CancelledError:\n            raise\n"],
+  "yanlış hata yakalanıyor": ["        except asyncio.CancelledError:\n            print(", "        except TimeoutError:\n            print("],
+  "son deneme eksik": ["range(1, retries)", "range(1, retries + 1)"],
+  "bağlantı yalnız başarıda kapanıyor": ["        else:\n            self.open -= 1\n", "        finally:\n            self.open -= 1\n"],
+});
+await checkPartialFixes("workshop4-fix", {
+  "--words yönü": ['action="store_false"', 'action="store_true"'],
+  "--min türü": ['parser.add_argument("--min", default=1)', 'parser.add_argument("--min", type=int, default=1)'],
+  "olmayan dosya": ["        n = count(Path(name), args.words, args.min)", "        path = Path(name)\n        if not path.exists():\n            print(f\"bulunamadı: {name}\")\n            continue\n        n = count(path, args.words, args.min)"],
+});
+await checkPartialFixes("workshop5-fix", {
+  "depolar ayrı sözlük": ["class Warehouse:\n    items = {}\n\n    def __init__(self, name):\n        self.name = name\n", "class Warehouse:\n    def __init__(self, name):\n        self.name = name\n        self.items = {}\n"],
+  "ada göre sıralama": ["@dataclass(order=True)\nclass StockItem:\n    qty: int\n    sku: str", "@dataclass(order=True)\nclass StockItem:\n    sku: str\n    qty: int"],
+  "yetersiz stok denetimi": ["        self.items[sku].qty -= qty", "        if qty > self.items[sku].qty:\n            raise ValueError(f\"yetersiz stok: {sku}\")\n        self.items[sku].qty -= qty"],
+});
+await checkPartialFixes("m13-w2", {
+  "önbellek dışarıda": ["    def wrapper(n):\n        cache = {}\n", "    cache = {}\n    def wrapper(n):\n"],
+  "sonucu döndür": ["        cache[n]\n    return wrapper", "        return cache[n]\n    return wrapper"],
+  "wraps": ["    def wrapper(n):", "    @wraps(func)\n    def wrapper(n):"],
+});
+await checkPartialFixes("m12-w2", {
+  "toplama yeni nesne döndürür": ["        self.cents += other.cents\n        return self", "        return Money(self.cents + other.cents)"],
+  "__radd__": ["    def __lt__(self, other):", "    def __radd__(self, other):\n        return self if other == 0 else NotImplemented\n\n    def __lt__(self, other):"],
+  "__lt__ yönü": ["return self.cents > other.cents", "return self.cents < other.cents"],
+});
 const alternate = await runtime.assess(py, "value = int(input())\nprint(60 * value)", tasks[0].tests);
 check("Farklı doğru çözüm kabul edilir", () => assert.ok(alternate.every(item => item.passed)));
 await runtime.execute(py, "leaked_name = 99");
@@ -90,6 +129,15 @@ check("Ders çalıştırılmadan tamamlanamaz; bölüm ve XP bir kez kaydedilir"
   assert.deepEqual(parseProgress({ ...done, lessonRuns: undefined }).lessonRuns, {});
   assert.ok(parseProgress({ ...done, lessonRuns: undefined }).completedSections["m1:repl-syntax"]);
 });
+const loopBefore = py.runPython("import asyncio\ntype(asyncio.events._get_running_loop()).__name__ + ' ' + str(asyncio.run is asyncio.runners.run) + ' ' + type(asyncio.get_event_loop_policy()).__name__");
+const asyncRun = await runtime.execute(py, 'import asyncio\nasync def job(name, delay):\n    await asyncio.sleep(delay)\n    print(name)\nasync def main():\n    loop = asyncio.get_running_loop()\n    start = loop.time()\n    await asyncio.gather(job("yavaş", 2), job("hızlı", 1))\n    print(f"{loop.time() - start:.1f}")\nasyncio.run(main())');
+check("asyncio.run çalışır; beklemeler atlanır ama loop.time() gerçek Python'daki gibi ilerler", () => assert.deepEqual(asyncRun, { ok: true, output: "hızlı\nyavaş\n2.0" }));
+const asyncTimeout = await runtime.execute(py, 'import asyncio\nasync def main():\n    try:\n        await asyncio.wait_for(asyncio.sleep(60), timeout=0.5)\n    except TimeoutError:\n        print("zaman aşımı")\nasyncio.run(main())');
+check("asyncio zaman aşımı çalışır", () => assert.deepEqual(asyncTimeout, { ok: true, output: "zaman aşımı" }));
+const asyncStuck = await runtime.execute(py, 'import asyncio\nasync def main():\n    await asyncio.Event().wait()\nasyncio.run(main())');
+check("Sonsuza dek bekleyen asyncio programı sayfayı dondurmaz, hata verir", () => assert.ok(!asyncStuck.ok && asyncStuck.output.includes("sonsuza dek bekleyecekti"), asyncStuck.output));
+const pyodideLoop = py.runPython("import asyncio\ntype(asyncio.events._get_running_loop()).__name__ + ' ' + str(asyncio.run is asyncio.runners.run) + ' ' + type(asyncio.get_event_loop_policy()).__name__");
+check("asyncio çalıştırmasından sonra Pyodide'in kendi döngüsü geri yüklenir", () => { assert.equal(pyodideLoop, loopBefore); assert.equal(loopBefore, "WebLoop False WebLoopPolicy"); });
 const empty = await runtime.execute(py, "x = 1");
 check("Çıktısız geçerli program kabul edilir", () => assert.deepEqual(empty, { ok: true, output: "" }));
 const large = await runtime.execute(py, 'print("x" * 21000)');
@@ -204,6 +252,25 @@ check("Ara sınav M1–M4'ten eşit kapsam ve dört yazma sorusu içerir", () =>
   for (let i = 1; i <= 4; i++) assert.equal(checkpoint.filter(q => q.id.startsWith(`m${i}-`)).length, 5);
   assert.equal(checkpoint.filter(q => q.type === "code").length, 4);
 });
+check("Ara sınavlar birbirinin sorusunu tekrar etmez", () => {
+  const seen = new Map();
+  for (const exam of milestones.exams) for (const id of exam.questionIds) {
+    assert.ok(!seen.has(id), `${id} hem ${seen.get(id)} hem ${exam.id} içinde`);
+    seen.set(id, exam.id);
+  }
+});
+check("Ara Sınav 3: M1–M12'nin hepsi var, ağırlık M9–M12'de, pratik soruları yok, 10 kod ve 10 hata bulma/traceback", () => {
+  const exam = milestones.exams.find(item => item.id === "midterm-3");
+  const questions = examQuestions(exam, modules);
+  assert.equal(questions.length, 28);
+  const owner = question => Number(/^m(\d+)-/.exec(question.id)[1]);
+  for (let id = 1; id <= 12; id++) assert.ok(questions.some(question => owner(question) === id), `M${id}`);
+  assert.ok(questions.filter(question => owner(question) >= 9).length >= 14, "M9–M12 ağırlığı");
+  const practice = new Set(modules.flatMap(module => module.practiceIds));
+  assert.deepEqual(questions.filter(question => practice.has(question.id)).map(question => question.id), []);
+  assert.equal(questions.filter(question => question.type === "code").length, 10);
+  assert.equal(questions.filter(question => question.type === "bug" || question.type === "traceback").length, 10);
+});
 check("M10 zorluk dağılımı 16 kolay / 16 orta / 8 zor", () => {
   assert.deepEqual([1, 2, 3].map(level => modules[9].questions.filter(q => q.difficulty === level).length), [16, 16, 8]);
 });
@@ -224,6 +291,36 @@ for (const module of modules.filter(item => item.id >= 11)) {
     for (const level of [1, 2, 3]) assert.ok(module.questions.some(item => item.difficulty === level), `zorluk ${level}`);
   });
 }
+// Yerel Python örnekleri tarayıcıda çalışmaz (thread, süreç); npm run verify:local ile CPython'da doğrulanır.
+check("Yerel Python örnekleri yalnız 'mixed' bölümlerde ve eksiksiz", () => {
+  for (const module of modules) for (const section of module.sections.filter(item => item.localExample)) {
+    const { code, output, note } = section.localExample;
+    assert.equal(section.runtime, "mixed", `m${module.id}:${section.id}`);
+    assert.ok(code?.trim() && output?.trim() && note?.trim(), `m${module.id}:${section.id}`);
+    assert.ok(section.runtimeNote?.includes("yerel"), `m${module.id}:${section.id}: runtimeNote yerel örneği anmalı`);
+  }
+});
+check("M1–M5 ders ve sorularında henüz öğretilmemiş yapı yok", () => {
+  // [ad, desen, öğretildiği modül]. Öğrenci geri bildirimi: ilk derslerde type(x).__name__ görmek kafa karıştırdı.
+  const rules = [
+    ["__name__", /__name__/, 9], ["def", /\bdef\b/, 6], ["class", /\bclass\b/, 11], ["import", /\bimport\b/, 9],
+    ["lambda", /\blambda\b/, 6], ["try", /\btry:/, 7], ["with", /^\s*with\b/m, 8], ["yield", /\byield\b/, 13],
+  ];
+  // Bilinçli istisnalar: deepcopy copy modülü olmadan gösterilemez; sözlük alanına göre key, lambda ile tanıtılır (M6'ya işaret ederek).
+  const allowed = new Set(["m4:sorting-key:lambda", "m4-w2:lambda", "m5:deep-copy:import", "m5-q09:import", "m5-q20:import", "m5-q24:import"]);
+  const found = [];
+  for (const module of modules.filter(item => item.id <= 5)) {
+    const items = [
+      ...module.sections.flatMap(section => [[`m${module.id}:${section.id}`, section.code], [`m${module.id}:${section.id}`, section.realCode]]),
+      ...module.questions.map(question => [question.id, [question.code, question.starterCode, question.solutionCode].filter(Boolean).join("\n")]),
+      ...tasks.filter(task => task.moduleId === module.id).map(task => [task.id, `${task.starterCode}\n${task.solution}`]),
+    ];
+    for (const [where, text] of items) for (const [name, pattern, taught] of rules) {
+      if (module.id < taught && pattern.test(text ?? "") && !allowed.has(`${where}:${name}`)) found.push(`${where}: ${name}`);
+    }
+  }
+  assert.deepEqual(found, []);
+});
 check("M1–M2 gerçek örneklerinde öğretilmemiş fonksiyon ve döngü yok", () => {
   for (const module of modules.slice(0, 2)) for (const section of module.sections) assert.ok(!/(^|\n)\s*(def |for |while |try:|if )/.test(section.realCode), section.id);
   assert.ok(!modules[0].sections[0].code.includes("if "));
@@ -378,6 +475,43 @@ const mutants = [
   ["workshop3-build", "anahtarlar sıralanmıyor", "solution", "sort_keys=True", "sort_keys=False"],
   ["workshop3-build", "Türkçe karakterler kaçışlanıyor", "solution", "ensure_ascii=False, ", ""],
   ["workshop3-build", "adet yerine fiyat önce denetleniyor", "solution", 'elif not is_count(row[1]):\n            reason = "adet sayı değil"\n        elif not is_count(row[2]):\n            reason = "fiyat sayı değil"', 'elif not is_count(row[2]):\n            reason = "fiyat sayı değil"\n        elif not is_count(row[1]):\n            reason = "adet sayı değil"'],
+  ["m14-w1", "average boş listede 0 döndürüyor", "solution", "    if not scores:\n        return None\n", "    if not scores:\n        return 0.0\n"],
+  ["m14-w1", "dönüş ipucu None'ı söylemiyor", "solution", "def average(scores: list[int]) -> float | None:", "def average(scores: list[int]) -> float:"],
+  ["m14-w1", "boş ad kabul ediliyor", "solution", "if not sep or not name.strip() or not score.strip().isdigit():", "if not sep or not score.strip().isdigit():"],
+  ["m14-w3", "yinelenen kimlik kabul ediliyor", "solution", "        if item.id in self._items:\n            raise ValueError(f\"kimlik zaten var: {item.id}\")\n", ""],
+  ["m14-w3", "all sıralamıyor", "solution", "for key in sorted(self._items)]", "for key in self._items]"],
+  ["m14-w3", "remove her zaman True", "solution", "return self._items.pop(item_id, None) is not None", "self._items.pop(item_id, None)\n        return True"],
+  ["m14-w3", "TypeVar sınırsız", "solution", "T = TypeVar(\"T\", bound=HasId)", "T = TypeVar(\"T\")"],
+  ["m14-w3", "kayıtlar sınıf düzeyinde paylaşılıyor", "solution", "    def __init__(self) -> None:\n        self._items: dict[int, T] = {}\n", "    _items: dict = {}\n"],
+  ["m15-w1", "sıra hiç verilmiyor", "solution", "        if i % step == step - 1:\n            await asyncio.sleep(0)\n", ""],
+  ["m15-w1", "her adımda sıra veriliyor", "solution", "        if i % step == step - 1:\n", "        if True:\n"],
+  ["m15-w3", "işler sırayla bekleniyor", "solution", "    results = await asyncio.gather(\n        *(asyncio.wait_for(download(seconds, size), timeout=limit) for _, seconds, size in jobs),\n        return_exceptions=True,\n    )\n", "    results = []\n    for _, seconds, size in jobs:\n        try:\n            results.append(await asyncio.wait_for(download(seconds, size), timeout=limit))\n        except Exception as error:\n            results.append(error)\n"],
+  ["m15-w3", "süre sınırı yok", "solution", "asyncio.wait_for(download(seconds, size), timeout=limit)", "download(seconds, size)"],
+  ["m15-w3", "hata diğerlerini durduruyor", "solution", "        return_exceptions=True,\n", ""],
+  ["m15-w3", "her hata zaman aşımı sayılıyor", "solution", "isinstance(result, TimeoutError)", "isinstance(result, Exception)"],
+  ["workshop4-build", "boş satırlar da sayılıyor", "solution", "for line in text.splitlines() if line.strip())", "for line in text.splitlines())"],
+  ["workshop4-build", "olmayan dosya denetlenmiyor", "solution", "    if not path.exists():\n        print(f\"bulunamadı: {name}\")\n        continue\n", ""],
+  ["workshop4-build", "eşitlerde ad sırası yok", "solution", "rows.sort(key=lambda row: (-size(row[1]), row[0]))", "rows.sort(key=lambda row: -size(row[1]))"],
+  ["workshop4-build", "sıralama ters", "solution", "(-size(row[1]), row[0])", "(size(row[1]), row[0])"],
+  ["workshop4-build", "boş metinde en uzun kelime hatası", "solution", "key=len, default=\"-\")", "key=len)"],
+  ["workshop4-build", "--sort hiç uygulanmıyor", "solution", "if args.sort:", "if False:"],
+  ["workshop5-build", "ship stok yeterliliğini denetlemiyor", "solution", "        if qty > self._stock[sku]:\n            raise ValueError(f\"yetersiz stok: {sku}\")\n", ""],
+  ["workshop5-build", "low_stock sınırı dahil ediyor", "solution", "if qty < limit)", "if qty <= limit)"],
+  ["workshop5-build", "sıfır adet kabul ediliyor", "solution", "if qty < 1:", "if qty < 0:"],
+  ["workshop5-build", "aynı sku ikinci kez kaydediliyor", "solution", "        if product.sku in self._catalog:\n            raise ValueError(f\"zaten kayıtlı: {product.sku}\")\n", ""],
+  ["workshop5-build", "Product dondurulmamış", "solution", "@dataclass(frozen=True)", "@dataclass"],
+  ["workshop5-build", "negatif fiyat kabul ediliyor", "solution", "if self.price < 0:", "if False:"],
+  ["workshop5-tests", "passes her zaman True", "solution", "return all(checks)", "return True"],
+  ["workshop5-tests", "sınır vakası yok (hata4 kaçar)", "solution", "        a.low_stock(3) == [],\n", ""],
+  ["workshop5-tests", "ikinci nesne denenmiyor (hata2 kaçar)", "solution", "        raises(lambda: b.ship(\"kalem\", 1)),\n", ""],
+  ["workshop5-tests", "sıfır adet denenmiyor (hata3 kaçar)", "solution", "        raises(lambda: a.receive(\"silgi\", 0)),\n", ""],
+  ["m13-w1", "yaş denetimi yok", "solution", " or not parts[2].isdigit()", ""],
+  ["m13-w1", "sınır yaşı dışlanıyor", "solution", "record[\"yaş\"] >= min_age", "record[\"yaş\"] > min_age"],
+  ["m13-w1", "alanlar kırpılmıyor", "solution", "[part.strip() for part in line.split(\",\")]", "line.split(\",\")"],
+  ["m13-w3", "geri alma yok", "solution", "        store.clear()\n        store.update(snapshot)\n", ""],
+  ["m13-w3", "hata yutuluyor", "solution", "        store.update(snapshot)\n        raise\n", "        store.update(snapshot)\n"],
+  ["m13-w3", "sözlük yerinde değil, yeni nesneye bağlanıyor", "solution", "        store.clear()\n        store.update(snapshot)\n", "        store = snapshot\n"],
+  ["m13-w3", "olmayan anahtar artırılabiliyor", "solution", "        key, value = op.split(\"+=\", 1)\n        if key not in store:\n            raise ValueError(f\"olmayan anahtar: {key}\")\n        store[key] += to_int(value, op)", "        key, value = op.split(\"+=\", 1)\n        store[key] = store.get(key, 0) + to_int(value, op)"],
 ];
 for (const [id, label, from, find, replacement] of mutants) {
   const task = tasks.find(item => item.id === id);
@@ -403,7 +537,8 @@ check("Modül dizini her modülün yapısını verir, metni taşımaz", () => {
     }
   }
   const text = JSON.stringify(contentIndex);
-  for (const heavy of ["explanation", "\"prompt\"", "realCode", "hints", "solutionCode", "lineByLine"]) assert.ok(!text.includes(heavy), `dizinde ${heavy} var`);
+  // Field names are searched with their quotes: a slug such as "type-hints" must not count as the hints field.
+  for (const heavy of ["\"explanation\"", "\"prompt\"", "\"realCode\"", "\"hints\"", "\"solutionCode\"", "\"lineByLine\""]) assert.ok(!text.includes(heavy), `dizinde ${heavy} var`);
 });
 check("Dizin tam içeriğin küçük bir kısmıdır (ana pakette kalan bu)", () => {
   const full = JSON.stringify(modules).length, light = JSON.stringify(contentIndex).length;

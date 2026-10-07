@@ -3,7 +3,7 @@
   "slug": "stringler",
   "title": "String'ler",
   "description": "Metinleri indeksle, dönüştür, biçimlendir ve byte dünyasına güvenle geçir.",
-  "contentVersion": 3,
+  "contentVersion": 4,
   "estimatedMinutes": 90,
   "practiceIds": [
     "m2-q01",
@@ -34,8 +34,8 @@
       "prerequisites": [],
       "summary": "Metindeki tek karaktere köşeli parantezle erişilir. İlk karakter 0, son karakter -1 indeksindedir.",
       "explanation": "Bir str içindeki konumları sıfırdan sayarsın: 'Python'[0] P, [1] y verir. len(text) uzunluğu bildirir; son pozitif indeks len(text) - 1'dir. Negatif indeksler sondan başlar: -1 son, -2 sondan ikinci karakterdir; -0 yine 0 demektir. Tek indeks geçerli aralığın dışına çıkarsa IndexError oluşur; boş metinde 0 da -1 de geçersizdir. Sonuç bir karakterlik str'dir, Python'da ayrı bir char tipi yoktur. İndeks tam sayı olmalıdır; 1.5 kullanmak TypeError verir. Örnekte baş ve son karakteri tahmin ederek çalıştır; sonra text'i tek harfe indir. Gerçek örneğin girdisinin boş olmadığı varsayılır. Boş metin denetimini M3 koşullarıyla ekleyeceksin; şimdilik bütün indekslerin her girdide güvenli olmadığını bil. Unicode'da bir görünen simge birden fazla kod noktasından oluşabilir; bu ayrımı ilerideki encoding bölümünde açacağız.",
-      "code": "language = \"Python\"\n\nprint(language[0])\nprint(language[-1])\nprint(type(language[1]).__name__)",
-      "expectedOutput": "P\nn\nstr",
+      "code": "language = \"Python\"\n\nprint(language[0])\nprint(language[-1])\nprint(type(language[1]))",
+      "expectedOutput": "P\nn\n<class 'str'>",
       "why": "0 ilk P karakterini, -1 son n karakterini seçer. Python'da ayrı bir char tipi yoktur.",
       "alternatives": [
         "İlk karakter için text[0], son karakter için text[-1] en okunur yoldur.",
@@ -314,8 +314,8 @@
       ],
       "summary": "str insan metni, bytes ham byte dizisidir. Ağ, dosya ve şifreleme API'leri çoğunlukla bytes ister.",
       "explanation": "b'ABC' bir bytes, 'ABC' bir str değeridir; benzer görünmeleri onları aynı tip yapmaz. bytes[0] tek byte'ın sayısal değerini, bytes[0:1] ise yine bir bytes parçasını verir. str[0] bir karakterlik str döndürür. Byte literaline doğrudan Türkçe harf yazmak yerine 'ş'.encode('utf-8') kullan. str ile bytes + işlemi TypeError üretir; birleştirmeden önce verinin anlamına uygun dönüşümü seç. str(payload) decode yerine geçmez, çoğu zaman b'...' biçimindeki temsili verir. Ağ ya da dosya sınırında hangi tip beklendiğini açık tut: uygulama içinde metinle işle, aktarırken encode et, gelen byte'ı belirtilen encoding ile decode et. Görüntü veya sıkıştırılmış veri gibi her bytes içeriği metin değildir; rastgele veriye decode uygulama. İsimlendirmede text ve payload gibi ayrım sağlayan adlar yanlış dönüşümü fark etmeyi kolaylaştırır.",
-      "code": "data = b\"ABC\"\nprint(data[0])\nprint(data.decode(\"ascii\"))\nprint(type(data).__name__)",
-      "expectedOutput": "65\nABC\nbytes",
+      "code": "data = b\"ABC\"\nprint(data[0])\nprint(data.decode(\"ascii\"))\nprint(type(data))",
+      "expectedOutput": "65\nABC\n<class 'bytes'>",
       "why": "bytes indekslemesi A'nın sayısal byte değeri 65'i verir. decode insan metnine dönüştürür.",
       "alternatives": [
         "Sabit ASCII protokollerde ascii; genel metinde utf-8 kullan.",

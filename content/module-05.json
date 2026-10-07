@@ -3,7 +3,7 @@
   "slug": "referans-ve-kopyalama",
   "title": "Referans ve kopyalama",
   "description": "Bir değişikliğin hangi isimleri etkilediğini izle, doğru kopyayı seç ve veriyi kısa ifadelerle dönüştür.",
-  "contentVersion": 2,
+  "contentVersion": 3,
   "estimatedMinutes": 120,
   "practiceIds": [
     "m5-q01",
@@ -91,13 +91,13 @@
         "x == None yazmak; çalışır ama is None tercih edilir.",
         "x is [] yazıp boş listeyi yakalayacağını sanmak; [] her seferinde yeni bir nesnedir."
       ],
-      "realCode": "_MISSING = object()\n\ndef lookup(config, key, default=_MISSING):\n    value = config.get(key, _MISSING)\n    if value is _MISSING:\n        if default is _MISSING:\n            return f\"{key} eksik\"\n        return default\n    return value\n\nprint(lookup({\"debug\": None}, \"debug\"))\nprint(lookup({}, \"port\", 8000))\nprint(lookup({}, \"host\"))",
-      "realOutput": "None\n8000\nhost eksik",
+      "realCode": "config = {\"debug\": None, \"port\": 8000}\nMISSING = object()\nfor key in (\"debug\", \"port\", \"host\"):\n    value = config.get(key, MISSING)\n    if value is MISSING:\n        print(key, \"eksik\")\n    else:\n        print(key, \"=\", value)",
+      "realOutput": "debug = None\nport = 8000\nhost eksik",
       "lineByLine": [
-        "object() benzersiz bir işaretçi nesne üretir; None geçerli bir değer olabileceği için ayrı bir işaret gerekir.",
-        "get, anahtar yoksa işaretçinin kendisini döndürür.",
-        "is ile yapılan kontrol değeri değil o tek nesneyi arar; config'te None olsa bile karışmaz.",
-        "debug=None bulunur ve döndürülür; eksik anahtarlar varsayılana veya mesaja düşer."
+        "object() benzersiz bir işaretçi nesne üretir; None geçerli bir ayar değeri olabileceği için eksikliği None ile anlatamayız.",
+        "get, anahtar yoksa ikinci argümanı, yani işaretçinin kendisini döndürür.",
+        "is değeri değil o tek nesneyi arar; debug'ın değeri None olsa bile eksik sayılmaz.",
+        "Yalnızca gerçekten bulunmayan host eksik olarak raporlanır."
       ],
       "sources": [
         {
@@ -113,14 +113,14 @@
       "eyebrow": "Yerinde değişim mi, yeni nesne mi?",
       "objectives": [
         "Bir işlemin nesneyi yerinde mi değiştirdiğini yoksa yeni nesne mi ürettiğini ayırır.",
-        "Fonksiyona verilen bir listenin fonksiyon içinde değiştirilebildiğini açıklar."
+        "Aynı listeye bağlı iki addan birinde yapılan yerinde değişikliğin ötekinde de göründüğünü açıklar."
       ],
       "prerequisites": [
         "identity-equality",
         "m2:immutability"
       ],
       "summary": "list, dict ve set mutable'dır; yerinde değişir. int, float, str, tuple ve frozenset immutable'dır; her \"değişiklik\" yeni bir nesne üretir.",
-      "explanation": "x += 1, bir int için yeni bir nesne üretip x'i ona bağlar. Liste için items += [4] ise listeyi yerinde genişletir; aynı listeye bağlı başka isimler de değişikliği görür. Fonksiyona bir liste verdiğinde fonksiyon aynı nesneyi alır: içeride append yapılırsa çağıran taraf da değişikliği görür, ama parametreye yeni bir liste atanırsa dışarısı etkilenmez. Hangi nesnelerin hashable olduğu, yani sözlük anahtarı olabildiği de buna bağlıdır: immutable olanlar.",
+      "explanation": "x += 1, bir int için yeni bir nesne üretip x'i ona bağlar. Liste için items += [4] ise listeyi yerinde genişletir; aynı listeye bağlı başka isimler de değişikliği görür. Aynı durum M6'da fonksiyonlarda da karşına çıkacak: bir fonksiyona liste verdiğinde fonksiyon kopyayı değil listenin kendisini alır. Hangi nesnelerin hashable olduğu, yani sözlük anahtarı olabildiği de buna bağlıdır: immutable olanlar.",
       "code": "text = \"ab\"\nsame_text = text\ntext += \"c\"\nprint(same_text, text)\n\nitems = [1]\nsame_items = items\nitems += [2]\nprint(same_items, items)",
       "expectedOutput": "ab abc\n[1, 2] [1, 2]",
       "why": "str immutable olduğu için text += \"c\" yeni bir metin üretir; same_text eski \"ab\" metninde kalır. Liste mutable'dır; items += [2] listeyi yerinde uzatır ve aynı listeyi gösteren same_items da değişikliği görür.",
@@ -133,13 +133,13 @@
         "Fonksiyon içinde parametre listesine append yapılınca çağıranın listesinin değişmeyeceğini sanmak.",
         "Tuple içindeki bir listenin de değiştirilemez olduğunu sanmak."
       ],
-      "realCode": "def add_tax(prices):\n    for i in range(len(prices)):\n        prices[i] = round(prices[i] * 1.2, 2)\n\ncart = [10.0, 25.0]\nadd_tax(cart)\nprint(cart)",
+      "realCode": "cart = [10.0, 25.0]\nprices = cart\nfor i in range(len(prices)):\n    prices[i] = round(prices[i] * 1.2, 2)\nprint(cart)",
       "realOutput": "[12.0, 30.0]",
       "lineByLine": [
-        "Fonksiyon bir fiyat listesi alır; bu, çağıranın listesinin kendisidir.",
+        "prices = cart yeni bir liste üretmez; aynı listeye ikinci bir ad bağlar.",
         "Her indeksteki öğe yerinde güncellenir.",
-        "Fonksiyon bir şey döndürmez ama bir yan etkisi vardır.",
-        "cart değişmiştir; yan etki istenmiyorsa yeni bir liste döndüren sürüm yazılmalıdır."
+        "Değişiklik prices üzerinden yapıldı ama liste tek olduğu için cart da değişti.",
+        "Yan etki istenmiyorsa önce kopya alınmalı: prices = cart.copy(). M6'da bir fonksiyona liste verdiğinde de aynı durum oluşacak."
       ],
       "sources": [
         {
@@ -203,7 +203,7 @@
         "m3:nested-loops"
       ],
       "summary": "copy.deepcopy iç içe bütün mutable nesneleri yeniden oluşturur. Liste çarpımı ise öğeleri kopyalamaz; aynı iç listeyi tekrar tekrar koyar.",
-      "explanation": "import copy ile gelen deepcopy, iç listeleri ve sözlükleri de kopyalar; kopyada yapılan hiçbir değişiklik orijinale yansımaz. Bedeli hız ve bellektir, bu yüzden her zaman gerekmez. [[0] * 3] * 2 ifadesi iki satırlık bir ızgara gibi görünür ama iki satır aynı listedir; bir hücreyi değiştirmek iki satırda da görünür. Bağımsız satırlar için her satır ayrı oluşturulmalıdır: döngüyle veya [[0] * 3 for _ in range(2)] gibi bir comprehension ile (comprehension bu modülün sonunda).",
+      "explanation": "import copy satırı Python'la gelen hazır copy aracını kullanıma açar (içe aktarmayı M9'da ayrıntılı göreceksin); bu araçtaki deepcopy, iç listeleri ve sözlükleri de kopyalar; kopyada yapılan hiçbir değişiklik orijinale yansımaz. Bedeli hız ve bellektir, bu yüzden her zaman gerekmez. [[0] * 3] * 2 ifadesi iki satırlık bir ızgara gibi görünür ama iki satır aynı listedir; bir hücreyi değiştirmek iki satırda da görünür. Bağımsız satırlar için her satır ayrı oluşturulmalıdır: döngüyle veya [[0] * 3 for _ in range(2)] gibi bir comprehension ile (comprehension bu modülün sonunda).",
       "code": "import copy\n\ngrid = [[0] * 3] * 2\ngrid[0][0] = 1\nprint(grid)\n\nsafe = [[0] * 3 for _ in range(2)]\nsafe[0][0] = 1\nprint(safe)\n\nbackup = copy.deepcopy(safe)\nbackup[1][2] = 7\nprint(safe[1], backup[1])",
       "expectedOutput": "[[1, 0, 0], [1, 0, 0]]\n[[1, 0, 0], [0, 0, 0]]\n[0, 0, 0] [0, 0, 7]",
       "why": "* 2 aynı iç listeyi iki kez koyar; bir hücre değişince iki satır da değişir. Comprehension her turda yeni bir [0, 0, 0] listesi üretir. deepcopy iç listeleri de kopyaladığı için backup'taki değişiklik safe'e yansımaz.",
@@ -216,13 +216,13 @@
         "deepcopy'yi gerekmeyen yerlerde kullanıp programı yavaşlatmak.",
         "copy modülünü import etmeyi unutup NameError almak."
       ],
-      "realCode": "import copy\n\nDEFAULT_STATE = {\"level\": 1, \"inventory\": [\"kılıç\"]}\n\ndef new_game():\n    return copy.deepcopy(DEFAULT_STATE)\n\nplayer1 = new_game()\nplayer2 = new_game()\nplayer1[\"inventory\"].append(\"kalkan\")\nprint(player2[\"inventory\"], DEFAULT_STATE[\"inventory\"])",
-      "realOutput": "['kılıç'] ['kılıç']",
+      "realCode": "import copy\n\nDEFAULT_STATE = {\"level\": 1, \"inventory\": [\"kılıç\"]}\nplayer1 = copy.deepcopy(DEFAULT_STATE)\nplayer2 = copy.deepcopy(DEFAULT_STATE)\nplayer1[\"inventory\"].append(\"kalkan\")\nprint(player1[\"inventory\"], player2[\"inventory\"], DEFAULT_STATE[\"inventory\"])",
+      "realOutput": "['kılıç', 'kalkan'] ['kılıç'] ['kılıç']",
       "lineByLine": [
         "Başlangıç durumu iç içe bir sözlükte tutulur.",
-        "Her yeni oyun deepcopy ile bağımsız bir durum alır.",
+        "Her oyuncu deepcopy ile bağımsız bir durum alır; iç liste de kopyalanır.",
         "Birinci oyuncunun envanterine ekleme yalnızca onun listesini değiştirir.",
-        "İkinci oyuncu ve varsayılan durum etkilenmez; copy() kullanılsaydı envanter ortak olurdu."
+        "İkinci oyuncu ve varsayılan durum etkilenmez; copy() kullanılsaydı envanter listesi ortak olurdu."
       ],
       "sources": [
         {
@@ -762,25 +762,25 @@
       "topic": "mutable",
       "sectionId": "mutable-immutable",
       "difficulty": 2,
-      "prompt": "Yazar my_cart'ın değişmeyeceğini düşündü ama ['ekmek', 'süt'] yazdırıldı. Neden?",
-      "code": "def add_item(cart, item):\n    cart.append(item)\n    return cart\n\nmy_cart = [\"ekmek\"]\nnew_cart = add_item(my_cart, \"süt\")\nprint(my_cart)",
+      "prompt": "Yazar new_cart'a eklemenin my_cart'ı değiştirmeyeceğini düşündü ama ['ekmek', 'süt'] yazdırıldı. Neden?",
+      "code": "my_cart = [\"ekmek\"]\nnew_cart = my_cart\nnew_cart.append(\"süt\")\nprint(my_cart)",
       "options": [
-        "Fonksiyon aynı listeyi alır ve append onu yerinde değiştirir",
-        "return listeyi kopyalar",
+        "new_cart = my_cart yeni liste üretmez; iki ad aynı listeye bağlı ve append onu yerinde değiştirir",
+        "append her zaman programdaki bütün listeleri değiştirir",
         "print yanlış listeyi gösterir",
-        "Fonksiyonlar listeleri değiştiremez"
+        "Atama listeyi kopyalar ama append kopyayı orijinale geri yazar"
       ],
-      "answer": "Fonksiyon aynı listeyi alır ve append onu yerinde değiştirir",
+      "answer": "new_cart = my_cart yeni liste üretmez; iki ad aynı listeye bağlı ve append onu yerinde değiştirir",
       "optionFeedback": {
-        "return listeyi kopyalar": "return kopya üretmez; new_cart ile my_cart aynı listedir.",
+        "append her zaman programdaki bütün listeleri değiştirir": "append yalnızca çağrıldığı listeyi değiştirir; burada o liste my_cart'ın kendisi.",
         "print yanlış listeyi gösterir": "print doğru listeyi gösteriyor; liste gerçekten değişti.",
-        "Fonksiyonlar listeleri değiştiremez": "Değiştirebilir; mutable nesneler fonksiyona referans olarak geçer."
+        "Atama listeyi kopyalar ama append kopyayı orijinale geri yazar": "Atama hiç kopya üretmez; tek bir liste var."
       },
       "hints": [
-        "cart parametresi my_cart'ın kendisini gösterir.",
-        "Bağımsız sonuç için return cart + [item] yeni liste üretir."
+        "new_cart = my_cart satırı kaç liste oluşturur?",
+        "Bağımsız bir liste için new_cart = my_cart.copy() ya da my_cart + ['süt'] kullan."
       ],
-      "explanation": "Fonksiyona verilen liste kopyalanmaz. append çağıranın listesini değiştirir; new_cart ve my_cart aynı nesnedir. Yan etkisiz sürüm return cart + [item] yazar."
+      "explanation": "Atama listeyi kopyalamaz; new_cart ve my_cart aynı listeye bağlı iki addır. append bu tek listeyi değiştirir. Bağımsız sonuç için new_cart = my_cart.copy() ya da new_cart = my_cart + ['süt'] yazılmalıydı. M6'da bir fonksiyona liste verdiğinde de aynı şey olur."
     },
     {
       "id": "m5-q19",

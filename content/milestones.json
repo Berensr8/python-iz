@@ -63,6 +63,44 @@
         "m8-q11",
         "m8-q26"
       ]
+    },
+    {
+      "id": "midterm-3",
+      "afterModule": 12,
+      "title": "Ara Sınav 3",
+      "scope": "M1–M12",
+      "minutes": 45,
+      "description": "On iki modülü birlikte tekrar eder. En çok soru son öğrendiklerinden (M9–M12: modüller, standart kütüphane ve iki OOP modülü) gelir; önceki modüllerden de en az birer soru var. On soru kod yazmayı, on soru hata bulma ve traceback okumayı ölçer. Önceki ara sınavların ve modül pratiklerinin soruları kullanılmaz. İpuçları kapalı, çözüm açıklamaları sonda.",
+      "questionIds": [
+        "m1-q20",
+        "m2-q30",
+        "m3-q33",
+        "m4-q18",
+        "m5-q06",
+        "m5-q36",
+        "m6-q18",
+        "m6-q32",
+        "m7-q40",
+        "m7-q25",
+        "m8-q36",
+        "m8-q18",
+        "m9-q04",
+        "m9-q18",
+        "m9-q32",
+        "m9-q38",
+        "m10-q08",
+        "m10-q18",
+        "m10-q32",
+        "m10-q40",
+        "m11-q12",
+        "m11-q36",
+        "m11-q40",
+        "m11-q33",
+        "m12-q11",
+        "m12-q31",
+        "m12-q17",
+        "m12-q35"
+      ]
     }
   ],
   "workshops": [
@@ -173,6 +211,82 @@
           "label": "Sıfırdan yaz",
           "taskId": "workshop3-build",
           "note": "Hata nedenlerinin denetim sırası önemli: önce alan sayısı, sonra adet, sonra fiyat. Başlık satırı numaralandırmaya dahildir (ilk veri satırı 2. satırdır)."
+        }
+      ]
+    },
+    {
+      "id": "workshop4",
+      "afterModule": 10,
+      "title": "Atölye 4 · Komut satırı raporlayıcısı",
+      "summary": "Önce iki dosyaya bölünmüş küçük bir komut satırı aracının ne yazdırdığını izle, sonra argparse seçenekleri bozuk bir sayım aracını onar. Son adımda hesaplamaları kendi modülüne ayıran, argparse ve pathlib kullanan bir dosya raporlama aracını sıfırdan yaz.",
+      "steps": [
+        {
+          "kind": "read",
+          "label": "İncele",
+          "progressKey": "workshop4-read",
+          "heading": "cli.main(...) çağrısı ne yazdırır?",
+          "code": "from pathlib import Path\n\nPath(\"sayac.py\").write_text(\"\"\"def count_words(text, min_len=1):\n    return sum(1 for word in text.split() if len(word) >= min_len)\n\"\"\", encoding=\"utf-8\")\n\nPath(\"cli.py\").write_text(\"\"\"import argparse\nfrom pathlib import Path\nimport sayac\n\ndef main(argv):\n    parser = argparse.ArgumentParser(prog=\"say\")\n    parser.add_argument(\"files\", nargs=\"+\")\n    parser.add_argument(\"--min\", type=int, default=1)\n    args = parser.parse_args(argv)\n    for name in args.files:\n        text = Path(name).read_text(encoding=\"utf-8\")\n        print(name, sayac.count_words(text, args.min))\n\nif __name__ == \"__main__\":\n    import sys\n    main(sys.argv[1:])\n\"\"\", encoding=\"utf-8\")\n\nPath(\"a.txt\").write_text(\"bir iki üç dört\", encoding=\"utf-8\")\nPath(\"b.txt\").write_text(\"merhaba dünya\", encoding=\"utf-8\")\n\nimport cli\ncli.main([\"a.txt\", \"b.txt\", \"--min\", \"4\"])",
+          "inputLabel": "Çıktı (iki satır)",
+          "placeholder": "Örn. a.txt 2 / b.txt 1",
+          "answer": "a.txt 1\nb.txt 2",
+          "expectedOutput": "a.txt 1\nb.txt 2",
+          "wrongHint": "cli import edildiğinde __name__ \"cli\" olur; korumalı blok çalışmaz ve yalnızca son satırdaki main çağrısı çıktı üretir. --min 4, en az dört harfli kelimeleri sayar; len('dört') kaçtır?",
+          "explanation": "cli.py import edilince if __name__ == \"__main__\" bloğu atlanır (M9); çıktıyı yalnızca cli.main([...]) üretir. argparse '--min 4' değerini type=int sayesinde sayıya çevirir. a.txt'de yalnızca 'dört' dört harflidir (bir, iki, üç daha kısa), b.txt'de 'merhaba' ve 'dünya' ikisi de en az dört harflidir.",
+          "nextLabel": "Düzeltme adımına geç"
+        },
+        {
+          "kind": "write",
+          "label": "Düzelt",
+          "taskId": "workshop4-fix",
+          "note": "Kontrol listesi: --words verilmediğinde satır sayılsın · --min sayı olarak okunsun · olmayan dosya mesaj verip atlansın, toplam yalnız bulunan dosyalardan oluşsun.",
+          "nextLabel": "Kendi aracını yaz"
+        },
+        {
+          "kind": "write",
+          "label": "Sıfırdan yaz",
+          "taskId": "workshop4-build",
+          "note": "Sorumlulukları ayır: metrik.py yalnızca metin alıp sayı ya da kelime döndürür, dosya okumaz ve yazdırmaz. Komut satırı, dosya okuma ve yazdırma ana programdadır."
+        }
+      ]
+    },
+    {
+      "id": "workshop5",
+      "afterModule": 12,
+      "title": "Atölye 5 · Envanter modeli",
+      "summary": "Önce iki deponun neden aynı stoğu gördüğünü açıkla, sonra bozuk depo modelini onar. Ardından dataclass, property ve dunder metotlarla kendi envanter modelini sıfırdan yaz ve son adımda stok sınıfının hatalı sürümlerini yakalayan davranış testlerini kur.",
+      "steps": [
+        {
+          "kind": "read",
+          "label": "İncele",
+          "progressKey": "workshop5-read",
+          "heading": "İki ayrı envanter nesnesinden sonra ekrana ne yazılır?",
+          "code": "from dataclasses import dataclass\n\n@dataclass\nclass Item:\n    sku: str\n    qty: int = 0\n\nclass Inventory:\n    items = {}\n\n    def add(self, sku, qty):\n        item = self.items.setdefault(sku, Item(sku))\n        item.qty += qty\n\na = Inventory()\nb = Inventory()\na.add(\"kalem\", 5)\nb.add(\"kalem\", 2)\nprint(a.items[\"kalem\"].qty, len(b.items))",
+          "inputLabel": "Çıktı (adet ve ürün sayısı)",
+          "placeholder": "Örn. 5 1",
+          "answer": "7 1",
+          "expectedOutput": "7 1",
+          "wrongHint": "items sınıfın gövdesinde tanımlanmış; a.items ile b.items aynı sözlük mü, ayrı mı? Item bir dataclass olduğu için kendi qty'si var ama sözlük paylaşılıyor.",
+          "explanation": "items bir class değişkenidir (M11): a ve b aynı sözlüğü görür. a.add kalem'i 5 ile ekler, b.add aynı Item nesnesini bulup 2 ekler; sonuç 7'dir ve b'nin sözlüğünde de bir ürün vardır. Çözüm: sözlüğü __init__ içinde self.items = {} ile her depo için ayrı kurmak.",
+          "nextLabel": "Düzeltme adımına geç"
+        },
+        {
+          "kind": "write",
+          "label": "Düzelt",
+          "taskId": "workshop5-fix",
+          "note": "Kontrol listesi: her deponun kendi sözlüğü olsun · rapor ada göre sıralansın · yetersiz stokta hata verilsin ve stok değişmesin.",
+          "nextLabel": "Kendi modelini yaz"
+        },
+        {
+          "kind": "write",
+          "label": "Sıfırdan yaz",
+          "taskId": "workshop5-build",
+          "note": "Önce sınıfların sorumluluklarını ayır: Product değişmeyen katalog bilgisi, Inventory değişen stok durumu. Her hatalı isteğin durumu değiştirmediğinden emin ol.",
+          "nextLabel": "Testlerini kur"
+        },
+        {
+          "kind": "write",
+          "label": "Testlerini kur",
+          "taskId": "workshop5-tests"
         }
       ]
     }

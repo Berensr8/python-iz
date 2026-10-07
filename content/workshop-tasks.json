@@ -341,5 +341,240 @@
         "expectedOutput": "{\"hatalar\": [], \"toplam\": 700, \"urunler\": {\"defter \\\"A4\\\"\": {\"adet\": 1, \"tutar\": 500}, \"kalem, mavi\": {\"adet\": 2, \"tutar\": 200}}}"
       }
     ]
+  },
+  {
+    "id": "workshop5-fix",
+    "moduleId": 12,
+    "sectionId": "dataclass",
+    "title": "Depo modelini onar",
+    "level": "Düzelt",
+    "objective": "Paylaşılan sınıf sözlüğünü, yanlış sıralama alanını ve eksiye düşen stoğu bul ve düzelt.",
+    "prompt": "İki depo (A ve B) var. Komutlar: 'DEPO ekle ÜRÜN ADET', 'DEPO çıkar ÜRÜN ADET' ve 'DEPO rapor'. Sözleşme: her deponun stoğu ayrıdır; çıkarılacak adet stoktan fazlaysa ValueError(f'yetersiz stok: {ürün}') fırlatılır ve stok değişmez; bilinmeyen ürün ValueError(f'bilinmeyen ürün: {ürün}') verir; rapor ürünleri ada göre sıralı 'ürün: adet' biçiminde virgülle yazar, depo boşsa 'boş' yazar. Başlangıç kodunda üç sorun var: depolar birbirinin stoğunu görüyor, rapor ada göre değil adede göre sıralanıyor ve stok eksiye düşebiliyor.",
+    "starterCode": "from dataclasses import dataclass\n\n@dataclass(order=True)\nclass StockItem:\n    qty: int\n    sku: str\n\nclass Warehouse:\n    items = {}\n\n    def __init__(self, name):\n        self.name = name\n\n    def add(self, sku, qty):\n        item = self.items.setdefault(sku, StockItem(qty=0, sku=sku))\n        item.qty += qty\n\n    def remove(self, sku, qty):\n        if sku not in self.items:\n            raise ValueError(f\"bilinmeyen ürün: {sku}\")\n        self.items[sku].qty -= qty\n\n    def report(self):\n        return [f\"{item.sku}: {item.qty}\" for item in sorted(self.items.values())]\n\nwarehouses = {\"A\": Warehouse(\"A\"), \"B\": Warehouse(\"B\")}\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[1] == \"ekle\":\n            warehouses[parts[0]].add(parts[2], int(parts[3]))\n        elif parts[1] == \"çıkar\":\n            warehouses[parts[0]].remove(parts[2], int(parts[3]))\n        elif parts[1] == \"rapor\":\n            print(f\"[{parts[0]}]\", \", \".join(warehouses[parts[0]].report()) or \"boş\")\n    except ValueError as error:\n        print(\"hata:\", error)",
+    "exampleInput": "6\nA ekle kalem 5\nA ekle defter 2\nB ekle silgi 4\nA çıkar kalem 3\nA rapor\nB rapor",
+    "exampleOutput": "[A] defter: 2, kalem: 2\n[B] silgi: 4",
+    "hints": [
+      "İncele adımındaki hatayı hatırla: items nerede tanımlanmış? order=True alanları hangi sırayla karşılaştırır?",
+      "items'ı __init__ içinde self.items = {} ile kur; sıralamayı key=lambda item: item.sku ile ya da alan sırasını değiştirerek ada göre yap; remove'da qty > item.qty ise ValueError fırlat."
+    ],
+    "solution": "from dataclasses import dataclass\n\n@dataclass\nclass StockItem:\n    sku: str\n    qty: int = 0\n\nclass Warehouse:\n    def __init__(self, name):\n        self.name = name\n        self.items = {}\n\n    def add(self, sku, qty):\n        item = self.items.setdefault(sku, StockItem(qty=0, sku=sku))\n        item.qty += qty\n\n    def remove(self, sku, qty):\n        if sku not in self.items:\n            raise ValueError(f\"bilinmeyen ürün: {sku}\")\n        item = self.items[sku]\n        if qty > item.qty:\n            raise ValueError(f\"yetersiz stok: {sku}\")\n        item.qty -= qty\n\n    def report(self):\n        return [f\"{item.sku}: {item.qty}\" for item in sorted(self.items.values(), key=lambda item: item.sku)]\n\nwarehouses = {\"A\": Warehouse(\"A\"), \"B\": Warehouse(\"B\")}\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[1] == \"ekle\":\n            warehouses[parts[0]].add(parts[2], int(parts[3]))\n        elif parts[1] == \"çıkar\":\n            warehouses[parts[0]].remove(parts[2], int(parts[3]))\n        elif parts[1] == \"rapor\":\n            print(f\"[{parts[0]}]\", \", \".join(warehouses[parts[0]].report()) or \"boş\")\n    except ValueError as error:\n        print(\"hata:\", error)",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "6\nA ekle kalem 5\nA ekle defter 2\nB ekle silgi 4\nA çıkar kalem 3\nA rapor\nB rapor",
+        "expectedOutput": "[A] defter: 2, kalem: 2\n[B] silgi: 4"
+      },
+      {
+        "label": "Depolar ayrı",
+        "stdin": "3\nA ekle kalem 1\nA rapor\nB rapor",
+        "expectedOutput": "[A] kalem: 1\n[B] boş"
+      },
+      {
+        "label": "Yetersiz stok",
+        "stdin": "3\nA ekle kalem 2\nA çıkar kalem 5\nA rapor",
+        "expectedOutput": "hata: yetersiz stok: kalem\n[A] kalem: 2"
+      },
+      {
+        "label": "Ada göre sıralama",
+        "stdin": "3\nA ekle zımba 1\nA ekle ataş 9\nA rapor",
+        "expectedOutput": "[A] ataş: 9, zımba: 1"
+      },
+      {
+        "label": "Bilinmeyen ürün",
+        "stdin": "2\nB çıkar kalem 1\nB rapor",
+        "expectedOutput": "hata: bilinmeyen ürün: kalem\n[B] boş"
+      }
+    ]
+  },
+  {
+    "id": "workshop5-build",
+    "moduleId": 12,
+    "sectionId": "dataclass",
+    "title": "Kendi envanter modelini yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "Dondurulmuş dataclass, doğrulama, property ve dunder metotlarla katalog + stok modeli tasarla.",
+    "prompt": "Product ve Inventory sınıflarını yaz. Product dondurulmuş bir dataclass'tır: sku, name (str), price (int, kuruş); price < 0 ise ValueError(f'geçersiz fiyat: {sku}'). Inventory ürün kataloğunu (sku → Product) ve stok adetlerini (sku → adet) tutar. register(product): aynı sku ikinci kez gelirse ValueError(f'zaten kayıtlı: {sku}'); yeni ürünün stoğu 0'dır. receive(sku, qty) ve ship(sku, qty): kayıtsız ürün ValueError(f'bilinmeyen ürün: {sku}'), qty 1'den küçükse ValueError('adet pozitif olmalı'); ship stoktan fazlasını isterse ValueError(f'yetersiz stok: {sku}'). Hatalı istek durumu değiştirmez. value property'si stoktaki ürünlerin fiyat x adet toplamıdır. low_stock(limit) stoğu limit'ten küçük (eşit değil) ürünlerin sku'larını sıralı liste olarak döndürür. len(inventory) kayıtlı ürün sayısını, 'sku' in inventory kayıtlı olup olmadığını verir. Programın komut okuma kısmı hazır; sınıfları üstüne yaz.",
+    "starterCode": "from dataclasses import dataclass\n\n# Product ve Inventory sınıflarını buraya yaz.\n\n\ninventory = Inventory()\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[0] == \"kaydet\":\n            inventory.register(Product(parts[1], parts[2], int(parts[3])))\n        elif parts[0] == \"giriş\":\n            inventory.receive(parts[1], int(parts[2]))\n        elif parts[0] == \"çıkış\":\n            inventory.ship(parts[1], int(parts[2]))\n        elif parts[0] == \"değer\":\n            print(\"değer:\", inventory.value)\n        elif parts[0] == \"az\":\n            print(\"az:\", \", \".join(inventory.low_stock(int(parts[1]))) or \"yok\")\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"ürün:\", len(inventory), \"| kalem kayıtlı:\", \"kalem\" in inventory, \"| dondurulmuş:\", Product.__dataclass_params__.frozen)",
+    "exampleInput": "7\nkaydet kalem Kalem 150\nkaydet defter Defter 900\ngiriş kalem 10\ngiriş defter 2\nçıkış kalem 4\ndeğer\naz 5",
+    "exampleOutput": "değer: 2700\naz: defter\nürün: 2 | kalem kayıtlı: True | dondurulmuş: True",
+    "hints": [
+      "Product için @dataclass(frozen=True) ve __post_init__; Inventory'de iki sözlük (katalog ve stok) __init__ içinde kurulsun.",
+      "Ortak denetimleri (kayıtlı mı, adet pozitif mi) küçük bir yardımcı metoda topla; ship'te önce bu denetimi, sonra stok yeterliliğini kontrol et. value için @property kullan."
+    ],
+    "solution": "from dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Product:\n    sku: str\n    name: str\n    price: int\n\n    def __post_init__(self):\n        if self.price < 0:\n            raise ValueError(f\"geçersiz fiyat: {self.sku}\")\n\nclass Inventory:\n    def __init__(self):\n        self._catalog = {}\n        self._stock = {}\n\n    def register(self, product):\n        if product.sku in self._catalog:\n            raise ValueError(f\"zaten kayıtlı: {product.sku}\")\n        self._catalog[product.sku] = product\n        self._stock[product.sku] = 0\n\n    def _check(self, sku, qty):\n        if sku not in self._catalog:\n            raise ValueError(f\"bilinmeyen ürün: {sku}\")\n        if qty < 1:\n            raise ValueError(\"adet pozitif olmalı\")\n\n    def receive(self, sku, qty):\n        self._check(sku, qty)\n        self._stock[sku] += qty\n\n    def ship(self, sku, qty):\n        self._check(sku, qty)\n        if qty > self._stock[sku]:\n            raise ValueError(f\"yetersiz stok: {sku}\")\n        self._stock[sku] -= qty\n\n    @property\n    def value(self):\n        return sum(self._catalog[sku].price * qty for sku, qty in self._stock.items())\n\n    def low_stock(self, limit):\n        return sorted(sku for sku, qty in self._stock.items() if qty < limit)\n\n    def __len__(self):\n        return len(self._catalog)\n\n    def __contains__(self, sku):\n        return sku in self._catalog\n\n\ninventory = Inventory()\nfor _ in range(int(input())):\n    parts = input().split()\n    try:\n        if parts[0] == \"kaydet\":\n            inventory.register(Product(parts[1], parts[2], int(parts[3])))\n        elif parts[0] == \"giriş\":\n            inventory.receive(parts[1], int(parts[2]))\n        elif parts[0] == \"çıkış\":\n            inventory.ship(parts[1], int(parts[2]))\n        elif parts[0] == \"değer\":\n            print(\"değer:\", inventory.value)\n        elif parts[0] == \"az\":\n            print(\"az:\", \", \".join(inventory.low_stock(int(parts[1]))) or \"yok\")\n    except ValueError as error:\n        print(\"hata:\", error)\nprint(\"ürün:\", len(inventory), \"| kalem kayıtlı:\", \"kalem\" in inventory, \"| dondurulmuş:\", Product.__dataclass_params__.frozen)",
+    "tests": [
+      {
+        "label": "Örnek",
+        "stdin": "7\nkaydet kalem Kalem 150\nkaydet defter Defter 900\ngiriş kalem 10\ngiriş defter 2\nçıkış kalem 4\ndeğer\naz 5",
+        "expectedOutput": "değer: 2700\naz: defter\nürün: 2 | kalem kayıtlı: True | dondurulmuş: True"
+      },
+      {
+        "label": "Hatalar durum değiştirmez",
+        "stdin": "8\nkaydet kalem Kalem 150\nkaydet kalem Mavi 200\ngiriş silgi 3\ngiriş kalem 0\ngiriş kalem 2\nçıkış kalem 5\nkaydet cetvel Cetvel -1\ndeğer",
+        "expectedOutput": "hata: zaten kayıtlı: kalem\nhata: bilinmeyen ürün: silgi\nhata: adet pozitif olmalı\nhata: yetersiz stok: kalem\nhata: geçersiz fiyat: cetvel\ndeğer: 300\nürün: 1 | kalem kayıtlı: True | dondurulmuş: True"
+      },
+      {
+        "label": "Sınır: limit dahil değil",
+        "stdin": "5\nkaydet a A 1\nkaydet b B 1\ngiriş a 3\ngiriş b 2\naz 3",
+        "expectedOutput": "az: b\nürün: 2 | kalem kayıtlı: False | dondurulmuş: True"
+      },
+      {
+        "label": "Boş envanter",
+        "stdin": "2\ndeğer\naz 1",
+        "expectedOutput": "değer: 0\naz: yok\nürün: 0 | kalem kayıtlı: False | dondurulmuş: True"
+      },
+      {
+        "label": "Stok sıfırlanınca da kayıtlı",
+        "stdin": "5\nkaydet kalem Kalem 100\ngiriş kalem 1\nçıkış kalem 1\naz 1\ndeğer",
+        "expectedOutput": "az: kalem\ndeğer: 0\nürün: 1 | kalem kayıtlı: True | dondurulmuş: True"
+      }
+    ]
+  },
+  {
+    "id": "workshop5-tests",
+    "moduleId": 12,
+    "sectionId": "dataclass",
+    "title": "Davranış testlerini kur",
+    "level": "Sıfırdan yaz",
+    "objective": "Bir stok sınıfının doğru ve hatalı sürümlerini yalnızca davranışına bakarak ayırt eden senaryolar tasarla.",
+    "prompt": "Stock sınıfının bir doğru (dogru) ve dört hatalı sürümü var: hata1 stoğun eksiye düşmesine izin veriyor, hata2 bütün nesnelerde aynı sayaçları paylaşıyor, hata3 0 adetlik girişi kabul ediyor, hata4 low_stock'ta sınırı dahil ediyor (limit'e eşit stok da az sayılıyor). passes(make) fonksiyonunu yaz: make() her çağrıldığında yeni, boş bir Stock verir. Senaryolarını yalnızca genel metotlarla (receive, ship, low_stock) kur, iç sözlüğe (counts) bakma; raises(action) yardımcısı, bir işlemin ValueError fırlatıp fırlatmadığını söyler. Doğru sürümde passes True, her hatalı sürümde False dönmeli. Program sürüm adlarını okur ve her biri için 'ad: GEÇTİ' ya da 'ad: YAKALANDI' yazar.",
+    "starterCode": "class Stock:\n    shared = {}\n\n    def __init__(self, bugs=()):\n        self.bugs = set(bugs)\n        self.counts = Stock.shared if \"paylasim\" in self.bugs else {}\n\n    def receive(self, sku, qty):\n        if qty < 1 and \"sifir\" not in self.bugs:\n            raise ValueError(\"adet pozitif olmalı\")\n        self.counts[sku] = self.counts.get(sku, 0) + qty\n\n    def ship(self, sku, qty):\n        have = self.counts.get(sku, 0)\n        if qty > have and \"eksi\" not in self.bugs:\n            raise ValueError(f\"yetersiz stok: {sku}\")\n        self.counts[sku] = have - qty\n\n    def low_stock(self, limit):\n        if \"sinir\" in self.bugs:\n            return sorted(sku for sku, qty in self.counts.items() if qty <= limit)\n        return sorted(sku for sku, qty in self.counts.items() if qty < limit)\n\nIMPLS = {\"dogru\": (), \"hata1\": (\"eksi\",), \"hata2\": (\"paylasim\",), \"hata3\": (\"sifir\",), \"hata4\": (\"sinir\",)}\n\ndef raises(action):\n    try:\n        action()\n    except ValueError:\n        return True\n    return False\n\ndef passes(make):\n    # make() ile nesneler kur, davranışları dene; hepsi beklendiği gibiyse True döndür\n    pass\n\nfor name in input().split():\n    make = lambda: Stock(IMPLS[name])\n    print(f\"{name}: {'GEÇTİ' if passes(make) else 'YAKALANDI'}\")",
+    "exampleInput": "dogru",
+    "exampleOutput": "dogru: GEÇTİ",
+    "hints": [
+      "Her hata için onu ortaya çıkaran bir davranış düşün: stoktan fazla çıkış, ikinci bir nesnenin boş olması, 0 adetlik giriş, stoğu tam limit kadar olan ürün.",
+      "İki nesne kur (a, b = make(), make()), a'ya 3 kalem gir. Sonra: a'dan 5 çıkış hata vermeli, b'den 1 çıkış hata vermeli (b boş), 0 adet giriş hata vermeli, a.low_stock(3) boş ve a.low_stock(4) ['kalem'] olmalı. Sonuçları bir listeye topla ve all(...) döndür."
+    ],
+    "solution": "class Stock:\n    shared = {}\n\n    def __init__(self, bugs=()):\n        self.bugs = set(bugs)\n        self.counts = Stock.shared if \"paylasim\" in self.bugs else {}\n\n    def receive(self, sku, qty):\n        if qty < 1 and \"sifir\" not in self.bugs:\n            raise ValueError(\"adet pozitif olmalı\")\n        self.counts[sku] = self.counts.get(sku, 0) + qty\n\n    def ship(self, sku, qty):\n        have = self.counts.get(sku, 0)\n        if qty > have and \"eksi\" not in self.bugs:\n            raise ValueError(f\"yetersiz stok: {sku}\")\n        self.counts[sku] = have - qty\n\n    def low_stock(self, limit):\n        if \"sinir\" in self.bugs:\n            return sorted(sku for sku, qty in self.counts.items() if qty <= limit)\n        return sorted(sku for sku, qty in self.counts.items() if qty < limit)\n\nIMPLS = {\"dogru\": (), \"hata1\": (\"eksi\",), \"hata2\": (\"paylasim\",), \"hata3\": (\"sifir\",), \"hata4\": (\"sinir\",)}\n\ndef raises(action):\n    try:\n        action()\n    except ValueError:\n        return True\n    return False\n\ndef passes(make):\n    a, b = make(), make()\n    a.receive(\"kalem\", 3)\n    checks = [\n        raises(lambda: a.ship(\"kalem\", 5)),\n        raises(lambda: b.ship(\"kalem\", 1)),\n        raises(lambda: a.receive(\"silgi\", 0)),\n        a.low_stock(3) == [],\n        a.low_stock(4) == [\"kalem\"],\n    ]\n    return all(checks)\n\nfor name in input().split():\n    make = lambda: Stock(IMPLS[name])\n    print(f\"{name}: {'GEÇTİ' if passes(make) else 'YAKALANDI'}\")",
+    "tests": [
+      {
+        "label": "Doğru sürüm",
+        "stdin": "dogru",
+        "expectedOutput": "dogru: GEÇTİ"
+      },
+      {
+        "label": "Eksi stok hatası",
+        "stdin": "hata1",
+        "expectedOutput": "hata1: YAKALANDI"
+      },
+      {
+        "label": "Paylaşılan sayaç hatası",
+        "stdin": "hata2",
+        "expectedOutput": "hata2: YAKALANDI"
+      },
+      {
+        "label": "Sıfır adet hatası",
+        "stdin": "hata3",
+        "expectedOutput": "hata3: YAKALANDI"
+      },
+      {
+        "label": "Sınır hatası",
+        "stdin": "hata4",
+        "expectedOutput": "hata4: YAKALANDI"
+      },
+      {
+        "label": "Karışık sıra",
+        "stdin": "hata4 dogru hata2 hata1 hata3",
+        "expectedOutput": "hata4: YAKALANDI\ndogru: GEÇTİ\nhata2: YAKALANDI\nhata1: YAKALANDI\nhata3: YAKALANDI"
+      }
+    ]
+  },
+  {
+    "id": "workshop4-fix",
+    "moduleId": 10,
+    "sectionId": "sys-subprocess-argparse",
+    "title": "Sayım aracını onar",
+    "level": "Düzelt",
+    "objective": "argparse seçeneklerinin türünü ve davranışını düzelt; olmayan dosyada programın çökmeden devam etmesini sağla.",
+    "prompt": "say aracı verilen dosyalarda satır sayar: uç boşlukları atıldıktan sonra uzunluğu --min değerinden (varsayılan 1) az olmayan satırlar sayılır, yani boş satırlar sayılmaz. --words verilirse satır yerine en az --min harfli kelimeleri sayar. Her dosya için 'ad: sayı', olmayan dosya için 'bulunamadı: ad' yazar ve devam eder; sonda bulunan dosyaların toplamını 'toplam: N' yazar. Kodda üç hata var: --words ters çalışıyor (verilmeyince kelime sayıyor), --min sayıya çevrilmiyor (verilince TypeError) ve olmayan bir dosya programı çökertiyor. Girdinin ilk satırı dosya sayısıdır; sonraki her satır 'ad|içerik' biçimindedir ve içerikteki '/' satır sonu demektir (bu satırlar dosyaları oluşturan test düzenidir). Son satır, terminalde yazılacak komut satırı argümanlarıdır; program onu bölüp argparse'a verir.",
+    "starterCode": "import argparse\nfrom pathlib import Path\n\ndef build_parser():\n    parser = argparse.ArgumentParser(prog=\"say\")\n    parser.add_argument(\"files\", nargs=\"+\")\n    parser.add_argument(\"--words\", action=\"store_false\")\n    parser.add_argument(\"--min\", default=1)\n    return parser\n\ndef count(path, words, min_len):\n    text = path.read_text(encoding=\"utf-8\")\n    if words:\n        return sum(1 for word in text.split() if len(word) >= min_len)\n    return sum(1 for line in text.splitlines() if len(line.strip()) >= min_len)\n\ndef main(argv):\n    args = build_parser().parse_args(argv)\n    total = 0\n    for name in args.files:\n        n = count(Path(name), args.words, args.min)\n        print(f\"{name}: {n}\")\n        total += n\n    print(f\"toplam: {total}\")\n\n# --- test düzeni: girdideki dosyaları oluştur ve komut satırını çalıştır (dokunma)\nfor _ in range(int(input())):\n    name, content = input().split(\"|\", 1)\n    Path(name).write_text(content.replace(\"/\", \"\\n\"), encoding=\"utf-8\")\nmain(input().split())",
+    "exampleInput": "2\na.txt|bir iki/üç//dört beş altı\nb.txt|tek\na.txt b.txt",
+    "exampleOutput": "a.txt: 3\nb.txt: 1\ntoplam: 4",
+    "hints": [
+      "store_true ile store_false'ın varsayılanları terstir. argparse argümanları metin olarak okur; sayı istiyorsan type=int ver. Dosyayı okumadan önce var olup olmadığını denetle.",
+      "--words için action=\"store_true\", --min için type=int yaz; döngüde path = Path(name) ile path.exists() yanlışsa 'bulunamadı: ad' yazıp continue kullan."
+    ],
+    "solution": "import argparse\nfrom pathlib import Path\n\ndef build_parser():\n    parser = argparse.ArgumentParser(prog=\"say\")\n    parser.add_argument(\"files\", nargs=\"+\")\n    parser.add_argument(\"--words\", action=\"store_true\")\n    parser.add_argument(\"--min\", type=int, default=1)\n    return parser\n\ndef count(path, words, min_len):\n    text = path.read_text(encoding=\"utf-8\")\n    if words:\n        return sum(1 for word in text.split() if len(word) >= min_len)\n    return sum(1 for line in text.splitlines() if len(line.strip()) >= min_len)\n\ndef main(argv):\n    args = build_parser().parse_args(argv)\n    total = 0\n    for name in args.files:\n        path = Path(name)\n        if not path.exists():\n            print(f\"bulunamadı: {name}\")\n            continue\n        n = count(path, args.words, args.min)\n        print(f\"{name}: {n}\")\n        total += n\n    print(f\"toplam: {total}\")\n\n# --- test düzeni: girdideki dosyaları oluştur ve komut satırını çalıştır (dokunma)\nfor _ in range(int(input())):\n    name, content = input().split(\"|\", 1)\n    Path(name).write_text(content.replace(\"/\", \"\\n\"), encoding=\"utf-8\")\nmain(input().split())",
+    "tests": [
+      {
+        "label": "Örnek: satır sayımı",
+        "stdin": "2\na.txt|bir iki/üç//dört beş altı\nb.txt|tek\na.txt b.txt",
+        "expectedOutput": "a.txt: 3\nb.txt: 1\ntoplam: 4"
+      },
+      {
+        "label": "--words",
+        "stdin": "1\na.txt|bir iki/üç\n--words a.txt",
+        "expectedOutput": "a.txt: 3\ntoplam: 3"
+      },
+      {
+        "label": "--min",
+        "stdin": "1\na.txt|ab/abcd/abcdef\n--min 4 a.txt",
+        "expectedOutput": "a.txt: 2\ntoplam: 2"
+      },
+      {
+        "label": "Olmayan dosya",
+        "stdin": "1\na.txt|x\na.txt yok.txt",
+        "expectedOutput": "a.txt: 1\nbulunamadı: yok.txt\ntoplam: 1"
+      },
+      {
+        "label": "--words ve --min birlikte",
+        "stdin": "1\nm.txt|merhaba dünya ve evren\n--words --min 5 m.txt",
+        "expectedOutput": "m.txt: 3\ntoplam: 3"
+      }
+    ]
+  },
+  {
+    "id": "workshop4-build",
+    "moduleId": 10,
+    "sectionId": "sys-subprocess-argparse",
+    "title": "Kendi raporlama aracını yaz",
+    "level": "Sıfırdan yaz",
+    "objective": "Hesaplamaları kendi modülüne ayır; argparse ile seçenekleri tanımla ve dosyaları pathlib ile oku.",
+    "prompt": "İki parçalı bir araç yaz. 1) Path('metrik.py').write_text(...) ile bir metrik.py modülü oluştur; içinde üç fonksiyon olsun: line_count(text) boş olmayan (uç boşlukları atılınca boş kalmayan) satırları sayar, word_count(text) kelimeleri sayar, longest_word(text) en uzun kelimeyi döndürür (eşitse ilk görüleni; metin boşsa '-'). 2) import metrik ile modülü içe aktar ve argparse ile şu komut satırını çözümle: bir ya da daha çok dosya adı, --metric (satır, kelime ya da en-uzun; varsayılan satır) ve --sort bayrağı. Her dosya için 'ad: değer' yaz; olmayan dosya için 'bulunamadı: ad' yazıp devam et. --sort verilirse bulunan dosyaları değere göre büyükten küçüğe sırala (en-uzun için kelimenin uzunluğuna göre), eşitlerde ada göre; olmayan dosya mesajları her durumda önce, girdi sırasıyla yazılır. Programın son satırı modülündeki adları yazdırır; test bu satırla modülü de denetler. Girdinin ilk satırı dosya sayısıdır; sonraki her satır 'ad|içerik' biçimindedir ve içerikteki '/' satır sonu demektir (bu satırlar dosyaları oluşturan test düzenidir). Son satır, terminalde yazılacak komut satırı argümanlarıdır; program onu bölüp argparse'a verir.",
+    "starterCode": "import argparse\nfrom pathlib import Path\n\n# Test düzeni: girdideki dosyaları oluşturur ve komut satırını argv'ye alır (dokunma).\nfor _ in range(int(input())):\n    name, content = input().split(\"|\", 1)\n    Path(name).write_text(content.replace(\"/\", \"\\n\"), encoding=\"utf-8\")\nargv = input().split()\n\n# 1) metrik.py modülünü Path(\"metrik.py\").write_text(...) ile oluştur:\n#    line_count(text), word_count(text), longest_word(text)\n# 2) import metrik\n# 3) argparse ile dosyaları, --metric ve --sort seçeneklerini tanımla,\n#    parser.parse_args(argv) ile çözümle ve raporu yazdır.\n\nprint(sorted(name for name in dir(metrik) if not name.startswith(\"_\")))",
+    "exampleInput": "2\na.txt|bir iki/üç//dört\nb.txt|merhaba\na.txt b.txt",
+    "exampleOutput": "a.txt: 3\nb.txt: 1\n['line_count', 'longest_word', 'word_count']",
+    "hints": [
+      "Modül içeriğini üç tırnaklı bir metin olarak yaz ve Path('metrik.py').write_text(metin, encoding='utf-8') ile kaydet; ardından import metrik çalışır (M9).",
+      "argparse: add_argument('files', nargs='+'), add_argument('--metric', choices=[...], default='satır'), add_argument('--sort', action='store_true'). Metrik adından fonksiyona giden bir sözlük kur; önce bulunamayanları yazdırıp sonuçları bir listede topla, --sort verildiyse sort(key=...) ile sırala."
+    ],
+    "solution": "import argparse\nfrom pathlib import Path\n\n# Test düzeni: girdideki dosyaları oluşturur ve komut satırını argv'ye alır (dokunma).\nfor _ in range(int(input())):\n    name, content = input().split(\"|\", 1)\n    Path(name).write_text(content.replace(\"/\", \"\\n\"), encoding=\"utf-8\")\nargv = input().split()\n\nPath(\"metrik.py\").write_text(\"\"\"def line_count(text):\n    return sum(1 for line in text.splitlines() if line.strip())\n\ndef word_count(text):\n    return len(text.split())\n\ndef longest_word(text):\n    return max(text.split(), key=len, default=\"-\")\n\"\"\", encoding=\"utf-8\")\n\nimport metrik\n\nMETRICS = {\"satır\": metrik.line_count, \"kelime\": metrik.word_count, \"en-uzun\": metrik.longest_word}\n\nparser = argparse.ArgumentParser(prog=\"rapor\")\nparser.add_argument(\"files\", nargs=\"+\")\nparser.add_argument(\"--metric\", choices=sorted(METRICS), default=\"satır\")\nparser.add_argument(\"--sort\", action=\"store_true\")\nargs = parser.parse_args(argv)\n\nrows = []\nfor name in args.files:\n    path = Path(name)\n    if not path.exists():\n        print(f\"bulunamadı: {name}\")\n        continue\n    rows.append((name, METRICS[args.metric](path.read_text(encoding=\"utf-8\"))))\n\ndef size(value):\n    return len(value) if isinstance(value, str) else value\n\nif args.sort:\n    rows.sort(key=lambda row: (-size(row[1]), row[0]))\nfor name, value in rows:\n    print(f\"{name}: {value}\")\n\nprint(sorted(name for name in dir(metrik) if not name.startswith(\"_\")))",
+    "tests": [
+      {
+        "label": "Örnek: satır",
+        "stdin": "2\na.txt|bir iki/üç//dört\nb.txt|merhaba\na.txt b.txt",
+        "expectedOutput": "a.txt: 3\nb.txt: 1\n['line_count', 'longest_word', 'word_count']"
+      },
+      {
+        "label": "Kelime ve sıralama",
+        "stdin": "2\nkisa.txt|a b\nuzun.txt|a b c d e\n--metric kelime --sort kisa.txt uzun.txt",
+        "expectedOutput": "uzun.txt: 5\nkisa.txt: 2\n['line_count', 'longest_word', 'word_count']"
+      },
+      {
+        "label": "En uzun kelime",
+        "stdin": "1\na.txt|kısa çokuzunkelime orta\n--metric en-uzun a.txt",
+        "expectedOutput": "a.txt: çokuzunkelime\n['line_count', 'longest_word', 'word_count']"
+      },
+      {
+        "label": "Olmayan dosya",
+        "stdin": "1\na.txt|x\na.txt yok.txt",
+        "expectedOutput": "bulunamadı: yok.txt\na.txt: 1\n['line_count', 'longest_word', 'word_count']"
+      },
+      {
+        "label": "Boş dosyada en uzun",
+        "stdin": "1\nbos.txt|\n--metric en-uzun bos.txt",
+        "expectedOutput": "bos.txt: -\n['line_count', 'longest_word', 'word_count']"
+      },
+      {
+        "label": "Eşitlerde ada göre",
+        "stdin": "2\nb.txt|x\na.txt|y\n--sort b.txt a.txt",
+        "expectedOutput": "a.txt: 1\nb.txt: 1\n['line_count', 'longest_word', 'word_count']"
+      },
+      {
+        "label": "En uzuna göre sıralama",
+        "stdin": "2\na.txt|ab\nb.txt|abcd\n--metric en-uzun --sort a.txt b.txt",
+        "expectedOutput": "b.txt: abcd\na.txt: ab\n['line_count', 'longest_word', 'word_count']"
+      }
+    ]
   }
 ]
